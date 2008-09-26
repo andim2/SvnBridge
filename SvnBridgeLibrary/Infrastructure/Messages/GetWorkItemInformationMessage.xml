@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<soap:Header>
+		<RequestHeader xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03">
+			<Id>uuid:{Guid}</Id>
+		</RequestHeader>
+	</soap:Header>
+	<soap:Body>
+		<GetWorkItem xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03">
+			<workItemId>{WorkItemId}</workItemId>
+			<revisionId>0</revisionId>
+			<minimumRevisionId>0</minimumRevisionId>
+			<asOfDate xsi:nil="true" />
+			<useMaster>true</useMaster>
+		</GetWorkItem>
+	</soap:Body>
+</soap:Envelope>

@@ -1,0 +1,153 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A374829E-4BE3-4DF5-9CCF-6EE9794D34A7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UnitTests</RootNamespace>
+    <AssemblyName>Tests</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AttachFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\AttachFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="CodePlex.TfsLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\CodePlex.TfsLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="xunit, Version=1.0.0.1105, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\xunit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Assert\Assert.cs" />
+    <Compile Include="Assert\AssertActualExpectedException.cs" />
+    <Compile Include="Assert\AssertException.cs" />
+    <Compile Include="Assert\ContainsException.cs" />
+    <Compile Include="Assert\DoesNotContainException.cs" />
+    <Compile Include="Assert\EmptyException.cs" />
+    <Compile Include="Assert\EqualException.cs" />
+    <Compile Include="Assert\FalseException.cs" />
+    <Compile Include="Assert\InRangeException.cs" />
+    <Compile Include="Assert\IsTypeException.cs" />
+    <Compile Include="Assert\NotEmptyException.cs" />
+    <Compile Include="Assert\NotEqualException.cs" />
+    <Compile Include="Assert\NotNullException.cs" />
+    <Compile Include="Assert\NotSameException.cs" />
+    <Compile Include="Assert\NullException.cs" />
+    <Compile Include="Assert\SameException.cs" />
+    <Compile Include="Assert\ThrowsException.cs" />
+    <Compile Include="Assert\TrueException.cs" />
+    <Compile Include="ContainerTests.cs" />
+    <Compile Include="BrokenXmlTests.cs" />
+    <Compile Include="CachePrePopulatorTest.cs" />
+    <Compile Include="FileNodeTests.cs" />
+    <Compile Include="Handlers\CheckoutHandlerTests.cs" />
+    <Compile Include="Handlers\CopyHandlerTests.cs" />
+    <Compile Include="Handlers\DeleteHandlerTests.cs" />
+    <Compile Include="Handlers\GetHandlerTests.cs" />
+    <Compile Include="Handlers\MergeHandlerTests.cs" />
+    <Compile Include="Handlers\MkActivityHandlerTests.cs" />
+    <Compile Include="Handlers\MkColHandlerTests.cs" />
+    <Compile Include="Handlers\OptionsHandlerTests.cs" />
+    <Compile Include="Handlers\PropFindHandlerAllPropForFolderTests.cs" />
+    <Compile Include="Handlers\PropFindHandlerAllPropForItemTests.cs" />
+    <Compile Include="Handlers\PropFindHandlerTests.cs" />
+    <Compile Include="Handlers\PropFindHandler\BcFileNodeTests.cs" />
+    <Compile Include="Handlers\PropFindHandler\FileNodeTests.cs" />
+    <Compile Include="Handlers\PropPatchHandlerTests.cs" />
+    <Compile Include="Handlers\PutHandlerTests.cs" />
+    <Compile Include="Handlers\ReportHandlerLogReportTests.cs" />
+    <Compile Include="Handlers\ReportHandlerTests.cs" />
+    <Compile Include="Handlers\ReportHandlerUpdateReportTests.cs" />
+    <Compile Include="Infrastructure\HandlerTestsBase.cs" />
+    <Compile Include="Infrastructure\ReadWriteMemoryStream.cs" />
+    <Compile Include="Infrastructure\TestHelper.cs" />
+    <Compile Include="Net\HttpContextDispatcherTests.cs" />
+    <Compile Include="Net\HttpRequestTests.cs" />
+    <Compile Include="Net\ListenerTests.cs" />
+    <Compile Include="PathParsing\PathParserProjectInDomainTest.cs" />
+    <Compile Include="PathParsing\RequestBasePathParserTest.cs" />
+    <Compile Include="PathParsing\PathParserSingleServerWithProjectInPathTest.cs" />
+    <Compile Include="Presenters\SettingsViewPresenterTests.cs" />
+    <Compile Include="Infrastructure\MyMocks.cs" />
+    <Compile Include="Proxies\ProxyFactoryTest.cs" />
+    <Compile Include="Proxies\RetryOnSocketExceptionTest.cs" />
+    <Compile Include="SourceControl\ProjectInformationRepositoryTest.cs" />
+    <Compile Include="SourceControl\TFSSourceControlProviderTest.cs" />
+    <Compile Include="SourceControl\TFSSourceControlServiceTest.cs" />
+    <Compile Include="Stubs\StubErrorsView.cs" />
+    <Compile Include="Stubs\StubInvocation.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Infrastructure\ProtocolTestsBase.cs" />
+    <Compile Include="Stubs\StubHttpContext.cs" />
+    <Compile Include="Stubs\StubHttpRequest.cs" />
+    <Compile Include="Stubs\StubHttpResponse.cs" />
+    <Compile Include="Stubs\StubListener.cs" />
+    <Compile Include="Stubs\StubListenerView.cs" />
+    <Compile Include="Presenters\ListenerViewPresenterTests.cs" />
+    <Compile Include="Stubs\StubSettingsView.cs" />
+    <Compile Include="Stubs\StubTFSSourceControlService.cs" />
+    <Compile Include="Utility\BinaryReaderEOFTests.cs" />
+    <Compile Include="Utility\SvnDiffEngineTests.cs" />
+    <Compile Include="Utility\HelperTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SvnBridgeLibrary\SvnBridge.Library.csproj">
+      <Project>{95E4E16B-0975-4705-B3A0-83700DE483C2}</Project>
+      <Name>SvnBridge.Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SvnBridge\SvnBridge.csproj">
+      <Project>{22D15920-C064-457D-889B-F7A2E16F3E05}</Project>
+      <Name>SvnBridge</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Handlers\ReportHandler\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.codeplex.com/services/ProjectInfoService/v1.0" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://www.codeplex.com/services/ProjectInfoService/v1.0" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.codeplex.com/services/ProjectInfoService/v1.0">
+      <s:element name="GetTfsInfoForProject">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ProjectName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetTfsInfoForProjectResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="GetTfsInfoForProjectResult" type="tns:ProjectTfsInfo" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ProjectTfsInfo">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="TfsServerUrl" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProjectPrefix" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListProjectsForUser">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CodePlexUserName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ListProjectsForUserResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListProjectsForUserResult" type="tns:ArrayOfString" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfString">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="string" nillable="true" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ListProjectsForAffiliate">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="affiliateName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="ListProjectsForAffiliateResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="ListProjectsForAffiliateResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="CodePlexUserNameToTfsUserName">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="CodePlexUserNameToTfsUserNameResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CodePlexUserNameToTfsUserNameResult" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GetTfsInfoForProjectSoapIn">
+    <wsdl:part name="parameters" element="tns:GetTfsInfoForProject" />
+  </wsdl:message>
+  <wsdl:message name="GetTfsInfoForProjectSoapOut">
+    <wsdl:part name="parameters" element="tns:GetTfsInfoForProjectResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListProjectsForUserSoapIn">
+    <wsdl:part name="parameters" element="tns:ListProjectsForUser" />
+  </wsdl:message>
+  <wsdl:message name="ListProjectsForUserSoapOut">
+    <wsdl:part name="parameters" element="tns:ListProjectsForUserResponse" />
+  </wsdl:message>
+  <wsdl:message name="ListProjectsForAffiliateSoapIn">
+    <wsdl:part name="parameters" element="tns:ListProjectsForAffiliate" />
+  </wsdl:message>
+  <wsdl:message name="ListProjectsForAffiliateSoapOut">
+    <wsdl:part name="parameters" element="tns:ListProjectsForAffiliateResponse" />
+  </wsdl:message>
+  <wsdl:message name="CodePlexUserNameToTfsUserNameSoapIn">
+    <wsdl:part name="parameters" element="tns:CodePlexUserNameToTfsUserName" />
+  </wsdl:message>
+  <wsdl:message name="CodePlexUserNameToTfsUserNameSoapOut">
+    <wsdl:part name="parameters" element="tns:CodePlexUserNameToTfsUserNameResponse" />
+  </wsdl:message>
+  <wsdl:portType name="ProjectInfoServiceSoap">
+    <wsdl:operation name="GetTfsInfoForProject">
+      <wsdl:input message="tns:GetTfsInfoForProjectSoapIn" />
+      <wsdl:output message="tns:GetTfsInfoForProjectSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListProjectsForUser">
+      <wsdl:input message="tns:ListProjectsForUserSoapIn" />
+      <wsdl:output message="tns:ListProjectsForUserSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="ListProjectsForAffiliate">
+      <wsdl:input message="tns:ListProjectsForAffiliateSoapIn" />
+      <wsdl:output message="tns:ListProjectsForAffiliateSoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="CodePlexUserNameToTfsUserName">
+      <wsdl:input message="tns:CodePlexUserNameToTfsUserNameSoapIn" />
+      <wsdl:output message="tns:CodePlexUserNameToTfsUserNameSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ProjectInfoServiceSoap" type="tns:ProjectInfoServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetTfsInfoForProject">
+      <soap:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/GetTfsInfoForProject" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListProjectsForUser">
+      <soap:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/ListProjectsForUser" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListProjectsForAffiliate">
+      <soap:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/ListProjectsForAffiliate" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CodePlexUserNameToTfsUserName">
+      <soap:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/CodePlexUserNameToTfsUserName" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="ProjectInfoServiceSoap12" type="tns:ProjectInfoServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetTfsInfoForProject">
+      <soap12:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/GetTfsInfoForProject" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListProjectsForUser">
+      <soap12:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/ListProjectsForUser" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ListProjectsForAffiliate">
+      <soap12:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/ListProjectsForAffiliate" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="CodePlexUserNameToTfsUserName">
+      <soap12:operation soapAction="http://www.codeplex.com/services/ProjectInfoService/v1.0/CodePlexUserNameToTfsUserName" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ProjectInfoService">
+    <wsdl:port name="ProjectInfoServiceSoap" binding="tns:ProjectInfoServiceSoap">
+      <soap:address location="http://www.codeplex.com/services/projectinfoservice.asmx" />
+    </wsdl:port>
+    <wsdl:port name="ProjectInfoServiceSoap12" binding="tns:ProjectInfoServiceSoap12">
+      <soap12:address location="http://www.codeplex.com/services/projectinfoservice.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

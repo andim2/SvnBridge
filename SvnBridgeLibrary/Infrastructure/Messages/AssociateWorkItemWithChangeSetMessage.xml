@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<soap:Header>
+		<RequestHeader xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03">
+			<Id>uuid:{Guid}</Id>
+		</RequestHeader>
+	</soap:Header>
+	<soap:Body>
+		<Update xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03">
+			<package>
+				<Package Product="{ServerUrl}/WorkItemTracking/v1.0/ClientService.asmx" xmlns="">
+					<UpdateWorkItem WorkItemID="{WorkItemId}" Revision="{RevisionId}" ObjectType="WorkItem">
+						<ComputedColumns>
+							<ComputedColumn Column="System.RevisedDate" />
+							<ComputedColumn Column="System.ChangedDate" />
+							<ComputedColumn Column="System.PersonId" />
+							<ComputedColumn Column="CodePlex.UpdatedBy" />
+						</ComputedColumns>
+						<Columns>
+							<Column Column="CodePlex.UpdatedBy">
+								<Value>{UserName}</Value>
+							</Column>
+						</Columns>
+						<InsertText FieldName="System.History" FieldDisplayName="History">Fixed on changeset {ChangeSetId}</InsertText>
+						<InsertResourceLink FieldName="System.BISLinks" LinkType="Fixed in Changeset" Location="vstfs:///VersionControl/Changeset/{ChangeSetId}" />
+					</UpdateWorkItem>
+				</Package>
+			</package>
+		</Update>
+	</soap:Body>
+</soap:Envelope>

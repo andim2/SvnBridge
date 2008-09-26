@@ -1,0 +1,257 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{95E4E16B-0975-4705-B3A0-83700DE483C2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SvnBridge</RootNamespace>
+    <AssemblyName>SvnBridge.Library</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <GenerateResourceNeverLockTypeAssemblies>true</GenerateResourceNeverLockTypeAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CodePlex.TfsLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\CodePlex.TfsLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BootStrapper.cs" />
+    <Compile Include="Cache\HashSet.cs" />
+    <Compile Include="Cache\MemoryBasedPersistentCache.cs" />
+    <Compile Include="Infrastructure\StatsRenderer.cs" />
+    <Compile Include="Infrastructure\Configuration.cs" />
+    <Compile Include="Infrastructure\FileRepository.cs" />
+    <Compile Include="Infrastructure\MetaDataRepositoryNoCache.cs" />
+    <Compile Include="Infrastructure\Statistics\ActionTrackingViaPerfCounter.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="Exceptions\CacheMissException.cs" />
+    <Compile Include="Exceptions\EnvironmentValidationException.cs" />
+    <Compile Include="Exceptions\RepositoryUnavailableException.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Protocol\OptionsData.cs" />
+    <Compile Include="RequestHandlers\CheckOutHandler.cs" />
+    <Compile Include="RequestHandlers\CopyHandler.cs" />
+    <Compile Include="RequestHandlers\DeleteHandler.cs" />
+    <Compile Include="RequestHandlers\GetHandler\FolderRenderer.cs" />
+    <Compile Include="RequestHandlers\GetHandler.cs" />
+    <Compile Include="Infrastructure\Logging.cs" />
+    <Compile Include="Infrastructure\MetaDataRepositoryFactory.cs" />
+    <Compile Include="Cache\RequestCache.cs" />
+    <Compile Include="Infrastructure\DefaultLogger.cs" />
+    <Compile Include="Interfaces\IMetaDataRepository.cs" />
+    <Compile Include="Infrastructure\MetaDataRepositoryCache.cs" />
+    <Compile Include="Infrastructure\TfsUrlValidator.cs" />
+    <Compile Include="PathParsing\BasePathParser.cs" />
+    <Compile Include="PathParsing\PathParserServerAndProjectInPath.cs" />
+    <Compile Include="PathParsing\PathParserSingleServerWithProjectInPath.cs" />
+    <Compile Include="PathParsing\PathParserProjectInDomain.cs" />
+    <Compile Include="Infrastructure\AsyncItemLoader.cs" />
+    <Compile Include="Infrastructure\ExceptionHelper.cs" />
+    <Compile Include="Cache\CachedResult.cs" />
+    <Compile Include="Interfaces\IInterceptor.cs" />
+    <Compile Include="Interfaces\IInvocation.cs" />
+    <Compile Include="Infrastructure\InterceptorAttribute.cs" />
+    <Compile Include="Interfaces\IPathParser.cs" />
+    <Compile Include="Protocol\DatedRevReportData.cs" />
+    <Compile Include="Protocol\FileRevsReportData.cs" />
+    <Compile Include="Protocol\RelayReportData.cs" />
+    <Compile Include="Proxies\ProxyFactory.cs" />
+    <Compile Include="Proxies\RemotingInvocation.cs" />
+    <Compile Include="Proxies\RetryOnExceptionsInterceptor.cs" />
+    <Compile Include="Infrastructure\AssociateWorkItemWithChangeSet.cs" />
+    <Compile Include="Infrastructure\BrokenXml.cs" />
+    <Compile Include="Infrastructure\Clock.cs" />
+    <Compile Include="Infrastructure\Container.cs" />
+    <Compile Include="Cache\WebCache.cs" />
+    <Compile Include="RequestHandlers\MergeHandler.cs" />
+    <Compile Include="RequestHandlers\MkActivityHandler.cs" />
+    <Compile Include="RequestHandlers\MkColHandler.cs" />
+    <Compile Include="RequestHandlers\OptionsHandler.cs" />
+    <Compile Include="RequestHandlers\PropFindHandler.cs" />
+    <Compile Include="RequestHandlers\PropPatchHandler.cs" />
+    <Compile Include="RequestHandlers\PutHandler.cs" />
+    <Compile Include="RequestHandlers\ReportHandler.cs" />
+    <Compile Include="RequestHandlers\RequestHandlerBase.cs" />
+    <Compile Include="Exceptions\ConflictException.cs" />
+    <Compile Include="Exceptions\FolderAlreadyExistsException.cs" />
+    <Compile Include="RequestHandlers\ReportHandler\UpdateReportService.cs" />
+    <Compile Include="ListenErrorEventArgs.cs" />
+    <Compile Include="Net\FinishedHandlingEventArgs.cs" />
+    <Compile Include="Net\Proxy.cs" />
+    <Compile Include="Net\ProxyInformation.cs" />
+    <Compile Include="Proxies\TracingInterceptor.cs" />
+    <Compile Include="SourceControl\ActivityRepository.cs" />
+    <Compile Include="SourceControl\CachePrePopulator.cs" />
+    <Compile Include="SourceControl\Dto\Activity.cs" />
+    <Compile Include="SourceControl\Dto\ActivityItem.cs" />
+    <Compile Include="SourceControl\Dto\ActivityItemAction.cs" />
+    <Compile Include="SourceControl\Dto\CopyAction.cs" />
+    <Compile Include="SourceControl\Dto\ItemProperties.cs" />
+    <Compile Include="SourceControl\Dto\Properties.cs" />
+    <Compile Include="SourceControl\Dto\Property.cs" />
+    <Compile Include="SourceControl\FindOrCreateResults.cs" />
+    <Compile Include="SourceControl\FutureInvocationException.cs" />
+    <Compile Include="SourceControl\MissingItemMetaData.cs" />
+    <Compile Include="SourceControl\ProjectLocationInformation.cs" />
+    <Compile Include="SourceControl\ProjectInformationRepository.cs" />
+    <Compile Include="Net\ListenerContext.cs" />
+    <Compile Include="Net\HttpContextDispatcher.cs" />
+    <Compile Include="Net\ListenerRequest.cs" />
+    <Compile Include="Net\ListenerResponse.cs" />
+    <Compile Include="Interfaces\IHttpContext.cs" />
+    <Compile Include="Interfaces\IHttpRequest.cs" />
+    <Compile Include="Interfaces\IHttpResponse.cs" />
+    <Compile Include="Net\Listener.cs" />
+    <Compile Include="Net\ListenerResponseStream.cs" />
+    <Compile Include="RequestHandlers\PropFindHandler\BcFileNode.cs" />
+    <Compile Include="RequestHandlers\PropFindHandler\FileNode.cs" />
+    <Compile Include="RequestHandlers\PropFindHandler\INode.cs" />
+    <Compile Include="RequestHandlers\PropFindHandler\SvnBlnNode.cs" />
+    <Compile Include="RequestHandlers\PropFindHandler\SvnVccDefaultNode.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\ActivityCollectionSetData.cs" />
+    <Compile Include="Protocol\ActivitySetData.cs" />
+    <Compile Include="Protocol\AddDirectoryData.cs" />
+    <Compile Include="Protocol\AddFileData.cs" />
+    <Compile Include="Protocol\AllPropData.cs" />
+    <Compile Include="Protocol\CheckedInData.cs" />
+    <Compile Include="Protocol\CheckoutData.cs" />
+    <Compile Include="Protocol\EntryData.cs" />
+    <Compile Include="Protocol\GetLocationsReportData.cs" />
+    <Compile Include="Protocol\GetLocksReportData.cs" />
+    <Compile Include="Protocol\LogReportData.cs" />
+    <Compile Include="Protocol\MergeData.cs" />
+    <Compile Include="Protocol\MergeResponseData.cs" />
+    <Compile Include="Protocol\MultiStatusData.cs" />
+    <Compile Include="Protocol\OpenDirectoryData.cs" />
+    <Compile Include="Protocol\OptionsResponseData.cs" />
+    <Compile Include="Protocol\PropData.cs" />
+    <Compile Include="Protocol\PropertyUpdateData.cs" />
+    <Compile Include="Protocol\PropFindData.cs" />
+    <Compile Include="Protocol\PropNameData.cs" />
+    <Compile Include="Protocol\PropStatData.cs" />
+    <Compile Include="Protocol\ResponseData.cs" />
+    <Compile Include="Protocol\SetData.cs" />
+    <Compile Include="Protocol\SetPropData.cs" />
+    <Compile Include="Protocol\SourceData.cs" />
+    <Compile Include="Protocol\TargetRevisionData.cs" />
+    <Compile Include="Protocol\TxDeltaData.cs" />
+    <Compile Include="Protocol\UpdatedSetData.cs" />
+    <Compile Include="Protocol\UpdateReportData.cs" />
+    <Compile Include="Protocol\UpdateReportResponseData.cs" />
+    <Compile Include="SourceControl\CredentialsHelper.cs" />
+    <Compile Include="SourceControl\DeleteFolderMetaData.cs" />
+    <Compile Include="SourceControl\DeleteMetaData.cs" />
+    <Compile Include="SourceControl\FolderMetaData.cs" />
+    <Compile Include="SourceControl\ItemMetaData.cs" />
+    <Compile Include="SourceControl\MergeActivityResponse.cs" />
+    <Compile Include="SourceControl\MergeActivityResponseItem.cs" />
+    <Compile Include="SourceControl\Recursion.cs" />
+    <Compile Include="SourceControl\RenamedSourceItem.cs" />
+    <Compile Include="SourceControl\StubFolderMetaData.cs" />
+    <Compile Include="SourceControl\TFSSourceControlService.cs" />
+    <Compile Include="SourceControl\TFSSourceControlProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SourceControl\UpdateDiffCalculator.cs" />
+    <Compile Include="Utility\BinaryReaderEOF.cs" />
+    <Compile Include="Utility\SvnDiff.cs" />
+    <Compile Include="Utility\SvnDiffEngine.cs" />
+    <Compile Include="Utility\SvnDiffInstruction.cs" />
+    <Compile Include="Utility\SvnDiffParser.cs" />
+    <Compile Include="Utility\Helper.cs" />
+    <Compile Include="Protocol\WebDav.cs" />
+    <Compile Include="Web References\CodePlexWebServices\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.map</DependentUpon>
+    </Compile>
+    <Compile Include="WebRequestSetup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Messages\GetWorkItemInformationMessage.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Messages\AssociateWorkItemWithChangeSetMessage.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Messages\SetWorkItemStatusToFixedMessage.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferences Include="Web References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferenceUrl Include="http://www.codeplex.com/services/projectinfoservice.asmx">
+      <UrlBehavior>Dynamic</UrlBehavior>
+      <RelPath>Web References\CodePlexWebServices\</RelPath>
+      <UpdateFromURL>http://www.codeplex.com/services/projectinfoservice.asmx</UpdateFromURL>
+      <ServiceLocationURL>
+      </ServiceLocationURL>
+      <CachedDynamicPropName>
+      </CachedDynamicPropName>
+      <CachedAppSettingsObjectName>Settings</CachedAppSettingsObjectName>
+      <CachedSettingsPropName>SvnBridge_Library_CodePlex_ProjectInfoService</CachedSettingsPropName>
+    </WebReferenceUrl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Web References\CodePlexWebServices\projectinfoservice.disco" />
+    <None Include="Web References\CodePlexWebServices\projectinfoservice.wsdl" />
+    <None Include="Web References\CodePlexWebServices\ProjectTfsInfo1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\CodePlexWebServices\Reference.map">
+      <Generator>MSDiscoCodeGenerator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
