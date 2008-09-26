@@ -372,7 +372,8 @@ namespace SvnBridge.Handlers
         private void WriteMultiStatusStart(TextWriter writer, List<XmlElement> properties)
         {
             if (properties.Count > 1 ||
-               (properties.Count == 1 && properties[0].LocalName == "deadprop-count"))
+               (properties.Count == 1 && properties[0].LocalName == "deadprop-count") ||
+               (properties.Count == 1 && properties[0].LocalName == "md5-checksum"))
             {
                 writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns0=\"DAV:\">\n");
             }

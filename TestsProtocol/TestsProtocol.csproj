@@ -80,6 +80,7 @@
     <Compile Include="Commit\CommitUpdatedFileThatIsOutOfDateTest.cs" />
     <Compile Include="Commit\CommitUpdatedFileWithConflictAfterCheckoutTest.cs" />
     <Compile Include="Commit\CommitUpdatedFileWithSpecialCharactersTest.cs" />
+    <Compile Include="Merge\MergeSingleFileFromBranchToTrunk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepoBrowser\ListWithRevisionSpecifiedUsingCurrentDateTime.cs" />
     <Compile Include="RepoBrowser\RepoBrowserOpenRootContainingFolderAndFile.cs" />
