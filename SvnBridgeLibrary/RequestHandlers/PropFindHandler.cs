@@ -212,20 +212,21 @@ namespace SvnBridge.Handlers
         {
             writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
-            writer.Write("<D:response xmlns:lp1=\"DAV:\" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\">\n");
-            writer.Write("<D:href>" + Helper.UrlEncodeIfNeccesary(requestPath) + "</D:href>\n");
+            writer.Write("<D:response xmlns:S=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:C=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:lp1=\"DAV:\" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\">\n");
+            writer.Write("<D:href>" + Helper.Encode(requestPath) + "</D:href>\n");
             writer.Write("<D:propstat>\n");
             writer.Write("<D:prop>\n");
+            writer.Write("<lp1:getcontentlength>" + itemData.Length + "</lp1:getcontentlength>\n");
             writer.Write("<lp1:getcontenttype>text/plain</lp1:getcontenttype>\n");
-            writer.Write("<lp1:getetag>W/\"" + item.Revision + "//" + item.Name + "\"</lp1:getetag>\n");
+            writer.Write("<lp1:getetag>\"" + item.Revision + "//" + Helper.EncodeB(item.Name) + "\"</lp1:getetag>\n");
             writer.Write("<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate) + "</lp1:creationdate>\n");
             writer.Write("<lp1:getlastmodified>" + Helper.FormatDateB(item.LastModifiedDate) + "</lp1:getlastmodified>\n");
-            string svnVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name));
-			writer.Write("<lp1:checked-in><D:href>" + Helper.UrlEncodeIfNeccesary(svnVerLocalPath) + "</D:href></lp1:checked-in>\n");
+            string svnVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
+			writer.Write("<lp1:checked-in><D:href>" + svnVerLocalPath + "</D:href></lp1:checked-in>\n");
             writer.Write("<lp1:version-controlled-configuration><D:href>" + VccPath + "</D:href></lp1:version-controlled-configuration>\n");
             writer.Write("<lp1:version-name>" + item.Revision + "</lp1:version-name>\n");
             writer.Write("<lp1:creator-displayname>" + item.Author + "</lp1:creator-displayname>\n");
-            writer.Write("<lp2:baseline-relative-path>" + item.Name + "</lp2:baseline-relative-path>\n");
+            writer.Write("<lp2:baseline-relative-path>" + Helper.EncodeB(item.Name) + "</lp2:baseline-relative-path>\n");
             writer.Write("<lp2:md5-checksum>" + Helper.GetMd5Checksum(itemData) + "</lp2:md5-checksum>\n");
             writer.Write("<lp2:repository-uuid>" + sourceControlProvider.GetRepositoryUuid() + "</lp2:repository-uuid>\n");
             writer.Write("<lp2:deadprop-count>0</lp2:deadprop-count>\n");
