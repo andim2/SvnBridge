@@ -27,10 +27,9 @@ namespace SvnBridgeServer
             {
                 pathParser = new PathParserProjectInDomainCodePlex();
             }
-            else if (Configuration.UrlIncludesProjectName)
+            else if (Configuration.DomainIncludesProjectName)
             {
-                ProjectInformationRepository projectInformationRepository = new ProjectInformationRepository(Container.Resolve<MetaDataRepositoryFactory>(), Configuration.TfsUrl);
-                pathParser = new PathParserProjectInDomain(Configuration.TfsUrl, projectInformationRepository);
+                pathParser = new PathParserProjectInDomain(Configuration.TfsUrl, Container.Resolve<MetaDataRepositoryFactory>());
             }
 			else
 			{

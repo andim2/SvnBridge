@@ -11,7 +11,7 @@ namespace SvnBridge.Infrastructure
         private const string LOG_PATH = "LogPath";
         private const string PERF_COUNTERS_MANDATORY = "PerfCountersAreMandatory";
         private const string TFS_URL = "TfsUrl";
-        private const string URL_INCLUDES_PROJECT_NAME = "URLIncludesProjectName";
+        private const string DOMAIN_INCLUDES_PROJECT_NAME = "DomainIncludesProjectName";
         private const string USE_CODEPLEX_SERVERS = "UseCodePlexServers";
 
         public static bool CacheEnabled
@@ -34,9 +34,9 @@ namespace SvnBridge.Infrastructure
             get { return ConfigurationManager.AppSettings[TFS_URL]; }
         }
 
-        public static bool UrlIncludesProjectName
+        public static bool DomainIncludesProjectName
         {
-            get { return BoolConfig(URL_INCLUDES_PROJECT_NAME, false); }
+            get { return BoolConfig(DOMAIN_INCLUDES_PROJECT_NAME, false); }
         }
 
         public static bool UseCodePlexServers
@@ -59,7 +59,7 @@ namespace SvnBridge.Infrastructure
             if (name == LOG_PATH.ToLower()) return LogPath;
             if (name == PERF_COUNTERS_MANDATORY.ToLower()) return PerfCountersMandatory;
             if (name == TFS_URL.ToLower()) return TfsUrl;
-            if (name == URL_INCLUDES_PROJECT_NAME.ToLower()) return UrlIncludesProjectName;
+            if (name == DOMAIN_INCLUDES_PROJECT_NAME.ToLower()) return DomainIncludesProjectName;
             if (name == USE_CODEPLEX_SERVERS.ToLower()) return UseCodePlexServers;
             return null;
         }

@@ -131,7 +131,6 @@
     <Compile Include="SourceControl\FutureInvocationException.cs" />
     <Compile Include="SourceControl\MissingItemMetaData.cs" />
     <Compile Include="SourceControl\ProjectLocationInformation.cs" />
-    <Compile Include="SourceControl\ProjectInformationRepository.cs" />
     <Compile Include="Net\ListenerContext.cs" />
     <Compile Include="Net\HttpContextDispatcher.cs" />
     <Compile Include="Net\ListenerRequest.cs" />

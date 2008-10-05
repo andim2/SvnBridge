@@ -5,9 +5,9 @@ namespace SvnBridge.SourceControl
         public string RemoteProjectName;
         public string ServerUrl;
 
-        public ProjectLocationInformation(string canonizedProjectName, string serverUrl)
+        public ProjectLocationInformation(string remoteProjectName, string serverUrl)
         {
-            RemoteProjectName = canonizedProjectName;
+            RemoteProjectName = remoteProjectName;
             ServerUrl = serverUrl;
         }
     }
