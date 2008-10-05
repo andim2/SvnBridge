@@ -8,7 +8,7 @@ namespace SvnBridge.Stubs
 {
     public class StubHttpRequest : IHttpRequest
     {
-        private NameValueCollection headers;
+        private NameValueCollection headers = new NameValueCollection();
         private string httpMethod;
         private Stream inputStream = new MemoryStream();
         private Uri url;

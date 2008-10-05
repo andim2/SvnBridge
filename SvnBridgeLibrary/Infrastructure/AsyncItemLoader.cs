@@ -32,7 +32,6 @@ namespace SvnBridge.Infrastructure
             {
                 while (CalculateLoadedItemsSize(folderInfo) > MAX_BUFFER_SIZE)
                 {
-                    System.Diagnostics.Debug.WriteLine("Pausing - " + DateTime.Now.ToString());
                     Thread.Sleep(1000);
                 }
                 if (item.ItemType == ItemType.Folder)

@@ -29,7 +29,6 @@ namespace SvnBridge.SourceControl
 
         private readonly string rootPath;
         private readonly string serverUrl;
-        private readonly string projectName;
         private readonly ICredentials credentials;
         private readonly TFSSourceControlService sourceControlService;
         private readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
@@ -41,7 +40,6 @@ namespace SvnBridge.SourceControl
         public TFSSourceControlProvider(string serverUrl, string projectName, ICredentials credentials, TFSSourceControlService sourceControlService, AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet, DefaultLogger logger, WebCache cache, MetaDataRepositoryFactory metaDataRepositoryFactory, FileRepository fileRepository)
         {
             this.serverUrl = serverUrl;
-            this.projectName = projectName;
             this.credentials = CredentialsHelper.GetCredentialsForServer(this.serverUrl, credentials);
             this.sourceControlService = sourceControlService;
             this.associateWorkItemWithChangeSet = associateWorkItemWithChangeSet;
@@ -50,9 +48,9 @@ namespace SvnBridge.SourceControl
             this.fileRepository = fileRepository;
 
             rootPath = Constants.ServerRootPath;
-            if (!string.IsNullOrEmpty(this.projectName))
+            if (!string.IsNullOrEmpty(projectName))
             {
-                rootPath += this.projectName + "/";
+                rootPath += projectName + "/";
             }
             this.metaDataRepository = metaDataRepositoryFactory.Create(this.credentials, this.serverUrl, this.rootPath);
         }

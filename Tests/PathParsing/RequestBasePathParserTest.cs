@@ -17,7 +17,7 @@ namespace SvnBridge.PathParsing
         public void CanParseServerFromUrl()
         {
             TfsUrlValidator urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
-            Results r1 = stubs.Attach(urlValidator.IsValidTfsServerUrl, Return.Value(true));
+            Results r1 = stubs.Attach((MyMocks.IsValidTfsServerUrl)urlValidator.IsValidTfsServerUrl, Return.Value(true));
 
             PathParserServerAndProjectInPath parser = new PathParserServerAndProjectInPath(urlValidator);
             StubHttpRequest request = new StubHttpRequest
@@ -33,7 +33,7 @@ namespace SvnBridge.PathParsing
         public void CanParseServerFromUrl_WillUseHttpIfHttpsIsNotValid()
         {
             TfsUrlValidator urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
-            Results r1 = stubs.Attach(urlValidator.IsValidTfsServerUrl, Return.Value(false));
+            Results r1 = stubs.Attach((MyMocks.IsValidTfsServerUrl)urlValidator.IsValidTfsServerUrl, Return.Value(false));
 
             PathParserServerAndProjectInPath parser = new PathParserServerAndProjectInPath(urlValidator);
             IHttpRequest request = new StubHttpRequest
@@ -50,7 +50,7 @@ namespace SvnBridge.PathParsing
         public void CanParseServerFromUrl_WithPort()
         {
             TfsUrlValidator urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
-            Results r1 = stubs.Attach(urlValidator.IsValidTfsServerUrl, Return.Value(true));
+            Results r1 = stubs.Attach((MyMocks.IsValidTfsServerUrl)urlValidator.IsValidTfsServerUrl, Return.Value(true));
 
             PathParserServerAndProjectInPath parser = new PathParserServerAndProjectInPath(urlValidator);
             IHttpRequest request = new StubHttpRequest
@@ -67,7 +67,7 @@ namespace SvnBridge.PathParsing
         public void CanParseServerFromUrl_WithPortAndNestedFolder()
         {
             TfsUrlValidator urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
-            Results r1 = stubs.Attach(urlValidator.IsValidTfsServerUrl, Return.Value(true));
+            Results r1 = stubs.Attach((MyMocks.IsValidTfsServerUrl)urlValidator.IsValidTfsServerUrl, Return.Value(true));
 
             PathParserServerAndProjectInPath parser = new PathParserServerAndProjectInPath(urlValidator);
             IHttpRequest request = new StubHttpRequest

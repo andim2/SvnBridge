@@ -23,6 +23,11 @@ namespace SvnBridge.SourceControl
             this.useCodePlexServers = useCodePlexServers;
         }
 
+        public virtual ProjectLocationInformation GetProjectLocation(string projectName)
+        {
+            return projectLocations[projectName.ToLower()];
+        }
+
         public virtual ProjectLocationInformation GetProjectLocation(ICredentials credentials, string projectName)
         {
             projectName = projectName.ToLower();

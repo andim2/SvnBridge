@@ -34,7 +34,7 @@ namespace SvnBridge.Handlers.Renderers
             writer.Write(GetFolderName(folder));
             writer.WriteLine("</title>");
             writer.Write("<body>");
-            writer.Write("<h1>Contents of ");
+            writer.Write("<h1>");
             writer.Write(GetFolderName(folder));
             writer.WriteLine("</h1>");
             writer.Write("<ul>");
@@ -57,10 +57,7 @@ namespace SvnBridge.Handlers.Renderers
 
         private string GetFolderName(ItemMetaData folder)
         {
-            string projectName = pathParser.GetProjectName(context.Request);
-            if (projectName != null)
-                return "Project " + projectName + " " + folder.Name;
-            return folder.Name + " @ " + pathParser.GetServerUrl(context.Request, credentials);
+            return "Revision HEAD: " + folder.Name;
         }
     }
 }

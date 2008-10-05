@@ -80,6 +80,7 @@ namespace Tests
         public delegate bool IsValidTfsServerUrl(string url);
         public delegate IMetaDataRepository Create(ICredentials credentials, string serverUrl, string rootPath);
         public delegate int GetVersionForDate(DateTime date);
+        public delegate ProjectLocationInformation GetProjectLocation(string projectName);
 
         public Results Attach(DeleteItem method, bool returnValue)
         {
@@ -238,6 +239,11 @@ namespace Tests
         }
 
         public Results Attach(GetVersionForDate method, Return action)
+        {
+            return base.Attach((Delegate)method, action);
+        }
+
+        public Results Attach(GetProjectLocation method, Return action)
         {
             return base.Attach((Delegate)method, action);
         }

@@ -24,13 +24,14 @@ namespace SvnBridge.PathParsing
 
         public override string GetServerUrl(IHttpRequest request, ICredentials credentials)
         {
-            string projectName = GetProjectName(request);
+            string projectName = request.Headers["Host"].Split('.')[0];
             return projectInformationRepository.GetProjectLocation(credentials, projectName).ServerUrl;
         }
 
-	    public override string GetProjectName(IHttpRequest request)
+        public override string GetProjectName(IHttpRequest request)
 		{
-			return request.Headers["Host"].Split('.')[0];
+            string projectName = request.Headers["Host"].Split('.')[0];
+            return projectInformationRepository.GetProjectLocation(projectName).RemoteProjectName;
 		}
 	}
 }
