@@ -21,16 +21,20 @@ namespace SvnBridgeServer
 
 		public SvnBridgeHttpHandler()
 		{
-			string tfsUrl = Configuration.TfsUrl;
             IPathParser pathParser;
-		    if (Configuration.UrlIncludesProjectName)
-			{
-                ProjectInformationRepository projectInformationRepository = new ProjectInformationRepository(Container.Resolve<MetaDataRepositoryFactory>(), tfsUrl, Configuration.UseCodePlexServers);
-                pathParser = new PathParserProjectInDomain(tfsUrl, projectInformationRepository);
-			}
+		    
+            if (Configuration.UseCodePlexServers)
+            {
+                pathParser = new PathParserProjectInDomainCodePlex();
+            }
+            else if (Configuration.UrlIncludesProjectName)
+            {
+                ProjectInformationRepository projectInformationRepository = new ProjectInformationRepository(Container.Resolve<MetaDataRepositoryFactory>(), Configuration.TfsUrl);
+                pathParser = new PathParserProjectInDomain(Configuration.TfsUrl, projectInformationRepository);
+            }
 			else
 			{
-                pathParser = new PathParserSingleServerWithProjectInPath(tfsUrl);
+                pathParser = new PathParserSingleServerWithProjectInPath(Configuration.TfsUrl);
 			}
             dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
         }

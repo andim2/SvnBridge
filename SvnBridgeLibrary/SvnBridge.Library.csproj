@@ -60,6 +60,7 @@
     <Compile Include="Exceptions\CacheMissException.cs" />
     <Compile Include="Exceptions\EnvironmentValidationException.cs" />
     <Compile Include="Exceptions\RepositoryUnavailableException.cs" />
+    <Compile Include="PathParsing\PathParserProjectInDomainCodePlex.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
