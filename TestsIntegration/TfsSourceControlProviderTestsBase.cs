@@ -66,7 +66,6 @@ namespace IntegrationTests
 			RepositoryWebSvcFactory factory1 = new RepositoryWebSvcFactory(factory);
 			WebTransferService webTransferService = new WebTransferService(system);
 			TFSSourceControlService tfsSourceControlService = new TFSSourceControlService(service, factory1, webTransferService, system, stubs.CreateObject<DefaultLogger>());
-            MetaDataRepositoryFactory metaDataRepositoryFactory = new MetaDataRepositoryFactory(tfsSourceControlService, Container.Resolve<MemoryBasedPersistentCache>(), Settings.Default.CacheEnabled);
             ICredentials credentials = GetCredentials();
             FileRepository fileRepository = new FileRepository(ServerUrl, credentials, webTransferService);
             return new TFSSourceControlProvider(
@@ -77,7 +76,6 @@ namespace IntegrationTests
 				associateWorkItemWithChangeSet,
                 stubs.CreateObject<DefaultLogger>(),
                 stubs.CreateObject<WebCache>(),
-				metaDataRepositoryFactory,
                 fileRepository);
 		}
 

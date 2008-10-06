@@ -37,7 +37,7 @@ namespace SvnBridge.SourceControl
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
 
-        public TFSSourceControlProvider(string serverUrl, string projectName, ICredentials credentials, TFSSourceControlService sourceControlService, AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet, DefaultLogger logger, WebCache cache, MetaDataRepositoryFactory metaDataRepositoryFactory, FileRepository fileRepository)
+        public TFSSourceControlProvider(string serverUrl, string projectName, ICredentials credentials, TFSSourceControlService sourceControlService, AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet, DefaultLogger logger, WebCache cache, FileRepository fileRepository)
         {
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(this.serverUrl, credentials);
@@ -52,7 +52,14 @@ namespace SvnBridge.SourceControl
             {
                 rootPath += projectName + "/";
             }
-            this.metaDataRepository = metaDataRepositoryFactory.Create(this.credentials, this.serverUrl, this.rootPath);
+            if (Configuration.CacheEnabled)
+            {
+                this.metaDataRepository = new MetaDataRepositoryCache(this.sourceControlService, this.credentials, Container.Resolve<MemoryBasedPersistentCache>(), this.serverUrl, this.rootPath);
+            }
+            else
+            {
+                this.metaDataRepository = new MetaDataRepositoryNoCache(this.sourceControlService, this.credentials, this.serverUrl, this.rootPath);
+            }
         }
 
 		public virtual void CopyItem(string activityId, string path, string targetPath)

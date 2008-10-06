@@ -73,7 +73,6 @@
     <Compile Include="RequestHandlers\GetHandler\FolderRenderer.cs" />
     <Compile Include="RequestHandlers\GetHandler.cs" />
     <Compile Include="Infrastructure\Logging.cs" />
-    <Compile Include="Infrastructure\MetaDataRepositoryFactory.cs" />
     <Compile Include="Cache\RequestCache.cs" />
     <Compile Include="Infrastructure\DefaultLogger.cs" />
     <Compile Include="Interfaces\IMetaDataRepository.cs" />

@@ -6,6 +6,7 @@ using System;
 using SvnBridge.Infrastructure;
 using System.Collections.Generic;
 using CodePlex.TfsLibrary.ObjectModel;
+using CodePlex.TfsLibrary.RepositoryWebSvc;
 
 namespace SvnBridge.PathParsing
 {
@@ -13,9 +14,9 @@ namespace SvnBridge.PathParsing
 	{
         private static Dictionary<string, ProjectLocationInformation> projectLocations = new Dictionary<string, ProjectLocationInformation>();
 
-        private readonly MetaDataRepositoryFactory metaDataRepositoryFactory;
+        private readonly TFSSourceControlService sourceControlService;
 
-        public PathParserProjectInDomain(string servers, MetaDataRepositoryFactory metaDataRepositoryFactory)
+        public PathParserProjectInDomain(string servers, TFSSourceControlService sourceControlService)
 	    {
             foreach (string singleServerUrl in servers.Split(','))
             {
@@ -24,7 +25,7 @@ namespace SvnBridge.PathParsing
                     throw new InvalidOperationException("The url '" + servers + "' is not a valid url");
             }
             this.server = servers;
-            this.metaDataRepositoryFactory = metaDataRepositoryFactory;
+            this.sourceControlService = sourceControlService;
         }
 
         public override string GetServerUrl(IHttpRequest request, ICredentials credentials)
@@ -48,10 +49,7 @@ namespace SvnBridge.PathParsing
                 foreach (string server in servers)
                 {
                     ICredentials credentialsForServer = CredentialsHelper.GetCredentialsForServer(server, credentials);
-                    int revision = metaDataRepositoryFactory.GetLatestRevision(server, credentialsForServer);
-                    SourceItem[] items = metaDataRepositoryFactory
-                            .Create(credentialsForServer, server, Constants.ServerRootPath + projectName)
-                                .QueryItems(revision, "", Recursion.None);
+                    SourceItem[] items = sourceControlService.QueryItems(server, credentialsForServer, Constants.ServerRootPath + projectName, RecursionType.None, VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder);
 
                     if (items != null && items.Length > 0)
                     {

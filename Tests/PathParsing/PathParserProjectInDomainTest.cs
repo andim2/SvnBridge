@@ -18,7 +18,7 @@ namespace SvnBridge.PathParsing
         public void PathParserProjectInDomain_DoesNotAcceptInvalidUrl()
 		{
             Exception result = Record.Exception(delegate {
-                new PathParserProjectInDomain("blah", stubs.CreateObject<MetaDataRepositoryFactory>(null, null, null));
+                new PathParserProjectInDomain("blah", new StubTFSSourceControlService());
             });
 
             Assert.NotNull(result);
@@ -29,7 +29,7 @@ namespace SvnBridge.PathParsing
         {
             Exception result = Record.Exception(delegate
             {
-                new PathParserProjectInDomain("https://codeplex.com", stubs.CreateObject<MetaDataRepositoryFactory>(null, null, null));
+                new PathParserProjectInDomain("https://codeplex.com", new StubTFSSourceControlService());
             });
 
             Assert.Null(result);
@@ -40,7 +40,7 @@ namespace SvnBridge.PathParsing
         {
             Exception result = Record.Exception(delegate
             {
-                new PathParserProjectInDomain("https://codeplex.com,https://www.codeplex.com", stubs.CreateObject<MetaDataRepositoryFactory>(null, null, null));
+                new PathParserProjectInDomain("https://codeplex.com,https://www.codeplex.com", new StubTFSSourceControlService());
             });
 
             Assert.Null(result);

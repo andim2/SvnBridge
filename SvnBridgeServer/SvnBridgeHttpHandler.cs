@@ -29,7 +29,7 @@ namespace SvnBridgeServer
             }
             else if (Configuration.DomainIncludesProjectName)
             {
-                pathParser = new PathParserProjectInDomain(Configuration.TfsUrl, Container.Resolve<MetaDataRepositoryFactory>());
+                pathParser = new PathParserProjectInDomain(Configuration.TfsUrl, Container.Resolve<TFSSourceControlService>());
             }
 			else
 			{
