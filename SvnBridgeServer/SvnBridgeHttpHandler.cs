@@ -31,9 +31,13 @@ namespace SvnBridgeServer
             {
                 pathParser = new PathParserProjectInDomain(Configuration.TfsUrl, Container.Resolve<TFSSourceControlService>());
             }
-			else
-			{
+            else if (!string.IsNullOrEmpty(Configuration.TfsUrl))
+            {
                 pathParser = new PathParserSingleServerWithProjectInPath(Configuration.TfsUrl);
+            }
+            else
+			{
+                pathParser = new PathParserServerAndProjectInPath(Container.Resolve<TfsUrlValidator>());
 			}
             dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
         }
