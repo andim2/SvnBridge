@@ -107,7 +107,6 @@
     <Compile Include="Infrastructure\MyMocks.cs" />
     <Compile Include="Proxies\ProxyFactoryTest.cs" />
     <Compile Include="Proxies\RetryOnSocketExceptionTest.cs" />
-    <Compile Include="SourceControl\ProjectInformationRepositoryTest.cs" />
     <Compile Include="SourceControl\TFSSourceControlProviderTest.cs" />
     <Compile Include="SourceControl\TFSSourceControlServiceTest.cs" />
     <Compile Include="Stubs\StubErrorsView.cs" />

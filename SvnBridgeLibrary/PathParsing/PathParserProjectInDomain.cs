@@ -16,6 +16,11 @@ namespace SvnBridge.PathParsing
 
         private readonly TFSSourceControlService sourceControlService;
 
+        public static void ResetCache()
+        {
+            projectLocations = new Dictionary<string, ProjectLocationInformation>();
+        }
+
         public PathParserProjectInDomain(string servers, TFSSourceControlService sourceControlService)
 	    {
             foreach (string singleServerUrl in servers.Split(','))
