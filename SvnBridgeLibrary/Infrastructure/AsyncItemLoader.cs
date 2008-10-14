@@ -1,10 +1,6 @@
-using System.Collections.Generic;
 using System.Threading;
-using CodePlex.TfsLibrary;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
-using System;
 
 namespace SvnBridge.Infrastructure
 {
@@ -14,6 +10,7 @@ namespace SvnBridge.Infrastructure
 
         private readonly FolderMetaData folderInfo;
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private bool cancelOperation;
 
         public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider)
         {
@@ -26,17 +23,28 @@ namespace SvnBridge.Infrastructure
             ReadItemsInFolder(folderInfo);
         }
 
+        public virtual void Cancel()
+        {
+            cancelOperation = true;
+        }
+
         private void ReadItemsInFolder(FolderMetaData folder)
         {
             foreach (ItemMetaData item in folder.Items)
             {
+                if (cancelOperation)
+                    break;
+
                 while (CalculateLoadedItemsSize(folderInfo) > MAX_BUFFER_SIZE)
                 {
+                    if (cancelOperation)
+                        break;
+
                     Thread.Sleep(1000);
                 }
                 if (item.ItemType == ItemType.Folder)
                 {
-                    ReadItemsInFolder((FolderMetaData)item);
+                    ReadItemsInFolder((FolderMetaData) item);
                 }
                 else if (!(item is DeleteMetaData))
                 {
@@ -53,7 +61,7 @@ namespace SvnBridge.Infrastructure
             {
                 if (item.ItemType == ItemType.Folder)
                 {
-                    itemsSize += CalculateLoadedItemsSize((FolderMetaData)item);
+                    itemsSize += CalculateLoadedItemsSize((FolderMetaData) item);
                 }
                 else if (item.DataLoaded)
                 {

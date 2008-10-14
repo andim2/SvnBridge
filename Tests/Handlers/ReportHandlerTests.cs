@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using SvnBridge.Infrastructure;
+using SvnBridge.SourceControl;
 using Xunit;
 using Attach;
 using SvnBridge.Net;
 using SvnBridge.Handlers;
 using SvnBridge.PathParsing;
+using Tests;
 
 namespace UnitTests
 {
@@ -47,6 +49,35 @@ namespace UnitTests
             Assert.Equal(501, response.StatusCode);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.Equal("close", response.GetHeader("Connection"));
+        }
+
+        [Fact]
+        public void Cancel_LoaderHasNotBeenInitialized_Succeeds()
+        {
+            Exception result = Record.Exception(delegate { handler.Cancel(); });
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Cancel_LoaderHasBeenInitialized_CancelsLoader()
+        {
+            TestableReportHandler reportHandler = new TestableReportHandler();
+            AsyncItemLoader loader = stubs.CreateObject<AsyncItemLoader>(null, null);
+            Results cancelMethod = stubs.Attach((MyMocks.Cancel)loader.Cancel, Return.Nothing);
+            reportHandler.Loader = loader;
+
+            reportHandler.Cancel();
+
+            Assert.True(cancelMethod.WasCalled);
+        }
+
+        class TestableReportHandler : ReportHandler
+        {
+            public AsyncItemLoader Loader
+            {
+                set { this.loader = value; }   
+            }
         }
     }
 }

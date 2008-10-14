@@ -18,6 +18,8 @@ namespace SvnBridge.Handlers
 {
     public class ReportHandler : RequestHandlerBase
     {
+        protected AsyncItemLoader loader;
+
         protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
@@ -413,9 +415,16 @@ namespace SvnBridge.Handlers
             if (metadata == null)
                 throw new InvalidOperationException("Could not find " + basePath + " in revision " + targetRevision);
 
-            var loader = new AsyncItemLoader(metadata, sourceControlProvider);
+            loader = new AsyncItemLoader(metadata, sourceControlProvider);
             ThreadPool.QueueUserWorkItem(state => loader.Start());
             return metadata;
+        }
+
+        public override void Cancel()
+        {
+            if (loader != null)
+                loader.Cancel();
+            base.Cancel();
         }
 
         private static void LogReport(TFSSourceControlProvider sourceControlProvider, LogReportData logreport, string path, TextWriter output)

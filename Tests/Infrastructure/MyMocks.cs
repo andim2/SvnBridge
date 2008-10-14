@@ -42,7 +42,7 @@ namespace Tests
         public TFSSourceControlProvider CreateTFSSourceControlProviderStub()
         {
             TFSSourceControlProvider stub = CreateObject<TFSSourceControlProvider>("http://www.codeplex.com", null, null, null, null, null, null, null);
-            this.Attach(stub.GetRepositoryUuid, Return.Value(new Guid("81a5aebe-f34e-eb42-b435-ac1ecbb335f7")));
+            this.Attach((GetRepositoryUuid)stub.GetRepositoryUuid, Return.Value(new Guid("81a5aebe-f34e-eb42-b435-ac1ecbb335f7")));
             this.Attach(stub.GetItemsWithoutProperties, Return.DelegateResult(
                 delegate(object[] parameters) { return stub.GetItems((int)parameters[0], (string)parameters[1], (Recursion)parameters[2]); }
             ));
@@ -74,6 +74,7 @@ namespace Tests
         public delegate IMetaDataRepository Create(ICredentials credentials, string serverUrl, string rootPath);
         public delegate int GetVersionForDate(DateTime date);
         public delegate ProjectLocationInformation GetProjectLocation(string projectName);
+        public delegate void Cancel();
 
         public Results Attach(DeleteItem method, bool returnValue)
         {
@@ -237,6 +238,16 @@ namespace Tests
         }
 
         public Results Attach(GetProjectLocation method, Return action)
+        {
+            return base.Attach((Delegate)method, action);
+        }
+
+        public Results Attach(Cancel method, Return action)
+        {
+            return base.Attach((Delegate)method, action);
+        }
+
+        public Results Attach(ReadFileAsync method, Return action)
         {
             return base.Attach((Delegate)method, action);
         }
