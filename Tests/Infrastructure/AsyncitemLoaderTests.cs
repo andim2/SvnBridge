@@ -31,7 +31,7 @@ namespace UnitTests.Infrastructure
 
             loader.Cancel();
 
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
 
             Assert.Equal(ThreadState.Stopped, loadingThread.ThreadState);
         }
