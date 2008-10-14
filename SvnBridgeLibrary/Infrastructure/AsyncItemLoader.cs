@@ -32,9 +32,6 @@ namespace SvnBridge.Infrastructure
         {
             foreach (ItemMetaData item in folder.Items)
             {
-                if (cancelOperation)
-                    break;
-
                 while (CalculateLoadedItemsSize(folderInfo) > MAX_BUFFER_SIZE)
                 {
                     if (cancelOperation)
@@ -42,6 +39,10 @@ namespace SvnBridge.Infrastructure
 
                     Thread.Sleep(1000);
                 }
+
+                if (cancelOperation)
+                    break;
+
                 if (item.ItemType == ItemType.Folder)
                 {
                     ReadItemsInFolder((FolderMetaData) item);
