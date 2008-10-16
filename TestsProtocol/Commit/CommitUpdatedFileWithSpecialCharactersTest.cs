@@ -416,7 +416,7 @@ namespace ProtocolTests
         {
             stubs.Attach(provider.ItemExists, true);
             FolderMetaData folder = new FolderMetaData();
-            folder.Name = "/";
+            folder.Name = "";
             stubs.Attach(provider.GetItems, folder);
 
             string request =

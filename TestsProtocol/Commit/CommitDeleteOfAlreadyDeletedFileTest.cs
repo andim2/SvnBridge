@@ -265,7 +265,7 @@ namespace ProtocolTests
         {
             stubs.Attach(provider.ItemExists, true);
             FolderMetaData folder = new FolderMetaData();
-            folder.Name = "/Spikes/SvnFacade/trunk/New Folder";
+            folder.Name = "Spikes/SvnFacade/trunk/New Folder";
             stubs.Attach(provider.GetItems, folder);
 
             string request =
