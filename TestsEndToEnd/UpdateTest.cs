@@ -9,7 +9,7 @@ namespace TestsEndToEnd
     public class UpdateTest : EndToEndTestBase
     {
 		[SvnBridgeFact]
-		public void Can_Update_File_After_It_Was_Remove_And_Another_Was_Added_With_Same_Name()
+		public void Update_FileWasRemovedAndAnotherAddedWithSameName_FileHasCorrectContents()
 		{
 			WriteFile(testPath + "/file", "blah1", true);
 
@@ -23,8 +23,21 @@ namespace TestsEndToEnd
 			Assert.Equal("blah2", File.ReadAllText("file"));
 		}
 
+        [SvnBridgeFact]
+        public void Update_FileClientStateIsDifferentAndFileWasModified_FileHasCorrectContents()
+        {
+            WriteFile(testPath + "/test.txt", "blah1", true);
+            CheckoutAndChangeDirectory();
+            File.WriteAllText("test.txt", "blah2");
+            Svn("commit -m edit");
+            WriteFile(testPath + "/test.txt", "blah3", true);
 
-		[SvnBridgeFact]
+            Svn("up");
+
+            Assert.Equal("blah3", File.ReadAllText("test.txt"));
+        }
+
+        [SvnBridgeFact]
 		public void CanUpdateWorkingCopy_AfterRenameFromOfFileFromOneFolderToAnother_WhenUpdatingFromTheOriginalFolder()
 		{
 			CreateFolder(testPath + "/src", true);
@@ -582,7 +595,6 @@ namespace TestsEndToEnd
             Assert.Equal("abc", File.ReadAllText(test1File));
             Assert.Equal("abc", File.ReadAllText(test2File));
         }
-
 
         [SvnBridgeFact]
         public void UpdateAfterCommitShouldMergeChangesFromRepository()

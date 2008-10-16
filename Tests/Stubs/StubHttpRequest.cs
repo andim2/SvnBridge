@@ -10,6 +10,7 @@ namespace SvnBridge.Stubs
     {
         private NameValueCollection headers = new NameValueCollection();
         private string httpMethod;
+        private string applicationPath = "/";
         private Stream inputStream = new MemoryStream();
         private Uri url;
 
@@ -38,7 +39,8 @@ namespace SvnBridge.Stubs
 
         public string ApplicationPath
         {
-            get { return "/"; }
+            get { return applicationPath; }
+            set { applicationPath = value; }
         }
 
         public NameValueCollection Headers

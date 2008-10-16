@@ -251,5 +251,10 @@ namespace Tests
         {
             return base.Attach((Delegate)method, action);
         }
+
+        public Results Attach(GetLatestVersion method, Return action)
+        {
+            return base.Attach((Delegate)method, action);
+        }
     }
 }

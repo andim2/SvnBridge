@@ -32,7 +32,7 @@ namespace SvnBridge.Infrastructure
 			{
 				bool existingFile = false;
 				string srcPath = GetSrcPath(updateReportRequest);
-				int clientRevisionForItem = updateReportRequest.GetClientRevisionFor(item.StripBasePath(srcPath));
+                int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(item, srcPath));
 				if (ItemExistsAtTheClient(item, updateReportRequest, srcPath, clientRevisionForItem))
 				{
 					existingFile = true;
@@ -47,20 +47,17 @@ namespace SvnBridge.Infrastructure
 				if (existingFile)
 				{
 					output.Write("<S:open-file name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\" rev=\"" +
-								 updateReportRequest.Entries[0].Rev + "\">\n");
+                                 clientRevisionForItem + "\">\n");
 				}
 				else
 				{
 					output.Write("<S:add-file name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\">\n");
 				}
 
-				string localPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" +
-													Helper.Encode(item.Name, true));
+				string localPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
 				output.Write("<D:checked-in><D:href>" + localPath + "</D:href></D:checked-in>\n");
-				output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + item.Revision +
-							 "</S:set-prop>\n");
-				output.Write("<S:set-prop name=\"svn:entry:committed-date\">" + Helper.FormatDate(item.LastModifiedDate) +
-							 "</S:set-prop>\n");
+				output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + item.Revision + "</S:set-prop>\n");
+				output.Write("<S:set-prop name=\"svn:entry:committed-date\">" + Helper.FormatDate(item.LastModifiedDate) + "</S:set-prop>\n");
 				output.Write("<S:set-prop name=\"svn:entry:last-author\">" + item.Author + "</S:set-prop>\n");
 				output.Write("<S:set-prop name=\"svn:entry:uuid\">" + sourceControlProvider.GetRepositoryUuid() + "</S:set-prop>\n");
 				foreach (KeyValuePair<string, string> property in item.Properties)
@@ -124,7 +121,7 @@ namespace SvnBridge.Infrastructure
 				else
 				{
 					string srcPath = GetSrcPath(updateReportRequest);
-					int clientRevisionForItem = updateReportRequest.GetClientRevisionFor(folder.StripBasePath(srcPath));
+                    int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(folder, srcPath));
 					if (ItemExistsAtTheClient(folder, updateReportRequest, srcPath, clientRevisionForItem))
 					{
 						existingFolder = true;
@@ -206,5 +203,46 @@ namespace SvnBridge.Infrastructure
 			int slashIndex = path.LastIndexOfAny(new char[] { '/', '\\' });
 			return path.Substring(slashIndex + 1);
 		}
-	}
+
+        private string StripBasePath(ItemMetaData item, string basePath)
+        {
+            basePath = basePath.Substring(1);
+            string name = item.Name;
+
+            if (name.StartsWith("/"))
+                name = name.Substring(1);
+
+            if (name.StartsWith(basePath) == false)
+                return name;
+
+            name = name.Substring(basePath.Length);
+            if (name.StartsWith(@"/"))
+                name = name.Substring(1);
+            return name;
+        }
+
+        private int GetClientRevisionFor(List<EntryData> entries, string name)
+        {
+            EntryData bestMatch = entries[0];
+
+            foreach (EntryData entry in entries)
+            {
+                if (entry.path == name)// found a best match
+                {
+                    bestMatch = entry;
+                    break;
+                }
+
+                if (entry.path == null || name.StartsWith(entry.path, StringComparison.InvariantCultureIgnoreCase) == false)
+                    continue;
+
+                // if the current entry is longer than the previous best match, than this
+                // is a better match, because it is more deeply nested, so likely
+                // to be a better parent
+                if (bestMatch.path == null || bestMatch.path.Length < entry.path.Length)
+                    bestMatch = entry;
+            }
+            return int.Parse(bestMatch.Rev);
+        }
+    }
 }

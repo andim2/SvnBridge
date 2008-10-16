@@ -101,29 +101,18 @@ namespace IntegrationTests
 
 		#endregion
 
-		protected void UpdateFile(string path,
-								  string fileData,
-								  bool commit)
+		protected void UpdateFile(string path, string fileData, bool commit)
 		{
-			byte[] data = Encoding.Default.GetBytes(fileData);
-			_provider.WriteFile(_activityId, path, data);
-			if (commit)
-			{
-				Commit();
-			}
+            WriteFile(path, fileData, true);
 		}
 
-		protected bool WriteFile(string path,
-								 string fileData,
-								 bool commit)
+		protected bool WriteFile(string path, string fileData, bool commit)
 		{
 			byte[] data = Encoding.Default.GetBytes(fileData);
 			return WriteFile(path, data, commit);
 		}
 
-		protected bool WriteFile(string path,
-								 byte[] fileData,
-								 bool commit)
+		protected bool WriteFile(string path, byte[] fileData, bool commit)
 		{
 			bool created = _provider.WriteFile(_activityId, path, fileData);
 			if (commit)

@@ -8,6 +8,7 @@ using Xunit;
 using SvnBridge.Infrastructure;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
+using Tests;
 
 namespace SvnBridge.Handlers
 {
@@ -342,6 +343,44 @@ namespace SvnBridge.Handlers
                 "</S:open-directory>\n" +
                 "</S:update-report>\n";
             Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+        }
+
+        [Fact]
+        public void Handle_ClientStateForFileIsDifferentAndFileWasModified_OpenFileElementRevisionMatchesClientState()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "svn";
+            metadata.ItemRevision = 5782;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2008-10-16T00:39:59.089062Z");
+            ItemMetaData item = new ItemMetaData();
+            item.Id = 1234;
+            item.Name = "svn/Commerce.MVC.sln";
+            item.ItemRevision = 5782;
+            item.Author = "jwanagel";
+            item.LastModifiedDate = DateTime.Parse("2008-10-16T00:39:59.089062Z");
+            metadata.Items.Add(item);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            byte[] fileData = Encoding.UTF8.GetBytes("3\r\n4\r\n5\r\n6");
+            stubs.Attach(provider.ReadFileAsync, fileData);
+            stubs.Attach((MyMocks.GetLatestVersion)provider.GetLatestVersion, Return.Value(5782));
+            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, Return.DelegateResult(
+                delegate(object[] parameters)
+                {
+                    string value = parameters[0].ToString();
+                    if (value == "svn/Commerce.MVC.sln" || value == "1234")
+                        return true;
+                    return false;
+                }
+            ));
+            request.Path = "http://localhost:8080/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080/svn</S:src-path><S:entry rev=\"5780\" ></S:entry><S:entry rev=\"5781\" >Commerce.MVC.sln</S:entry></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:open-file name=\"Commerce.MVC.sln\" rev=\"5781\">"));
         }
     }
 }
