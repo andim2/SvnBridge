@@ -619,5 +619,33 @@ namespace IntegrationTests
 			Assert.Equal(testPath, folder.Name);
 			Assert.Equal("val1", folder.Properties["prop1"]);
 		}
+
+        [Fact]
+        public void GetChangedItems_ClientStateHasUpdatedFileAtRootAndFileIsUpdated()
+        {
+            int versionFrom = _lastCommitRevision;
+            WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+            int versionUpdate = _lastCommitRevision;
+            WriteFile(testPath + "/TestFile.txt", "Fun text 2", true);
+            int versionTo = _lastCommitRevision;
+
+            UpdateReportData reportData = new UpdateReportData();
+            reportData.Entries = new List<EntryData>();
+            EntryData entry = new EntryData();
+            entry.Rev = versionFrom.ToString();
+            reportData.Entries.Add(entry);
+            entry = new EntryData();
+            entry.Rev = versionUpdate.ToString();
+            entry.path = "TestFile.txt";
+            reportData.Entries.Add(entry);
+            CreateRootProvider();
+
+            FolderMetaData folder = _providerRoot.GetChangedItems("", versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.Equal("/", folder.Name);
+            Assert.Equal("/TestFile.txt", folder.Items[0].Name);
+            Assert.Equal(versionTo, folder.Items[0].ItemRevision);
+        }
 	}
 }

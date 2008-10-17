@@ -31,8 +31,6 @@ namespace IntegrationTests
 		protected readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
 		private readonly AuthenticateAsLowPrivilegeUser authenticateAsLowPrivilegeUser;
 
-		#region Setup/Teardown
-
 		public TFSSourceControlProviderTestsBase()
 		{
             stubs = new MyMocks();
@@ -50,6 +48,17 @@ namespace IntegrationTests
 
 			Commit();
 		}
+
+        public virtual void Dispose()
+        {
+            Commit();
+            DeleteItem(testPath, false);
+            _provider.MergeActivity(_activityId);
+            _provider.DeleteActivity(_activityId);
+            if (_providerRoot != null)
+                _providerRoot.DeleteActivity(_activityIdRoot);
+            authenticateAsLowPrivilegeUser.Dispose();
+        }
 
 		public void CreateRootProvider()
 		{
@@ -87,19 +96,6 @@ namespace IntegrationTests
 			}
 			return new NetworkCredential(Settings.Default.Username, Settings.Default.Password, Settings.Default.Domain);
 		}
-
-		public virtual void Dispose()
-		{
-			Commit();
-			DeleteItem(testPath, false);
-			_provider.MergeActivity(_activityId);
-			_provider.DeleteActivity(_activityId);
-			if (_providerRoot != null)
-				_providerRoot.DeleteActivity(_activityIdRoot);
-			authenticateAsLowPrivilegeUser.Dispose();
-		}
-
-		#endregion
 
 		protected void UpdateFile(string path, string fileData, bool commit)
 		{

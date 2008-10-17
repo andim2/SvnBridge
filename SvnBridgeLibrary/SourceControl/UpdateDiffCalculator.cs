@@ -22,10 +22,10 @@ namespace SvnBridge.SourceControl
 
         public UpdateDiffCalculator(TFSSourceControlProvider sourceControlProvider)
         {
-        	this.sourceControlProvider = sourceControlProvider;
+            this.sourceControlProvider = sourceControlProvider;
         }
 
-    	public void CalculateDiff(string checkoutRootPath,
+        public void CalculateDiff(string checkoutRootPath,
                                   int versionTo,
                                   int versionFrom,
                                   FolderMetaData checkoutRoot,
@@ -34,35 +34,32 @@ namespace SvnBridge.SourceControl
             clientExistingFiles = GetClientExistingFiles(checkoutRootPath, updateReportData);
             clientDeletedFiles = GetClientDeletedFiles(checkoutRootPath, updateReportData);
 
-			if (versionFrom != versionTo)
+            if (versionFrom != versionTo)
             {
-				// we have to calculate the difference from the project root
-				// this is because we may have a file move from below the checkoutRootPath, 
-				// which we still need to consider
-				string projectRootPath = GetProjectRoot(checkoutRootPath);
-            	FolderMetaData projectRoot = checkoutRoot;
-				if(projectRootPath!=checkoutRootPath)
-				{
-					projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
-				}
-				CalculateChangeBetweenVersions(projectRootPath,
-											   projectRoot,
-                                               versionFrom,
-                                               versionTo);
+                // we have to calculate the difference from the project root
+                // this is because we may have a file move from below the checkoutRootPath, 
+                // which we still need to consider
+                string projectRootPath = GetProjectRoot(checkoutRootPath);
+                FolderMetaData projectRoot = checkoutRoot;
+                if (projectRootPath != checkoutRootPath)
+                {
+                    projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
+                }
+                CalculateChangeBetweenVersions(projectRootPath, projectRoot, versionFrom, versionTo);
 
-				if(projectRootPath!=checkoutRootPath)
-				{
-					// we will now copy all the children to the real checkoutRoot
-					FolderMetaData checkoutRootFromProjectRoot = (FolderMetaData)projectRoot.FindItem("/" + checkoutRootPath);
-					// if it is null, then there were no changes in this diff
-					if (checkoutRootFromProjectRoot != null)
-					{
-						foreach (ItemMetaData item in checkoutRootFromProjectRoot.Items)
-						{
-							checkoutRoot.Items.Add(item);
-						}
-					}
-				}
+                if (projectRootPath != checkoutRootPath)
+                {
+                    // we will now copy all the children to the real checkoutRoot
+                    FolderMetaData checkoutRootFromProjectRoot = (FolderMetaData)projectRoot.FindItem("/" + checkoutRootPath);
+                    // if it is null, then there were no changes in this diff
+                    if (checkoutRootFromProjectRoot != null)
+                    {
+                        foreach (ItemMetaData item in checkoutRootFromProjectRoot.Items)
+                        {
+                            checkoutRoot.Items.Add(item);
+                        }
+                    }
+                }
             }
 
             if (updateReportData.Entries != null)
@@ -75,15 +72,19 @@ namespace SvnBridge.SourceControl
                         continue;
                     if (itemVersionFrom != versionTo)
                     {
-                      
-                    	string rootPath = checkoutRootPath;
-						if (updateReportData.UpdateTarget != null)
-						    rootPath += "/" + updateReportData.UpdateTarget ;
-						string targetPath = rootPath + "/" + data.path;
 
-						FindOrCreateResults results = FindItemOrCreateItem(checkoutRoot, rootPath, data.path, versionTo,
-																		 Recursion.None);
-						bool changed = CalculateChangeBetweenVersions(targetPath, checkoutRoot,
+                        string rootPath = checkoutRootPath;
+                        if (updateReportData.UpdateTarget != null)
+                            rootPath += "/" + updateReportData.UpdateTarget;
+
+                        string targetPath = rootPath + "/" + data.path;
+
+                        if (targetPath.StartsWith("/"))
+                            targetPath = targetPath.Substring(1);
+
+                        FindOrCreateResults results = FindItemOrCreateItem(checkoutRoot, rootPath, data.path, versionTo,
+                                                                         Recursion.None);
+                        bool changed = CalculateChangeBetweenVersions(targetPath, checkoutRoot,
                                                                       itemVersionFrom, versionTo);
                         if (changed == false)
                             results.RevertAddition();
@@ -103,15 +104,15 @@ namespace SvnBridge.SourceControl
         }
 
 
-    	private static string GetProjectRoot(string path)
-    	{
-    		string[] parts = path.Split(new char[]{'/'}, StringSplitOptions.RemoveEmptyEntries);
-			if (parts.Length == 0)
-				return "";
-    		return parts[0];
-    	}
+        private static string GetProjectRoot(string path)
+        {
+            string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return "";
+            return parts[0];
+        }
 
-    	private void RemoveMissingItemsWhichAreChildrenOfRenamedItem(FolderMetaData root)
+        private void RemoveMissingItemsWhichAreChildrenOfRenamedItem(FolderMetaData root)
         {
             foreach (string item in renamedItemsToBeCheckedForDeletedChildren)
             {
@@ -144,7 +145,11 @@ namespace SvnBridge.SourceControl
             ItemMetaData item = null;
             for (int i = 0; i < parts.Length; i++)
             {
-                itemName += "/" + parts[i];
+                if (!itemName.EndsWith("/"))
+                    itemName += "/" + parts[i];
+                else
+                    itemName += parts[i];
+
                 item = folder.FindItem(itemName);
                 bool lastNamePart = i == parts.Length - 1;
                 if (item == null)
@@ -209,8 +214,8 @@ namespace SvnBridge.SourceControl
                     for (int i = history.Changes.Count - 1; i >= 0; i--)
                     {
                         SourceItemChange change = history.Changes[i];
-						if(ShouldBeIgnored(change.Item.RemoteName))
-							continue;
+                        if (ShouldBeIgnored(change.Item.RemoteName))
+                            continue;
                         if (IsAddOperation(change, updatingForwardInTime))
                         {
                             PerformAddOrUpdate(targetVersion, checkoutRootPath, change, root, false);
@@ -523,7 +528,7 @@ namespace SvnBridge.SourceControl
                     itemName = "/" + itemName;
                 string[] nameParts;
                 if (checkoutRootPath != "")
-                    nameParts = remoteName.Substring(checkoutRootPath.Length + 1).Split(new char[]{'/'},StringSplitOptions.RemoveEmptyEntries);
+                    nameParts = remoteName.Substring(checkoutRootPath.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 else
                     nameParts = remoteName.Split('/');
 
@@ -540,14 +545,14 @@ namespace SvnBridge.SourceControl
                         item = sourceControlProvider.GetItems(targetVersion, itemName, Recursion.None);
                         if (item == null)
                         {
-							// TFS will report renames even for deleted items, 
-							// since TFS reported that this was renamed, but it doesn't exists
-							// in this revision, we know it is a case of renaming a deleted file.
-							// We can safely ignore this and any of its children.
-							if(IsRenameOperation(change))
-							{
-								return;
-							}
+                            // TFS will report renames even for deleted items, 
+                            // since TFS reported that this was renamed, but it doesn't exists
+                            // in this revision, we know it is a case of renaming a deleted file.
+                            // We can safely ignore this and any of its children.
+                            if (IsRenameOperation(change))
+                            {
+                                return;
+                            }
                             item = new MissingItemMetaData(itemName, targetVersion, edit);
                         }
                         if (!lastNamePart)
@@ -644,7 +649,7 @@ namespace SvnBridge.SourceControl
                 separator = "/";
                 HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart, targetVersion);
             }
-            if(nameParts.Length==0)//we have to delete the checkout root itself
+            if (nameParts.Length == 0)//we have to delete the checkout root itself
             {
                 HandleDeleteItem(remoteName, change, folderName, ref folder, true, targetVersion);
             }
