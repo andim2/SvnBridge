@@ -78,14 +78,6 @@ namespace SvnBridge.Handlers
 			return pathParser.GetLocalPath(request);
 		}
 
-		private string ApplicationPath
-		{
-			get
-			{
-				return PathParser.GetApplicationPath(httpContext.Request);
-			}
-		}
-
 		public string VccPath
 		{
 			get { return GetLocalPath(Constants.SvnVccPath); }
@@ -93,13 +85,15 @@ namespace SvnBridge.Handlers
 
 		public string GetLocalPath(string href)
 		{
-		    string result;
-			if (href.StartsWith("/") == false && ApplicationPath.EndsWith("/") == false)
-			    result =  ApplicationPath + "/" + href;
-			if (href.StartsWith("/") && ApplicationPath.EndsWith("/"))
-			    result = ApplicationPath + href.Substring(1);
+            string result;
+            string applicationPath = PathParser.GetApplicationPath(httpContext.Request);
+
+			if (href.StartsWith("/") == false && applicationPath.EndsWith("/") == false)
+			    result =  applicationPath + "/" + href;
+			if (href.StartsWith("/") && applicationPath.EndsWith("/"))
+			    result = applicationPath + href.Substring(1);
 		    else
-                result = ApplicationPath + href;
+                result = applicationPath + href;
 		    return result;
 		}
 

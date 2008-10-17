@@ -31,7 +31,7 @@ namespace SvnBridge.PathParsing
             return "http://" + url;
 		}
 
-		private static string GetUrlFromRequest(Uri requestUrl)
+		private string GetUrlFromRequest(Uri requestUrl)
 		{
 			string path = requestUrl.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
 			int firstIndexOfSlash = path.IndexOf('/');
