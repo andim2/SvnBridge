@@ -382,5 +382,38 @@ namespace SvnBridge.Handlers
 
             Assert.True(output.Contains("<S:open-file name=\"Commerce.MVC.sln\" rev=\"5781\">"));
         }
+
+        [Fact]
+        public void Handle_CheckoutAtRootWithCodePlexPathParser_Succeeds()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "svn";
+            metadata.ItemRevision = 5782;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2008-10-16T00:39:59.089062Z");
+            ItemMetaData item = new ItemMetaData();
+            item.Id = 1234;
+            item.Name = "svn/Commerce.MVC.sln";
+            item.ItemRevision = 5782;
+            item.Author = "jwanagel";
+            item.LastModifiedDate = DateTime.Parse("2008-10-16T00:39:59.089062Z");
+            metadata.Items.Add(item);
+            stubs.Attach(provider.GetItems, metadata);
+            byte[] fileData = Encoding.UTF8.GetBytes("3\r\n4\r\n5\r\n6");
+            stubs.Attach(provider.ReadFileAsync, fileData);
+
+            request.ApplicationPath = "/svn";
+            request.Path = "http://svnbridge.redmond.corp.microsoft.com/svn/!svn/vcc/default";
+            request.Input =
+                "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
+                "  <entry rev=\"23664\" start-empty=\"true\" />" +
+                "  <src-path>http://svnbridge.redmond.corp.microsoft.com/svn</src-path>" +
+                "  <target-revision>23664</target-revision>" +
+                "</update-report>";
+
+            Exception result = Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+
+            Assert.Null(result);
+        }
     }
 }

@@ -206,18 +206,22 @@ namespace SvnBridge.Infrastructure
 
         private string StripBasePath(ItemMetaData item, string basePath)
         {
-            basePath = basePath.Substring(1);
             string name = item.Name;
 
             if (name.StartsWith("/"))
                 name = name.Substring(1);
 
-            if (name.StartsWith(basePath) == false)
-                return name;
+            if (basePath.StartsWith("/"))
+                basePath = basePath.Substring(1);
 
-            name = name.Substring(basePath.Length);
-            if (name.StartsWith(@"/"))
-                name = name.Substring(1);
+            basePath = basePath + "/";
+
+            if (name.StartsWith(basePath))
+            {
+                name = name.Substring(basePath.Length);
+                if (name.StartsWith(@"/"))
+                    name = name.Substring(1);
+            }
             return name;
         }
 
