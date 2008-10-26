@@ -19,6 +19,8 @@ namespace IntegrationTests
 {
 	public abstract class TFSSourceControlProviderTestsBase : IDisposable
 	{
+        const bool TEST_ROOT = false;
+
 		public string ServerUrl = Settings.Default.ServerUrl;
         protected MyMocks stubs;
 		protected const string PROJECT_NAME = "SvnBridgeTesting";
@@ -42,9 +44,17 @@ namespace IntegrationTests
 			_activityId = Guid.NewGuid().ToString();
 			associateWorkItemWithChangeSet = new AssociateWorkItemWithChangeSet(ServerUrl, GetCredentials());
             _provider = CreateSourceControlProvider(PROJECT_NAME);
-            testPath = "/Test" + DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Environment.MachineName + "-" + Guid.NewGuid();
             _provider.MakeActivity(_activityId);
-			_provider.MakeCollection(_activityId, testPath);
+
+            if (TEST_ROOT)
+            {
+                testPath = "/";
+            }
+            else
+            {
+                testPath = "/Test" + DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Environment.MachineName + "-" + Guid.NewGuid();
+                _provider.MakeCollection(_activityId, testPath);
+            }
 
 			Commit();
 		}
@@ -52,7 +62,18 @@ namespace IntegrationTests
         public virtual void Dispose()
         {
             Commit();
-            DeleteItem(testPath, false);
+            if (TEST_ROOT)
+            {
+                FolderMetaData folder = (FolderMetaData)_provider.GetItems(-1, testPath, Recursion.OneLevel);
+                foreach (ItemMetaData item in folder.Items)
+                {
+                    DeleteItem(testPath + item.Name, false);
+                }
+            }
+            else
+            {
+                DeleteItem(testPath, false);
+            }
             _provider.MergeActivity(_activityId);
             _provider.DeleteActivity(_activityId);
             if (_providerRoot != null)
@@ -216,6 +237,22 @@ namespace IntegrationTests
 		{
 			return Encoding.Default.GetBytes(data);
 		}
+
+        protected string MergePaths(string path1, string path2)
+        {
+            if (path1.EndsWith("/") && path2.StartsWith("/"))
+            {
+                return path1 + path2.Substring(1);
+            }
+            else if (!path1.EndsWith("/") && !path2.StartsWith("/"))
+            {
+                return path1 + "/" + path2;
+            }
+            else
+            {
+                return path1 + path2;
+            }
+        }
 
 		protected bool ResponseContains(MergeActivityResponse response,
 										string path,

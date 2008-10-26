@@ -13,7 +13,7 @@ namespace IntegrationTests
 		public void TestGetLog()
 		{
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 			int versionTo = _lastCommitRevision;
 
 			LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
@@ -24,31 +24,31 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetLogReturnsOriginalNameAndRevisionForRenamedItems()
 		{
-			WriteFile(testPath + "/Fun.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			MoveItem(testPath + "/Fun.txt", testPath + "/FunRename.txt", true);
+			MoveItem(MergePaths(testPath, "/Fun.txt"), MergePaths(testPath, "/FunRename.txt"), true);
 			int versionTo = _lastCommitRevision;
 
-			LogItem logItem = _provider.GetLog(testPath + "/FunRename.txt", versionFrom, versionTo, Recursion.None, 1);
+			LogItem logItem = _provider.GetLog(MergePaths(testPath, "/FunRename.txt"), versionFrom, versionTo, Recursion.None, 1);
 
-			Assert.Equal(testPath + "/Fun.txt",
+			Assert.Equal(MergePaths(testPath, "/Fun.txt"),
 			                ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRemoteName);
 			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
-			Assert.Equal(testPath.Substring(1) + "/FunRename.txt", logItem.History[0].Changes[0].Item.RemoteName);
+            Assert.Equal(MergePaths(testPath, "/FunRename.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
 
 		[Fact]
 		public void TestGetLogWithBranchedFileContainsOriginalNameAndRevision()
 		{
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			CopyItem(testPath + "/TestFile.txt", testPath + "/TestFileBranch.txt", true);
+			CopyItem(MergePaths(testPath, "/TestFile.txt"), MergePaths(testPath, "/TestFileBranch.txt"), true);
 			int versionTo = _lastCommitRevision;
 
 			LogItem logItem = _provider.GetLog(testPath, versionTo, versionTo, Recursion.Full, Int32.MaxValue);
 
 			Assert.Equal(ChangeType.Branch, logItem.History[0].Changes[0].ChangeType & ChangeType.Branch);
-			Assert.Equal(testPath.Substring(1) + "/TestFile.txt",
+			Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1),
 			                ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRemoteName);
 			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
 		}
@@ -56,10 +56,10 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetLogWithBranchedFileContainsOriginalVersionAsRevisionImmediatelyBeforeBranch()
 		{
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
-			WriteFile(testPath + "/TestFile2.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile2.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			CopyItem(testPath + "/TestFile.txt", testPath + "/TestFileBranch.txt", true);
+			CopyItem(MergePaths(testPath, "/TestFile.txt"), MergePaths(testPath, "/TestFileBranch.txt"), true);
 			int versionTo = _lastCommitRevision;
 
 			LogItem logItem = _provider.GetLog(testPath, versionTo, versionTo, Recursion.Full, Int32.MaxValue);
@@ -71,7 +71,7 @@ namespace IntegrationTests
 		public void TestGetLogWithNewFolder()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/TestFolder", true);
+			CreateFolder(MergePaths(testPath, "/TestFolder"), true);
 			int versionTo = _lastCommitRevision;
 
 			LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
@@ -80,7 +80,7 @@ namespace IntegrationTests
 			Assert.Equal(1, logItem.History[0].Changes.Count);
 			Assert.Equal(ChangeType.Add | ChangeType.Encoding, logItem.History[0].Changes[0].ChangeType);
 			Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
-			Assert.Equal(testPath.Substring(1) + "/TestFolder", logItem.History[0].Changes[0].Item.RemoteName);
+			Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
 
         [Fact]

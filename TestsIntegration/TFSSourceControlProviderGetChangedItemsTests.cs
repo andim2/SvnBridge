@@ -10,7 +10,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsAtRootReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			string path = testPath + "/TestFile.txt";
+			string path = MergePaths(testPath, "/TestFile.txt");
 			int versionFrom = _lastCommitRevision;
 			WriteFile(path, "Fun text", true);
 			int versionTo = _lastCommitRevision;
@@ -18,7 +18,7 @@ namespace IntegrationTests
 			reportData.Entries = new List<EntryData>();
 			EntryData entry = new EntryData();
 			entry.Rev = versionTo.ToString();
-			entry.path = testPath.Substring(1) + "/TestFile.txt";
+			entry.path = MergePaths(testPath, "/TestFile.txt").Substring(1);
 			reportData.Entries.Add(entry);
 
 			FolderMetaData folder = _provider.GetChangedItems("/", versionFrom, versionTo, reportData);
@@ -30,9 +30,9 @@ namespace IntegrationTests
 		public void TestGetChangedItemsCompletesWhenChangesetDoesNotExistInPath()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "2", true);
-			CreateFolder(testPath + "/Folder1", true);
-			DeleteItem(testPath + "2", true);
+			CreateFolder(MergePaths(testPath, "2"), true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), true);
+			DeleteItem(MergePaths(testPath, "2"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -44,11 +44,11 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsDoesNotIncludePropertiesInSubFoldersIfNotUpdated()
 		{
-			CreateFolder(testPath + "/Folder1", false);
+			CreateFolder(MergePaths(testPath, "/Folder1"), false);
 			SetProperty(testPath, "prop1", "val1", false);
-			SetProperty(testPath + "/Folder1", "prop2", "val2", true);
+			SetProperty(MergePaths(testPath, "/Folder1"), "prop2", "val2", true);
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/Folder1/Test1.txt", "filedata", true);
+			WriteFile(MergePaths(testPath, "/Folder1/Test1.txt"), "filedata", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -63,16 +63,16 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsForFileThatWasDeleted()
 		{
-			CreateFolder(testPath + "/New Folder", false);
-			WriteFile(testPath + "/New Folder/New File.txt", "Fun text", true);
+			CreateFolder(MergePaths(testPath, "/New Folder"), false);
+			WriteFile(MergePaths(testPath, "/New Folder/New File.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			DeleteItem(testPath + "/New Folder", true);
+			DeleteItem(MergePaths(testPath, "/New Folder"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 			reportData.UpdateTarget = "New File.txt";
 
 			FolderMetaData folder =
-				_provider.GetChangedItems(testPath + "/New Folder", versionFrom, versionTo, reportData);
+				_provider.GetChangedItems(MergePaths(testPath, "/New Folder"), versionFrom, versionTo, reportData);
 
 			Assert.Equal(1, folder.Items.Count);
 			Assert.Equal("New File.txt", folder.Items[0].Name);
@@ -83,14 +83,14 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFile()
 		{
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
 			Assert.Equal(testPath, folder.Name);
-			Assert.Equal(testPath + "/TestFile.txt", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/TestFile.txt"), folder.Items[0].Name);
 			Assert.NotNull(folder.Items[0].DownloadUrl);
 		}
 
@@ -98,7 +98,7 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFileAtRoot()
 		{
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 			CreateRootProvider();
@@ -114,8 +114,8 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFileContainingProperty()
 		{
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/Test1.txt", "filedata", false);
-			SetProperty(testPath + "/Test1.txt", "prop1", "prop1value", true);
+			WriteFile(MergePaths(testPath, "/Test1.txt"), "filedata", false);
+			SetProperty(MergePaths(testPath, "/Test1.txt"), "prop1", "prop1value", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -123,14 +123,14 @@ namespace IntegrationTests
 
 			Assert.Equal(1, folder.Items.Count);
 			Assert.Equal(1, folder.Items[0].Properties.Count);
-			Assert.Equal(testPath+ "/Test1.txt", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Test1.txt"), folder.Items[0].Name);
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
 		[Fact]
 		public void TestGetChangedItemsWithAddedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			string path = testPath + "/TestFile.txt";
+			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Fun text", true);
 			int versionFrom = _lastCommitRevision;
 			UpdateFile(path, "Fun text 2", true);
@@ -151,8 +151,8 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFileThenDeletedFileReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
-			DeleteItem(testPath + "/TestFile.txt", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
+			DeleteItem(MergePaths(testPath, "/TestFile.txt"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -164,10 +164,10 @@ namespace IntegrationTests
         [Fact]
         public void TestGetChangedItemsWithUpdatedThenDeletedFile()
         {
-            string path = testPath + "/TestFile.txt";
+            string path = MergePaths(testPath, "/TestFile.txt");
             WriteFile(path, "Fun text", true);
             int versionFrom = _lastCommitRevision;
-            WriteFile(testPath + "/TestFile.txt", "New fun text", true);
+            WriteFile(MergePaths(testPath, "/TestFile.txt"), "New fun text", true);
             DeleteItem(path, true);
             int versionTo = _lastCommitRevision;
             UpdateReportData reportData = new UpdateReportData();
@@ -183,9 +183,9 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFileThenEditedThenDeletedFileReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
-			WriteFile(testPath + "/TestFile.txt", "Fun text2", true);
-			DeleteItem(testPath + "/TestFile.txt", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text2", true);
+			DeleteItem(MergePaths(testPath, "/TestFile.txt"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -197,17 +197,17 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithAddedFileThenFolderContainingFileIsDeleted()
 		{
-			CreateFolder(testPath + "/Folder1", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), true);
 			int versionFrom = _lastCommitRevision;
-			WriteFile(testPath + "/Folder1/Test.txt", "fun text", true);
-			DeleteItem(testPath + "/Folder1", true);
+			WriteFile(MergePaths(testPath, "/Folder1/Test.txt"), "fun text", true);
+			DeleteItem(MergePaths(testPath, "/Folder1"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
 			Assert.Equal(1, folder.Items.Count);
-			Assert.Equal(testPath + "/Folder1", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Folder1"), folder.Items[0].Name);
 			Assert.IsType(typeof (DeleteFolderMetaData), folder.Items[0]);
 		}
 
@@ -215,9 +215,9 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFolderAndFileWithinFolderInSingleCommitThenDeleteFolder()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/Folder1", false);
-			WriteFile(testPath + "/Folder1/Test.txt", "fun text", true);
-			DeleteItem(testPath + "/Folder1", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), false);
+			WriteFile(MergePaths(testPath, "/Folder1/Test.txt"), "fun text", true);
+			DeleteItem(MergePaths(testPath, "/Folder1"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -230,8 +230,8 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFolderContainingProperty()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/Folder1", false);
-			SetProperty(testPath + "/Folder1", "prop1", "prop1value", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), false);
+			SetProperty(MergePaths(testPath, "/Folder1"), "prop1", "prop1value", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -239,17 +239,17 @@ namespace IntegrationTests
 
 			Assert.Equal(1, folder.Items.Count);
 			Assert.Equal(1, folder.Items[0].Properties.Count);
-			Assert.Equal(testPath + "/Folder1", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Folder1"), folder.Items[0].Name);
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
 		[Fact]
 		public void TestGetChangedItemsWithAddedFolderPropertyThenDeletedFolder()
 		{
-			CreateFolder(testPath + "/Folder1", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), true);
 			int versionFrom = _lastCommitRevision;
-			SetProperty(testPath + "/Folder1", "prop", "val1", true);
-			DeleteItem(testPath + "/Folder1", true);
+			SetProperty(MergePaths(testPath, "/Folder1"), "prop", "val1", true);
+			DeleteItem(MergePaths(testPath, "/Folder1"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -262,9 +262,9 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFolderThenAddedPropertyThenDeletedFolder()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/Folder1", true);
-			SetProperty(testPath + "/Folder1", "prop", "val2", true);
-			DeleteItem(testPath + "/Folder1", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), true);
+			SetProperty(MergePaths(testPath, "/Folder1"), "prop", "val2", true);
+			DeleteItem(MergePaths(testPath, "/Folder1"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -277,8 +277,8 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithAddedFolderThenDeletedFolderReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/TestFolder", true);
-			DeleteItem(testPath + "/TestFolder", true);
+			CreateFolder(MergePaths(testPath, "/TestFolder"), true);
+			DeleteItem(MergePaths(testPath, "/TestFolder"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -290,9 +290,9 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithBranchedFile()
 		{
-			WriteFile(testPath + "/Fun.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			CopyItem(testPath + "/Fun.txt", testPath + "/FunRename.txt", true);
+			CopyItem(MergePaths(testPath, "/Fun.txt"), MergePaths(testPath, "/FunRename.txt"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -300,17 +300,17 @@ namespace IntegrationTests
 
 			Assert.Equal(testPath, folder.Name);
 			Assert.Equal(1, folder.Items.Count);
-			Assert.Equal(testPath  + "/FunRename.txt", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/FunRename.txt"), folder.Items[0].Name);
 			Assert.NotNull(folder.Items[0].DownloadUrl);
 		}
 
 		[Fact]
 		public void TestGetChangedItemsWithDeletedAndReAddedItemReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			CreateFolder(testPath + "/New Folder", true);
+			CreateFolder(MergePaths(testPath, "/New Folder"), true);
 			int versionFrom = _lastCommitRevision;
-			DeleteItem(testPath + "/New Folder", true);
-			CreateFolder(testPath + "/New Folder", true);
+			DeleteItem(MergePaths(testPath, "/New Folder"), true);
+			CreateFolder(MergePaths(testPath, "/New Folder"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 			EntryData entry = new EntryData();
@@ -330,7 +330,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithDeletedFile()
 		{
-			string path = testPath + "/TestFile.txt";
+			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Test file contents", true);
 			int versionFrom = _lastCommitRevision;
 			DeleteItem(path, true);
@@ -346,7 +346,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithDeletedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			string path = testPath + "/TestFile.txt";
+			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Fun text", true);
 			int versionFrom = _lastCommitRevision;
 			DeleteItem(path, true);
@@ -363,25 +363,25 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithDeletedFileThenDeleteFolderContainingFile()
 		{
-			CreateFolder(testPath + "/Folder1", false);
-			WriteFile(testPath + "/Folder1/Test.txt", "fun text", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), false);
+			WriteFile(MergePaths(testPath, "/Folder1/Test.txt"), "fun text", true);
 			int versionFrom = _lastCommitRevision;
-			DeleteItem(testPath + "/Folder1/Test.txt", true);
-			DeleteItem(testPath + "/Folder1", true);
+			DeleteItem(MergePaths(testPath, "/Folder1/Test.txt"), true);
+			DeleteItem(MergePaths(testPath, "/Folder1"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
 			Assert.Equal(1, folder.Items.Count);
-			Assert.Equal(testPath + "/Folder1", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Folder1"), folder.Items[0].Name);
 			Assert.IsType(typeof (DeleteFolderMetaData), folder.Items[0]);
 		}
 
 		[Fact]
 		public void TestGetChangedItemsWithDeletedFolder()
 		{
-			string path = testPath + "/Test Folder";
+			string path = MergePaths(testPath, "/Test Folder");
 			CreateFolder(path, true);
 			int versionFrom = _lastCommitRevision;
 			DeleteItem(path, true);
@@ -397,10 +397,10 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithDeletedFolderContainingFilesReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			CreateFolder(testPath + "/FolderA", false);
-			WriteFile(testPath + "/FolderA/Test1.txt", "filedata", true);
+			CreateFolder(MergePaths(testPath, "/FolderA"), false);
+			WriteFile(MergePaths(testPath, "/FolderA/Test1.txt"), "filedata", true);
 			int versionFrom = _lastCommitRevision;
-			DeleteItem(testPath + "/FolderA", true);
+			DeleteItem(MergePaths(testPath, "/FolderA"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 			reportData.Entries = new List<EntryData>();
@@ -418,7 +418,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithDeletedFolderReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			string path = testPath + "/FolderA";
+			string path = MergePaths(testPath, "/FolderA");
 			CreateFolder(path, true);
 			int versionFrom = _lastCommitRevision;
 			DeleteItem(path, true);
@@ -439,21 +439,21 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithDeleteFileThenDeleteFolderThatContainedFileWithinSubfolder()
 		{
-			CreateFolder(testPath + "/Test1", false);
-			CreateFolder(testPath + "/Test1/Folder1", false);
-			WriteFile(testPath + "/Test1/Folder1/Test.txt", "fun text", true);
+			CreateFolder(MergePaths(testPath, "/Test1"), false);
+			CreateFolder(MergePaths(testPath, "/Test1/Folder1"), false);
+			WriteFile(MergePaths(testPath, "/Test1/Folder1/Test.txt"), "fun text", true);
 			int versionFrom = _lastCommitRevision;
-			DeleteItem(testPath + "/Test1/Folder1/Test.txt", true);
-			DeleteItem(testPath + "/Test1/Folder1", true);
+			DeleteItem(MergePaths(testPath, "/Test1/Folder1/Test.txt"), true);
+			DeleteItem(MergePaths(testPath, "/Test1/Folder1"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
 			Assert.Equal(1, folder.Items.Count);
-			Assert.Equal(testPath + "/Test1", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Test1"), folder.Items[0].Name);
 			Assert.Equal(1, ((FolderMetaData) folder.Items[0]).Items.Count);
-			Assert.Equal(testPath+ "/Test1/Folder1", ((FolderMetaData) folder.Items[0]).Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Test1/Folder1"), ((FolderMetaData) folder.Items[0]).Items[0].Name);
 			Assert.True(((FolderMetaData) folder.Items[0]).Items[0] is DeleteFolderMetaData);
 			Assert.Equal(0, ((FolderMetaData) ((FolderMetaData) folder.Items[0]).Items[0]).Items.Count);
 		}
@@ -462,17 +462,17 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithNewFileInNewFolderInSameChangeset()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/New Folder", false);
-			WriteFile(testPath + "/New Folder/New File.txt", "Fun text", true);
+			CreateFolder(MergePaths(testPath, "/New Folder"), false);
+			WriteFile(MergePaths(testPath, "/New Folder/New File.txt"), "Fun text", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
 			Assert.Equal(1, folder.Items.Count);
-			Assert.Equal(testPath + "/New Folder", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/New Folder"), folder.Items[0].Name);
 			Assert.Equal(1, ((FolderMetaData) folder.Items[0]).Items.Count);
-			Assert.Equal(testPath + "/New Folder/New File.txt",
+			Assert.Equal(MergePaths(testPath, "/New Folder/New File.txt"),
 			             ((FolderMetaData) folder.Items[0]).Items[0].Name);
 		}
 
@@ -480,8 +480,8 @@ namespace IntegrationTests
 		public void TestGetChangedItemsWithNewFolderAndNewFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			int versionFrom = _lastCommitRevision;
-			CreateFolder(testPath + "/Folder1", false);
-			WriteFile(testPath + "/Folder1/Test.txt", "filedata", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), false);
+			WriteFile(MergePaths(testPath, "/Folder1/Test.txt"), "filedata", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 			reportData.Entries = new List<EntryData>();
@@ -515,9 +515,9 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithRenamedFile()
 		{
-			WriteFile(testPath + "/Fun.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			MoveItem(testPath + "/Fun.txt", testPath + "/FunRename.txt", true);
+			MoveItem(MergePaths(testPath, "/Fun.txt"), MergePaths(testPath, "/FunRename.txt"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -525,19 +525,19 @@ namespace IntegrationTests
 
 			Assert.Equal(testPath, folder.Name);
 			Assert.Equal(2, folder.Items.Count);
-			Assert.Equal(testPath + "/Fun.txt", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Fun.txt"), folder.Items[0].Name);
 			Assert.True(folder.Items[0] is DeleteMetaData);
-			Assert.Equal(testPath + "/FunRename.txt", folder.Items[1].Name);
+			Assert.Equal(MergePaths(testPath, "/FunRename.txt"), folder.Items[1].Name);
 			Assert.NotNull(folder.Items[1]);
 		}
 
 		[Fact]
 		public void TestGetChangedItemsWithRenamedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
-			CreateFolder(testPath + "/Folder", false);
-			WriteFile(testPath + "/Fun.txt", "Fun text", true);
+			CreateFolder(MergePaths(testPath, "/Folder"), false);
+			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
-			MoveItem(testPath + "/Fun.txt", testPath + "/FunRenamed.txt", true);
+			MoveItem(MergePaths(testPath, "/Fun.txt"), MergePaths(testPath, "/FunRenamed.txt"), true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 			reportData.Missing = new List<string>();
@@ -556,7 +556,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithSameFileUpdatedTwice()
 		{
-			string path = testPath + "/TestFile.txt";
+			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Fun text", true);
 			int versionFrom = _lastCommitRevision;
 			UpdateFile(path, "Fun text 2", true);
@@ -574,9 +574,9 @@ namespace IntegrationTests
 		[Fact]
 		public void TestGetChangedItemsWithUpdatedFileProperty()
 		{
-			WriteFile(testPath + "/Test1.txt", "filedata", true);
+			WriteFile(MergePaths(testPath, "/Test1.txt"), "filedata", true);
 			int versionFrom = _lastCommitRevision;
-			SetProperty(testPath + "/Test1.txt", "prop1", "prop1value", true);
+			SetProperty(MergePaths(testPath, "/Test1.txt"), "prop1", "prop1value", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -584,16 +584,16 @@ namespace IntegrationTests
 
 			Assert.Equal(1, folder.Items.Count);
 			Assert.Equal(1, folder.Items[0].Properties.Count);
-			Assert.Equal(testPath + "/Test1.txt", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Test1.txt"), folder.Items[0].Name);
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
 		[Fact]
 		public void TestGetChangedItemsWithUpdatedFolderProperty()
 		{
-			CreateFolder(testPath + "/Folder1", true);
+			CreateFolder(MergePaths(testPath, "/Folder1"), true);
 			int versionFrom = _lastCommitRevision;
-			SetProperty(testPath + "/Folder1", "prop1", "prop1value", true);
+			SetProperty(MergePaths(testPath, "/Folder1"), "prop1", "prop1value", true);
 			int versionTo = _lastCommitRevision;
 			UpdateReportData reportData = new UpdateReportData();
 
@@ -601,7 +601,7 @@ namespace IntegrationTests
 
 			Assert.Equal(1, folder.Items.Count);
 			Assert.Equal(1, folder.Items[0].Properties.Count);
-			Assert.Equal(testPath + "/Folder1", folder.Items[0].Name);
+			Assert.Equal(MergePaths(testPath, "/Folder1"), folder.Items[0].Name);
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
@@ -624,9 +624,9 @@ namespace IntegrationTests
         public void GetChangedItems_ClientStateHasUpdatedFileAtRootAndFileIsUpdated()
         {
             int versionFrom = _lastCommitRevision;
-            WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+            WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
             int versionUpdate = _lastCommitRevision;
-            WriteFile(testPath + "/TestFile.txt", "Fun text 2", true);
+            WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text 2", true);
             int versionTo = _lastCommitRevision;
 
             UpdateReportData reportData = new UpdateReportData();

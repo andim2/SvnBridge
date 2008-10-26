@@ -19,9 +19,9 @@ namespace IntegrationTests
 		[Fact]
 		public void TestAddFolderThatAlreadyExistsThrowsException()
 		{
-			CreateFolder(testPath + "/New Folder", true);
+			CreateFolder(MergePaths(testPath, "/New Folder"), true);
 
-            Exception result = Record.Exception(delegate { _provider.MakeCollection(_activityId, testPath + "/New Folder"); });
+            Exception result = Record.Exception(delegate { _provider.MakeCollection(_activityId, MergePaths(testPath, "/New Folder")); });
 
             Assert.IsType<FolderAlreadyExistsException>(result);
 		}
@@ -29,7 +29,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestDeleteItemReturnsFalseIfFileDoesNotExist()
 		{
-			bool result = _provider.DeleteItem(_activityId, testPath + "/NotHere.txt");
+			bool result = _provider.DeleteItem(_activityId, MergePaths(testPath, "/NotHere.txt"));
 
 			Assert.False(result);
 		}
@@ -37,9 +37,9 @@ namespace IntegrationTests
 		[Fact]
 		public void TestDeleteItemReturnsTrueWhenFileExists()
 		{
-			WriteFile(testPath + "/File.txt", "filedata", true);
+			WriteFile(MergePaths(testPath, "/File.txt"), "filedata", true);
 
-			bool result = _provider.DeleteItem(_activityId, testPath + "/File.txt");
+			bool result = _provider.DeleteItem(_activityId, MergePaths(testPath, "/File.txt"));
 
 			Assert.True(result);
 		}
@@ -47,7 +47,7 @@ namespace IntegrationTests
 		[Fact]
 		public void TestItemExistsReturnsFalseIfFileDoesNotExist()
 		{
-			bool result = _provider.ItemExists(testPath + "/TestFile.txt");
+			bool result = _provider.ItemExists(MergePaths(testPath, "/TestFile.txt"));
 
 			Assert.False(result);
 		}
@@ -56,9 +56,9 @@ namespace IntegrationTests
 		public void TestItemExistsReturnsFalseIfFileDoesNotExistInSpecifiedVersion()
 		{
 			int version = _lastCommitRevision;
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 
-			bool result = _provider.ItemExists(testPath + "/TestFile.txt", version);
+			bool result = _provider.ItemExists(MergePaths(testPath, "/TestFile.txt"), version);
 
 			Assert.False(result);
 		}
@@ -66,9 +66,9 @@ namespace IntegrationTests
 		[Fact]
 		public void TestItemExistsReturnsTrueIfFileExists()
 		{
-			WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 
-			bool result = _provider.ItemExists(testPath + "/TestFile.txt");
+			bool result = _provider.ItemExists(MergePaths(testPath, "/TestFile.txt"));
 
 			Assert.True(result);
 		}
@@ -106,7 +106,7 @@ namespace IntegrationTests
             int expected = _lastCommitRevision;
             DateTime startDate = DateTime.Now;
             Thread.Sleep(1000);
-            WriteFile(testPath + "/TestFile.txt", "Fun text", true);
+            WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 
             int result = _provider.GetVersionForDate(startDate);
 
