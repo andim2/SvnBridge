@@ -74,8 +74,8 @@ namespace IntegrationTests
 
             FolderMetaData folder = (FolderMetaData)_providerRoot.GetItems(-1, "", Recursion.Full);
 
-            Assert.Equal(mimeType, folder.Items[0].Properties["mime-type"]);
             Assert.Equal(1, folder.Items.Count);
+            Assert.Equal(mimeType, folder.Items[0].Properties["mime-type"]);
         }
 
         [Fact]

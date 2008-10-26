@@ -69,6 +69,7 @@ namespace IntegrationTests
                 {
                     DeleteItem(testPath + item.Name, false);
                 }
+                DeleteItem(testPath + Constants.PropFolder, false);
             }
             else
             {
@@ -84,7 +85,14 @@ namespace IntegrationTests
 		public void CreateRootProvider()
 		{
 			_activityIdRoot = Guid.NewGuid().ToString();
-            _providerRoot = CreateSourceControlProvider(PROJECT_NAME + testPath);
+            if (TEST_ROOT)
+            {
+                _providerRoot = CreateSourceControlProvider(PROJECT_NAME);
+            }
+            else
+            {
+                _providerRoot = CreateSourceControlProvider(PROJECT_NAME + testPath);
+            }
 			_providerRoot.MakeActivity(_activityIdRoot);
 		}
 

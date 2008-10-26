@@ -621,7 +621,7 @@ namespace IntegrationTests
 		}
 
         [Fact]
-        public void GetChangedItems_ClientStateHasUpdatedFileAtRootAndFileIsUpdated()
+        public void GetChangedItems_ClientStateHasUpdatedFileAndFileIsUpdated()
         {
             int versionFrom = _lastCommitRevision;
             WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -638,14 +638,13 @@ namespace IntegrationTests
             entry.Rev = versionUpdate.ToString();
             entry.path = "TestFile.txt";
             reportData.Entries.Add(entry);
-            CreateRootProvider();
 
-            FolderMetaData folder = _providerRoot.GetChangedItems("", versionFrom, versionTo, reportData);
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
             Assert.Equal(1, folder.Items.Count);
-            Assert.Equal("/", folder.Name);
-            Assert.Equal("/TestFile.txt", folder.Items[0].Name);
+            Assert.Equal(testPath, folder.Name);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt"), folder.Items[0].Name);
             Assert.Equal(versionTo, folder.Items[0].ItemRevision);
         }
-	}
+    }
 }
