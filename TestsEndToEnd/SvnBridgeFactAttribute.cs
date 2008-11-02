@@ -49,6 +49,9 @@ namespace TestsEndToEnd
 		public MethodResult Execute(object testClass)
 		{
 			var test = (EndToEndTestBase) testClass;
+            test.TestRoot = false;
+            test.Initialize();
+
 			string testUrl = "http://" + IPAddress.Loopback + ":" + test.Port + "/" +
 			                 (new Uri(test.ServerUrl).Host + ":" + new Uri(test.ServerUrl).Port)
 			                 + "/SvnBridgeTesting" + test.TestPath;
