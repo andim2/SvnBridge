@@ -16,8 +16,8 @@ namespace IntegrationTests
 {
 	public class TFSSourceControlProviderTests : TFSSourceControlProviderTestsBase
 	{
-		[Fact]
-		public void TestAddFolderThatAlreadyExistsThrowsException()
+        [IntegrationTestFact]
+        public void TestAddFolderThatAlreadyExistsThrowsException()
 		{
 			CreateFolder(MergePaths(testPath, "/New Folder"), true);
 
@@ -26,7 +26,7 @@ namespace IntegrationTests
             Assert.IsType<FolderAlreadyExistsException>(result);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestDeleteItemReturnsFalseIfFileDoesNotExist()
 		{
 			bool result = _provider.DeleteItem(_activityId, MergePaths(testPath, "/NotHere.txt"));
@@ -34,8 +34,8 @@ namespace IntegrationTests
 			Assert.False(result);
 		}
 
-		[Fact]
-		public void TestDeleteItemReturnsTrueWhenFileExists()
+        [IntegrationTestFact]
+        public void TestDeleteItemReturnsTrueWhenFileExists()
 		{
 			WriteFile(MergePaths(testPath, "/File.txt"), "filedata", true);
 
@@ -44,16 +44,16 @@ namespace IntegrationTests
 			Assert.True(result);
 		}
 
-		[Fact]
-		public void TestItemExistsReturnsFalseIfFileDoesNotExist()
+        [IntegrationTestFact]
+        public void TestItemExistsReturnsFalseIfFileDoesNotExist()
 		{
 			bool result = _provider.ItemExists(MergePaths(testPath, "/TestFile.txt"));
 
 			Assert.False(result);
 		}
 
-		[Fact]
-		public void TestItemExistsReturnsFalseIfFileDoesNotExistInSpecifiedVersion()
+        [IntegrationTestFact]
+        public void TestItemExistsReturnsFalseIfFileDoesNotExistInSpecifiedVersion()
 		{
 			int version = _lastCommitRevision;
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -63,7 +63,7 @@ namespace IntegrationTests
 			Assert.False(result);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestItemExistsReturnsTrueIfFileExists()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -73,7 +73,7 @@ namespace IntegrationTests
 			Assert.True(result);
 		}
 
-        [Fact]
+        [IntegrationTestFact]
         public void GetVersionForDate_CurrentDateAndTime_ReturnsLatestChangeSet()
         {
             int result = _provider.GetVersionForDate(DateTime.Now);
@@ -81,7 +81,7 @@ namespace IntegrationTests
             Assert.Equal(_lastCommitRevision, result);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void GetVersionForDate_DateAndTimeBeforeRepositoryExisted_ReturnsZero()
         {
             int result = _provider.GetVersionForDate(DateTime.Parse("1900-01-01"));
@@ -89,7 +89,7 @@ namespace IntegrationTests
             Assert.Equal(0, result);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void GetVersionForDate_DateAndTimeBeforeProjectExistedButAfterRepositoryExisted_ReturnsZero()
         {
             LogItem item = _provider.GetLog("", 1, _lastCommitRevision, Recursion.None, int.MaxValue);
@@ -100,7 +100,7 @@ namespace IntegrationTests
             Assert.Equal(0, result);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void GetVersionForDate_DateAndTimeBeforeLastCommit_ReturnsChangesetBeforeLastCommit()
         {
             int expected = _lastCommitRevision;

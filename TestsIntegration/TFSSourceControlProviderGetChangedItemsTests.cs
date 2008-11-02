@@ -7,7 +7,7 @@ namespace IntegrationTests
 
 	public class TFSSourceControlProviderGetChangedItemsTests : TFSSourceControlProviderTestsBase
 	{
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsAtRootReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
@@ -26,7 +26,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsCompletesWhenChangesetDoesNotExistInPath()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -41,7 +41,7 @@ namespace IntegrationTests
 			Assert.Equal(1, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsDoesNotIncludePropertiesInSubFoldersIfNotUpdated()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -60,7 +60,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items[0].Properties.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsForFileThatWasDeleted()
 		{
 			CreateFolder(MergePaths(testPath, "/New Folder"), false);
@@ -79,7 +79,7 @@ namespace IntegrationTests
 			Assert.Equal(typeof (DeleteMetaData), folder.Items[0].GetType());
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFile()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -94,7 +94,7 @@ namespace IntegrationTests
 			Assert.NotNull(folder.Items[0].DownloadUrl);
 		}
         
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFileContainingProperty()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -111,7 +111,7 @@ namespace IntegrationTests
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
@@ -131,7 +131,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFileThenDeletedFileReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -145,7 +145,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetChangedItemsWithUpdatedThenDeletedFile()
         {
             string path = MergePaths(testPath, "/TestFile.txt");
@@ -163,7 +163,7 @@ namespace IntegrationTests
             Assert.Equal(path.Substring(1), folder.Items[0].Name);
         }
 
-        [Fact]
+        [IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFileThenEditedThenDeletedFileReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -178,7 +178,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFileThenFolderContainingFileIsDeleted()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
@@ -195,7 +195,7 @@ namespace IntegrationTests
 			Assert.IsType(typeof (DeleteFolderMetaData), folder.Items[0]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFolderAndFileWithinFolderInSingleCommitThenDeleteFolder()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -210,7 +210,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFolderContainingProperty()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -227,7 +227,7 @@ namespace IntegrationTests
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFolderPropertyThenDeletedFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
@@ -242,7 +242,7 @@ namespace IntegrationTests
 			Assert.Equal(1, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFolderThenAddedPropertyThenDeletedFolder()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -257,7 +257,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithAddedFolderThenDeletedFolderReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -271,7 +271,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithBranchedFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -288,7 +288,7 @@ namespace IntegrationTests
 			Assert.NotNull(folder.Items[0].DownloadUrl);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedAndReAddedItemReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			CreateFolder(MergePaths(testPath, "/New Folder"), true);
@@ -311,7 +311,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedFile()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
@@ -327,7 +327,7 @@ namespace IntegrationTests
 			Assert.Equal(path.Substring(1), folder.Items[0].Name);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
@@ -344,7 +344,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedFileThenDeleteFolderContainingFile()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -362,7 +362,7 @@ namespace IntegrationTests
 			Assert.IsType(typeof (DeleteFolderMetaData), folder.Items[0]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedFolder()
 		{
 			string path = MergePaths(testPath, "/Test Folder");
@@ -378,7 +378,7 @@ namespace IntegrationTests
 			Assert.Equal(path.Substring(1), folder.Items[0].Name);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedFolderContainingFilesReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			CreateFolder(MergePaths(testPath, "/FolderA"), false);
@@ -399,7 +399,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeletedFolderReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/FolderA");
@@ -420,7 +420,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithDeleteFileThenDeleteFolderThatContainedFileWithinSubfolder()
 		{
 			CreateFolder(MergePaths(testPath, "/Test1"), false);
@@ -442,7 +442,7 @@ namespace IntegrationTests
 			Assert.Equal(0, ((FolderMetaData) ((FolderMetaData) folder.Items[0]).Items[0]).Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithNewFileInNewFolderInSameChangeset()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -460,7 +460,7 @@ namespace IntegrationTests
 			             ((FolderMetaData) folder.Items[0]).Items[0].Name);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithNewFolderAndNewFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -480,7 +480,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithNoUpdatesDoesNotIncludeProperties()
 		{
 			SetProperty(testPath, "prop1", "val1", true);
@@ -496,7 +496,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Properties.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithRenamedFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -515,7 +515,7 @@ namespace IntegrationTests
 			Assert.NotNull(folder.Items[1]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithRenamedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder"), false);
@@ -537,7 +537,7 @@ namespace IntegrationTests
 			Assert.Equal(0, folder.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithSameFileUpdatedTwice()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
@@ -555,7 +555,7 @@ namespace IntegrationTests
 			Assert.Equal("Fun text 3", ReadFile(path));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithUpdatedFileProperty()
 		{
 			WriteFile(MergePaths(testPath, "/Test1.txt"), "filedata", true);
@@ -572,7 +572,7 @@ namespace IntegrationTests
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithUpdatedFolderProperty()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
@@ -589,7 +589,7 @@ namespace IntegrationTests
 			Assert.Equal("prop1value", folder.Items[0].Properties["prop1"]);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetChangedItemsWithUpdatedPropertyAtRoot()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -604,7 +604,7 @@ namespace IntegrationTests
 			Assert.Equal("val1", folder.Properties["prop1"]);
 		}
 
-        [Fact]
+        [IntegrationTestFact]
         public void GetChangedItems_ClientStateHasUpdatedFileAndFileIsUpdated()
         {
             int versionFrom = _lastCommitRevision;

@@ -19,13 +19,12 @@ namespace IntegrationTests
 {
 	public abstract class TFSSourceControlProviderTestsBase : IDisposable
 	{
-        const bool TEST_ROOT = false;
-
+        public bool TestRoot = true;
 		public string ServerUrl = Settings.Default.ServerUrl;
         protected MyMocks stubs;
 		protected const string PROJECT_NAME = "SvnBridgeTesting";
 		protected readonly string _activityId;
-		protected readonly string testPath;
+		protected string testPath;
 		protected readonly TFSSourceControlProvider _provider;
 		protected int _lastCommitRevision;
 		protected readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
@@ -43,24 +42,23 @@ namespace IntegrationTests
 			associateWorkItemWithChangeSet = new AssociateWorkItemWithChangeSet(ServerUrl, GetCredentials());
             _provider = CreateSourceControlProvider(PROJECT_NAME);
             _provider.MakeActivity(_activityId);
+            testPath = "/";
+        }
 
-            if (TEST_ROOT)
-            {
-                testPath = "/";
-            }
-            else
+        public void Initialize()
+        {
+            if (!TestRoot)
             {
                 testPath = "/Test" + DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Environment.MachineName + "-" + Guid.NewGuid();
                 _provider.MakeCollection(_activityId, testPath);
             }
-
-			Commit();
-		}
+            Commit();
+        }
 
         public virtual void Dispose()
         {
             Commit();
-            if (TEST_ROOT)
+            if (TestRoot)
             {
                 FolderMetaData folder = (FolderMetaData)_provider.GetItems(-1, testPath, Recursion.OneLevel);
                 foreach (ItemMetaData item in folder.Items)

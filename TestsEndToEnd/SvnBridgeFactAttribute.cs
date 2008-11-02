@@ -89,13 +89,9 @@ namespace TestsEndToEnd
 
 		private ConsoleColor oldColor;
 
-		#region IDisposable Members
-
 		public void Dispose()
 		{
 			Console.ForegroundColor = oldColor;
 		}
-
-		#endregion
 	}
 }

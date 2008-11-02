@@ -10,7 +10,7 @@ namespace IntegrationTests
 {
 	public class TFSSourceControlProviderCommitTests : TFSSourceControlProviderTestsBase
 	{
-		[Fact]
+		[IntegrationTestFact]
 		public void TestConcurrentCommits()
 		{
 			string activity1 = Guid.NewGuid().ToString();
@@ -32,7 +32,7 @@ namespace IntegrationTests
 			Assert.Equal(MergePaths(testPath, "/Fun2.txt"), items.Items[1].Name);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitBranchFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -47,7 +47,7 @@ namespace IntegrationTests
 			Assert.Equal(0, response.Items.Count);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitBranchFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/Fun"), true);
@@ -61,7 +61,7 @@ namespace IntegrationTests
 			Assert.Equal(0, response.Items.Count);
 		}
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestCommitBranchFolderAlsoBranchesSubFiles()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -74,7 +74,7 @@ namespace IntegrationTests
             Assert.Equal(1, folder.Items.Count);
         }
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitDeleteFile()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
@@ -89,7 +89,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitDeleteFileAlsoDeletesPropertiesOnFile()
 		{
 			string mimeType = "application/octet-stream";
@@ -106,7 +106,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitDeleteFolder()
 		{
 			string path = MergePaths(testPath, "/TestFolder");
@@ -121,7 +121,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveAnUpdatedFileThenDeleteFolderThatContainedFile()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -145,7 +145,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveAnUpdateFile()
 		{
 			CreateFolder(MergePaths(testPath, "/Nodes"), false);
@@ -169,7 +169,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/Nodes"), ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveFileFromDeletedFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -188,7 +188,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveFileOutOfFolderAndDeleteFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/TestFolder"), false);
@@ -208,7 +208,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveFolderWithUpdatedFile()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -233,7 +233,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/B"), ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveMultipleFilesFromDeletedFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -257,7 +257,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/Test2.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMoveMultipleFilesFromDeletedFolderIntoNewFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -285,7 +285,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/B/Test2.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMultipleNewFiles()
 		{
 			byte[] testFile = GetBytes("Test file contents");
@@ -306,7 +306,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile3.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMultipleNewPropertiesOnMultipleFiles()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile1.txt"), "Fun text", false);
@@ -329,7 +329,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile2.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitMultipleNewPropertiesOnMultipleFolders()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -352,7 +352,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/Folder2"), ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewFile()
 		{
 			byte[] testFile = GetBytes("Test file contents");
@@ -368,7 +368,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewFolder()
 		{
 			_provider.MakeCollection(_activityId, MergePaths(testPath, "/TestFolder"));
@@ -382,7 +382,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewFolderContainingNewFile()
 		{
 			byte[] fileData = GetBytes("Test file contents");
@@ -399,7 +399,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewPropertyOnFile()
 		{
 			string mimeType = "application/octet-stream";
@@ -416,7 +416,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewPropertyOnFolder()
 		{
 			string ignore = "*.bad\n";
@@ -431,7 +431,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewPropertyOnNewFileInSameCommit()
 		{
 			byte[] fileData = GetBytes("test");
@@ -448,7 +448,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewPropertyOnNewFolderInSameCommit()
 		{
 			_provider.MakeCollection(_activityId, MergePaths(testPath, "/Folder1"));
@@ -463,7 +463,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitNewSubFolderInNewFolder()
 		{
 			_provider.MakeCollection(_activityId, MergePaths(testPath, "/TestFolder"));
@@ -480,7 +480,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFolder/SubFolder"), ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameAndUpdateFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -502,7 +502,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/FunRename.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -520,7 +520,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/FunRename.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFileWithCopyBeforeDelete()
 		{
 			WriteFile(MergePaths(testPath, "/FunRename.txt"), "Fun text", true);
@@ -537,7 +537,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/Fun"), true);
@@ -554,7 +554,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/FunRename"), ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFolderAndDeleteFileWithinFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -575,7 +575,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFolderContainingRenamedFile()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -600,7 +600,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/B/Test2.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFolderContainingRenamedFileAndNotRenamedFile()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -631,7 +631,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/B/TestA2.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFolderContainingUpdatedFile()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), false);
@@ -661,7 +661,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/B/Test.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitRenameFolderWithPropertiesAddedInCommitAfterFolderCreated()
 		{
 			CreateFolder(MergePaths(testPath, "/A"), true);
@@ -685,7 +685,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitReplacedFile()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Test file contents", true);
@@ -708,7 +708,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitUpdatedFile()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Test file contents", true);
@@ -724,7 +724,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile.txt"), ItemType.File));
 		}
 
-		[Fact(Skip = "Not implemented yet")]
+        [IntegrationTestFact(Skip = "Not implemented yet")]
 		//[ExpectedException(typeof (ConflictException))]
 		public void TestCommitUpdatedFileAtSameTimeAsAnotherUserThrowsConflictException()
 		{
@@ -741,7 +741,7 @@ namespace IntegrationTests
 			_provider.MergeActivity(_activityId);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitUpdatePropertyOnFile()
 		{
 			string mimeType1 = "application/octet-stream1";
@@ -760,7 +760,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile.txt"), ItemType.File));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitUpdatePropertyOnFolder()
 		{
 			string ignore1 = "*.bad\n";
@@ -777,7 +777,7 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, testPath, ItemType.Folder));
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestCommitWithNoItemsReturnsLatestChangeset()
 		{
 			int startVersion = _provider.GetLatestVersion();

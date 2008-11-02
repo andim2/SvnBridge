@@ -9,7 +9,7 @@ namespace IntegrationTests
 
 	public class TFSSourceControlProviderGetLogTests : TFSSourceControlProviderTestsBase
 	{
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetLog()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -21,7 +21,7 @@ namespace IntegrationTests
 			Assert.Equal(2, logItem.History.Length);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetLogReturnsOriginalNameAndRevisionForRenamedItems()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -37,7 +37,7 @@ namespace IntegrationTests
             Assert.Equal(MergePaths(testPath, "/FunRename.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetLogWithBranchedFileContainsOriginalNameAndRevision()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -53,7 +53,7 @@ namespace IntegrationTests
 			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetLogWithBranchedFileContainsOriginalVersionAsRevisionImmediatelyBeforeBranch()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -67,7 +67,7 @@ namespace IntegrationTests
 			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
 		}
 
-		[Fact]
+		[IntegrationTestFact]
 		public void TestGetLogWithNewFolder()
 		{
 			int versionFrom = _lastCommitRevision;
@@ -83,7 +83,7 @@ namespace IntegrationTests
 			Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
 
-        [Fact]
+        [IntegrationTestFact]
         public void GetLog_Root_ReturnsCorrectResult()
         {
             LogItem logItem = _provider.GetLog("", 1, _lastCommitRevision, Recursion.None, Int32.MaxValue);

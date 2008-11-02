@@ -6,7 +6,7 @@ namespace IntegrationTests
 {
     public class TFSSourceControlProviderGetItemsTests : TFSSourceControlProviderTestsBase
     {
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemInActivityReturnsCorrectItemIfIsInRenamedFolder()
         {
             CreateFolder(MergePaths(testPath, "/A"), false);
@@ -19,7 +19,7 @@ namespace IntegrationTests
             Assert.Equal(MergePaths(testPath, "/A/Test.txt"), item.Name);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsForRootSucceedsWithAllRecursionLevels()
         {
             _provider.GetItems(-1, "", Recursion.None);
@@ -27,7 +27,7 @@ namespace IntegrationTests
             _provider.GetItems(-1, "", Recursion.Full);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsOnFile()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", true);
@@ -38,7 +38,7 @@ namespace IntegrationTests
             Assert.Equal(MergePaths(testPath, "/File1.txt"), item.Name);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsOnFileReturnsPropertiesForFile()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", false);
@@ -50,7 +50,7 @@ namespace IntegrationTests
             Assert.Equal(propvalue, item.Properties["prop1"]);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsOnFolderReturnsPropertiesForFileWithinFolder()
         {
             string mimeType = "application/octet-stream";
@@ -64,7 +64,7 @@ namespace IntegrationTests
             Assert.Equal(mimeType, folder.Items[0].Properties["mime-type"]);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsOnFolderReturnsPropertiesForFolder()
         {
             string ignore = "*.bad\n";
@@ -76,7 +76,7 @@ namespace IntegrationTests
             Assert.Equal(ignore, item.Properties["ignore"]);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsReturnsCorrectRevisionWhenPropertyHasBeenAddedToFileAndRecursionIsFull()
         {
             WriteFile(MergePaths(testPath, "/Test.txt"), "whee", true);
@@ -88,7 +88,7 @@ namespace IntegrationTests
             Assert.Equal(revision, item.Items[0].Revision);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsReturnsCorrectRevisionWhenPropertyHasBeenAddedToFolderAndRecursionIsFull()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), true);
@@ -100,7 +100,7 @@ namespace IntegrationTests
             Assert.Equal(revision, item.Items[0].Revision);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsReturnsCorrectRevisionWhenPropertyIsAdded()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", true);
@@ -112,7 +112,7 @@ namespace IntegrationTests
             Assert.Equal(revision, item.Revision);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsReturnsCorrectRevisionWhenPropertyIsAddedThenFileIsUpdated()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", true);
@@ -125,7 +125,7 @@ namespace IntegrationTests
             Assert.Equal(revision, item.Revision);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsWithAllRecursionLevelsReturnsPropertyForFolder()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -141,7 +141,7 @@ namespace IntegrationTests
             Assert.Equal(ignore, item3.Properties["ignore"]);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsWithOneLevelRecursionReturnsPropertiesForSubFolders()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -157,7 +157,7 @@ namespace IntegrationTests
             Assert.Equal(ignore2, item.Items[0].Properties["ignore"]);
         }
 
-        [Fact]
+        [IntegrationTestFact]
         public void TestGetItemsIgnoresStalePropertyFiles()
         {
             string propertyFile = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ItemProperties xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><Properties><Property><Name>mime-type</Name><Value>application/octet-stream</Value></Property></Properties></ItemProperties>";
