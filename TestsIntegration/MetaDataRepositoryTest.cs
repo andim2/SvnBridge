@@ -35,12 +35,12 @@ namespace IntegrationTests
 	    [Fact]
 		public void WhenAskToGetItemOnServer_WillCacheEntireRevision()
 		{
-			WriteFile(testPath + "/Test.txt", "blah", true);
+			WriteFile(MergePaths(testPath, "/Test.txt"), "blah", true);
 
-			string path = Constants.ServerRootPath + PROJECT_NAME + testPath + "/Test.txt";
+			string path = Constants.ServerRootPath + PROJECT_NAME + MergePaths(testPath, "/Test.txt");
 			Assert.False(repository.IsInCache(_lastCommitRevision, path));
 
-			repository.QueryItems(_lastCommitRevision, testPath + "/Test.txt", Recursion.None);
+			repository.QueryItems(_lastCommitRevision, MergePaths(testPath, "/Test.txt"), Recursion.None);
 
 			Assert.True(repository.IsInCache(_lastCommitRevision, path));
 		}
@@ -48,13 +48,13 @@ namespace IntegrationTests
 		[Fact]
 		public void CanGetValidResultFromQueryItems_RecursionNone()
 		{
-			WriteFile(testPath + "/Test.txt", "blah", true);
+			WriteFile(MergePaths(testPath, "/Test.txt"), "blah", true);
 
-			SourceItem[] items = repository.QueryItems(_lastCommitRevision, testPath + "/Test.txt", Recursion.None);
+			SourceItem[] items = repository.QueryItems(_lastCommitRevision, MergePaths(testPath, "/Test.txt"), Recursion.None);
 			SourceItem[] sourceItems = sourceControlService.QueryItems(
 				ServerUrl,
 				credentials,
-				Constants.ServerRootPath + PROJECT_NAME + testPath + "/Test.txt",
+				Constants.ServerRootPath + PROJECT_NAME + MergePaths(testPath, "/Test.txt"),
 				RecursionType.None,
 				VersionSpec.FromChangeset(_lastCommitRevision),
 				DeletedState.Any,
@@ -66,7 +66,7 @@ namespace IntegrationTests
 		[Fact]
 		public void CanGetValidResultFromQueryItems_RecursionOneLevel()
 		{
-			WriteFile(testPath + "/Test.txt", "blah", true);
+			WriteFile(MergePaths(testPath, "/Test.txt"), "blah", true);
 
 			SourceItem[] items = repository.QueryItems(_lastCommitRevision, "", Recursion.OneLevel);
 			SourceItem[] sourceItems = sourceControlService.QueryItems(
@@ -84,7 +84,7 @@ namespace IntegrationTests
 		[Fact]
 		public void CanGetValidResultFromQueryItems_RecursionFull()
 		{
-			WriteFile(testPath + "/Test.txt", "blah", true);
+			WriteFile(MergePaths(testPath, "/Test.txt"), "blah", true);
 
 			SourceItem[] items = repository.QueryItems(_lastCommitRevision, "", Recursion.Full);
 			SourceItem[] sourceItems = sourceControlService.QueryItems(

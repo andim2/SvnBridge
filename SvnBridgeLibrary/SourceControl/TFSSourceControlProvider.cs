@@ -715,13 +715,13 @@ namespace SvnBridge.SourceControl
 		{
 			foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)
 			{
-                string propertyKey = propertyRevision.Key.ToLower();
+                string propertyKey = propertyRevision.Key;
                 if (propertyKey == "")
                     propertyKey = "/";
 
-				if (folders.ContainsKey(propertyKey))
+				if (folders.ContainsKey(propertyKey.ToLower()))
 				{
-                    ItemMetaData item = folders[propertyKey];
+                    ItemMetaData item = folders[propertyKey.ToLower()];
 					item.PropertyRevision = propertyRevision.Value;
 				}
 				else
