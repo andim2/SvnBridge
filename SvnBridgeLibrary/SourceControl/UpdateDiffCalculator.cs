@@ -384,6 +384,18 @@ namespace SvnBridge.SourceControl
                     remoteName = remoteName.Replace("/" + Constants.PropFolder + "/", "/");
                 }
             }
+            else if (remoteName.StartsWith(Constants.PropFolder + "/"))
+            {
+                propertyChange = true;
+                if (remoteName == Constants.PropFolder + "/" + Constants.FolderPropFile)
+                {
+                    remoteName = "";
+                }
+                else
+                {
+                    remoteName = remoteName.Substring(Constants.PropFolder.Length + 1);
+                }
+            }
             return new ItemInformation(propertyChange, remoteName);
         }
 
@@ -538,7 +550,11 @@ namespace SvnBridge.SourceControl
                     if (i == nameParts.Length - 1)
                         lastNamePart = true;
 
-                    itemName += "/" + nameParts[i];
+                    if (!itemName.EndsWith("/"))
+                        itemName += "/" + nameParts[i];
+                    else
+                        itemName += nameParts[i];
+
                     ItemMetaData item = folder.FindItem(itemName);
                     if (item == null)
                     {
@@ -640,13 +656,15 @@ namespace SvnBridge.SourceControl
                 .Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             FolderMetaData folder = root;
-            string separator = folderName != "" ? "/" : "";
             for (int i = 0; i < nameParts.Length; i++)
             {
                 bool isLastNamePart = i == nameParts.Length - 1;
 
-                folderName += separator + nameParts[i];
-                separator = "/";
+                if (!folderName.EndsWith("/"))
+                    folderName += "/" + nameParts[i];
+                else
+                    folderName += nameParts[i];
+
                 HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart, targetVersion);
             }
             if (nameParts.Length == 0)//we have to delete the checkout root itself
