@@ -93,22 +93,6 @@ namespace IntegrationTests
 			Assert.Equal(MergePaths(testPath, "/TestFile.txt"), folder.Items[0].Name);
 			Assert.NotNull(folder.Items[0].DownloadUrl);
 		}
-
-		[Fact]
-		public void TestGetChangedItemsWithAddedFileAtRoot()
-		{
-			int versionFrom = _lastCommitRevision;
-			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
-			int versionTo = _lastCommitRevision;
-			UpdateReportData reportData = new UpdateReportData();
-			CreateRootProvider();
-
-			FolderMetaData folder = _providerRoot.GetChangedItems("", versionFrom, versionTo, reportData);
-
-			Assert.Equal("/", folder.Name);
-			Assert.Equal("/TestFile.txt", folder.Items[0].Name);
-			Assert.NotNull(folder.Items[0].DownloadUrl);
-		}
         
 		[Fact]
 		public void TestGetChangedItemsWithAddedFileContainingProperty()
