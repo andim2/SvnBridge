@@ -25,10 +25,8 @@ namespace IntegrationTests
         protected MyMocks stubs;
 		protected const string PROJECT_NAME = "SvnBridgeTesting";
 		protected readonly string _activityId;
-		protected string _activityIdRoot;
 		protected readonly string testPath;
 		protected readonly TFSSourceControlProvider _provider;
-		protected TFSSourceControlProvider _providerRoot;
 		protected int _lastCommitRevision;
 		protected readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
 		private readonly AuthenticateAsLowPrivilegeUser authenticateAsLowPrivilegeUser;
@@ -77,24 +75,8 @@ namespace IntegrationTests
             }
             _provider.MergeActivity(_activityId);
             _provider.DeleteActivity(_activityId);
-            if (_providerRoot != null)
-                _providerRoot.DeleteActivity(_activityIdRoot);
             authenticateAsLowPrivilegeUser.Dispose();
         }
-
-		public void CreateRootProvider()
-		{
-			_activityIdRoot = Guid.NewGuid().ToString();
-            if (TEST_ROOT)
-            {
-                _providerRoot = CreateSourceControlProvider(PROJECT_NAME);
-            }
-            else
-            {
-                _providerRoot = CreateSourceControlProvider(PROJECT_NAME + testPath);
-            }
-			_providerRoot.MakeActivity(_activityIdRoot);
-		}
 
         public TFSSourceControlProvider CreateSourceControlProvider(string projectName)
 		{
@@ -154,16 +136,6 @@ namespace IntegrationTests
 			_provider.DeleteActivity(_activityId);
 			_provider.MakeActivity(_activityId);
 			RequestCache.Init();
-			return response;
-		}
-
-		protected MergeActivityResponse CommitRoot()
-		{
-			MergeActivityResponse response = _providerRoot.MergeActivity(_activityIdRoot);
-			_lastCommitRevision = response.Version;
-			RequestCache.Init();
-			_providerRoot.DeleteActivity(_activityIdRoot);
-			_providerRoot.MakeActivity(_activityIdRoot);
 			return response;
 		}
 
