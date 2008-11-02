@@ -58,21 +58,7 @@ namespace IntegrationTests
             WriteFile(path, "Fun text", false);
             SetProperty(path, "mime-type", mimeType, true);
 
-            FolderMetaData item = (FolderMetaData) _provider.GetItems(-1, testPath, Recursion.Full);
-
-            Assert.Equal(mimeType, item.Items[0].Properties["mime-type"]);
-        }
-
-        [Fact]
-        public void TestGetItemsOnRootFolderReturnsPropertiesForFileWithinFolder()
-        {
-            string mimeType = "application/octet-stream";
-            string path = MergePaths(testPath, "/TestFile.txt");
-            WriteFile(path, "Fun text", false);
-            SetProperty(path, "mime-type", mimeType, true);
-            CreateRootProvider();
-
-            FolderMetaData folder = (FolderMetaData)_providerRoot.GetItems(-1, "", Recursion.Full);
+            FolderMetaData folder = (FolderMetaData) _provider.GetItems(-1, testPath, Recursion.Full);
 
             Assert.Equal(1, folder.Items.Count);
             Assert.Equal(mimeType, folder.Items[0].Properties["mime-type"]);
@@ -86,20 +72,8 @@ namespace IntegrationTests
 
             FolderMetaData item = (FolderMetaData) _provider.GetItems(-1, testPath, Recursion.Full);
 
-            Assert.Equal(ignore, item.Properties["ignore"]);
-        }
-
-        [Fact]
-        public void TestGetItemsOnRootFolderReturnsPropertiesForFolder()
-        {
-            string ignore = "*.bad\n";
-            SetProperty(testPath, "ignore", ignore, true);
-            CreateRootProvider();
-
-            FolderMetaData item = (FolderMetaData)_providerRoot.GetItems(-1, "", Recursion.Full);
-
-            Assert.Equal(ignore, item.Properties["ignore"]);
             Assert.Equal(0, item.Items.Count);
+            Assert.Equal(ignore, item.Properties["ignore"]);
         }
 
         [Fact]
