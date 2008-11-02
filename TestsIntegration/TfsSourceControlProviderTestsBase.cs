@@ -19,7 +19,7 @@ namespace IntegrationTests
 {
 	public abstract class TFSSourceControlProviderTestsBase : IDisposable
 	{
-        const bool TEST_ROOT = true;
+        const bool TEST_ROOT = false;
 
 		public string ServerUrl = Settings.Default.ServerUrl;
         protected MyMocks stubs;

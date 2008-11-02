@@ -724,23 +724,6 @@ namespace IntegrationTests
 			Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile.txt"), ItemType.File));
 		}
 
-		[Fact]
-		public void TestCommitUpdatedFileAtRoot()
-		{
-			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Test file contents", true);
-			byte[] testFile = GetBytes("Test file contents\r\nUpdated");
-
-			CreateRootProvider();
-			bool created = _providerRoot.WriteFile(_activityIdRoot, "/TestFile.txt", testFile);
-			MergeActivityResponse response = CommitRoot();
-
-			Assert.Equal(GetString(testFile), ReadFile(MergePaths(testPath, "/TestFile.txt")));
-			Assert.Equal(false, created);
-			Assert.Equal(_provider.GetLatestVersion(), response.Version);
-			Assert.Equal(1, response.Items.Count);
-			Assert.True(ResponseContains(response, "/TestFile.txt", ItemType.File));
-		}
-
 		[Fact(Skip = "Not implemented yet")]
 		//[ExpectedException(typeof (ConflictException))]
 		public void TestCommitUpdatedFileAtSameTimeAsAnotherUserThrowsConflictException()
