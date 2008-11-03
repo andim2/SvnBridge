@@ -633,7 +633,7 @@ namespace TestsEndToEnd
         }
 
         [SvnBridgeFact]
-        public void UpdateAfterCommitWithModifiedThenDeletedFile_ShouldRemoveFile()
+        public void CommitFileThenUpdateWithFileModifiedThenDeleted_ShouldRemoveFile()
         {
             CheckoutAndChangeDirectory();
             File.WriteAllText("test.txt", "test");
@@ -645,6 +645,20 @@ namespace TestsEndToEnd
             string output = Svn("up");
 
             Assert.False(File.Exists("test.txt"));
+        }
+
+        [SvnBridgeFact]
+        public void CommitFolderThenUpdateWithFolderDeleted_ShouldRemoveFolder()
+        {
+            CheckoutAndChangeDirectory();
+            Directory.CreateDirectory("test");
+            Svn("add test");
+            Svn("commit -m blah");
+            DeleteItem(testPath + "/test", true);
+
+            string output = Svn("up");
+
+            Assert.False(Directory.Exists("test"));
         }
     }
 }

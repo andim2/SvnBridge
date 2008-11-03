@@ -220,6 +220,11 @@ namespace SvnBridge.SourceControl
 
         public virtual LogItem GetLog(string path, int versionFrom, int versionTo, Recursion recursion, int maxCount)
         {
+            return GetLog(path, -1, versionFrom, versionTo, recursion, maxCount);
+        }
+
+        public virtual LogItem GetLog(string path, int itemVersion, int versionFrom, int versionTo, Recursion recursion, int maxCount)
+        {
             if (path.StartsWith("/"))
             {
                 path = path.Substring(1);
@@ -237,7 +242,11 @@ namespace SvnBridge.SourceControl
                     break;
             }
 
-            LogItem logItem = GetLogItem(serverPath, VersionSpec.Latest, versionFrom, versionTo, recursionType, maxCount);
+            VersionSpec itemVersionSpec = VersionSpec.Latest;
+            if (itemVersion != -1)
+                itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
+
+            LogItem logItem = GetLogItem(serverPath, itemVersionSpec, versionFrom, versionTo, recursionType, maxCount);
 
             foreach (SourceItemHistory history in logItem.History)
             {

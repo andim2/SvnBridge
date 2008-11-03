@@ -45,7 +45,7 @@ namespace SvnBridge.SourceControl
                 {
                     projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
                 }
-                CalculateChangeBetweenVersions(projectRootPath, projectRoot, versionFrom, versionTo);
+                CalculateChangeBetweenVersions(projectRootPath, -1, projectRoot, versionFrom, versionTo);
 
                 if (projectRootPath != checkoutRootPath)
                 {
@@ -83,7 +83,7 @@ namespace SvnBridge.SourceControl
                             targetPath = targetPath.Substring(1);
 
                         FindOrCreateResults results = FindItemOrCreateItem(checkoutRoot, rootPath, data.path, versionTo, Recursion.None);
-                        bool changed = CalculateChangeBetweenVersions(targetPath, checkoutRoot, itemVersionFrom, versionTo);
+                        bool changed = CalculateChangeBetweenVersions(targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionTo);
                         if (changed == false)
                             results.RevertAddition();
                     }
@@ -179,10 +179,7 @@ namespace SvnBridge.SourceControl
             return results;
         }
 
-        private bool CalculateChangeBetweenVersions(string checkoutRootPath,
-                                                    FolderMetaData root,
-                                                    int sourceVersion,
-                                                    int targetVersion)
+        private bool CalculateChangeBetweenVersions(string checkoutRootPath, int checkoutRootVersion, FolderMetaData root, int sourceVersion, int targetVersion)
         {
             bool updatingForwardInTime = sourceVersion <= targetVersion;
             int lastVersion = sourceVersion;
@@ -190,14 +187,14 @@ namespace SvnBridge.SourceControl
             while (targetVersion != lastVersion)
             {
                 int previousLoopLastVersion = lastVersion;
-                LogItem logItem =
-                    sourceControlProvider.GetLog(checkoutRootPath,
-                                                 Math.Min(lastVersion, targetVersion) + 1,
-                                                 Math.Max(lastVersion, targetVersion),
-                                                 Recursion.Full, 256);
+                LogItem logItem = sourceControlProvider.GetLog(
+                    checkoutRootPath,
+                    checkoutRootVersion,
+                    Math.Min(lastVersion, targetVersion) + 1,
+                    Math.Max(lastVersion, targetVersion),
+                    Recursion.Full, 256);
 
-                foreach (SourceItemHistory history in
-                    Helper.SortHistories(updatingForwardInTime, logItem.History))
+                foreach (SourceItemHistory history in Helper.SortHistories(updatingForwardInTime, logItem.History))
                 {
                     changed = true;
                     lastVersion = history.ChangeSetID;
