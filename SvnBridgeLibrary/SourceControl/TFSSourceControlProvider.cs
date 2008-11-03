@@ -299,40 +299,50 @@ namespace SvnBridge.SourceControl
             return logItem;
         }
 
+        private List<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changes)
+        {
+            List<SourceItemHistory> history = new List<SourceItemHistory>();
+
+            foreach (Changeset changeset in changes)
+            {
+                SourceItemHistory sourceItemHistory = new SourceItemHistory(changeset.Changes[0].Item.cs, changeset.cmtr, changeset.date, changeset.Comment);
+                foreach (Change change in changeset.Changes)
+                {
+                    SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
+                    sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, change.type));
+                }
+                history.Add(sourceItemHistory);
+            }
+            return history;
+        }
+
         private LogItem GetLogItem(string serverPath, int versionFrom, int versionTo, RecursionType recursionType, int maxCount)
         {
-            LogItem log = sourceControlService.QueryLog(serverUrl,
-                                                        credentials,
-                                                        serverPath,
-                                                        new ChangesetVersionSpec { cs = versionFrom },
-                                                        new ChangesetVersionSpec { cs = versionTo },
-                                                        recursionType,
-                                                        maxCount);
+            ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
+            Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false);
+
+            List<SourceItemHistory> histories = ConvertChangesetsToSourceItemHistory(changes);
+
             const int queryLimit = 256;
             if (maxCount > queryLimit)
             {
-                var histories = new List<SourceItemHistory>(log.History);
                 // we might have remaining items
-                int logItemsCount = log.History.Length;
-                LogItem temp = log;
+                int logItemsCount = histories.Count;
+                List<SourceItemHistory> temp = histories;
                 while (logItemsCount == queryLimit)
                 {
-                    int earliestVersionFound = temp.History[queryLimit - 1].ChangeSetID - 1;
+                    //int earliestVersionFound = temp.History[queryLimit - 1].ChangeSetID - 1;
+                    int earliestVersionFound = temp[queryLimit - 1].ChangeSetID - 1;
                     if (earliestVersionFound == versionFrom)
                         break;
-                    temp = sourceControlService.QueryLog(serverUrl,
-                                                         credentials,
-                                                         serverPath,
-                                                         new ChangesetVersionSpec { cs = versionFrom },
-                                                         new ChangesetVersionSpec { cs = earliestVersionFound },
-                                                         recursionType,
-                                                         maxCount);
-                    histories.AddRange(temp.History);
-                    logItemsCount = temp.History.Length;
+
+                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false);
+                    temp = ConvertChangesetsToSourceItemHistory(changes);
+                    histories.AddRange(temp);
+                    logItemsCount = temp.Count;
                 }
-                log.History = histories.ToArray();
             }
-            return log;
+            return new LogItem(null, serverPath, histories.ToArray());
         }
 
         public virtual bool IsDirectory(int version, string path)

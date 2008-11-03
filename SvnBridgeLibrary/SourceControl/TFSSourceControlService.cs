@@ -8,6 +8,7 @@ using System.Text;
 using System.IO;
 using SvnBridge.Interfaces;
 using SvnBridge.Infrastructure;
+using CodePlex.TfsLibrary;
 
 namespace SvnBridge.SourceControl
 {
@@ -25,41 +26,75 @@ namespace SvnBridge.SourceControl
 
 		public ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType)
 		{
-			Repository webSvc = CreateProxy(tfsUrl, credentials);
-			string username = TfsUtil.GetUsername(credentials, tfsUrl);
-			return webSvc.QueryItemsExtended(workspaceName, username, items, deletedState, itemType);
-		}
-
-		private Repository CreateProxy(string tfsUrl, ICredentials credentials)
-		{
-			return (Repository)webSvcFactory.Create(tfsUrl, credentials);
+            return WrapWebException<ExtendedItem[][]>(delegate
+            {
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                string username = TfsUtil.GetUsername(credentials, tfsUrl);
+                return webSvc.QueryItemsExtended(workspaceName, username, items, deletedState, itemType);
+            });
 		}
 
 		public BranchRelative[][] QueryBranches(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, VersionSpec version)
 		{
-			Repository webSvc = CreateProxy(tfsUrl, credentials);
-			string username = TfsUtil.GetUsername(credentials, tfsUrl);
-			return webSvc.QueryBranches(workspaceName, username, items, version);
+            return WrapWebException<BranchRelative[][]>(delegate
+            {
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                string username = TfsUtil.GetUsername(credentials, tfsUrl);
+                return webSvc.QueryBranches(workspaceName, username, items, version);
+            });
 		}
 
 		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemIds, int changeSet)
 		{
-			SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemIds }, changeSet);
-			if(items.Length==0)
-				return null;
-			return items[0];
+            return WrapWebException<SourceItem>(delegate
+            {
+                SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemIds }, changeSet);
+                if (items.Length == 0)
+                    return null;
+                return items[0];
+            });
 		}
 
         public ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items)
         {
-            Repository webSvc = CreateProxy(tfsUrl, credentials);
-            return webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+            return WrapWebException<ItemSet[]>(delegate
+            {
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                return webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+            });
         }
 
         public Changeset[] QueryHistory(string tfsUrl, ICredentials credentials, string workspaceName, string workspaceOwner, ItemSpec itemSpec, VersionSpec versionItem, string user, VersionSpec versionFrom, VersionSpec versionTo, int maxCount, bool includeFiles, bool generateDownloadUrls, bool slotMode)
         {
-            Repository webSvc = CreateProxy(tfsUrl, credentials);
-            return webSvc.QueryHistory(workspaceName, workspaceOwner, itemSpec, versionItem, user, versionFrom, versionTo, maxCount, includeFiles, generateDownloadUrls, slotMode);
+            return WrapWebException<Changeset[]>(delegate
+            {
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                return webSvc.QueryHistory(workspaceName, workspaceOwner, itemSpec, versionItem, user, versionFrom, versionTo, maxCount, includeFiles, generateDownloadUrls, slotMode);
+            });
+        }
+
+        private Repository CreateProxy(string tfsUrl, ICredentials credentials)
+        {
+            return (Repository)webSvcFactory.Create(tfsUrl, credentials);
+        }
+
+        private delegate T WrapWebExceptionDelegate<T>();
+
+        private T WrapWebException<T>(WrapWebExceptionDelegate<T> function)
+        {
+            try
+            {
+                return function();
+            }
+            catch (WebException ex)
+            {
+                HttpWebResponse response = ex.Response as HttpWebResponse;
+
+                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
+                    throw new NetworkAccessDeniedException(ex);
+
+                throw;
+            }
         }
     }
 }
