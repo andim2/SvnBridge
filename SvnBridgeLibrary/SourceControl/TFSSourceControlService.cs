@@ -16,24 +16,14 @@ namespace SvnBridge.SourceControl
         private readonly DefaultLogger logger;
 		private readonly IRepositoryWebSvcFactory webSvcFactory;
 
-		public TFSSourceControlService(
-			IRegistrationService registrationService, 
-			IRepositoryWebSvcFactory webSvcFactory, 
-			IWebTransferService webTransferService, 
-			IFileSystem fileSystem,
-            DefaultLogger logger)
+		public TFSSourceControlService(IRegistrationService registrationService, IRepositoryWebSvcFactory webSvcFactory, IWebTransferService webTransferService, IFileSystem fileSystem, DefaultLogger logger)
 			: base(registrationService, webSvcFactory, webTransferService, fileSystem)
 		{
 			this.webSvcFactory = webSvcFactory;
 			this.logger = logger;
 		}
 
-		public ExtendedItem[][] QueryItemsExtended(string tfsUrl,
-		                                           ICredentials credentials,
-		                                           string workspaceName,
-		                                           ItemSpec[] items,
-		                                           DeletedState deletedState,
-		                                           ItemType itemType)
+		public ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType)
 		{
 			Repository webSvc = CreateProxy(tfsUrl, credentials);
 			string username = TfsUtil.GetUsername(credentials, tfsUrl);
@@ -45,11 +35,7 @@ namespace SvnBridge.SourceControl
 			return (Repository)webSvcFactory.Create(tfsUrl, credentials);
 		}
 
-		public BranchRelative[][] QueryBranches(string tfsUrl,
-		                                        ICredentials credentials,
-		                                        string workspaceName,
-		                                        ItemSpec[] items,
-		                                        VersionSpec version)
+		public BranchRelative[][] QueryBranches(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, VersionSpec version)
 		{
 			Repository webSvc = CreateProxy(tfsUrl, credentials);
 			string username = TfsUtil.GetUsername(credentials, tfsUrl);
@@ -58,7 +44,7 @@ namespace SvnBridge.SourceControl
 
 		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemIds, int changeSet)
 		{
-			SourceItem[] items = QueryItems(tfsUrl, credentials, new int[]{itemIds}, changeSet);
+			SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemIds }, changeSet);
 			if(items.Length==0)
 				return null;
 			return items[0];
@@ -67,8 +53,13 @@ namespace SvnBridge.SourceControl
         public ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items)
         {
             Repository webSvc = CreateProxy(tfsUrl, credentials);
-            string username = TfsUtil.GetUsername(credentials, tfsUrl);
             return webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+        }
+
+        public Changeset[] QueryHistory(string tfsUrl, ICredentials credentials, string workspaceName, string workspaceOwner, ItemSpec itemSpec, VersionSpec versionItem, string user, VersionSpec versionFrom, VersionSpec versionTo, int maxCount, bool includeFiles, bool generateDownloadUrls, bool slotMode)
+        {
+            Repository webSvc = CreateProxy(tfsUrl, credentials);
+            return webSvc.QueryHistory(workspaceName, workspaceOwner, itemSpec, versionItem, user, versionFrom, versionTo, maxCount, includeFiles, generateDownloadUrls, slotMode);
         }
     }
 }
