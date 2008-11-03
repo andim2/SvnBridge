@@ -82,10 +82,8 @@ namespace SvnBridge.SourceControl
                         if (targetPath.StartsWith("/"))
                             targetPath = targetPath.Substring(1);
 
-                        FindOrCreateResults results = FindItemOrCreateItem(checkoutRoot, rootPath, data.path, versionTo,
-                                                                         Recursion.None);
-                        bool changed = CalculateChangeBetweenVersions(targetPath, checkoutRoot,
-                                                                      itemVersionFrom, versionTo);
+                        FindOrCreateResults results = FindItemOrCreateItem(checkoutRoot, rootPath, data.path, versionTo, Recursion.None);
+                        bool changed = CalculateChangeBetweenVersions(targetPath, checkoutRoot, itemVersionFrom, versionTo);
                         if (changed == false)
                             results.RevertAddition();
                     }
@@ -530,7 +528,10 @@ namespace SvnBridge.SourceControl
             if (string.Equals(remoteName, checkoutRootPath, StringComparison.InvariantCultureIgnoreCase))
             {
                 ItemMetaData item = sourceControlProvider.GetItems(targetVersion, remoteName, Recursion.None);
-                root.Properties = item.Properties;
+                if (item != null)
+                {
+                    root.Properties = item.Properties;
+                }
             }
             else
             {

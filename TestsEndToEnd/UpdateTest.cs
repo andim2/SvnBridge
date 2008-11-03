@@ -631,5 +631,20 @@ namespace TestsEndToEnd
 5
 6", File.ReadAllText("test.txt"));
         }
+
+        [SvnBridgeFact]
+        public void UpdateAfterCommitWithModifiedThenDeletedFile_ShouldRemoveFile()
+        {
+            CheckoutAndChangeDirectory();
+            File.WriteAllText("test.txt", "test");
+            Svn("add test.txt");
+            Svn("commit -m blah");
+            WriteFile(testPath + "/test.txt", "test2", true);
+			DeleteItem(testPath + "/test.txt", true);
+
+            string output = Svn("up");
+
+            Assert.False(File.Exists("test.txt"));
+        }
     }
 }

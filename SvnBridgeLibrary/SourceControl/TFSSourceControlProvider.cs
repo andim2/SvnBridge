@@ -237,7 +237,7 @@ namespace SvnBridge.SourceControl
                     break;
             }
 
-            LogItem logItem = GetLogItem(serverPath, versionFrom, versionTo, recursionType, maxCount);
+            LogItem logItem = GetLogItem(serverPath, VersionSpec.Latest, versionFrom, versionTo, recursionType, maxCount);
 
             foreach (SourceItemHistory history in logItem.History)
             {
@@ -316,27 +316,26 @@ namespace SvnBridge.SourceControl
             return history;
         }
 
-        private LogItem GetLogItem(string serverPath, int versionFrom, int versionTo, RecursionType recursionType, int maxCount)
+        private LogItem GetLogItem(string serverPath, VersionSpec itemVersion, int versionFrom, int versionTo, RecursionType recursionType, int maxCount)
         {
-            ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
-            Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false);
+            const int QUERY_LIMIT = 256;
 
+            ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
+            Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false);
             List<SourceItemHistory> histories = ConvertChangesetsToSourceItemHistory(changes);
 
-            const int queryLimit = 256;
-            if (maxCount > queryLimit)
+            // TFS QueryHistory API won't return more then 256 items, so need to call multiple times if more
+            if (maxCount > QUERY_LIMIT)
             {
-                // we might have remaining items
                 int logItemsCount = histories.Count;
                 List<SourceItemHistory> temp = histories;
-                while (logItemsCount == queryLimit)
+                while (logItemsCount == QUERY_LIMIT)
                 {
-                    //int earliestVersionFound = temp.History[queryLimit - 1].ChangeSetID - 1;
-                    int earliestVersionFound = temp[queryLimit - 1].ChangeSetID - 1;
+                    int earliestVersionFound = temp[QUERY_LIMIT - 1].ChangeSetID - 1;
                     if (earliestVersionFound == versionFrom)
                         break;
 
-                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false);
+                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false);
                     temp = ConvertChangesetsToSourceItemHistory(changes);
                     histories.AddRange(temp);
                     logItemsCount = temp.Count;
