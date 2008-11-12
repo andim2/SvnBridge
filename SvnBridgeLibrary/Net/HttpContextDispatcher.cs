@@ -10,6 +10,7 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
+using System.Web;
 
 namespace SvnBridge.Net
 {
@@ -134,11 +135,24 @@ namespace SvnBridge.Net
             }
             catch (IOException)
             {
-                // Error caused by client cancelling operation
+                // Error caused by client cancelling operation under IIS 6
+                if (Configuration.LogCancelErrors)
+                    throw;
+            }
+            catch (HttpException ex)
+            {
+                // Check if error caused by client cancelling operation under IIS 7
+                if (!ex.Message.StartsWith("The remote host closed the connection."))
+                    throw;
+
+                if (Configuration.LogCancelErrors)
+                    throw;
+            }
+            finally
+            {
                 if (handler != null)
                     handler.Cancel();
             }
-
         }
 
         private static NetworkCredential GetCredential(IHttpContext context)

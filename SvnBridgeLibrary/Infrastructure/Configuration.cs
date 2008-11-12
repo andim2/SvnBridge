@@ -13,6 +13,7 @@ namespace SvnBridge.Infrastructure
         private const string TFS_URL = "TfsUrl";
         private const string DOMAIN_INCLUDES_PROJECT_NAME = "DomainIncludesProjectName";
         private const string USE_CODEPLEX_SERVERS = "UseCodePlexServers";
+        private const string LOG_CANCEL_ERRORS = "LogCancelErrors";
 
         public static bool CacheEnabled
         {
@@ -22,6 +23,11 @@ namespace SvnBridge.Infrastructure
         public static string LogPath
         {
             get { return ConfigurationManager.AppSettings[LOG_PATH]; }
+        }
+
+        public static bool LogCancelErrors
+        {
+            get { return BoolConfig(LOG_CANCEL_ERRORS, false); }
         }
 
         public static bool PerfCountersMandatory

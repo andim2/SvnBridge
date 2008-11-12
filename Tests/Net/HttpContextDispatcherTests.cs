@@ -9,6 +9,10 @@ using SvnBridge.Stubs;
 using System.Collections.Specialized;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.SourceControl;
+using SvnBridge.PathParsing;
+using SvnBridge.Infrastructure;
+using System.IO;
+using System.Web;
 
 namespace SvnBridge.Net
 {
@@ -24,8 +28,40 @@ namespace SvnBridge.Net
             RequestCache.Dispose();
         }
 
+        //[Fact]
+        //public void Repro()
+        //{
+        //    BootStrapper.Start();
+        //    IPathParser pathParser = new PathParserProjectInDomain("http://codeplex-team:8080", Container.Resolve<TFSSourceControlService>());
+        //    HttpContextDispatcher dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
+
+        //    StubHttpContext context = new StubHttpContext();
+        //    StubHttpRequest request = new StubHttpRequest();
+        //    StubHttpResponse response = new StubHttpResponse();
+        //    context.Request = request;
+        //    context.Response = response;
+        //    response.OutputStream = new MemoryStream(Constants.BufferSize);
+
+        //    RequestCache.Init();
+        //    request.ApplicationPath = "/svn";
+        //    request.HttpMethod = "REPORT";
+        //    request.Path = "http://galleries.redmond.corp.microsoft.com/svn/!svn/vcc/default";
+        //    request.Input =
+        //        //"<?xml version=\"1.0\" encoding=\"utf-16\"?>" +
+        //        "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
+        //        "  <entry rev=\"6629\" start-empty=\"true\" />" +
+        //        "  <src-path>http://galleries.redmond.corp.microsoft.com/svn</src-path>" +
+        //        "  <target-revision>6629</target-revision>" +
+        //        "</update-report>";
+
+        //    dispatcher.Dispatch(context);
+
+        //    string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+        //    System.Diagnostics.Debug.WriteLine(output);
+        //}
+
         [Fact]
-        public void Dispatch_WhenServerIsCodePlexAndUsernameIsMissingDomainAndSuffix_DomainAndSuffixIsAdded()
+        public void Dispatch_ServerIsCodePlexAndUsernameIsMissingDomainAndSuffix_DomainAndSuffixIsAdded()
         {
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             StubHttpContext context = new StubHttpContext();
@@ -42,18 +78,47 @@ namespace SvnBridge.Net
         }
 
         [Fact]
-        public void Dispatch_WhenServerIsCodePlexAndNoAuthorizationHeader_CredentialsAreNull()
+        public void Dispatch_ServerIsCodePlexAndNoAuthorizationHeader_CredentialsAreNull()
         {
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             StubHttpContext context = new StubHttpContext();
             StubHttpRequest request = new StubHttpRequest();
             context.Request = request;
             request.Url = new Uri("https://tfs01.codeplex.com"); ;
-            request.Headers = new NameValueCollection();
 
             dispatcher.Dispatch(context);
 
             Assert.Null(dispatcher.Handler.Handle_credentials);
+        }
+
+        [Fact]
+        public void Dispatch_RequestIsCancelledUnderIIS6_ExceptionIsNotThrown()
+        {
+            TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            context.Request = request;
+            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            dispatcher.Handler.Handle_Throw = new IOException();
+
+            Exception result = Record.Exception(delegate { dispatcher.Dispatch(context); });
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Dispatch_RequestIsCancelledUnderIIS7_ExceptionIsNotThrown()
+        {
+            TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            context.Request = request;
+            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            dispatcher.Handler.Handle_Throw = new HttpException("The remote host closed the connection.");
+
+            Exception result = Record.Exception(delegate { dispatcher.Dispatch(context); });
+
+            Assert.Null(result);
         }
     }
 
@@ -130,10 +195,13 @@ namespace SvnBridge.Net
     public class StubHandler : RequestHandlerBase
     {
         public NetworkCredential Handle_credentials;
+        public Exception Handle_Throw = null;
 
         public override void Handle(IHttpContext context, IPathParser pathParser, NetworkCredential credentials)
         {
             Handle_credentials = credentials;
+            if (Handle_Throw != null)
+                throw Handle_Throw;
         }
 
         protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
