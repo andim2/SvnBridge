@@ -60,139 +60,6 @@ namespace ProtocolTests
         }
 
         [Fact]
-        public void Test10()
-        {
-            stubs.Attach(provider.ItemExists, false);
-            ItemMetaData item = new ItemMetaData();
-            stubs.Attach(provider.GetItemInActivity, item);
-            stubs.AttachReadFile(provider.ReadFile,
-                        Encoding.Default.GetBytes(
-                            "Fun test1.txt\r\nMore fun1\r\nMore fun2\r\nMore fun3\r\nMore fun4\r\nMore fun5\r\nMore fun6\r\nMore fun7\r\nMore fun8\r\nMore fun9"));
-            stubs.Attach(provider.WriteFile, false);
-
-            string request =
-                "PUT //!svn/wrk/cd41de09-d4dd-9d45-bd7a-6cb0fafb9dd1/Spikes/SvnFacade/trunk/Test1.txt HTTP/1.1\r\n" +
-                "Host: localhost:8082\r\n" +
-                "User-Agent: SVN/1.4.2 (r22196) neon/0.26.2\r\n" +
-                "Connection: TE\r\n" +
-                "TE: trailers\r\n" +
-                "Content-Type: application/vnd.svn-svndiff\r\n" +
-                "X-SVN-Base-Fulltext-MD5: bc502e1a6a02211228f16e6230ec038e\r\n" +
-                "X-SVN-Result-Fulltext-MD5: b4f4b6b88b5686a793b8d396c9326004\r\n" +
-                "Content-Length: 25\r\n" +
-                "Authorization: Basic andhbmFnZWw6UGFzc0B3b3JkMQ==\r\n" +
-                "\r\n" +
-                "SVN\0\0p|\u0004\u000C\0p\0\u008C\r\n" +
-                "More fun10";
-
-            string expected =
-                "HTTP/1.1 204 No Content\r\n" +
-                "Date: Mon, 11 Jun 2007 21:59:32 GMT\r\n" +
-                "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 0\r\n" +
-                "Content-Type: text/plain\r\n" +
-                "\r\n";
-
-            string actual = ProcessRequest(request, ref expected);
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public void Test11()
-        {
-            MergeActivityResponse mergeResponse =
-                new MergeActivityResponse(5465, DateTime.Parse("2007-06-11T21:59:32.848723Z"), "jwanagel");
-            mergeResponse.Items.Add(new MergeActivityResponseItem(ItemType.File, "/Spikes/SvnFacade/trunk/Test1.txt"));
-            stubs.Attach(provider.MergeActivity, mergeResponse);
-
-            string request =
-                "MERGE /Spikes/SvnFacade/trunk HTTP/1.1\r\n" +
-                "Host: localhost:8082\r\n" +
-                "User-Agent: SVN/1.4.2 (r22196) neon/0.26.2\r\n" +
-                "Connection: TE\r\n" +
-                "TE: trailers\r\n" +
-                "Content-Length: 297\r\n" +
-                "Content-Type: text/xml\r\n" +
-                "X-SVN-Options:  release-locks\r\n" +
-                "Accept-Encoding: gzip\r\n" +
-                "Accept-Encoding: gzip\r\n" +
-                "Authorization: Basic andhbmFnZWw6UGFzc0B3b3JkMQ==\r\n" +
-                "\r\n" +
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:merge xmlns:D=\"DAV:\"><D:source><D:href>/!svn/act/cd41de09-d4dd-9d45-bd7a-6cb0fafb9dd1</D:href></D:source><D:no-auto-merge/><D:no-checkout/><D:prop><D:checked-in/><D:version-name/><D:resourcetype/><D:creationdate/><D:creator-displayname/></D:prop></D:merge>";
-
-            string expected =
-                "HTTP/1.1 200 OK\r\n" +
-                "Date: Mon, 11 Jun 2007 21:59:32 GMT\r\n" +
-                "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Cache-Control: no-cache\r\n" +
-                "Transfer-Encoding: chunked\r\n" +
-                "Content-Type: text/xml\r\n" +
-                "\r\n" +
-                "2e9\r\n" +
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<D:merge-response xmlns:D=\"DAV:\">\n" +
-                "<D:updated-set>\n" +
-                "<D:response>\n" +
-                "<D:href>/!svn/vcc/default</D:href>\n" +
-                "<D:propstat><D:prop>\n" +
-                "<D:resourcetype><D:baseline/></D:resourcetype>\n" +
-                "\n" +
-                "<D:version-name>5465</D:version-name>\n" +
-                "<D:creationdate>2007-06-11T21:59:32.848723Z</D:creationdate>\n" +
-                "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
-                "</D:prop>\n" +
-                "<D:status>HTTP/1.1 200 OK</D:status>\n" +
-                "</D:propstat>\n" +
-                "</D:response>\n" +
-                "<D:response>\n" +
-                "<D:href>/Spikes/SvnFacade/trunk/Test1.txt</D:href>\n" +
-                "<D:propstat><D:prop>\n" +
-                "<D:resourcetype/>\n" +
-                "<D:checked-in><D:href>/!svn/ver/5465/Spikes/SvnFacade/trunk/Test1.txt</D:href></D:checked-in>\n" +
-                "</D:prop>\n" +
-                "<D:status>HTTP/1.1 200 OK</D:status>\n" +
-                "</D:propstat>\n" +
-                "</D:response>\n" +
-                "</D:updated-set>\n" +
-                "</D:merge-response>\n" +
-                "\r\n" +
-                "0\r\n" +
-                "\r\n";
-
-            string actual = ProcessRequest(request, ref expected);
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public void Test12()
-        {
-            stubs.Attach(provider.DeleteActivity);
-
-            string request =
-                "DELETE /!svn/act/cd41de09-d4dd-9d45-bd7a-6cb0fafb9dd1 HTTP/1.1\r\n" +
-                "Host: localhost:8082\r\n" +
-                "User-Agent: SVN/1.4.2 (r22196) neon/0.26.2\r\n" +
-                "Connection: TE\r\n" +
-                "TE: trailers\r\n" +
-                "Authorization: Basic andhbmFnZWw6UGFzc0B3b3JkMQ==\r\n" +
-                "\r\n";
-
-            string expected =
-                "HTTP/1.1 204 No Content\r\n" +
-                "Date: Mon, 11 Jun 2007 21:59:32 GMT\r\n" +
-                "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 0\r\n" +
-                "Content-Type: text/plain\r\n" +
-                "\r\n";
-
-            string actual = ProcessRequest(request, ref expected);
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
         public void Test2()
         {
             stubs.Attach(provider.ItemExists, true);
@@ -536,6 +403,139 @@ namespace ProtocolTests
                 "<hr />\n" +
                 "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at localhost Port 8082</address>\n" +
                 "</body></html>\n";
+
+            string actual = ProcessRequest(request, ref expected);
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Test10()
+        {
+            stubs.Attach(provider.ItemExists, false);
+            ItemMetaData item = new ItemMetaData();
+            stubs.Attach(provider.GetItemInActivity, item);
+            stubs.AttachReadFile(provider.ReadFile,
+                        Encoding.Default.GetBytes(
+                            "Fun test1.txt\r\nMore fun1\r\nMore fun2\r\nMore fun3\r\nMore fun4\r\nMore fun5\r\nMore fun6\r\nMore fun7\r\nMore fun8\r\nMore fun9"));
+            stubs.Attach(provider.WriteFile, false);
+
+            string request =
+                "PUT //!svn/wrk/cd41de09-d4dd-9d45-bd7a-6cb0fafb9dd1/Spikes/SvnFacade/trunk/Test1.txt HTTP/1.1\r\n" +
+                "Host: localhost:8082\r\n" +
+                "User-Agent: SVN/1.4.2 (r22196) neon/0.26.2\r\n" +
+                "Connection: TE\r\n" +
+                "TE: trailers\r\n" +
+                "Content-Type: application/vnd.svn-svndiff\r\n" +
+                "X-SVN-Base-Fulltext-MD5: bc502e1a6a02211228f16e6230ec038e\r\n" +
+                "X-SVN-Result-Fulltext-MD5: b4f4b6b88b5686a793b8d396c9326004\r\n" +
+                "Content-Length: 25\r\n" +
+                "Authorization: Basic andhbmFnZWw6UGFzc0B3b3JkMQ==\r\n" +
+                "\r\n" +
+                "SVN\0\0p|\u0004\u000C\0p\0\u008C\r\n" +
+                "More fun10";
+
+            string expected =
+                "HTTP/1.1 204 No Content\r\n" +
+                "Date: Mon, 11 Jun 2007 21:59:32 GMT\r\n" +
+                "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
+                "Content-Length: 0\r\n" +
+                "Content-Type: text/plain\r\n" +
+                "\r\n";
+
+            string actual = ProcessRequest(request, ref expected);
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Test11()
+        {
+            MergeActivityResponse mergeResponse =
+                new MergeActivityResponse(5465, DateTime.Parse("2007-06-11T21:59:32.848723Z"), "jwanagel");
+            mergeResponse.Items.Add(new MergeActivityResponseItem(ItemType.File, "/Spikes/SvnFacade/trunk/Test1.txt"));
+            stubs.Attach(provider.MergeActivity, mergeResponse);
+
+            string request =
+                "MERGE /Spikes/SvnFacade/trunk HTTP/1.1\r\n" +
+                "Host: localhost:8082\r\n" +
+                "User-Agent: SVN/1.4.2 (r22196) neon/0.26.2\r\n" +
+                "Connection: TE\r\n" +
+                "TE: trailers\r\n" +
+                "Content-Length: 297\r\n" +
+                "Content-Type: text/xml\r\n" +
+                "X-SVN-Options:  release-locks\r\n" +
+                "Accept-Encoding: gzip\r\n" +
+                "Accept-Encoding: gzip\r\n" +
+                "Authorization: Basic andhbmFnZWw6UGFzc0B3b3JkMQ==\r\n" +
+                "\r\n" +
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:merge xmlns:D=\"DAV:\"><D:source><D:href>/!svn/act/cd41de09-d4dd-9d45-bd7a-6cb0fafb9dd1</D:href></D:source><D:no-auto-merge/><D:no-checkout/><D:prop><D:checked-in/><D:version-name/><D:resourcetype/><D:creationdate/><D:creator-displayname/></D:prop></D:merge>";
+
+            string expected =
+                "HTTP/1.1 200 OK\r\n" +
+                "Date: Mon, 11 Jun 2007 21:59:32 GMT\r\n" +
+                "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
+                "Cache-Control: no-cache\r\n" +
+                "Transfer-Encoding: chunked\r\n" +
+                "Content-Type: text/xml\r\n" +
+                "\r\n" +
+                "2e9\r\n" +
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<D:merge-response xmlns:D=\"DAV:\">\n" +
+                "<D:updated-set>\n" +
+                "<D:response>\n" +
+                "<D:href>/!svn/vcc/default</D:href>\n" +
+                "<D:propstat><D:prop>\n" +
+                "<D:resourcetype><D:baseline/></D:resourcetype>\n" +
+                "\n" +
+                "<D:version-name>5465</D:version-name>\n" +
+                "<D:creationdate>2007-06-11T21:59:32.848723Z</D:creationdate>\n" +
+                "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
+                "</D:prop>\n" +
+                "<D:status>HTTP/1.1 200 OK</D:status>\n" +
+                "</D:propstat>\n" +
+                "</D:response>\n" +
+                "<D:response>\n" +
+                "<D:href>/Spikes/SvnFacade/trunk/Test1.txt</D:href>\n" +
+                "<D:propstat><D:prop>\n" +
+                "<D:resourcetype/>\n" +
+                "<D:checked-in><D:href>/!svn/ver/5465/Spikes/SvnFacade/trunk/Test1.txt</D:href></D:checked-in>\n" +
+                "</D:prop>\n" +
+                "<D:status>HTTP/1.1 200 OK</D:status>\n" +
+                "</D:propstat>\n" +
+                "</D:response>\n" +
+                "</D:updated-set>\n" +
+                "</D:merge-response>\n" +
+                "\r\n" +
+                "0\r\n" +
+                "\r\n";
+
+            string actual = ProcessRequest(request, ref expected);
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Test12()
+        {
+            stubs.Attach(provider.DeleteActivity);
+
+            string request =
+                "DELETE /!svn/act/cd41de09-d4dd-9d45-bd7a-6cb0fafb9dd1 HTTP/1.1\r\n" +
+                "Host: localhost:8082\r\n" +
+                "User-Agent: SVN/1.4.2 (r22196) neon/0.26.2\r\n" +
+                "Connection: TE\r\n" +
+                "TE: trailers\r\n" +
+                "Authorization: Basic andhbmFnZWw6UGFzc0B3b3JkMQ==\r\n" +
+                "\r\n";
+
+            string expected =
+                "HTTP/1.1 204 No Content\r\n" +
+                "Date: Mon, 11 Jun 2007 21:59:32 GMT\r\n" +
+                "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
+                "Content-Length: 0\r\n" +
+                "Content-Type: text/plain\r\n" +
+                "\r\n";
 
             string actual = ProcessRequest(request, ref expected);
 
