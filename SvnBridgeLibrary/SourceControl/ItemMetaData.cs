@@ -53,38 +53,6 @@ namespace SvnBridge.SourceControl
             }
         }
 
-
-		public static ItemMetaData ConvertSourceItem(SourceItem sourceItem, string rootPath)
-		{
-			ItemMetaData item;
-			if (sourceItem.ItemType == ItemType.Folder)
-			{
-				item = new FolderMetaData();
-			}
-			else
-			{
-				item = new ItemMetaData();
-			}
-
-			item.Id = sourceItem.ItemId;
-			if (rootPath.Length <= sourceItem.RemoteName.Length)
-			{
-				item.Name = sourceItem.RemoteName.Substring(rootPath.Length);
-			}
-			else
-			{
-				item.Name = "";
-			}
-            if (item.Name.StartsWith("/") == false)
-                item.Name = "/" + item.Name;
-
-			item.Author = "unknown";
-			item.LastModifiedDate = sourceItem.RemoteDate;
-			item.ItemRevision = sourceItem.RemoteChangesetId;
-			item.DownloadUrl = sourceItem.DownloadUrl;
-			return item;
-		}
-
 		public override string ToString()
 		{
 			return Name + " @" + Revision;

@@ -679,7 +679,7 @@ namespace SvnBridge.SourceControl
             ItemMetaData firstItem = null;
             foreach (SourceItem sourceItem in items)
             {
-                ItemMetaData item = ItemMetaData.ConvertSourceItem(sourceItem, rootPath);
+                ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
                 if (IsPropertyFile(item.Name) && !returnPropertyFiles)
                 {
                     string itemPath = GetItemFileNameFromPropertiesFileName(item.Name);
@@ -1353,7 +1353,7 @@ namespace SvnBridge.SourceControl
 
             List<ItemMetaData> result = new List<ItemMetaData>();
             foreach (SourceItem sourceItem in sourceItems)
-                result.Add(ItemMetaData.ConvertSourceItem(sourceItem, rootPath));
+                result.Add(ConvertSourceItem(sourceItem, rootPath));
 
             return result.ToArray();
         }
@@ -1364,6 +1364,37 @@ namespace SvnBridge.SourceControl
             itemSpec.item = item;
             itemSpec.recurse = recurse;
             return itemSpec;
+        }
+
+        private ItemMetaData ConvertSourceItem(SourceItem sourceItem, string rootPath)
+        {
+            ItemMetaData item;
+            if (sourceItem.ItemType == ItemType.Folder)
+            {
+                item = new FolderMetaData();
+            }
+            else
+            {
+                item = new ItemMetaData();
+            }
+
+            item.Id = sourceItem.ItemId;
+            if (rootPath.Length <= sourceItem.RemoteName.Length)
+            {
+                item.Name = sourceItem.RemoteName.Substring(rootPath.Length);
+            }
+            else
+            {
+                item.Name = "";
+            }
+            if (item.Name.StartsWith("/") == false)
+                item.Name = "/" + item.Name;
+
+            item.Author = "unknown";
+            item.LastModifiedDate = sourceItem.RemoteDate;
+            item.ItemRevision = sourceItem.RemoteChangesetId;
+            item.DownloadUrl = sourceItem.DownloadUrl;
+            return item;
         }
     }
 }
