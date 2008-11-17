@@ -32,26 +32,5 @@ namespace SvnBridge.Protocol
         {
             get { return Entries[0].StartEmpty && Entries.Count == 1; }
         }
-
-        public bool IsMissing(string localPath, string name)
-        {
-            if (Missing == null || Missing.Count == 0)
-                return false;
-
-            string path = localPath;
-            if (path.EndsWith("/") == false)
-                path += "/";
-            if (name.StartsWith(path))
-                name = name.Substring(path.Length);
-
-            if (Missing.Contains(name))
-                return true;
-            foreach (string missing in Missing)
-            {
-                if (name.StartsWith(missing))// the missing is the parent of this item
-                    return true;
-            }
-            return false;
-        }
     }
 }

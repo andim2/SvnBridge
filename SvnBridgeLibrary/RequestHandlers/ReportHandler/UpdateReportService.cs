@@ -91,7 +91,7 @@ namespace SvnBridge.Infrastructure
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
 		{
 			return updateReportRequest.IsCheckOut == false &&
-			       updateReportRequest.IsMissing(srcPath, item.Name) == false &&
+                   IsMissing(updateReportRequest, srcPath, item.Name) == false &&
 			       // we need to check both name and id to ensure that the item was not renamed
 			       sourceControlProvider.ItemExists(item.Name, clientRevisionForItem) &&
 			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem);
@@ -193,7 +193,7 @@ namespace SvnBridge.Infrastructure
 			bool existingFolder)
 		{
 			return existingFolder == false && updateReportRequest.IsCheckOut == false &&
-				   updateReportRequest.IsMissing(srcPath, folder.Name) == false &&
+                   IsMissing(updateReportRequest, srcPath, folder.Name) == false &&
 				   sourceControlProvider.ItemExists(folder.Name, clientRevisionForItem);
 		}
 
@@ -247,6 +247,27 @@ namespace SvnBridge.Infrastructure
                     bestMatch = entry;
             }
             return int.Parse(bestMatch.Rev);
+        }
+
+        private bool IsMissing(UpdateReportData data, string localPath, string name)
+        {
+            if (data.Missing == null || data.Missing.Count == 0)
+                return false;
+
+            string path = localPath;
+            if (path.EndsWith("/") == false)
+                path += "/";
+            if (name.StartsWith(path))
+                name = name.Substring(path.Length);
+
+            if (data.Missing.Contains(name))
+                return true;
+            foreach (string missing in data.Missing)
+            {
+                if (name.StartsWith(missing))// the missing is the parent of this item
+                    return true;
+            }
+            return false;
         }
     }
 }
