@@ -8,7 +8,7 @@ namespace IntegrationTests
 	public class TFSSourceControlProviderGetChangedItemsTests : TFSSourceControlProviderTestsBase
 	{
 		[IntegrationTestFact]
-		public void TestGetChangedItemsAtRootReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_AtRootReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
 			int versionFrom = _lastCommitRevision;
@@ -27,7 +27,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsCompletesWhenChangesetDoesNotExistInPath()
+		public void GetChangedItems_CompletesWhenChangesetDoesNotExistInPath()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "2"), true);
@@ -42,7 +42,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsDoesNotIncludePropertiesInSubFoldersIfNotUpdated()
+		public void GetChangedItems_DoesNotIncludePropertiesInSubFoldersIfNotUpdated()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
 			SetProperty(testPath, "prop1", "val1", false);
@@ -61,7 +61,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsForFileThatWasDeleted()
+		public void GetChangedItems_ForFileThatWasDeleted()
 		{
 			CreateFolder(MergePaths(testPath, "/New Folder"), false);
 			WriteFile(MergePaths(testPath, "/New Folder/New File.txt"), "Fun text", true);
@@ -71,8 +71,7 @@ namespace IntegrationTests
 			UpdateReportData reportData = new UpdateReportData();
 			reportData.UpdateTarget = "New File.txt";
 
-			FolderMetaData folder =
-				_provider.GetChangedItems(MergePaths(testPath, "/New Folder"), versionFrom, versionTo, reportData);
+			FolderMetaData folder = _provider.GetChangedItems(MergePaths(testPath, "/New Folder"), versionFrom, versionTo, reportData);
 
 			Assert.Equal(1, folder.Items.Count);
 			Assert.Equal("New File.txt", folder.Items[0].Name);
@@ -80,7 +79,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFile()
+		public void GetChangedItems_WithAddedFile()
 		{
 			int versionFrom = _lastCommitRevision;
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -95,7 +94,7 @@ namespace IntegrationTests
 		}
         
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFileContainingProperty()
+		public void GetChangedItems_WithAddedFileContainingProperty()
 		{
 			int versionFrom = _lastCommitRevision;
 			WriteFile(MergePaths(testPath, "/Test1.txt"), "filedata", false);
@@ -112,7 +111,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFileReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithAddedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Fun text", true);
@@ -132,7 +131,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFileThenDeletedFileReturnsNothing()
+		public void GetChangedItems_WithAddedFileThenDeletedFileReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -146,7 +145,7 @@ namespace IntegrationTests
 		}
 
         [IntegrationTestFact]
-        public void TestGetChangedItemsWithUpdatedThenDeletedFile()
+        public void GetChangedItems_WithUpdatedThenDeletedFile()
         {
             string path = MergePaths(testPath, "/TestFile.txt");
             WriteFile(path, "Fun text", true);
@@ -164,7 +163,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFileThenEditedThenDeletedFileReturnsNothing()
+		public void GetChangedItems_WithAddedFileThenEditedThenDeletedFileReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -179,7 +178,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFileThenFolderContainingFileIsDeleted()
+		public void GetChangedItems_WithAddedFileThenFolderContainingFileIsDeleted()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
 			int versionFrom = _lastCommitRevision;
@@ -196,7 +195,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFolderAndFileWithinFolderInSingleCommitThenDeleteFolder()
+		public void GetChangedItems_WithAddedFolderAndFileWithinFolderInSingleCommitThenDeleteFolder()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -211,7 +210,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFolderContainingProperty()
+		public void GetChangedItems_WithAddedFolderContainingProperty()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -228,7 +227,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFolderPropertyThenDeletedFolder()
+		public void GetChangedItems_WithAddedFolderPropertyThenDeletedFolder()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
 			int versionFrom = _lastCommitRevision;
@@ -243,7 +242,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFolderThenAddedPropertyThenDeletedFolder()
+		public void GetChangedItems_WithAddedFolderThenAddedPropertyThenDeletedFolder()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
@@ -258,7 +257,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithAddedFolderThenDeletedFolderReturnsNothing()
+		public void GetChangedItems_WithAddedFolderThenDeletedFolderReturnsNothing()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/TestFolder"), true);
@@ -272,7 +271,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithBranchedFile()
+		public void GetChangedItems_WithBranchedFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
@@ -289,7 +288,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedAndReAddedItemReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithDeletedAndReAddedItemReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			CreateFolder(MergePaths(testPath, "/New Folder"), true);
 			int versionFrom = _lastCommitRevision;
@@ -312,7 +311,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedFile()
+		public void GetChangedItems_WithDeletedFile()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Test file contents", true);
@@ -328,7 +327,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedFileReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithDeletedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Fun text", true);
@@ -345,7 +344,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedFileThenDeleteFolderContainingFile()
+		public void GetChangedItems_WithDeletedFileThenDeleteFolderContainingFile()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
 			WriteFile(MergePaths(testPath, "/Folder1/Test.txt"), "fun text", true);
@@ -363,7 +362,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedFolder()
+		public void GetChangedItems_WithDeletedFolder()
 		{
 			string path = MergePaths(testPath, "/Test Folder");
 			CreateFolder(path, true);
@@ -379,7 +378,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedFolderContainingFilesReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithDeletedFolderContainingFilesReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			CreateFolder(MergePaths(testPath, "/FolderA"), false);
 			WriteFile(MergePaths(testPath, "/FolderA/Test1.txt"), "filedata", true);
@@ -400,7 +399,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeletedFolderReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithDeletedFolderReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			string path = MergePaths(testPath, "/FolderA");
 			CreateFolder(path, true);
@@ -421,7 +420,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithDeleteFileThenDeleteFolderThatContainedFileWithinSubfolder()
+		public void GetChangedItems_WithDeleteFileThenDeleteFolderThatContainedFileWithinSubfolder()
 		{
 			CreateFolder(MergePaths(testPath, "/Test1"), false);
 			CreateFolder(MergePaths(testPath, "/Test1/Folder1"), false);
@@ -443,7 +442,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithNewFileInNewFolderInSameChangeset()
+		public void GetChangedItems_WithNewFileInNewFolderInSameChangeset()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/New Folder"), false);
@@ -461,7 +460,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithNewFolderAndNewFileReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithNewFolderAndNewFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/Folder1"), false);
@@ -481,7 +480,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithNoUpdatesDoesNotIncludeProperties()
+		public void GetChangedItems_WithNoUpdatesDoesNotIncludeProperties()
 		{
 			SetProperty(testPath, "prop1", "val1", true);
 			int versionFrom = _lastCommitRevision;
@@ -497,7 +496,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithRenamedFile()
+		public void GetChangedItems_WithRenamedFile()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
@@ -516,7 +515,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithRenamedFileReturnsNothingWhenClientStateAlreadyCurrent()
+		public void GetChangedItems_WithRenamedFileReturnsNothingWhenClientStateAlreadyCurrent()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder"), false);
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
@@ -538,7 +537,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithSameFileUpdatedTwice()
+		public void GetChangedItems_WithSameFileUpdatedTwice()
 		{
 			string path = MergePaths(testPath, "/TestFile.txt");
 			WriteFile(path, "Fun text", true);
@@ -556,7 +555,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithUpdatedFileProperty()
+		public void GetChangedItems_WithUpdatedFileProperty()
 		{
 			WriteFile(MergePaths(testPath, "/Test1.txt"), "filedata", true);
 			int versionFrom = _lastCommitRevision;
@@ -573,7 +572,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithUpdatedFolderProperty()
+		public void GetChangedItems_WithUpdatedFolderProperty()
 		{
 			CreateFolder(MergePaths(testPath, "/Folder1"), true);
 			int versionFrom = _lastCommitRevision;
@@ -590,7 +589,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetChangedItemsWithUpdatedPropertyAtRoot()
+		public void GetChangedItems_WithUpdatedPropertyAtRoot()
 		{
 			int versionFrom = _lastCommitRevision;
 			SetProperty(testPath, "prop1", "val1", true);
