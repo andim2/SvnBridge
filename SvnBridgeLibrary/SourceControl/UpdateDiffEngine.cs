@@ -15,7 +15,7 @@ namespace SvnBridge.SourceControl
         private readonly Dictionary<string, int> clientExistingFiles;
         private readonly Dictionary<string, string> clientMissingFiles;
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren;
-        private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
+        private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly;
         private readonly FolderMetaData _root;
         private readonly string _checkoutRootPath;
         private readonly int _targetVersion;
@@ -26,6 +26,7 @@ namespace SvnBridge.SourceControl
                     TFSSourceControlProvider sourceControlProvider,
                     Dictionary<string, int> clientExistingFiles,
                     Dictionary<string, string> clientMissingFiles,
+                    Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly,
                     List<string> renamedItemsToBeCheckedForDeletedChildren)
         {
             this._root = root;
@@ -34,6 +35,7 @@ namespace SvnBridge.SourceControl
             this.sourceControlProvider = sourceControlProvider;
             this.clientExistingFiles = clientExistingFiles;
             this.clientMissingFiles = clientMissingFiles;
+            this.additionForPropertyChangeOnly = additionForPropertyChangeOnly;
             this.renamedItemsToBeCheckedForDeletedChildren = renamedItemsToBeCheckedForDeletedChildren;
         }
 

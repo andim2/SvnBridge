@@ -15,6 +15,7 @@ namespace SvnBridge.SourceControl
         private readonly TFSSourceControlProvider sourceControlProvider;
         private Dictionary<string, int> clientExistingFiles;
         private Dictionary<string, string> clientMissingFiles;
+        private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData,bool>();
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
 
         public UpdateDiffCalculator(TFSSourceControlProvider sourceControlProvider)
@@ -198,7 +199,7 @@ namespace SvnBridge.SourceControl
                     // all the files first, and build the folder hierarchy that way
                     for (int i = history.Changes.Count - 1; i >= 0; i--)
                     {
-                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, renamedItemsToBeCheckedForDeletedChildren);
+                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
                         SourceItemChange change = history.Changes[i];
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
