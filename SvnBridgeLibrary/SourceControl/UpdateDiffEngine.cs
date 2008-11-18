@@ -18,9 +18,11 @@ namespace SvnBridge.SourceControl
         private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
         private readonly FolderMetaData _root;
         private readonly string _checkoutRootPath;
+        private readonly int _targetVersion;
 
         public UpdateDiffEngine(FolderMetaData root,
                     string checkoutRootPath,
+                    int targetVersion,
                     TFSSourceControlProvider sourceControlProvider,
                     Dictionary<string, int> clientExistingFiles,
                     Dictionary<string, string> clientMissingFiles,
@@ -28,23 +30,24 @@ namespace SvnBridge.SourceControl
         {
             this._root = root;
             this._checkoutRootPath = checkoutRootPath;
+            this._targetVersion = targetVersion;
             this.sourceControlProvider = sourceControlProvider;
             this.clientExistingFiles = clientExistingFiles;
             this.clientMissingFiles = clientMissingFiles;
             this.renamedItemsToBeCheckedForDeletedChildren = renamedItemsToBeCheckedForDeletedChildren;
         }
 
-        public void Add(int targetVersion, SourceItemChange change)
+        public void Add(SourceItemChange change)
         {
-            PerformAddOrUpdate(targetVersion, change, false);
+            PerformAddOrUpdate(change, false);
         }
 
-        public void Edit(int targetVersion, SourceItemChange change)
+        public void Edit(SourceItemChange change)
         {
-            PerformAddOrUpdate(targetVersion, change, true);
+            PerformAddOrUpdate(change, true);
         }
 
-        public void Delete(int targetVersion, SourceItemChange change)
+        public void Delete(SourceItemChange change)
         {
             // we ignore it here because this only happens when the related item
             // is delete, and at any rate, this is a SvnBridge implementation detail
@@ -54,34 +57,24 @@ namespace SvnBridge.SourceControl
             {
                 return;
             }
-            ProcessDeletedItem(change.Item.RemoteName, change, targetVersion);
+            ProcessDeletedItem(change.Item.RemoteName, change);
         }
 
-        public void Rename(int targetVersion, SourceItemChange change, bool updatingForwardInTime)
+        public void Rename(SourceItemChange change, bool updatingForwardInTime)
         {
             ItemMetaData oldItem =
                 sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
 
             if (updatingForwardInTime)
             {
-                ProcessDeletedItem(oldItem.Name,
-                                   change,
-                                   targetVersion);
-                ProcessAddedItem(change.Item.RemoteName,
-                                 change,
-                                 false,
-                                 targetVersion);
+                ProcessDeletedItem(oldItem.Name, change);
+                ProcessAddedItem(change.Item.RemoteName, change, false);
             }
             else
             {
-                ProcessAddedItem(oldItem.Name,
-                                 change,
-                                 false,
-                                 targetVersion);
+                ProcessAddedItem(oldItem.Name, change, false);
 
-                ProcessDeletedItem(change.Item.RemoteName,
-                                   change,
-                                   targetVersion);
+                ProcessDeletedItem(change.Item.RemoteName, change);
             }
             if (change.Item.ItemType == ItemType.Folder)
             {
@@ -90,7 +83,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private void PerformAddOrUpdate(int targetVersion, SourceItemChange change, bool edit)
+        private void PerformAddOrUpdate(SourceItemChange change, bool edit)
         {
             if (change.Item.RemoteName.EndsWith("/" + Constants.PropFolder))
             {
@@ -101,7 +94,6 @@ namespace SvnBridge.SourceControl
             ProcessAddedOrUpdatedItem(itemInformation.RemoteName,
                              change,
                              itemInformation.PropertyChange,
-                             targetVersion,
                              edit);
         }
 
@@ -144,19 +136,12 @@ namespace SvnBridge.SourceControl
             return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
         }
 
-        private void ProcessAddedItem(string remoteName,
-                                      SourceItemChange change,
-                                      bool propertyChange,
-                                      int targetVersion)
+        private void ProcessAddedItem(string remoteName, SourceItemChange change, bool propertyChange)
         {
-            ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, targetVersion, false);
+            ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, false);
         }
 
-        private void ProcessAddedOrUpdatedItem(string remoteName,
-                                      SourceItemChange change,
-                                      bool propertyChange,
-                                      int targetVersion,
-                                      bool edit)
+        private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit)
         {
             bool alreadyInClientCurrentState = IsChangeAlreadyCurrentInClientState(ChangeType.Add,
                                                                                    remoteName,
@@ -170,7 +155,7 @@ namespace SvnBridge.SourceControl
 
             if (string.Equals(remoteName, _checkoutRootPath, StringComparison.InvariantCultureIgnoreCase))
             {
-                ItemMetaData item = sourceControlProvider.GetItems(targetVersion, remoteName, Recursion.None);
+                ItemMetaData item = sourceControlProvider.GetItems(_targetVersion, remoteName, Recursion.None);
                 if (item != null)
                 {
                     _root.Properties = item.Properties;
@@ -202,7 +187,7 @@ namespace SvnBridge.SourceControl
                     ItemMetaData item = folder.FindItem(itemName);
                     if (item == null)
                     {
-                        item = sourceControlProvider.GetItems(targetVersion, itemName, Recursion.None);
+                        item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
                         if (item == null)
                         {
                             // TFS will report renames even for deleted items, 
@@ -213,7 +198,7 @@ namespace SvnBridge.SourceControl
                             {
                                 return;
                             }
-                            item = new MissingItemMetaData(itemName, targetVersion, edit);
+                            item = new MissingItemMetaData(itemName, _targetVersion, edit);
                         }
                         if (!lastNamePart)
                         {
@@ -269,9 +254,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private void ProcessDeletedItem(string remoteName,
-                                        SourceItemChange change,
-                                        int targetVersion)
+        private void ProcessDeletedItem(string remoteName, SourceItemChange change)
         {
             bool alreadyChangedInCurrentClientState = IsChangeAlreadyCurrentInClientState(ChangeType.Delete,
                                                                                           remoteName,
@@ -302,16 +285,15 @@ namespace SvnBridge.SourceControl
                 else
                     folderName += nameParts[i];
 
-                HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart, targetVersion);
+                HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart);
             }
             if (nameParts.Length == 0)//we have to delete the checkout root itself
             {
-                HandleDeleteItem(remoteName, change, folderName, ref folder, true, targetVersion);
+                HandleDeleteItem(remoteName, change, folderName, ref folder, true);
             }
         }
 
-        private void HandleDeleteItem(string remoteName, SourceItemChange change, string folderName,
-                                      ref FolderMetaData folder, bool isLastNamePart, int targetVersion)
+        private void HandleDeleteItem(string remoteName, SourceItemChange change, string folderName, ref FolderMetaData folder, bool isLastNamePart)
         {
             if (folderName.StartsWith("/") == false)
                 folderName = "/" + folderName;
@@ -337,12 +319,12 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    item = sourceControlProvider.GetItemsWithoutProperties(targetVersion, folderName, Recursion.None);
+                    item = sourceControlProvider.GetItemsWithoutProperties(_targetVersion, folderName, Recursion.None);
                     if (item == null)
                     {
                         item = new DeleteFolderMetaData();
                         item.Name = folderName;
-                        item.ItemRevision = targetVersion;
+                        item.ItemRevision = _targetVersion;
                     }
                 }
                 folder.Items.Add(item);
@@ -353,7 +335,7 @@ namespace SvnBridge.SourceControl
                 {
                     DeleteFolderMetaData removeFolder = new DeleteFolderMetaData();
                     removeFolder.Name = item.Name;
-                    removeFolder.ItemRevision = targetVersion;
+                    removeFolder.ItemRevision = _targetVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
                 }
@@ -363,7 +345,7 @@ namespace SvnBridge.SourceControl
                                                     ? (ItemMetaData)new DeleteFolderMetaData()
                                                     : new DeleteMetaData();
                     removeFolder.Name = item.Name;
-                    removeFolder.ItemRevision = targetVersion;
+                    removeFolder.ItemRevision = _targetVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
                 }
@@ -371,7 +353,7 @@ namespace SvnBridge.SourceControl
                 {
                     ItemMetaData removeFolder = new DeleteMetaData();
                     removeFolder.Name = item.Name.Substring(1);
-                    removeFolder.ItemRevision = targetVersion;
+                    removeFolder.ItemRevision = _targetVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
                 }

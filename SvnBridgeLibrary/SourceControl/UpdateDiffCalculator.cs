@@ -198,34 +198,34 @@ namespace SvnBridge.SourceControl
                     // all the files first, and build the folder hierarchy that way
                     for (int i = history.Changes.Count - 1; i >= 0; i--)
                     {
-                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, sourceControlProvider, clientExistingFiles, clientMissingFiles, renamedItemsToBeCheckedForDeletedChildren);
+                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, renamedItemsToBeCheckedForDeletedChildren);
                         SourceItemChange change = history.Changes[i];
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
                         if (IsAddOperation(change, updatingForwardInTime))
                         {
-                            engine.Add(targetVersion, change);
+                            engine.Add(change);
                         }
                         else if (IsDeleteOperation(change, updatingForwardInTime))
                         {
-                            engine.Delete(targetVersion, change);
+                            engine.Delete(change);
                         }
                         else if (IsEditOperation(change))
                         {
                             // We may have edit & rename operations
                             if (IsRenameOperation(change))
                             {
-                                engine.Rename(targetVersion, change, updatingForwardInTime);
+                                engine.Rename(change, updatingForwardInTime);
                             }
                             if (updatingForwardInTime == false)
                             {
                                 change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
                             }
-                            engine.Edit(targetVersion, change);
+                            engine.Edit(change);
                         }
                         else if (IsRenameOperation(change))
                         {
-                            engine.Rename(targetVersion, change, updatingForwardInTime);
+                            engine.Rename(change, updatingForwardInTime);
                         }
                         else
                         {
