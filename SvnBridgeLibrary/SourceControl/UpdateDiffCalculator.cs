@@ -206,28 +206,28 @@ namespace SvnBridge.SourceControl
                             continue;
                         if (IsAddOperation(change, updatingForwardInTime))
                         {
-                            engine.PerformAddOrUpdate(targetVersion, checkoutRootPath, change, root, false);
+                            engine.Add(targetVersion, checkoutRootPath, change, root);
                         }
                         else if (IsDeleteOperation(change, updatingForwardInTime))
                         {
-                            engine.PerformDelete(targetVersion, checkoutRootPath, change, root);
+                            engine.Delete(targetVersion, checkoutRootPath, change, root);
                         }
                         else if (IsEditOperation(change))
                         {
                             // We may have edit & rename operations
                             if (IsRenameOperation(change))
                             {
-                                engine.PerformRename(targetVersion, checkoutRootPath, change, root, updatingForwardInTime);
+                                engine.Rename(targetVersion, checkoutRootPath, change, root, updatingForwardInTime);
                             }
                             if (updatingForwardInTime == false)
                             {
                                 change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
                             }
-                            engine.PerformAddOrUpdate(targetVersion, checkoutRootPath, change, root, true);
+                            engine.Edit(targetVersion, checkoutRootPath, change, root);
                         }
                         else if (IsRenameOperation(change))
                         {
-                            engine.PerformRename(targetVersion, checkoutRootPath, change, root, updatingForwardInTime);
+                            engine.Rename(targetVersion, checkoutRootPath, change, root, updatingForwardInTime);
                         }
                         else
                         {

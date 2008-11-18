@@ -30,24 +30,17 @@ namespace SvnBridge.SourceControl
             this.renamedItemsToBeCheckedForDeletedChildren = renamedItemsToBeCheckedForDeletedChildren;
         }
 
-        public void PerformAddOrUpdate(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root, bool edit)
+        public void Add(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root)
         {
-            if (change.Item.RemoteName.EndsWith("/" + Constants.PropFolder))
-            {
-                return;
-            }
-            ItemInformation itemInformation = GetItemInformation(change);
-
-            ProcessAddedOrUpdatedItem(checkoutRootPath,
-                             itemInformation.RemoteName,
-                             change,
-                             itemInformation.PropertyChange,
-                             root,
-                             targetVersion,
-                             edit);
+            PerformAddOrUpdate(targetVersion, checkoutRootPath, change, root, false);
         }
 
-        public void PerformDelete(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root)
+        public void Edit(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root)
+        {
+            PerformAddOrUpdate(targetVersion, checkoutRootPath, change, root, true);
+        }
+
+        public void Delete(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root)
         {
             // we ignore it here because this only happens when the related item
             // is delete, and at any rate, this is a SvnBridge implementation detail
@@ -60,7 +53,7 @@ namespace SvnBridge.SourceControl
             ProcessDeletedItem(checkoutRootPath, change.Item.RemoteName, change, root, targetVersion);
         }
 
-        public void PerformRename(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root, bool updatingForwardInTime)
+        public void Rename(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root, bool updatingForwardInTime)
         {
             ItemMetaData oldItem =
                 sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
@@ -99,6 +92,23 @@ namespace SvnBridge.SourceControl
                 string itemName = updatingForwardInTime ? change.Item.RemoteName : oldItem.Name;
                 renamedItemsToBeCheckedForDeletedChildren.Add(itemName);
             }
+        }
+
+        private void PerformAddOrUpdate(int targetVersion, string checkoutRootPath, SourceItemChange change, FolderMetaData root, bool edit)
+        {
+            if (change.Item.RemoteName.EndsWith("/" + Constants.PropFolder))
+            {
+                return;
+            }
+            ItemInformation itemInformation = GetItemInformation(change);
+
+            ProcessAddedOrUpdatedItem(checkoutRootPath,
+                             itemInformation.RemoteName,
+                             change,
+                             itemInformation.PropertyChange,
+                             root,
+                             targetVersion,
+                             edit);
         }
 
         private static ItemInformation GetItemInformation(SourceItemChange change)
