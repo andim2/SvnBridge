@@ -64,48 +64,54 @@ namespace SvnBridge.SourceControl
 
         public void Rename(SourceItemChange change, bool updatingForwardInTime)
         {
-            ItemMetaData oldItem =
-                sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
+            ItemMetaData oldItem = sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
 
+            string itemOldName;
+            string itemNewName;
             if (updatingForwardInTime)
             {
-                ProcessDeletedItem(oldItem.Name, change);
-                ProcessAddedItem(change.Item.RemoteName, change, false);
+                itemOldName = oldItem.Name;
+                itemNewName = change.Item.RemoteName;
+                ProcessDeletedItem(itemOldName, change);
+                ProcessAddedItem(itemNewName, change, false);
             }
             else
             {
-                ProcessAddedItem(oldItem.Name, change, false);
-
-                ProcessDeletedItem(change.Item.RemoteName, change);
+                itemOldName = change.Item.RemoteName;
+                itemNewName = oldItem.Name;
+                ProcessAddedItem(itemNewName, change, false);
+                ProcessDeletedItem(itemOldName, change);
             }
             if (change.Item.ItemType == ItemType.Folder)
             {
-                string itemName = updatingForwardInTime ? change.Item.RemoteName : oldItem.Name;
-                renamedItemsToBeCheckedForDeletedChildren.Add(itemName);
+                renamedItemsToBeCheckedForDeletedChildren.Add(itemNewName);
             }
         }
 
         private void PerformAddOrUpdate(SourceItemChange change, bool edit)
         {
-            if (change.Item.RemoteName.EndsWith("/" + Constants.PropFolder))
+            if (sourceControlProvider.IsPropertyFolder(change.Item.RemoteName))
             {
                 return;
             }
-            ItemInformation itemInformation = GetItemInformation(change);
 
-            ProcessAddedOrUpdatedItem(itemInformation.RemoteName,
-                             change,
-                             itemInformation.PropertyChange,
-                             edit);
-        }
-
-        private static ItemInformation GetItemInformation(SourceItemChange change)
-        {
             string remoteName = change.Item.RemoteName;
             bool propertyChange = false;
-            if (remoteName.Contains("/" + Constants.PropFolder + "/"))
+
+            if (sourceControlProvider.IsPropertyFile(change.Item.RemoteName))
             {
                 propertyChange = true;
+                remoteName = GetRemoteNameOfPropertyChange(change);
+            }
+
+            ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit);
+        }
+
+        private string GetRemoteNameOfPropertyChange(SourceItemChange change)
+        {
+            string remoteName = change.Item.RemoteName;
+            if (remoteName.Contains("/" + Constants.PropFolder + "/"))
+            {
                 if (remoteName.EndsWith("/" + Constants.PropFolder + "/" + Constants.FolderPropFile))
                 {
                     remoteName =
@@ -120,7 +126,6 @@ namespace SvnBridge.SourceControl
             }
             else if (remoteName.StartsWith(Constants.PropFolder + "/"))
             {
-                propertyChange = true;
                 if (remoteName == Constants.PropFolder + "/" + Constants.FolderPropFile)
                 {
                     remoteName = "";
@@ -130,7 +135,7 @@ namespace SvnBridge.SourceControl
                     remoteName = remoteName.Substring(Constants.PropFolder.Length + 1);
                 }
             }
-            return new ItemInformation(propertyChange, remoteName);
+            return remoteName;
         }
 
         private static bool IsRenameOperation(SourceItemChange change)
@@ -411,22 +416,5 @@ namespace SvnBridge.SourceControl
             }
             return false;
         }
-
-        #region Nested type: ItemInformation
-
-        private class ItemInformation
-        {
-            public readonly bool PropertyChange;
-            public readonly string RemoteName;
-
-            public ItemInformation(bool propertyChange,
-                                   string remoteName)
-            {
-                PropertyChange = propertyChange;
-                RemoteName = remoteName;
-            }
-        }
-
-        #endregion
     }
 }

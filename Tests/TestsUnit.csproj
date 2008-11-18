@@ -110,6 +110,7 @@
     <Compile Include="Proxies\RetryOnSocketExceptionTest.cs" />
     <Compile Include="SourceControl\TFSSourceControlProviderTest.cs" />
     <Compile Include="SourceControl\TFSSourceControlServiceTest.cs" />
+    <Compile Include="SourceControl\UpdateDiffEngineTests.cs" />
     <Compile Include="Stubs\StubErrorsView.cs" />
     <Compile Include="Stubs\StubInvocation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

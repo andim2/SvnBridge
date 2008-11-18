@@ -89,7 +89,8 @@ namespace IntegrationTests
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
 			Assert.Equal(testPath, folder.Name);
-			Assert.Equal(MergePaths(testPath, "/TestFile.txt"), folder.Items[0].Name);
+            Assert.Equal(1, folder.Items.Count);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt"), folder.Items[0].Name);
 			Assert.NotNull(folder.Items[0].DownloadUrl);
 		}
         

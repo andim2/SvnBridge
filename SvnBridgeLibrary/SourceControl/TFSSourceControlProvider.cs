@@ -714,7 +714,7 @@ namespace SvnBridge.SourceControl
             return firstItem;
         }
 
-        private static bool IsPropertyFile(string name)
+        public bool IsPropertyFile(string name)
         {
             if (name.StartsWith(Constants.PropFolder + "/") || name.Contains("/" + Constants.PropFolder + "/"))
                 return true;
@@ -722,7 +722,7 @@ namespace SvnBridge.SourceControl
                 return false;
         }
 
-        private bool IsPropertyFolder(string name)
+        public bool IsPropertyFolder(string name)
         {
             if (name == Constants.PropFolder || name.EndsWith("/" + Constants.PropFolder))
                 return true;
