@@ -13,8 +13,6 @@ namespace SvnBridge.SourceControl
     public class UpdateDiffCalculator
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
-        private readonly IDictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
-
         private Dictionary<string, int> clientExistingFiles;
         private Dictionary<string, string> clientMissingFiles;
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
@@ -200,34 +198,34 @@ namespace SvnBridge.SourceControl
                     // all the files first, and build the folder hierarchy that way
                     for (int i = history.Changes.Count - 1; i >= 0; i--)
                     {
-                        UpdateDiffEngine engine = new UpdateDiffEngine(sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
+                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, sourceControlProvider, clientExistingFiles, clientMissingFiles, renamedItemsToBeCheckedForDeletedChildren);
                         SourceItemChange change = history.Changes[i];
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
                         if (IsAddOperation(change, updatingForwardInTime))
                         {
-                            engine.Add(targetVersion, checkoutRootPath, change, root);
+                            engine.Add(targetVersion, change);
                         }
                         else if (IsDeleteOperation(change, updatingForwardInTime))
                         {
-                            engine.Delete(targetVersion, checkoutRootPath, change, root);
+                            engine.Delete(targetVersion, change);
                         }
                         else if (IsEditOperation(change))
                         {
                             // We may have edit & rename operations
                             if (IsRenameOperation(change))
                             {
-                                engine.Rename(targetVersion, checkoutRootPath, change, root, updatingForwardInTime);
+                                engine.Rename(targetVersion, change, updatingForwardInTime);
                             }
                             if (updatingForwardInTime == false)
                             {
                                 change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
                             }
-                            engine.Edit(targetVersion, checkoutRootPath, change, root);
+                            engine.Edit(targetVersion, change);
                         }
                         else if (IsRenameOperation(change))
                         {
-                            engine.Rename(targetVersion, checkoutRootPath, change, root, updatingForwardInTime);
+                            engine.Rename(targetVersion, change, updatingForwardInTime);
                         }
                         else
                         {
