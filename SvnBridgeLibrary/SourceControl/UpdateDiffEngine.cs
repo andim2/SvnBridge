@@ -73,13 +73,13 @@ namespace SvnBridge.SourceControl
                 itemOldName = oldItem.Name;
                 itemNewName = change.Item.RemoteName;
                 ProcessDeletedItem(itemOldName, change);
-                ProcessAddedItem(itemNewName, change, false);
+                ProcessAddedOrUpdatedItem(itemNewName, change, false, false);
             }
             else
             {
                 itemOldName = change.Item.RemoteName;
                 itemNewName = oldItem.Name;
-                ProcessAddedItem(itemNewName, change, false);
+                ProcessAddedOrUpdatedItem(itemNewName, change, false, false);
                 ProcessDeletedItem(itemOldName, change);
             }
             if (change.Item.ItemType == ItemType.Folder)
@@ -114,10 +114,7 @@ namespace SvnBridge.SourceControl
             {
                 if (remoteName.EndsWith("/" + Constants.PropFolder + "/" + Constants.FolderPropFile))
                 {
-                    remoteName =
-                        remoteName.Substring(0,
-                                             remoteName.IndexOf("/" + Constants.PropFolder + "/" +
-                                                                Constants.FolderPropFile));
+                    remoteName = remoteName.Substring(0, remoteName.Length - ("/" + Constants.PropFolder + "/" + Constants.FolderPropFile).Length);
                 }
                 else
                 {
@@ -141,11 +138,6 @@ namespace SvnBridge.SourceControl
         private static bool IsRenameOperation(SourceItemChange change)
         {
             return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
-        }
-
-        private void ProcessAddedItem(string remoteName, SourceItemChange change, bool propertyChange)
-        {
-            ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, false);
         }
 
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit)
