@@ -61,7 +61,6 @@ namespace SvnBridgeServer
                 {
                     DefaultLogger logger = Container.Resolve<DefaultLogger>();
                     logger.ErrorFullDetails(ex, new HttpContextWrapper(context));
-                    throw;
                 }
 			}
 			finally
