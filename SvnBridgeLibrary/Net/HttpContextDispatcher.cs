@@ -142,7 +142,8 @@ namespace SvnBridge.Net
             catch (HttpException ex)
             {
                 // Check if error caused by client cancelling operation under IIS 7
-                if (!ex.Message.StartsWith("The remote host closed the connection."))
+                if (!ex.Message.StartsWith("An error occurred while communicating with the remote host.") &&
+                    !ex.Message.StartsWith("The remote host closed the connection."))
                     throw;
 
                 if (Configuration.LogCancelErrors)
