@@ -71,7 +71,7 @@ namespace IntegrationTests
 				cache.Add("list", "I#" + i);
 			}
 
-			HashSet<string> list = (HashSet<string>)cache.Get("list").Value;
+			SvnBridge.Cache.HashSet<string> list = (SvnBridge.Cache.HashSet<string>)cache.Get("list").Value;
 			int j=0;
 			foreach (string s in list)
 			{

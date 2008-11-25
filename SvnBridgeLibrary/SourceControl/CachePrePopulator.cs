@@ -9,7 +9,7 @@ namespace SvnBridge.SourceControl
     public class CachePrePopulator
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
-        readonly Dictionary<string, HashSet<string>> hierarchy = new Dictionary<string, HashSet<string>>();
+        readonly Dictionary<string, Cache.HashSet<string>> hierarchy = new Dictionary<string, Cache.HashSet<string>>();
 
         public CachePrePopulator(TFSSourceControlProvider sourceControlProvider)
         {
@@ -42,7 +42,7 @@ namespace SvnBridge.SourceControl
             var keysToRemove = new List<string>();
             foreach (var key in hierarchy.Keys)
             {
-                HashSet<string> alreadyLoadedByParentKey;
+                Cache.HashSet<string> alreadyLoadedByParentKey;
                 if (hierarchy.TryGetValue(key, out alreadyLoadedByParentKey) == false)
                     continue;
                 keysToRemove.AddRange(alreadyLoadedByParentKey);
@@ -58,10 +58,10 @@ namespace SvnBridge.SourceControl
                 while (itemName != Constants.ServerRootPath)
                 {
                     string parentName = Helper.GetFolderNameUsingServerRootPath(itemName);
-                    HashSet<string> children;
+                    Cache.HashSet<string> children;
                     if (hierarchy.TryGetValue(parentName, out children) == false)
                     {
-                        hierarchy[parentName] = children = new HashSet<string>();
+                        hierarchy[parentName] = children = new Cache.HashSet<string>();
                     }
                     children.Add(itemName);
                     itemName = parentName;
