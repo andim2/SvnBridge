@@ -1,11 +1,9 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Xml;
 using SvnBridge.Interfaces;
-using System.Configuration;
 using SvnBridge.Net;
 using SvnBridge.Utility;
 
@@ -13,29 +11,59 @@ namespace SvnBridge.Infrastructure
 {
     public class DefaultLogger
     {
-        static bool environmentValidated;
-        string logPath;
+        private string logPath;
 
-        public DefaultLogger()
+        private string LogPath
         {
-            if (!environmentValidated)
+            get
             {
-                WriteLogMessageWithNoExceptionHandling("test", "can write to file", null);
-                environmentValidated = true;
+                if (logPath != null)
+                    return logPath;
+
+                logPath = Configuration.LogPath;
+                if (logPath != null)
+                    return logPath;
+
+                logPath = "";
+                try
+                {
+                    try
+                    {
+                        File.WriteAllText("tmp.log", "test");
+                        File.Delete("tmp.log");
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                        logPath = Path.Combine(localAppData, "SvnBridge");
+                        if (Directory.Exists(logPath) == false)
+                            Directory.CreateDirectory(logPath);
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    throw new UnauthorizedAccessException(
+                        string.Format(
+                            "Tried to write to a log file in: {0} and in {1}, but did not have the required permissions to do so." +
+                            Environment.NewLine +
+                            "Please set the permissions for either of those locations, or set the 'LogPath' property in the application configuration file.",
+                            Environment.CurrentDirectory, Path.GetFullPath(logPath)));
+                }
+                return logPath;
             }
         }
 
         public virtual void Error(string message, Exception exception)
         {
-            WebException we = exception as WebException;
+            var we = exception as WebException;
             if (we != null && we.Response != null)
             {
-                HttpWebResponse hwr = we.Response as HttpWebResponse;
+                var hwr = we.Response as HttpWebResponse;
                 if (hwr != null && hwr.StatusCode != HttpStatusCode.Unauthorized)
                 {
-                    using (StreamReader sr = new StreamReader(we.Response.GetResponseStream()))
+                    using (var sr = new StreamReader(we.Response.GetResponseStream()))
                     {
-                        StringBuilder sb = new StringBuilder(message);
+                        var sb = new StringBuilder(message);
                         sb.AppendLine(" Error page is:");
                         sb.AppendLine(sr.ReadToEnd());
                         message = sb.ToString();
@@ -48,11 +76,11 @@ namespace SvnBridge.Infrastructure
         public virtual void ErrorFullDetails(Exception exception, IHttpContext context)
         {
             Guid errorId = Guid.NewGuid();
-            string logFile = Path.Combine(LogPath, "Error-" + errorId.ToString() + ".log");
-            StringBuilder output = new StringBuilder();
+            string logFile = Path.Combine(LogPath, "Error-" + errorId + ".log");
+            var output = new StringBuilder();
             output.AppendFormat("Time     : {0}\r\n", DateTime.Now);
             output.AppendFormat("Message  : {0}\r\n", exception.Message);
-            NetworkCredential credential = (NetworkCredential)RequestCache.Items["credentials"];
+            var credential = (NetworkCredential) RequestCache.Items["credentials"];
             if (credential != null)
             {
                 output.AppendFormat("User     : {0}\r\n", credential.UserName);
@@ -110,7 +138,7 @@ namespace SvnBridge.Infrastructure
 
         private void WriteLogMessageWithNoExceptionHandling(string level, string message, string exception)
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
+            var settings = new XmlWriterSettings();
             settings.Indent = true;
             settings.OmitXmlDeclaration = true;
 
@@ -125,42 +153,6 @@ namespace SvnBridge.Infrastructure
                 if (string.IsNullOrEmpty(exception) == false)
                     WriteCDataElement(writer, "exception", exception);
                 writer.WriteEndElement();
-            }
-        }
-
-        private string LogPath
-        {
-            get
-            {
-                if (logPath != null)
-                    return logPath;
-
-                logPath = Configuration.LogPath;
-                if (logPath != null)
-                    return logPath;
-
-                logPath = "";
-                try
-                {
-                    try
-                    {
-                        File.WriteAllText("tmp.log", "test");
-                        File.Delete("tmp.log");
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                        logPath = Path.Combine(localAppData, "SvnBridge");
-                        if (Directory.Exists(logPath) == false)
-                            Directory.CreateDirectory(logPath);
-                    }
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    throw new UnauthorizedAccessException(string.Format("Tried to write to a log file in: {0} and in {1}, but did not have the required permissions to do so."+Environment.NewLine +
-                        "Please set the permissions for either of those locations, or set the 'LogPath' property in the application configuration file.", Environment.CurrentDirectory, Path.GetFullPath(logPath)));
-                }
-                return logPath;
             }
         }
 
