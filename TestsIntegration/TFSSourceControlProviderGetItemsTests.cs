@@ -7,7 +7,7 @@ namespace IntegrationTests
     public class TFSSourceControlProviderGetItemsTests : TFSSourceControlProviderTestsBase
     {
         [IntegrationTestFact]
-        public void TestGetItemInActivityReturnsCorrectItemIfIsInRenamedFolder()
+        public void GetItemInActivity_ReturnsCorrectItemIfIsInRenamedFolder()
         {
             CreateFolder(MergePaths(testPath, "/A"), false);
             WriteFile(MergePaths(testPath, "/A/Test.txt"), "filedata", true);
@@ -20,7 +20,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsForRootSucceedsWithAllRecursionLevels()
+        public void GetItems_ForRootSucceedsWithAllRecursionLevels()
         {
             _provider.GetItems(-1, "", Recursion.None);
             _provider.GetItems(-1, "", Recursion.OneLevel);
@@ -28,7 +28,17 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsOnFile()
+        public void GetItems_ForRootAndRootFolderHasProperties_ReturnsCorrectRevision()
+        {
+            SetProperty(testPath, "prop1", "val1", true);
+
+            ItemMetaData folder = _provider.GetItems(-1, testPath, Recursion.Full);
+
+            Assert.Equal(_lastCommitRevision, folder.Revision);
+        }
+
+        [IntegrationTestFact]
+        public void GetItems_OnFile()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", true);
 
@@ -39,7 +49,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsOnFileReturnsPropertiesForFile()
+        public void GetItems_OnFileReturnsPropertiesForFile()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", false);
             string propvalue = "prop1value";
@@ -51,7 +61,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsOnFolderReturnsPropertiesForFileWithinFolder()
+        public void GetItems_OnFolderReturnsPropertiesForFileWithinFolder()
         {
             string mimeType = "application/octet-stream";
             string path = MergePaths(testPath, "/TestFile.txt");
@@ -65,7 +75,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsOnFolderReturnsPropertiesForFolder()
+        public void GetItems_OnFolderReturnsPropertiesForFolder()
         {
             string ignore = "*.bad\n";
             SetProperty(testPath, "ignore", ignore, true);
@@ -77,7 +87,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsReturnsCorrectRevisionWhenPropertyHasBeenAddedToFileAndRecursionIsFull()
+        public void GetItems_ReturnsCorrectRevisionWhenPropertyHasBeenAddedToFileAndRecursionIsFull()
         {
             WriteFile(MergePaths(testPath, "/Test.txt"), "whee", true);
             SetProperty(MergePaths(testPath, "/Test.txt"), "prop1", "val1", true);
@@ -89,7 +99,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsReturnsCorrectRevisionWhenPropertyHasBeenAddedToFolderAndRecursionIsFull()
+        public void GetItems_ReturnsCorrectRevisionWhenPropertyHasBeenAddedToFolderAndRecursionIsFull()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), true);
             SetProperty(MergePaths(testPath, "/Folder1"), "prop1", "val1", true);
@@ -101,7 +111,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsReturnsCorrectRevisionWhenPropertyIsAdded()
+        public void GetItems_ReturnsCorrectRevisionWhenPropertyIsAdded()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", true);
             SetProperty(MergePaths(testPath, "/File1.txt"), "prop1", "val1", true);
@@ -113,7 +123,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsReturnsCorrectRevisionWhenPropertyIsAddedThenFileIsUpdated()
+        public void GetItems_ReturnsCorrectRevisionWhenPropertyIsAddedThenFileIsUpdated()
         {
             WriteFile(MergePaths(testPath, "/File1.txt"), "filedata", true);
             SetProperty(MergePaths(testPath, "/File1.txt"), "prop1", "val1", true);
@@ -126,7 +136,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsWithAllRecursionLevelsReturnsPropertyForFolder()
+        public void GetItems_WithAllRecursionLevelsReturnsPropertyForFolder()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), false);
             string ignore = "*.bad\n";
@@ -142,7 +152,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsWithOneLevelRecursionReturnsPropertiesForSubFolders()
+        public void GetItems_WithOneLevelRecursionReturnsPropertiesForSubFolders()
         {
             CreateFolder(MergePaths(testPath, "/Folder1"), false);
             CreateFolder(MergePaths(testPath, "/Folder1/SubFolder"), false);
@@ -158,7 +168,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void TestGetItemsIgnoresStalePropertyFiles()
+        public void GetItems_IgnoresStalePropertyFiles()
         {
             string propertyFile = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ItemProperties xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><Properties><Property><Name>mime-type</Name><Value>application/octet-stream</Value></Property></Properties></ItemProperties>";
             CreateFolder(MergePaths(testPath, "/..svnbridge"), true);

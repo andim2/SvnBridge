@@ -31,9 +31,8 @@ namespace IntegrationTests
 
 			LogItem logItem = _provider.GetLog(MergePaths(testPath, "/FunRename.txt"), versionFrom, versionTo, Recursion.None, 1);
 
-			Assert.Equal(MergePaths(testPath, "/Fun.txt"),
-			                ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRemoteName);
-			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
+			Assert.Equal(MergePaths(testPath, "/Fun.txt"), ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRemoteName);
+			Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
             Assert.Equal(MergePaths(testPath, "/FunRename.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
 
@@ -48,9 +47,8 @@ namespace IntegrationTests
 			LogItem logItem = _provider.GetLog(testPath, versionTo, versionTo, Recursion.Full, Int32.MaxValue);
 
 			Assert.Equal(ChangeType.Branch, logItem.History[0].Changes[0].ChangeType & ChangeType.Branch);
-			Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1),
-			                ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRemoteName);
-			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
+			Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRemoteName);
+			Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
 		}
 
 		[IntegrationTestFact]
@@ -64,7 +62,7 @@ namespace IntegrationTests
 
 			LogItem logItem = _provider.GetLog(testPath, versionTo, versionTo, Recursion.Full, Int32.MaxValue);
 
-			Assert.Equal(versionFrom, ((RenamedSourceItem) logItem.History[0].Changes[0].Item).OriginalRevision);
+			Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
 		}
 
 		[IntegrationTestFact]
