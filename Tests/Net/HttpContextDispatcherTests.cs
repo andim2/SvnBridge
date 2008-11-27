@@ -114,11 +114,15 @@ namespace SvnBridge.Net
             StubHttpRequest request = new StubHttpRequest();
             context.Request = request;
             request.Url = new Uri("https://tfs01.codeplex.com"); ;
+
+            dispatcher.Handler.Handle_Throw = new HttpException("An error occurred while communicating with the remote host.");
+            Exception result1 = Record.Exception(delegate { dispatcher.Dispatch(context); });
+
             dispatcher.Handler.Handle_Throw = new HttpException("The remote host closed the connection.");
+            Exception result2 = Record.Exception(delegate { dispatcher.Dispatch(context); });
 
-            Exception result = Record.Exception(delegate { dispatcher.Dispatch(context); });
-
-            Assert.Null(result);
+            Assert.Null(result1);
+            Assert.Null(result2);
         }
     }
 
