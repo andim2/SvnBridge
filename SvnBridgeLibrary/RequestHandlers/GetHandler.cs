@@ -57,12 +57,8 @@ namespace SvnBridge.Handlers
                 response.AppendHeader("Last-Modified", Helper.FormatDateB(item.LastModifiedDate));
                 response.AppendHeader("ETag", "\"" + item.ItemRevision + "//" + Helper.EncodeB(item.Name) + "\"");
                 response.AppendHeader("Accept-Ranges", "bytes");
-                string itemData = Encoding.UTF8.GetString(sourceControlProvider.ReadFile(item));
-
-				using (StreamWriter writer = new StreamWriter(response.OutputStream))
-				{
-					writer.Write(itemData);
-				}
+                byte[] itemData = sourceControlProvider.ReadFile(item);
+                response.OutputStream.Write(itemData, 0, itemData.Length);
 			}
 		}
 	}

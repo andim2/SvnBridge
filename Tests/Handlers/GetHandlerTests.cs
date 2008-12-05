@@ -38,7 +38,25 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void Handle_CorrectInvokesSourceControlProvide()
+        public void Handle_UnicodeFile_ReturnsCorrectResponse()
+        {
+            ItemMetaData item = new ItemMetaData();
+            item.Name = "Foo/Bar.txt";
+            item.ItemRevision = 1234;
+            Clock.FrozenCurrentTime = DateTime.Now;
+            item.LastModifiedDate = Clock.Now;
+            Results getItemsResult = stubs.Attach(provider.GetItems, item);
+            byte[] fileData = new byte[] { 110, 160, 70 };
+            Results readFileResult = stubs.AttachReadFile(provider.ReadFile, fileData);
+            request.Path = "http://localhost:8082/!svn/bc/1234/Foo/Bar.txt";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            Assert.Equal(fileData, ((MemoryStream)response.OutputStream).ToArray());
+        }
+
+        [Fact]
+        public void Handle_CorrectInvokesSourceControlProvider()
         {
             ItemMetaData item = new ItemMetaData();
             item.Name = "Foo/Bar.txt";
