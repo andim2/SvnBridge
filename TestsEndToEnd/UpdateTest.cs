@@ -660,5 +660,20 @@ namespace TestsEndToEnd
 
             Assert.False(Directory.Exists("test"));
         }
+
+        [SvnBridgeFact]
+        public void CommitFolderAndFileWithinFolderThenUpdateWithFolderDeleted_ShouldRemoveFolder()
+        {
+            CheckoutAndChangeDirectory();
+            Directory.CreateDirectory("test");
+            File.WriteAllText(@"test\whee.txt", "test");
+            Svn("add test");
+            Svn("commit -m blah");
+            DeleteItem(testPath + "/test", true);
+
+            string output = Svn("up");
+
+            Assert.False(Directory.Exists("test"));
+        }
     }
 }
