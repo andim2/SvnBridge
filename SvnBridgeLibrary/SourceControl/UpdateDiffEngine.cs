@@ -164,8 +164,6 @@ namespace SvnBridge.SourceControl
             {
                 FolderMetaData folder = _root;
                 string itemName = _checkoutRootPath;
-                if (itemName.StartsWith("/") == false)
-                    itemName = "/" + itemName;
                 string[] nameParts;
                 if (_checkoutRootPath != "")
                     nameParts = remoteName.Substring(_checkoutRootPath.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -178,7 +176,7 @@ namespace SvnBridge.SourceControl
                     if (i == nameParts.Length - 1)
                         lastNamePart = true;
 
-                    if (!itemName.EndsWith("/"))
+                    if (itemName != "" && !itemName.EndsWith("/"))
                         itemName += "/" + nameParts[i];
                     else
                         itemName += nameParts[i];
@@ -228,6 +226,8 @@ namespace SvnBridge.SourceControl
                         if (!propertyChange)
                         {
                             folder.Items.Remove(item);
+                            item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
+                            folder.Items.Add(item);
                         }
                     }
                     if (lastNamePart == false)
@@ -262,13 +262,11 @@ namespace SvnBridge.SourceControl
                                                                                           clientMissingFiles);
             if (alreadyChangedInCurrentClientState)
             {
-                _root.RemoveMissingItem(remoteName);
+                RemoveMissingItem(remoteName, _root);
                 return;
             }
 
             string folderName = _checkoutRootPath;
-            if (folderName.StartsWith("/") == false)
-                folderName = "/" + folderName;
             string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : folderName;
 
             string[] nameParts = remoteName.Substring(remoteNameStart.Length)
@@ -279,7 +277,7 @@ namespace SvnBridge.SourceControl
             {
                 bool isLastNamePart = i == nameParts.Length - 1;
 
-                if (!folderName.EndsWith("/"))
+                if (folderName != "" && !folderName.EndsWith("/"))
                     folderName += "/" + nameParts[i];
                 else
                     folderName += nameParts[i];
@@ -294,10 +292,8 @@ namespace SvnBridge.SourceControl
 
         private void HandleDeleteItem(string remoteName, SourceItemChange change, string folderName, ref FolderMetaData folder, bool isLastNamePart)
         {
-            if (folderName.StartsWith("/") == false)
-                folderName = "/" + folderName;
             ItemMetaData item = folder.FindItem(folderName);
-            if (item is DeleteFolderMetaData)
+            if (item is DeleteFolderMetaData || item is DeleteMetaData)
                 return;
 
             if (item == null)
@@ -351,7 +347,7 @@ namespace SvnBridge.SourceControl
                 else if (item is MissingItemMetaData && ((MissingItemMetaData)item).Edit == true)
                 {
                     ItemMetaData removeFolder = new DeleteMetaData();
-                    removeFolder.Name = item.Name.Substring(1);
+                    removeFolder.Name = item.Name;
                     removeFolder.ItemRevision = _targetVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
@@ -404,6 +400,25 @@ namespace SvnBridge.SourceControl
                     {
                         return true;
                     }
+                }
+            }
+            return false;
+        }
+
+        private bool RemoveMissingItem(string name, FolderMetaData folder)
+        {
+            foreach (ItemMetaData item in folder.Items)
+            {
+                if (item.Name == name && item is MissingItemMetaData)
+                {
+                    folder.Items.Remove(item);
+                    return true;
+                }
+                FolderMetaData subFolder = item as FolderMetaData;
+                if (subFolder != null)
+                {
+                    if (RemoveMissingItem(name, subFolder))
+                        return true;
                 }
             }
             return false;

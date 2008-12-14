@@ -34,12 +34,25 @@ namespace SvnBridge.Handlers
         public void Handle_NoRequestBodyIsSpecified_ReturnCorrectOutput()
         {
             Results r = stubs.Attach(provider.ItemExists, true);
+            request.Headers["Content-Type"] = "text/xml";
             request.Path = "http://localhost:8082/Spikes/SvnFacade/trunk/New%20Folder%207";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             Assert.Equal("", response.Output);
             Assert.Equal("text/plain", response.ContentType);
+        }
+
+        [Fact]
+        public void Handle_NoContentTypeAndAcceptEncodingIsSpecified_ReturnCorrectContentType()
+        {
+            Results r = stubs.Attach(provider.ItemExists, true);
+            request.Headers["Accept-Encoding"] = "gzip";
+            request.Path = "http://localhost:8082/Spikes/SvnFacade/trunk/New%20Folder%207";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            Assert.Equal("httpd/unix-directory", response.ContentType);
         }
 
         [Fact]

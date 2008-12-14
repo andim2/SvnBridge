@@ -254,7 +254,7 @@ namespace SvnBridge.Infrastructure
             if (data.Missing == null || data.Missing.Count == 0)
                 return false;
 
-            string path = localPath;
+            string path = localPath.Substring(1);
             if (path.EndsWith("/") == false)
                 path += "/";
             if (name.StartsWith(path))

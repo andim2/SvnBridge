@@ -17,7 +17,7 @@ namespace SvnBridge.Handlers
         protected ReportHandler handler = new ReportHandler();
 
         [Fact]
-        public void TestHandleEncodesDeleteFileElements()
+        public void Handle_EncodesDeleteFileElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "";
@@ -39,7 +39,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestHandleEncodesDeleteFolderElements()
+        public void Handle_EncodesDeleteFolderElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "";
@@ -61,7 +61,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestHandleEncodesUpdateFileElements()
+        public void Handle_EncodesUpdateFileElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "";
@@ -89,7 +89,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleEncodesAddDirectoryCheckedInHrefElements()
+        public void Handle_EncodesAddDirectoryCheckedInHrefElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "Test";
@@ -118,7 +118,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleEncodesAddDirectoryElements()
+        public void Handle_EncodesAddDirectoryElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "Test";
@@ -147,7 +147,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleEncodesAddFileCheckedInHrefElements()
+        public void Handle_EncodesAddFileCheckedInHrefElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "Test";
@@ -176,7 +176,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleEncodesAddFileElements()
+        public void Handle_EncodesAddFileElements()
         {
             FolderMetaData metadata = new FolderMetaData();
             metadata.Name = "Test";
@@ -203,7 +203,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleProducesCorrectOutputForBranchedFile()
+        public void Handle_ProducesCorrectOutputForBranchedFile()
         {
             FolderMetaData folder = new FolderMetaData();
             folder.Name = "";
@@ -259,7 +259,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleProducesCorrectOutputForDeletedFileInSubfolder()
+        public void Handle_ProducesCorrectOutputForDeletedFileInSubfolder()
         {
             FolderMetaData folder = new FolderMetaData();
             folder.Name = "";
@@ -314,7 +314,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleSucceedsWhenTargetRevisionIsNotSpecified()
+        public void Handle_SucceedsWhenTargetRevisionIsNotSpecified()
         {
             FolderMetaData folder = new FolderMetaData();
             folder.Name = "";
@@ -414,6 +414,28 @@ namespace SvnBridge.Handlers
             Exception result = Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
 
             Assert.Null(result);
+        }
+
+        [Fact]
+        public void Handle_UpdateWithFolderMissingInClientState()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "";
+            metadata.ItemRevision = 5734;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2008-01-20T08:55:13.330897Z");
+            FolderMetaData folder = new FolderMetaData("Test/foo");
+            metadata.Items.Add(folder);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            stubs.Attach(provider.ItemExists, true);
+            request.Path = "http://127.0.0.1:25169/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://127.0.0.1:25169/Test</S:src-path><S:target-revision>5733</S:target-revision><S:entry rev=\"5733\" ></S:entry><S:missing>foo</S:missing></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:add-directory name=\"foo\""));
         }
     }
 }

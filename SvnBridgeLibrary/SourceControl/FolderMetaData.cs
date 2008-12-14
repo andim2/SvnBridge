@@ -31,27 +31,6 @@ namespace SvnBridge.SourceControl
             get { return ItemType.Folder; }
         }
 
-        public bool RemoveMissingItem(string name)
-        {
-            if (name.StartsWith("/") == false)
-                name = "/" + name;
-            foreach (ItemMetaData item in Items)
-            {
-                if (item.Name == name && item is MissingItemMetaData)
-                {
-                    Items.Remove(item);
-                    return true;
-                }
-                FolderMetaData subFolder = item as FolderMetaData;
-                if (subFolder != null)
-                {
-                    if (subFolder.RemoveMissingItem(name))
-                        return true;
-                }
-            }
-            return false;
-        }
-
         public ItemMetaData FindItem(string name)
         {
             if (string.Equals(name, this.Name, StringComparison.InvariantCultureIgnoreCase))

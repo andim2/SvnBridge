@@ -29,7 +29,11 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                SetResponseSettings(response, "text/plain", Encoding.UTF8, 200);
+                if (context.Request.Headers["Content-Type"] != "text/xml" &&
+                    context.Request.Headers["Accept-Encoding"] == "gzip")
+                    SetResponseSettings(response, "httpd/unix-directory", Encoding.UTF8, 200);
+                else
+                    SetResponseSettings(response, "text/plain", Encoding.UTF8, 200);
             }
 
             response.AppendHeader("DAV", "1,2");

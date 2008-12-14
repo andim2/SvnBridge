@@ -70,6 +70,7 @@
     <Compile Include="Commit\CommitDeleteFileTest.cs" />
     <Compile Include="Commit\CommitDeleteFolderTest.cs" />
     <Compile Include="Commit\CommitDeleteOfAlreadyDeletedFileTest.cs" />
+    <Compile Include="Commit\CommitDeletePropertyFromFolderTest.cs" />
     <Compile Include="Commit\CommitFileThatWasCheckedOutAnonymouslyTest.cs" />
     <Compile Include="Commit\CommitIgnoreFileTest.cs" />
     <Compile Include="Commit\CommitNewBinaryFileTest.cs" />

@@ -44,7 +44,7 @@ namespace SvnBridge.SourceControl
                 if (projectRootPath != checkoutRootPath)
                 {
                     // we will now copy all the children to the real checkoutRoot
-                    FolderMetaData checkoutRootFromProjectRoot = (FolderMetaData)projectRoot.FindItem("/" + checkoutRootPath);
+                    FolderMetaData checkoutRootFromProjectRoot = (FolderMetaData)projectRoot.FindItem(checkoutRootPath);
                     // if it is null, then there were no changes in this diff
                     if (checkoutRootFromProjectRoot != null)
                     {
@@ -129,12 +129,10 @@ namespace SvnBridge.SourceControl
             FolderMetaData folder = root;
             string[] parts = path.Split('/');
             string itemName = pathRoot;
-            if (itemName.StartsWith("/") == false)
-                itemName = "/" + itemName;
             ItemMetaData item = null;
             for (int i = 0; i < parts.Length; i++)
             {
-                if (!itemName.EndsWith("/"))
+                if (itemName != "" && !itemName.EndsWith("/"))
                     itemName += "/" + parts[i];
                 else
                     itemName += parts[i];

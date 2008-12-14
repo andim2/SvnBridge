@@ -10,7 +10,7 @@ namespace IntegrationTests
 	public class TFSSourceControlProviderGetLogTests : TFSSourceControlProviderTestsBase
 	{
 		[IntegrationTestFact]
-		public void TestGetLog()
+		public void GetLog_()
 		{
 			int versionFrom = _lastCommitRevision;
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
@@ -22,7 +22,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetLogReturnsOriginalNameAndRevisionForRenamedItems()
+		public void GetLog_ReturnsOriginalNameAndRevisionForRenamedItems()
 		{
 			WriteFile(MergePaths(testPath, "/Fun.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
@@ -31,13 +31,13 @@ namespace IntegrationTests
 
 			LogItem logItem = _provider.GetLog(MergePaths(testPath, "/FunRename.txt"), versionFrom, versionTo, Recursion.None, 1);
 
-			Assert.Equal(MergePaths(testPath, "/Fun.txt"), ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRemoteName);
+            Assert.Equal(MergePaths(testPath, "/Fun.txt").Substring(1), ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRemoteName);
 			Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
             Assert.Equal(MergePaths(testPath, "/FunRename.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
 
 		[IntegrationTestFact]
-		public void TestGetLogWithBranchedFileContainsOriginalNameAndRevision()
+		public void GetLog_WithBranchedFileContainsOriginalNameAndRevision()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 			int versionFrom = _lastCommitRevision;
@@ -52,7 +52,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetLogWithBranchedFileContainsOriginalVersionAsRevisionImmediatelyBeforeBranch()
+		public void GetLog_WithBranchedFileContainsOriginalVersionAsRevisionImmediatelyBeforeBranch()
 		{
 			WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 			WriteFile(MergePaths(testPath, "/TestFile2.txt"), "Fun text", true);
@@ -66,7 +66,7 @@ namespace IntegrationTests
 		}
 
 		[IntegrationTestFact]
-		public void TestGetLogWithNewFolder()
+		public void GetLog_WithNewFolder()
 		{
 			int versionFrom = _lastCommitRevision;
 			CreateFolder(MergePaths(testPath, "/TestFolder"), true);

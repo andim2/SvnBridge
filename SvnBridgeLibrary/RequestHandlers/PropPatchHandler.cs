@@ -23,16 +23,20 @@ namespace SvnBridge.Handlers
 			{
 				correctXml = BrokenXml.Escape(sr.ReadToEnd());
 			}
+            bool extendedNamespaces = false;
+            if (correctXml.Contains("http://subversion.tigris.org/xmlns/custom/"))
+                extendedNamespaces = true;
+
 			PropertyUpdateData data = Helper.DeserializeXml<PropertyUpdateData>(correctXml);
 			SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
 			using (StreamWriter output = new StreamWriter(response.OutputStream))
 			{
-				PropPatch(sourceControlProvider, data, path, output);
+				PropPatch(sourceControlProvider, data, extendedNamespaces,path, output);
 			}
 		}
 
-        private void PropPatch(TFSSourceControlProvider sourceControlProvider, PropertyUpdateData request, string path, TextWriter output)
+        private void PropPatch(TFSSourceControlProvider sourceControlProvider, PropertyUpdateData request, bool extendedNamespaces, string path, TextWriter output)
 		{
 			string activityPath = path.Substring(10);
 			if (activityPath.StartsWith("/"))
@@ -45,7 +49,7 @@ namespace SvnBridge.Handlers
 			if (request.Set.Prop.Properties.Count > 0)
 			{
 				if (request.Set.Prop.Properties[0].LocalName == "log")
-					OutputLogResponse(path, request, sourceControlProvider, activityId, output);
+					OutputLogResponse(path, request, sourceControlProvider, extendedNamespaces, activityId, output);
 				else
 					OutputSetPropertiesResponse(path, request, sourceControlProvider, activityId, output, itemPath);
 			}
@@ -54,16 +58,18 @@ namespace SvnBridge.Handlers
 				output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 				output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns3=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns2=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n");
 				output.Write("<D:response>\n");
-				output.Write("<D:href>" + GetLocalPath("/"+ Helper.Encode(path)) + "</D:href>\n");
+				output.Write("<D:href>" + GetLocalPath("/" + Helper.Encode(path.Substring(0, path.Length-1))) + "</D:href>\n");
 				output.Write("<D:propstat>\n");
+                output.Write("<D:prop>\n");
 
 				foreach (XmlElement element in request.Remove.Prop.Properties)
 				{
-					sourceControlProvider.RemoveProperty(activityId, itemPath, GetPropertyName(element));
+                    sourceControlProvider.RemoveProperty(activityId, itemPath, GetPropertyName(element));
 					OutputElement(output, element);
-				}
+                }
 
-				output.Write("<D:status>HTTP/1.1 200 OK</D:status>\n");
+                output.Write("</D:prop>\n");
+                output.Write("<D:status>HTTP/1.1 200 OK</D:status>\n");
 				output.Write("</D:propstat>\n");
 				output.Write("</D:response>\n");
 				output.Write("</D:multistatus>\n");
@@ -115,11 +121,15 @@ namespace SvnBridge.Handlers
                 output.Write("<ns2:" + elementName + "/>\r\n");
 		}
 
-        private void OutputLogResponse(string path, PropertyUpdateData request, TFSSourceControlProvider sourceControlProvider, string activityId, TextWriter output)
+        private void OutputLogResponse(string path, PropertyUpdateData request, TFSSourceControlProvider sourceControlProvider, bool extendedNamespaces, string activityId, TextWriter output)
 		{
 			sourceControlProvider.SetActivityComment(activityId, request.Set.Prop.Properties[0].InnerText);
 			output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-			output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n");
+            if (extendedNamespaces)
+                output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns3=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns2=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n");
+            else
+                output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n");
+
 			output.Write("<D:response>\n");
 			output.Write("<D:href>" + GetLocalPath("/"+path) + "</D:href>\n");
 			output.Write("<D:propstat>\n");

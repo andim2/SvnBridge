@@ -41,6 +41,20 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
+        public void Handle_SettingCommitLogMessageWithAdditionalNamespaces_ReturnsCorrectOutput()
+        {
+            Results r = stubs.Attach(provider.SetActivityComment);
+            request.Path = "http://localhost:8080//!svn/wbl/9c122f80-4f28-0e41-8978-d768e3343033/5782";
+            request.Input =
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?><D:propertyupdate xmlns:D=\"DAV:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:C=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:S=\"http://subversion.tigris.org/xmlns/svn/\"><D:set><D:prop><S:log >prop</S:log></D:prop></D:set></D:propertyupdate>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(result.Contains("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns3=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns2=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">"));
+        }
+
+        [Fact]
         public void Handle_SettingSvnProperty_ReturnsCorrectOutput()
         {
             Results r = stubs.Attach(provider.SetProperty);
@@ -55,6 +69,32 @@ namespace SvnBridge.Handlers
                 "<D:multistatus xmlns:D=\"DAV:\" xmlns:ns3=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns2=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n" +
                 "<D:response>\n" +
                 "<D:href>//!svn/wrk/be05cf36-7514-3f4d-81ea-7822f7b1dfe7/Spikes/SvnFacade/trunk/New%20Folder%204</D:href>\n" +
+                "<D:propstat>\n" +
+                "<D:prop>\n" +
+                "<ns1:ignore/>\r\n" +
+                "</D:prop>\n" +
+                "<D:status>HTTP/1.1 200 OK</D:status>\n" +
+                "</D:propstat>\n" +
+                "</D:response>\n" +
+                "</D:multistatus>\n";
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void Handle_RemovingSvnProperty_ReturnsCorrectOutput()
+        {
+            Results r = stubs.Attach(provider.RemoveProperty);
+            request.Path = "http://localhost:8080//!svn/wrk/9c122f80-4f28-0e41-8978-d768e3343033/";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><D:propertyupdate xmlns:D=\"DAV:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:C=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:S=\"http://subversion.tigris.org/xmlns/svn/\"><D:remove><D:prop><S:ignore /></D:prop></D:remove></D:propertyupdate>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            string expected =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<D:multistatus xmlns:D=\"DAV:\" xmlns:ns3=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns2=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n" +
+                "<D:response>\n" +
+                "<D:href>//!svn/wrk/9c122f80-4f28-0e41-8978-d768e3343033</D:href>\n" +
                 "<D:propstat>\n" +
                 "<D:prop>\n" +
                 "<ns1:ignore/>\r\n" +
@@ -120,7 +160,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleCallsSourceControlProviderWithCorrectActivityIdWhenPathHasOneSlashAfterHostname()
+        public void Handle_PathHasOneSlashAfterHostname_CallsSourceControlProviderWithCorrectActivityId()
         {
             Results r = stubs.Attach(provider.SetActivityComment);
             request.Path = "http://localhost:8082/!svn/wbl/c512ecbe-7577-ce46-939c-a9e81eb4d98e/5465";
@@ -133,7 +173,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleCorrectlyCallsSourceControlProviderForCheckinComment()
+        public void Handle_SettingCheckinComment_CorrectlyCallsSourceControlProvider()
         {
             Results r = stubs.Attach(provider.SetActivityComment);
             request.Path = "http://localhost:8082//!svn/wbl/c512ecbe-7577-ce46-939c-a9e81eb4d98e/5465";
@@ -178,7 +218,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void VerifyHandleEncodesHrefElement()
+        public void Handle_EncodesHrefElement()
         {
             Results r = stubs.Attach(provider.SetProperty);
             request.Path =

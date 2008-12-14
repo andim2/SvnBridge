@@ -279,8 +279,7 @@ namespace SvnBridge.SourceControl
                             // it is a branch without a source ...
                             continue;
                         }
-                        string oldName =
-                            branches[0][branches[0].GetUpperBound(0)].BranchFromItem.item.Substring(rootPath.Length);
+                        string oldName = branches[0][branches[0].GetUpperBound(0)].BranchFromItem.item.Substring(rootPath.Length);
                         int oldRevision = change.Item.RemoteChangesetId - 1;
                         change.Item = new RenamedSourceItem(change.Item, oldName, oldRevision);
                     }
@@ -735,8 +734,6 @@ namespace SvnBridge.SourceControl
             foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)
             {
                 string propertyKey = propertyRevision.Key;
-                if (propertyKey == "")
-                    propertyKey = "/";
 
                 if (folders.ContainsKey(propertyKey.ToLower()))
                 {
@@ -798,9 +795,9 @@ namespace SvnBridge.SourceControl
                 foreach (ActivityItem item in activity.MergeList)
                 {
                     ActivityItem newItem = item;
-                    if (!item.Path.EndsWith("/" + Constants.PropFolder))
+                    if (!IsPropertyFolder(item.Path))
                     {
-                        if (item.Path.Contains("/" + Constants.PropFolder + "/"))
+                        if (IsPropertyFile(item.Path))
                         {
                             string path = item.Path.Replace("/" + Constants.PropFolder + "/", "/");
                             ItemType newItemType = item.FileType;
@@ -859,8 +856,8 @@ namespace SvnBridge.SourceControl
                 if (!folderFound)
                 {
                     folderName = GetFolderName(item.Path.Substring(rootPath.Length));
-                    if (folderName == "")
-                        folderName = "/";
+                    if (!folderName.StartsWith("/"))
+                        folderName = "/" + folderName;
                     MergeActivityResponseItem responseItem = new MergeActivityResponseItem(ItemType.Folder, folderName);
                     mergeResponse.Items.Add(responseItem);
                 }
@@ -1271,17 +1268,11 @@ namespace SvnBridge.SourceControl
 
         private static string GetFolderName(string path)
         {
-            string folderName;
+            string folderName = "";
             if (path.Contains("/"))
             {
                 folderName = path.Substring(0, path.LastIndexOf('/'));
             }
-            else
-            {
-                folderName = "/";
-            }
-            if (folderName.StartsWith("/") == false && folderName.StartsWith("$/") == false)
-                folderName = "/" + folderName;
             return folderName;
         }
 
@@ -1316,8 +1307,6 @@ namespace SvnBridge.SourceControl
             {
                 ItemMetaData item = null;
                 string key = itemProperties.Key.ToLowerInvariant();
-                if (key.StartsWith("/") == false)
-                    key = "/" + key;
                 if (folders.ContainsKey(key))
                 {
                     item = folders[key];
@@ -1387,8 +1376,6 @@ namespace SvnBridge.SourceControl
             {
                 item.Name = "";
             }
-            if (item.Name.StartsWith("/") == false)
-                item.Name = "/" + item.Name;
 
             item.Author = "unknown";
             item.LastModifiedDate = sourceItem.RemoteDate;

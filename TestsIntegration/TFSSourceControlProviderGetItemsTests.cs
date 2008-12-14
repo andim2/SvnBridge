@@ -16,7 +16,7 @@ namespace IntegrationTests
 
             ItemMetaData item = _provider.GetItemInActivity(_activityId, MergePaths(testPath, "/B/Test.txt"));
 
-            Assert.Equal(MergePaths(testPath, "/A/Test.txt"), item.Name);
+            Assert.Equal(MergePaths(testPath, "/A/Test.txt").Substring(1), item.Name);
         }
 
         [IntegrationTestFact]
@@ -45,7 +45,7 @@ namespace IntegrationTests
             ItemMetaData item = _provider.GetItems(-1, MergePaths(testPath, "/File1.txt"), Recursion.None);
 
             Assert.NotNull(item);
-            Assert.Equal(MergePaths(testPath, "/File1.txt"), item.Name);
+            Assert.Equal(MergePaths(testPath, "/File1.txt").Substring(1), item.Name);
         }
 
         [IntegrationTestFact]

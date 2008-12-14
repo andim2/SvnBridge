@@ -28,8 +28,8 @@ namespace IntegrationTests
 
 			FolderMetaData items = (FolderMetaData)_provider.GetItems(_provider.GetLatestVersion(), testPath, Recursion.Full);
 			Assert.Equal(2, items.Items.Count);
-			Assert.Equal(MergePaths(testPath, "/Fun.txt"), items.Items[0].Name);
-			Assert.Equal(MergePaths(testPath, "/Fun2.txt"), items.Items[1].Name);
+			Assert.Equal(MergePaths(testPath, "/Fun.txt").Substring(1), items.Items[0].Name);
+            Assert.Equal(MergePaths(testPath, "/Fun2.txt").Substring(1), items.Items[1].Name);
 		}
 
 		[IntegrationTestFact]
