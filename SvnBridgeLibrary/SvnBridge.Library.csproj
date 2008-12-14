@@ -122,7 +122,6 @@
     <Compile Include="Net\ProxyInformation.cs" />
     <Compile Include="Proxies\TracingInterceptor.cs" />
     <Compile Include="SourceControl\ActivityRepository.cs" />
-    <Compile Include="SourceControl\CachePrePopulator.cs" />
     <Compile Include="SourceControl\Dto\Activity.cs" />
     <Compile Include="SourceControl\Dto\ActivityItem.cs" />
     <Compile Include="SourceControl\Dto\ActivityItemAction.cs" />

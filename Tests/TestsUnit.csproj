@@ -78,7 +78,6 @@
     <Compile Include="Assert\TrueException.cs" />
     <Compile Include="ContainerTests.cs" />
     <Compile Include="BrokenXmlTests.cs" />
-    <Compile Include="CachePrePopulatorTest.cs" />
     <Compile Include="FileNodeTests.cs" />
     <Compile Include="Handlers\CheckoutHandlerTests.cs" />
     <Compile Include="Handlers\CopyHandlerTests.cs" />
