@@ -87,6 +87,7 @@
     <Compile Include="Commit\CommitUpdatedFileWithSpecialCharactersTest.cs" />
     <Compile Include="Merge\MergeSingleFileFromBranchToTrunk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RepoBrowser\BrowseFolderContainingSpaceInNameTest.cs" />
     <Compile Include="RepoBrowser\ListWithRevisionSpecifiedUsingCurrentDateTime.cs" />
     <Compile Include="RepoBrowser\RepoBrowserOpenRootContainingFolderAndFile.cs" />
     <Compile Include="ShowLog\ShowLogRenamedFile.cs" />

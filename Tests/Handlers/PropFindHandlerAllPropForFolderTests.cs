@@ -30,7 +30,7 @@ namespace SvnBridge.Handlers
         private FolderMetaData item;
 
         [Fact]
-        public void TestAllPropCustomProperty()
+        public void Handle_AllPropCustomProperty()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -43,7 +43,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropSvnProperty()
+        public void Handle_AllPropSvnProperty()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -56,7 +56,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropBaselineRelativePath()
+        public void Handle_AllPropBaselineRelativePath()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -69,7 +69,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropCheckedIn()
+        public void Handle_AllPropCheckedIn()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -82,7 +82,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropContentType()
+        public void Handle_AllPropContentType()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -95,7 +95,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropCreationDate()
+        public void Handle_AllPropCreationDate()
         {
             DateTime dt = DateTime.Now;
             item.LastModifiedDate = dt;
@@ -111,7 +111,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropCreatorDisplayName()
+        public void Handle_AllPropCreatorDisplayName()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -124,7 +124,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropDeadDropCount()
+        public void Handle_AllPropDeadDropCount()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -137,7 +137,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropGetETag()
+        public void Handle_AllPropGetETag()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -150,7 +150,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropGetLastModified()
+        public void Handle_AllPropGetLastModified()
         {
             DateTime dt = DateTime.Now;
             item.LastModifiedDate = dt;
@@ -166,7 +166,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropRepositoryUuid()
+        public void Handle_AllPropRepositoryUuid()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -180,7 +180,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropResourceType()
+        public void Handle_AllPropResourceType()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -193,7 +193,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropVersionControlledConfiguration()
+        public void Handle_AllPropVersionControlledConfiguration()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -208,7 +208,7 @@ namespace SvnBridge.Handlers
         }
 
         [Fact]
-        public void TestAllPropVersionName()
+        public void Handle_AllPropVersionName()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
@@ -218,6 +218,19 @@ namespace SvnBridge.Handlers
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:version-name>1234</lp1:version-name>"));
+        }
+
+        [Fact]
+        public void Handle_AllPropOnFolderWithSpaces_CorrectlyEncodesHrefElement()
+        {
+            request.Path = "http://localhost:8080/!svn/bc/5784/Quick%20Starts";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
+            request.Headers["Depth"] = "0";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            Assert.True(result.Contains("<D:href>/!svn/bc/5784/Quick%20Starts/</D:href>"));
         }
     }
 }
