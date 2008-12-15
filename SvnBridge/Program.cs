@@ -19,7 +19,7 @@ namespace SvnBridge
         [STAThread]
         private static void Main(string[] args)
         {
-        	Logging.TraceEnabled = Settings.Default.TraceEnabled;
+        	Logging.TraceEnabled = Configuration.TraceEnabled;
             Logging.MethodTraceEnabled = false;
 
             BootStrapper.Start();
@@ -61,24 +61,24 @@ namespace SvnBridge
 
         private static int? TryGetPortFromSettings()
         {
-            if (Settings.Default.TfsPort != 0)
-                return Settings.Default.TfsPort;
+            if (Configuration.TfsPort != 0)
+                return Configuration.TfsPort;
             return null;
         }
 
         public static ProxyInformation GetProxyInfo()
         {
             var proxyInfo = new ProxyInformation();
-            proxyInfo.UseProxy = Settings.Default.UseProxy;
-            proxyInfo.Url = Settings.Default.ProxyUrl;
-            proxyInfo.Port = Settings.Default.ProxyPort;
-            proxyInfo.UseDefaultCredentails = Settings.Default.ProxyUseDefaultCredentials;
-            proxyInfo.Username = Settings.Default.ProxyUsername;
+            proxyInfo.UseProxy = Configuration.UseProxy;
+            proxyInfo.Url = Configuration.ProxyUrl;
+            proxyInfo.Port = Configuration.ProxyPort;
+            proxyInfo.UseDefaultCredentails = Configuration.ProxyUseDefaultCredentials;
+            proxyInfo.Username = Configuration.ProxyUsername;
 
-            if (Settings.Default.ProxyEncryptedPassword != null)
+            if (Configuration.ProxyEncryptedPassword != null)
             {
                 byte[] password = ProtectedData.Unprotect(
-                    Settings.Default.ProxyEncryptedPassword,
+                    Configuration.ProxyEncryptedPassword,
                     Encoding.UTF8.GetBytes("ProxyEncryptedPassword"),
                     DataProtectionScope.CurrentUser
                     );
@@ -87,33 +87,24 @@ namespace SvnBridge
             return proxyInfo;
         }
 
-        private static bool TryGetSettings(ref int? port,
-                                           ProxyInformation proxyInfo)
+        private static bool TryGetSettings(ref int? port, ProxyInformation proxyInfo)
         {
             var view = new SettingsForm();
             var presenter = new SettingsViewPresenter(view, proxyInfo);
-            presenter.Port = port ?? Settings.Default.TfsPort;
+            presenter.Port = port ?? Configuration.TfsPort;
             presenter.Show();
 
-
-            if (!presenter.Cancelled)
+            if (!presenter.Canceled)
             {
             	port = presenter.Port;
 
             	SaveSettings(proxyInfo, presenter.Port);
             }
-        	return !presenter.Cancelled;
+        	return !presenter.Canceled;
         }
 
     	public static void SaveSettings(ProxyInformation proxyInfo, int port)
     	{
-    		Settings.Default.TfsPort = port;
-    		Settings.Default.UseProxy = proxyInfo.UseProxy;
-    		Settings.Default.ProxyUrl = proxyInfo.Url;
-    		Settings.Default.ProxyPort = proxyInfo.Port;
-    		Settings.Default.ProxyUseDefaultCredentials = proxyInfo.UseDefaultCredentails;
-    		Settings.Default.ProxyUsername = proxyInfo.Username;
-
     		byte[] password = null;
     		if (proxyInfo.Password != null)
     		{
@@ -123,9 +114,14 @@ namespace SvnBridge
     				DataProtectionScope.CurrentUser
     				);
     		}
-    		Settings.Default.ProxyEncryptedPassword = password;
-
-    		Settings.Default.Save();
+            Configuration.TfsPort = port;
+            Configuration.UseProxy = proxyInfo.UseProxy;
+            Configuration.ProxyUrl = proxyInfo.Url;
+            Configuration.ProxyPort = proxyInfo.Port;
+            Configuration.ProxyUseDefaultCredentials = proxyInfo.UseDefaultCredentails;
+            Configuration.ProxyUsername = proxyInfo.Username;
+            Configuration.ProxyEncryptedPassword = password;
+            Configuration.Save();
     	}
 
     	private static void Run(int port, ProxyInformation proxyInformation)

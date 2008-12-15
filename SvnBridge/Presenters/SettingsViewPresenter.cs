@@ -24,7 +24,7 @@ namespace SvnBridge.Presenters
 			view.Presenter = this;
 		}
 
-		public bool Cancelled
+		public bool Canceled
 		{
 			get
 			{

@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly : AssemblyTitle("SvnBridge")]
 [assembly : AssemblyDescription("")]
 [assembly : AssemblyConfiguration("")]
-[assembly : AssemblyCompany("MS")]
+[assembly : AssemblyCompany("Microsoft")]
 [assembly : AssemblyProduct("SvnBridge")]
-[assembly : AssemblyCopyright("Copyright © MS 2007")]
+[assembly : AssemblyCopyright("Copyright © Microsoft 2007")]
 [assembly : AssemblyTrademark("")]
 [assembly : AssemblyCulture("")]
 

@@ -49,7 +49,7 @@ namespace SvnBridge.Presenters
 
             presenter.Show();
 
-            Assert.True(presenter.Cancelled);
+            Assert.True(presenter.Canceled);
         }
 
         [Fact]

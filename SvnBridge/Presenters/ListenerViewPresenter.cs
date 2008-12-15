@@ -49,7 +49,7 @@ namespace SvnBridge.Presenters
 			settingsViewPresenter.IgnoredUsedPort = listener.Port;
 			settingsViewPresenter.Show();
 
-			if ((!settingsViewPresenter.Cancelled) && (SettingsHaveChanged(settingsViewPresenter)))
+			if ((!settingsViewPresenter.Canceled) && (SettingsHaveChanged(settingsViewPresenter)))
 			{
 				Program.SaveSettings(settingsViewPresenter.ProxyInformation, settingsViewPresenter.Port);
 				ApplyNewSettings(settingsViewPresenter.ProxyInformation, settingsViewPresenter.Port);
