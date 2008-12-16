@@ -19,10 +19,6 @@ namespace SvnBridge.Views
 			Closed+=((sender, e) => presenter.ViewClosed());
 			showErrorsToolStripMenuItem.Click += OnShowErrorsClick;
             invokeDeubgger.Click+=((sender, e) => Debugger.Launch());
-            cacheClear.Click += (sender, e) => {
-                SvnBridge.Infrastructure.Container.Resolve<MemoryBasedPersistentCache>().Clear();
-                GC.Collect(2);
-            };
         }
 
     	private void BalloonTipClicked_OnClick(object sender, EventArgs e)

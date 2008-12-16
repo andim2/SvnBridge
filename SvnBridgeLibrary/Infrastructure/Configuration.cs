@@ -36,20 +36,6 @@ namespace SvnBridge.Infrastructure
             ReadUserConfig();
         }
 
-        private static void ReadUserConfig()
-        {
-            string configFile = Path.Combine(userConfigFolder, "user.config");
-            if (File.Exists(configFile))
-            {
-                XmlDocument xml = new XmlDocument();
-                xml.InnerXml = File.ReadAllText(configFile);
-                foreach (XmlElement node in xml.SelectNodes("//setting"))
-                {
-                    userConfig[node.Attributes["name"].Value] = node.Attributes["value"].Value;
-                }
-            }
-        }
-
         public static void Save()
         {
             Directory.CreateDirectory(userConfigFolder);
@@ -166,18 +152,6 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-        private static T ReadConfig<T>(ConfigSettings setting, T defaultValue)
-        {
-            string name = setting.ToString();
-            if (userConfig.ContainsKey(name.ToString()))
-                return (T)Convert.ChangeType(userConfig[name], typeof(T));
-
-            if (ConfigurationManager.AppSettings[name] != null)
-                return (T)Convert.ChangeType(ConfigurationManager.AppSettings[name], typeof(T));
-
-            return defaultValue;
-        }
-
         public static object AppSettings(string name)
         {
             name = name.ToLower();
@@ -188,6 +162,32 @@ namespace SvnBridge.Infrastructure
             if (name == ConfigSettings.DomainIncludesProjectName.ToString().ToLower()) return DomainIncludesProjectName;
             if (name == ConfigSettings.UseCodePlexServers.ToString().ToLower()) return UseCodePlexServers;
             return null;
+        }
+
+        private static void ReadUserConfig()
+        {
+            string configFile = Path.Combine(userConfigFolder, "user.config");
+            if (File.Exists(configFile))
+            {
+                XmlDocument xml = new XmlDocument();
+                xml.InnerXml = File.ReadAllText(configFile);
+                foreach (XmlElement node in xml.SelectNodes("//setting"))
+                {
+                    userConfig[node.Attributes["name"].Value] = node.Attributes["value"].Value;
+                }
+            }
+        }
+
+        private static T ReadConfig<T>(ConfigSettings setting, T defaultValue)
+        {
+            string name = setting.ToString();
+            if (userConfig.ContainsKey(name.ToString()))
+                return (T)Convert.ChangeType(userConfig[name], typeof(T));
+
+            if (ConfigurationManager.AppSettings[name] != null)
+                return (T)Convert.ChangeType(ConfigurationManager.AppSettings[name], typeof(T));
+
+            return defaultValue;
         }
     }
 }
