@@ -181,17 +181,17 @@ namespace SvnBridge.Handlers
                 }
             }
             writer.Write("<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>\n");
-            writer.Write("<lp1:getetag>W/\"" + item.Revision + "//" + item.Name + "\"</lp1:getetag>\n");
+            writer.Write("<lp1:getetag>W/\"" + item.Revision + "//" + Helper.EncodeB(item.Name) + "\"</lp1:getetag>\n");
             writer.Write("<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate) + "</lp1:creationdate>\n");
             writer.Write("<lp1:getlastmodified>" + Helper.FormatDateB(item.LastModifiedDate) + "</lp1:getlastmodified>\n");
-            string svrVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name));
-            writer.Write("<lp1:checked-in><D:href>" + Helper.UrlEncodeIfNeccesary(svrVerLocalPath) + "</D:href></lp1:checked-in>\n");
+            string svrVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
+            writer.Write("<lp1:checked-in><D:href>" + svrVerLocalPath + "</D:href></lp1:checked-in>\n");
             writer.Write("<lp1:version-controlled-configuration><D:href>" + VccPath + "</D:href></lp1:version-controlled-configuration>\n");
             writer.Write("<lp1:version-name>" + item.Revision + "</lp1:version-name>\n");
             writer.Write("<lp1:creator-displayname>" + item.Author + "</lp1:creator-displayname>\n");
             if (item.Name != "")
             {
-                writer.Write("<lp2:baseline-relative-path>" + item.Name + "</lp2:baseline-relative-path>\n");
+                writer.Write("<lp2:baseline-relative-path>" + Helper.EncodeB(item.Name) + "</lp2:baseline-relative-path>\n");
             }
             else
             {

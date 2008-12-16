@@ -224,8 +224,7 @@ namespace SvnBridge.Utility
 			return Encode(value, false);
 		}
 
-		public static string Encode(string value,
-									bool capitalize)
+		public static string Encode(string value, bool capitalize)
 		{
 			return Encode(ENCODED, DECODED, value, capitalize);
 		}

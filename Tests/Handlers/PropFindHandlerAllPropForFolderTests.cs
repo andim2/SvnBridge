@@ -30,6 +30,26 @@ namespace SvnBridge.Handlers
         private FolderMetaData item;
 
         [Fact]
+        public void Handle_FolderWithSpecialCharacters_ProperlyEncodesResults()
+        {
+            item.Name = "trunk/A !@#$%^&()_-+={[}];',.~`";
+            item.ItemRevision = 5787;
+            item.Author = "jwanagel";
+
+            request.Path = "http://localhost:8080/!svn/bc/5787/trunk/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
+            request.Headers["Depth"] = "0";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            Assert.True(result.Contains("<D:href>/!svn/bc/5787/trunk/A%20!@%23$%25%5e&amp;()_-+=%7b%5b%7d%5d%3b',.~%60/</D:href>\n"));
+            Assert.True(result.Contains("<lp1:getetag>W/\"5787//trunk/A !@#$%^&amp;()_-+={[}];',.~`\"</lp1:getetag>"));
+            Assert.True(result.Contains("<lp1:checked-in><D:href>/!svn/ver/5787/trunk/A%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60</D:href></lp1:checked-in>"));
+            Assert.True(result.Contains("<lp2:baseline-relative-path>trunk/A !@#$%^&amp;()_-+={[}];',.~`</lp2:baseline-relative-path>"));
+        }
+
+        [Fact]
         public void Handle_AllPropCustomProperty()
         {
             request.Path = "http://localhost/!svn/bc/1234/Foo";
