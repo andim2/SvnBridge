@@ -94,6 +94,7 @@
     <Compile Include="Handlers\PropFindHandler\FileNodeTests.cs" />
     <Compile Include="Handlers\PropPatchHandlerTests.cs" />
     <Compile Include="Handlers\PutHandlerTests.cs" />
+    <Compile Include="Handlers\ReportHandlerGetLocationsReportTests.cs" />
     <Compile Include="Handlers\ReportHandlerLogReportTests.cs" />
     <Compile Include="Handlers\ReportHandlerTests.cs" />
     <Compile Include="Handlers\ReportHandlerUpdateReportTests.cs" />

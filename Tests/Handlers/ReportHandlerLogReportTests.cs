@@ -102,46 +102,6 @@ namespace UnitTests
         }
 
         [Fact]
-        public void VerifyHandleOutputForGetLocationsReportOnRoot()
-        {
-            stubs.Attach(provider.GetItems, new ItemMetaData());
-            request.Path = "http://localhost:8082/!svn/bc/5696";
-            request.Input =
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5696</S:peg-revision><S:location-revision>5597</S:location-revision></S:get-locations>";
-
-			handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
-
-            string expected =
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n" +
-                "<S:location rev=\"5597\" path=\"/\"/>\n" +
-                "</S:get-locations-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
-            Assert.Equal(200, context.Response.StatusCode);
-            Assert.Equal("text/xml; charset=\"utf-8\"", context.Response.ContentType);
-            Assert.Equal(true, context.Response.SendChunked);
-        }
-
-        [Fact]
-        public void VerifyHandleOutputForGetLocationsReportOnSubFolder()
-        {
-            stubs.Attach(provider.GetItems, new ItemMetaData());
-
-            request.Path = "http://localhost:8082/!svn/bc/5696/Folder1";
-            request.Input =
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5696</S:peg-revision><S:location-revision>5573</S:location-revision></S:get-locations>";
-
-			handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
-
-            string expected =
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n" +
-                "<S:location rev=\"5573\" path=\"/Folder1\"/>\n" +
-                "</S:get-locations-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
-        }
-
-        [Fact]
         public void VerifyHandleProducesCorrectOutputForBranchedFile()
         {
             List<SourceItemHistory> histories = new List<SourceItemHistory>();

@@ -360,17 +360,17 @@ namespace SvnBridge.Handlers
                 path = "/";
             }
 
-            ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(
-                int.Parse(getLocationsReport.LocationRevision),
-                path,
-                Recursion.None);
-
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
-            if (item != null)
+            foreach (string locationRevision in getLocationsReport.LocationRevision)
             {
-                output.Write("<S:location rev=\"" + getLocationsReport.LocationRevision + "\" path=\"" + path + "\"/>\n");
+                ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(int.Parse(locationRevision), path, Recursion.None);
+                if (item != null)
+                {
+                    output.Write("<S:location rev=\"" + locationRevision + "\" path=\"" + path + "\"/>\n");
+                }
             }
+
             output.Write("</S:get-locations-report>\n");
         }
 
