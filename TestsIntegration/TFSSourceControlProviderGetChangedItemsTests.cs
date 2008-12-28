@@ -435,9 +435,47 @@ namespace IntegrationTests
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
+            Assert.Equal(1, folder.Items.Count);
 			Assert.True(folder.Items[0] is DeleteFolderMetaData);
 			Assert.Equal(path.Substring(1), folder.Items[0].Name);
 		}
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFolderContainingFile()
+        {
+            string path = MergePaths(testPath, "/Test Folder");
+            CreateFolder(path, false);
+            WriteFile(path + "/Test.txt", "test", true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.True(folder.Items[0] is DeleteFolderMetaData);
+            Assert.Equal(path.Substring(1), folder.Items[0].Name);
+        }
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFolderContainingTwoFiles()
+        {
+            string path = MergePaths(testPath, "/Test Folder");
+            CreateFolder(path, false);
+            WriteFile(path + "/Test1.txt", "test1", false);
+            WriteFile(path + "/Test2.txt", "test2", true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.True(folder.Items[0] is DeleteFolderMetaData);
+            Assert.Equal(path.Substring(1), folder.Items[0].Name);
+        }
 
 		[IntegrationTestFact]
 		public void GetChangedItems_WithDeletedFolderContainingFilesReturnsNothingWhenClientStateAlreadyCurrent()

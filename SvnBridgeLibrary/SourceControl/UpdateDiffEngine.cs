@@ -282,7 +282,9 @@ namespace SvnBridge.SourceControl
                 else
                     folderName += nameParts[i];
 
-                HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart);
+                bool fullyHandled = HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart);
+                if (fullyHandled)
+                    break;
             }
             if (nameParts.Length == 0)//we have to delete the checkout root itself
             {
@@ -290,11 +292,11 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private void HandleDeleteItem(string remoteName, SourceItemChange change, string folderName, ref FolderMetaData folder, bool isLastNamePart)
+        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string folderName, ref FolderMetaData folder, bool isLastNamePart)
         {
             ItemMetaData item = folder.FindItem(folderName);
             if (item is DeleteFolderMetaData || item is DeleteMetaData)
-                return;
+                return true;
 
             if (item == null)
             {
@@ -358,6 +360,7 @@ namespace SvnBridge.SourceControl
                 }
             }
             folder = (item as FolderMetaData) ?? folder;
+            return false;
         }
 
         private static bool IsChangeAlreadyCurrentInClientState(ChangeType changeType,

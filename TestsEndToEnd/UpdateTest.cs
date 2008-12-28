@@ -491,6 +491,20 @@ namespace TestsEndToEnd
 
 
         [SvnBridgeFact]
+        public void Update_AfterDeleteFolderContainingTwoFiles()
+        {
+            CreateFolder(testPath + "/testFolder1", false);
+            WriteFile(testPath + "/testFolder1/Test1.txt", "test1", false);
+            WriteFile(testPath + "/testFolder1/Test2.txt", "test2", true);
+            CheckoutAndChangeDirectory();
+            DeleteItem(testPath + "/testFolder1", true);
+
+            Svn("update");
+
+            Assert.False(Directory.Exists("testFolder1"));
+        }
+
+        [SvnBridgeFact]
         public void UpdateAfterRemovingFolderFromFileSystemShouldReturnFolder()
         {
             CreateFolder(testPath + "/testFolder1", true);
