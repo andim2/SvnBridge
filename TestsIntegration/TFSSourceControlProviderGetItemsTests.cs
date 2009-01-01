@@ -179,5 +179,13 @@ namespace IntegrationTests
                 _provider.GetItems(-1, testPath, Recursion.Full);     
             });
         }
+
+        [IntegrationTestFact]
+        public void GetItems_RequestedRevisionIs0_ReturnsFirstRevision()
+        {
+            ItemMetaData item = _provider.GetItems(0, "", Recursion.None);
+
+            Assert.NotNull(item);
+        }
     }
 }

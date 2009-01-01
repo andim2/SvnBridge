@@ -154,6 +154,17 @@ namespace UnitTests.SourceControl
         }
 
         [Fact]
+        public void DeleteFolderContainingTwoFiles()
+        {
+            engine.Delete(CreateChange(ChangeType.Delete, "project/new folder", ItemType.Folder));
+            engine.Delete(CreateChange(ChangeType.Delete, "project/new folder/test1.txt", ItemType.File));
+            engine.Delete(CreateChange(ChangeType.Delete, "project/new folder/test2.txt", ItemType.File));
+
+            AssertFolder(root, "project", 0, 1);
+            AssertDeleteFolder(root.Items[0], "project/new folder", 0);
+        }
+
+        [Fact]
         public void EditFile()
         {
             ItemMetaData item = new ItemMetaData("project/file.txt");

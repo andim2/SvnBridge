@@ -631,6 +631,11 @@ namespace SvnBridge.SourceControl
                 path = path.Substring(1);
             }
 
+            if (version == 0)
+            {
+                version = GetEarliestVersion(path);
+            }
+
             if (version == -1)
             {
                 version = GetLatestVersion();
@@ -1353,6 +1358,12 @@ namespace SvnBridge.SourceControl
             itemSpec.item = item;
             itemSpec.recurse = recurse;
             return itemSpec;
+        }
+
+        private int GetEarliestVersion(string path)
+        {
+            LogItem log = GetLog(path, 1, GetLatestVersion(), Recursion.None, int.MaxValue);
+            return log.History[log.History.Length - 1].ChangeSetID;
         }
 
         private ItemMetaData ConvertSourceItem(SourceItem sourceItem, string rootPath)
