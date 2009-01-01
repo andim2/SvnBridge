@@ -181,7 +181,7 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void GetItems_RequestedRevisionIs0_ReturnsFirstRevision()
+        public void GetItems_RequestedRevision0ForRoot_ReturnsFirstRevision()
         {
             ItemMetaData item = _provider.GetItems(0, "", Recursion.None);
 

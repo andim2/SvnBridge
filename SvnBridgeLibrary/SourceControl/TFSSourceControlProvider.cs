@@ -631,7 +631,7 @@ namespace SvnBridge.SourceControl
                 path = path.Substring(1);
             }
 
-            if (version == 0)
+            if (version == 0 && path == "")
             {
                 version = GetEarliestVersion(path);
             }
