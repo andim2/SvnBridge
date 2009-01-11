@@ -23,6 +23,7 @@ namespace SvnBridge.SourceControl
         public string Name;
         public Dictionary<string, string> Properties = new Dictionary<string, string>();
         public int PropertyRevision;
+        public int SubItemRevision;
 
         public ItemMetaData()
         {
@@ -42,7 +43,11 @@ namespace SvnBridge.SourceControl
         {
             get
             {
-                if (PropertyRevision > ItemRevision)
+                if (SubItemRevision > PropertyRevision && SubItemRevision > ItemRevision)
+                {
+                    return SubItemRevision;
+                }
+                else if (PropertyRevision > ItemRevision)
                 {
                     return PropertyRevision;
                 }

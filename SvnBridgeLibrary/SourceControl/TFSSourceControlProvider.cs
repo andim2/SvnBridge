@@ -745,7 +745,7 @@ namespace SvnBridge.SourceControl
                             maxLastModified = folderItem.LastModifiedDate;
                     }
                     if (maxChangeset > item.ItemRevision)
-                        item.ItemRevision = maxChangeset;
+                        item.SubItemRevision = maxChangeset;
 
                     if (maxLastModified > item.LastModifiedDate)
                         item.LastModifiedDate = maxLastModified;
@@ -753,7 +753,7 @@ namespace SvnBridge.SourceControl
                 else
                 {
                     LogItem log = GetLog(item.Name, 1, version, Recursion.Full, 1);
-                    item.ItemRevision = log.History[0].ChangeSetID;
+                    item.SubItemRevision = log.History[0].ChangeSetID;
                     item.LastModifiedDate = log.History[0].CommitDateTime;
                 }
             }
