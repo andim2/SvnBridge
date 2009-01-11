@@ -87,6 +87,30 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
+        public void GetItems_OnFolderContainingUpdatesWithRecursionFull_ReturnsLatestChangesetOfContainedItems()
+        {
+            WriteFile(MergePaths(testPath, "/Test.txt"), "whee", true);
+
+            FolderMetaData folder = (FolderMetaData)_provider.GetItems(-1, testPath, Recursion.Full);
+
+            ItemMetaData item = _provider.GetItems(-1, MergePaths(testPath, "/Test.txt"), Recursion.None);
+            Assert.Equal(item.Revision, folder.Revision);
+            Assert.Equal(item.LastModifiedDate, folder.LastModifiedDate);
+        }
+
+        [IntegrationTestFact]
+        public void GetItems_OnFolderContainingUpdatesWithRecursionNone_ReturnsLatestChangesetOfContainedItems()
+        {
+            WriteFile(MergePaths(testPath, "/Test.txt"), "whee", true);
+
+            FolderMetaData folder = (FolderMetaData)_provider.GetItems(-1, testPath, Recursion.None);
+
+            ItemMetaData item = _provider.GetItems(-1, MergePaths(testPath, "/Test.txt"), Recursion.None);
+            Assert.Equal(item.Revision, folder.Revision);
+            Assert.Equal(item.LastModifiedDate, folder.LastModifiedDate);
+        }
+
+        [IntegrationTestFact]
         public void GetItems_ReturnsCorrectRevisionWhenPropertyHasBeenAddedToFileAndRecursionIsFull()
         {
             WriteFile(MergePaths(testPath, "/Test.txt"), "whee", true);

@@ -715,7 +715,48 @@ namespace SvnBridge.SourceControl
             }
             SetItemProperties(folders, properties);
             UpdateItemRevisionsBasedOnPropertyItemRevisions(folders, itemPropertyRevision);
+            if (!returnPropertyFiles)
+            {
+                UpdateFolderRevisions(firstItem, version, recursion);
+            }
             return firstItem;
+        }
+
+        private void UpdateFolderRevisions(ItemMetaData item, int version, Recursion recursion)
+        {
+            if (item != null && item.ItemType == ItemType.Folder)
+            {
+                FolderMetaData folder = (FolderMetaData)item;
+                foreach (ItemMetaData folderItem in folder.Items)
+                {
+                    UpdateFolderRevisions(folderItem, version, recursion);
+                }
+                if (recursion == Recursion.Full)
+                {
+                    int maxChangeset = int.MinValue;
+                    DateTime maxLastModified = DateTime.MinValue;
+
+                    foreach (ItemMetaData folderItem in folder.Items)
+                    {
+                        if (folderItem.Revision > maxChangeset)
+                            maxChangeset = folderItem.Revision;
+
+                        if (folderItem.LastModifiedDate > maxLastModified)
+                            maxLastModified = folderItem.LastModifiedDate;
+                    }
+                    if (maxChangeset > item.ItemRevision)
+                        item.ItemRevision = maxChangeset;
+
+                    if (maxLastModified > item.LastModifiedDate)
+                        item.LastModifiedDate = maxLastModified;
+                }
+                else
+                {
+                    LogItem log = GetLog(item.Name, 1, version, Recursion.Full, 1);
+                    item.ItemRevision = log.History[0].ChangeSetID;
+                    item.LastModifiedDate = log.History[0].CommitDateTime;
+                }
+            }
         }
 
         public bool IsPropertyFile(string name)
