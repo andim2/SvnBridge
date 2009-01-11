@@ -54,10 +54,7 @@ namespace SvnBridge.Handlers
 			}
 		}
 
-		private string CheckOut(
-            TFSSourceControlProvider sourceControlProvider,
-			CheckoutData request,
-			string path)
+		private string CheckOut(TFSSourceControlProvider sourceControlProvider, CheckoutData request, string path)
 		{
 			string activityId = PathParser.GetActivityId(request.ActivitySet.href);
 
@@ -73,7 +70,7 @@ namespace SvnBridge.Handlers
 			string location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
 		
             ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(-1, Helper.Decode(itemPath), Recursion.None);
-			if (item.Revision > version)
+			if (item.ItemRevision > version || item.PropertyRevision > version)
 			{
 				throw new ConflictException();
 			}
