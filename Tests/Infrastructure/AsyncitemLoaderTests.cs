@@ -5,7 +5,7 @@ using SvnBridge.SourceControl;
 using Tests;
 using Xunit;
 
-namespace UnitTests.Infrastructure
+namespace UnitTests
 {
     public class AsyncitemLoaderTests
     {

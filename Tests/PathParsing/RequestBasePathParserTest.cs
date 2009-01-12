@@ -1,13 +1,13 @@
 using System;
 using SvnBridge.Interfaces;
 using SvnBridge.Net;
-using SvnBridge.Stubs;
 using Xunit;
 using Tests;
 using SvnBridge.Infrastructure;
 using Attach;
+using SvnBridge.PathParsing;
 
-namespace SvnBridge.PathParsing
+namespace UnitTests
 {
     public class RequestBasePathParserTest
     {

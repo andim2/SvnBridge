@@ -11,8 +11,9 @@ using SvnBridge.Infrastructure;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using Tests;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class MergeHandlerTests : HandlerTestsBase
     {

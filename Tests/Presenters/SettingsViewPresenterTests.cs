@@ -1,10 +1,9 @@
 using System.Windows.Forms;
 using Xunit;
 using SvnBridge.Net;
-using SvnBridge.Stubs;
-using Assert=CodePlex.NUnitExtensions.Assert;
+using SvnBridge.Presenters;
 
-namespace SvnBridge.Presenters
+namespace UnitTests
 {
     public class SettingsViewPresenterTests
     {

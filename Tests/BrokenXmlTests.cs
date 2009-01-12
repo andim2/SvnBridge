@@ -1,12 +1,11 @@
 using System.Xml;
 using Xunit;
 using SvnBridge.Infrastructure;
+using SvnBridge.Protocol;
+using SvnBridge.Utility;
 
-namespace SvnBridge
+namespace UnitTests
 {
-	using Protocol;
-	using Utility;
-
     public class BrokenXmlTests
     {
         [Fact]

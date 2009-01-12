@@ -3,12 +3,12 @@ using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;
 using SvnBridge.PathParsing;
 using Xunit;
-using Assert=CodePlex.NUnitExtensions.Assert;
 using SvnBridge.Infrastructure;
 using Tests;
 using SvnBridge.SourceControl;
+using SvnBridge.Net;
 
-namespace SvnBridge.Net
+namespace UnitTests
 {
     public class ListenerTests
     {

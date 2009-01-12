@@ -1,7 +1,7 @@
 using SvnBridge.Presenters;
 using SvnBridge.Views;
 
-namespace SvnBridge.Stubs
+namespace UnitTests
 {
     public class StubListenerView : IListenerView
     {

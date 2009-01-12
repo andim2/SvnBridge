@@ -9,8 +9,9 @@ using SvnBridge.Nodes;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class PropFindHandlerTests : HandlerTestsBase
     {

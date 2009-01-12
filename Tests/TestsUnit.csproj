@@ -58,27 +58,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assert\Assert.cs" />
-    <Compile Include="Assert\AssertActualExpectedException.cs" />
-    <Compile Include="Assert\AssertException.cs" />
-    <Compile Include="Assert\ContainsException.cs" />
-    <Compile Include="Assert\DoesNotContainException.cs" />
-    <Compile Include="Assert\EmptyException.cs" />
-    <Compile Include="Assert\EqualException.cs" />
-    <Compile Include="Assert\FalseException.cs" />
-    <Compile Include="Assert\InRangeException.cs" />
-    <Compile Include="Assert\IsTypeException.cs" />
-    <Compile Include="Assert\NotEmptyException.cs" />
-    <Compile Include="Assert\NotEqualException.cs" />
-    <Compile Include="Assert\NotNullException.cs" />
-    <Compile Include="Assert\NotSameException.cs" />
-    <Compile Include="Assert\NullException.cs" />
-    <Compile Include="Assert\SameException.cs" />
-    <Compile Include="Assert\ThrowsException.cs" />
-    <Compile Include="Assert\TrueException.cs" />
     <Compile Include="ContainerTests.cs" />
     <Compile Include="BrokenXmlTests.cs" />
-    <Compile Include="FileNodeTests.cs" />
     <Compile Include="Handlers\CheckoutHandlerTests.cs" />
     <Compile Include="Handlers\CopyHandlerTests.cs" />
     <Compile Include="Handlers\DeleteHandlerTests.cs" />
@@ -90,7 +71,6 @@
     <Compile Include="Handlers\PropFindHandlerAllPropForFolderTests.cs" />
     <Compile Include="Handlers\PropFindHandlerAllPropForItemTests.cs" />
     <Compile Include="Handlers\PropFindHandlerTests.cs" />
-    <Compile Include="Handlers\PropFindHandler\BcFileNodeTests.cs" />
     <Compile Include="Handlers\PropFindHandler\FileNodeTests.cs" />
     <Compile Include="Handlers\PropPatchHandlerTests.cs" />
     <Compile Include="Handlers\PutHandlerTests.cs" />

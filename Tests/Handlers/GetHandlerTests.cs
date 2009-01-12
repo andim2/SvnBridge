@@ -8,8 +8,9 @@ using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using System;
 using SvnBridge.Utility;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class GetHandlerTests : HandlerTestsBase
     {

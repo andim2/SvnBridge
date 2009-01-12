@@ -10,7 +10,7 @@ using ChangeType = CodePlex.TfsLibrary.RepositoryWebSvc.ChangeType;
 using ItemType = CodePlex.TfsLibrary.RepositoryWebSvc.ItemType;
 using System.Diagnostics;
 
-namespace UnitTests.SourceControl
+namespace UnitTests
 {
     public class UpdateDiffEngineTests
     {

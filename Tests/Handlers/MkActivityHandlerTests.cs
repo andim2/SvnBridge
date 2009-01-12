@@ -4,8 +4,9 @@ using Xunit;
 using SvnBridge.Infrastructure;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class MkActivityHandlerTests : HandlerTestsBase
     {

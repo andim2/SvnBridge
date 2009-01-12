@@ -1,8 +1,9 @@
 using System;
 using System.IO;
 using Xunit;
+using SvnBridge.Utility;
 
-namespace SvnBridge.Utility
+namespace UnitTests
 {
     public class BinaryReaderEOFTests
     {

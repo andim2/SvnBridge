@@ -9,7 +9,7 @@ using SvnBridge.Cache;
 using Tests;
 using SvnBridge.Net;
 
-namespace SvnBridge
+namespace UnitTests
 {
 	public class ContainerTests : IDisposable
 	{

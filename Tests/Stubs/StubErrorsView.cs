@@ -1,8 +1,8 @@
-namespace SvnBridge.Stubs
-{
-	using Presenters;
-	using Views;
+using SvnBridge.Presenters;
+using SvnBridge.Views;
 
+namespace UnitTests
+{
 	public class StubErrorsView : IListenerErrorsView
 	{
 		public bool AddError_Called;

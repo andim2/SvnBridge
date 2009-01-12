@@ -7,8 +7,9 @@ using Tests;
 using SvnBridge.Cache;
 using Attach;
 using System.Net;
+using SvnBridge.SourceControl;
 
-namespace SvnBridge.SourceControl
+namespace UnitTests
 {
     public class TFSSourceControlProviderTest
     {

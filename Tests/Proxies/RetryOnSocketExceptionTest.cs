@@ -6,9 +6,8 @@ using SvnBridge.Interfaces;
 using SvnBridge.Proxies;
 using Tests;
 using SvnBridge.Infrastructure;
-using SvnBridge.Stubs;
 
-namespace SvnBridge.Proxies
+namespace UnitTests
 {
     public class RetryOnSocketExceptionTest
     {

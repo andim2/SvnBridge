@@ -7,8 +7,9 @@ using SvnBridge.Nodes;
 using SvnBridge.SourceControl;
 using Tests;
 using Attach;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class FileNodeTests : HandlerTestsBase
     {

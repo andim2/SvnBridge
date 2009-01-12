@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using SvnBridge.Interfaces;
 
-namespace SvnBridge.Stubs
+namespace UnitTests
 {
     public class StubHttpResponse : IHttpResponse
     {

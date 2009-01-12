@@ -1,7 +1,7 @@
 using Xunit;
 using SvnBridge.Utility;
 
-namespace Tests
+namespace UnitTests
 {
     public class HelperTests
     {

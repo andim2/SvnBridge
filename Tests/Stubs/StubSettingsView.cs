@@ -2,7 +2,7 @@ using System.Windows.Forms;
 using SvnBridge.Presenters;
 using SvnBridge.Views;
 
-namespace SvnBridge.Stubs
+namespace UnitTests
 {
     public class StubSettingsView : ISettingsView
     {

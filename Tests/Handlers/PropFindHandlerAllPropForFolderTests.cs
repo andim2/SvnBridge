@@ -7,8 +7,9 @@ using SvnBridge.Infrastructure;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class PropFindHandlerAllPropForFolderTests : HandlerTestsBase
     {

@@ -6,8 +6,9 @@ using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using System.IO;
 using System.Text;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class OptionsHandlerTests : HandlerTestsBase
     {

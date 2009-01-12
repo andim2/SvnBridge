@@ -7,7 +7,7 @@ using System.Net;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using Attach;
 
-namespace Tests
+namespace UnitTests
 {
     public class StubTFSSourceControlService : TFSSourceControlService
     {

@@ -3,7 +3,7 @@ using SvnBridge.Interfaces;
 using SvnBridge.Net;
 using SvnBridge.PathParsing;
 
-namespace SvnBridge.Stubs
+namespace UnitTests
 {
     public delegate void StartDelegate();
 

@@ -6,9 +6,9 @@ using Xunit;
 using SvnBridge.Net;
 using SvnBridge.SourceControl;
 using Tests;
-using SvnBridge.Stubs;
+using SvnBridge.PathParsing;
 
-namespace SvnBridge.PathParsing
+namespace UnitTests
 {
     public class PathParserSingleServerWithProjectInPathTest
     {

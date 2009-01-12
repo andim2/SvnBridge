@@ -4,13 +4,13 @@ using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.SourceControl;
 using Tests;
-using SvnBridge.Stubs;
 using Attach;
 using SvnBridge.Infrastructure;
 using CodePlex.TfsLibrary.ObjectModel;
 using System.Windows.Forms;
+using SvnBridge.PathParsing;
 
-namespace SvnBridge.PathParsing
+namespace UnitTests
 {
     public class PathParserProjectInDomainTest : IDisposable
 	{

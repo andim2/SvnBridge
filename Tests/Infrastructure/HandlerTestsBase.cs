@@ -2,13 +2,14 @@ using System.Collections.Specialized;
 using System.IO;
 using Xunit;
 using SvnBridge.SourceControl;
-using SvnBridge.Stubs;
 using Tests;
 using SvnBridge.Net;
 using Attach;
 using System;
+using SvnBridge;
+using SvnBridge.Infrastructure;
 
-namespace SvnBridge.Infrastructure
+namespace UnitTests
 {
     public abstract class HandlerTestsBase : IDisposable
     {

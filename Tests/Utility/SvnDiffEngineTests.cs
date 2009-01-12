@@ -1,7 +1,7 @@
 using Xunit;
 using SvnBridge.Utility;
 
-namespace Tests.Utility
+namespace UnitTests
 {
     public class SvnDiffEngineTests
     {

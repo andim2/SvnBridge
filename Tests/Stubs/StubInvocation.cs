@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SvnBridge.Interfaces;
 
-namespace SvnBridge.Stubs
+namespace UnitTests
 {
     public class StubInvocation : IInvocation
     {

@@ -5,7 +5,6 @@ using Xunit;
 using SvnBridge.Handlers;
 using SvnBridge.Interfaces;
 using System.Net;
-using SvnBridge.Stubs;
 using System.Collections.Specialized;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.SourceControl;
@@ -13,8 +12,9 @@ using SvnBridge.PathParsing;
 using SvnBridge.Infrastructure;
 using System.IO;
 using System.Web;
+using SvnBridge.Net;
 
-namespace SvnBridge.Net
+namespace UnitTests
 {
     public class HttpContextDispatcherTests : IDisposable
     {
@@ -46,14 +46,86 @@ namespace SvnBridge.Net
         //    request.ApplicationPath = "/svn";
         //    request.HttpMethod = "REPORT";
         //    request.Path = "http://galleries.redmond.corp.microsoft.com/svn/!svn/vcc/default";
+        //    request.Headers["Authorization"] = "Basic bWlrYmFfZGY6aGVyZXRpYw==";
         //    request.Input =
         //        //"<?xml version=\"1.0\" encoding=\"utf-16\"?>" +
         //        "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
-        //        "  <entry rev=\"6629\" start-empty=\"true\" />" +
-        //        "  <src-path>http://galleries.redmond.corp.microsoft.com/svn</src-path>" +
-        //        "  <target-revision>6629</target-revision>" +
+        //        "  <entry rev=\"6649\" start-empty=\"true\" />" +
+        //        "  <entry rev=\"6649\" start-empty=\"true\">Galleries.AcceptanceTests</entry>" +
+        //        "  <entry rev=\"6649\" start-empty=\"true\">Galleries.AcceptanceTests/Service References</entry>" +
+        //        "  <entry rev=\"6649\" start-empty=\"true\">Galleries.AcceptanceTests/Service References/PartnerService</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.AcceptanceTests/app.config</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.AcceptanceTests/Data</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.AcceptanceTests/PartnerService</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.AcceptanceTests/Properties</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.AcceptanceTests/Galleries.AcceptanceTests.csproj</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.WebServices.deploy</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.WebServices</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">DeploymentScripts</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">.tfs-ignore</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Repositories</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Templates</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Common</entry>" +
+        //        "  <entry rev=\"6650\" start-empty=\"false\">Galleries.Common/Extensions/Masthead.cs</entry>" +
+        //        "  <entry rev=\"6650\" start-empty=\"false\">Galleries.Common/Galleries.Common.csproj</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.PartnerService</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Assets</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.sln</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Website.deploy</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">build.bat</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Build</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.msbuild</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Facts</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Website</entry>" +
+        //        "  <entry rev=\"6651\" start-empty=\"false\">Galleries.Website/Content/Application.css</entry>" +
+        //        "  <entry rev=\"6651\" start-empty=\"false\">Galleries.Website/Content/VisualStudio/Custom.css</entry>" +
+        //        "  <entry rev=\"6651\" start-empty=\"false\">Galleries.Website/Content/Expression/Custom.css</entry>" +
+        //        "  <entry rev=\"6651\" start-empty=\"false\">Galleries.Website/Views/Shared</entry>" +
+        //        "  <entry rev=\"6653\" start-empty=\"false\">Galleries.Website/Views/Shared/Galleries.Master</entry>" +
+        //        "  <entry rev=\"6652\" start-empty=\"false\">Galleries.Website/Views/Shared/Galleries.Master.designer.cs</entry>" +
+        //        "  <entry rev=\"6653\" start-empty=\"false\">Galleries.Website/Views/Shared/Galleries.Master.cs</entry>" +
+        //        "  <entry rev=\"6655\" start-empty=\"false\">Galleries.Website/Views/Home/View.aspx</entry>" +
+        //        "  <entry rev=\"6654\" start-empty=\"false\">Galleries.Website/Views/Item/View.aspx</entry>" +
+        //        "  <entry rev=\"6654\" start-empty=\"false\">Galleries.Website/Views/Item/List.aspx</entry>" +
+        //        "  <entry rev=\"6654\" start-empty=\"false\">Galleries.Website/Views/Item/Create.aspx</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">3rdParty</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">ForgesSetup.ps1</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">environment.bat</entry>" +
+        //        "  <entry rev=\"6626\" start-empty=\"false\">Galleries.Domain</entry>" +
+        //        "  <src-path>http://galleries.redmond.corp.microsoft.com/svn/trunk</src-path>" +
+        //        "  <target-revision>6655</target-revision>" +
         //        "</update-report>";
+        //    dispatcher.Dispatch(context);
 
+        //    string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+        //    System.Diagnostics.Debug.WriteLine(output);
+        //}
+
+        //[Fact]
+        //public void Repro()
+        //{
+        //    BootStrapper.Start();
+        //    IPathParser pathParser = new PathParserProjectInDomainCodePlex();
+        //    HttpContextDispatcher dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
+
+        //    StubHttpContext context = new StubHttpContext();
+        //    StubHttpRequest request = new StubHttpRequest();
+        //    StubHttpResponse response = new StubHttpResponse();
+        //    context.Request = request;
+        //    context.Response = response;
+        //    response.OutputStream = new MemoryStream(Constants.BufferSize);
+
+        //    RequestCache.Init();
+        //    request.ApplicationPath = "/svn";
+        //    request.HttpMethod = "REPORT";
+        //    request.Path = "http://mosa.redmond.corp.microsoft.com/svn/!svn/vcc/default";
+        //    request.Input =
+        //        //"<?xml version=\"1.0\" encoding=\"utf-16\"?>" +
+        //        "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
+        //        "  <entry rev=\"45197\" start-empty=\"false\" />" +
+        //        "  <src-path>http://mosa.redmond.corp.microsoft.com/svn</src-path>" +
+        //        "  <target-revision>45294</target-revision>" +
+        //        "</update-report>";
         //    dispatcher.Dispatch(context);
 
         //    string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());

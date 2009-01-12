@@ -4,7 +4,7 @@ using System.Text;
 using Xunit;
 using SvnBridge.SourceControl;
 using SvnBridge.PathParsing;
-using SvnBridge.Stubs;
+using UnitTests;
 
 namespace IntegrationTests
 {

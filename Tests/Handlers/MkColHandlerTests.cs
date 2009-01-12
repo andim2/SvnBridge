@@ -8,8 +8,9 @@ using SvnBridge.Exceptions;
 using SvnBridge.Infrastructure;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
+using SvnBridge.Handlers;
 
-namespace SvnBridge.Handlers
+namespace UnitTests
 {
     public class MkColHandlerTests : HandlerTestsBase
     {

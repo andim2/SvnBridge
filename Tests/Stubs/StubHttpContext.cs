@@ -1,6 +1,6 @@
 using SvnBridge.Interfaces;
 
-namespace SvnBridge.Stubs
+namespace UnitTests
 {
     public class StubHttpContext : IHttpContext
     {
