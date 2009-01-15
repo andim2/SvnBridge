@@ -5,8 +5,10 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
 using Xunit;
 using Tests;
+using SvnBridge;
+using SvnBridge.Net;
 
-namespace SvnBridge.Net
+namespace UnitTests
 {
     public class HttpRequestTests
     {

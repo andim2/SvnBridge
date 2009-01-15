@@ -5,7 +5,7 @@ using Xunit;
 using SvnBridge.Interfaces;
 using SvnBridge.Proxies;
 
-namespace SvnBridge.Proxies.Tests
+namespace UnitTests
 {
     public class ProxyFactoryTest
     {

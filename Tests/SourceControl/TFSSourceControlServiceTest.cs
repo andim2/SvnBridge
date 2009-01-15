@@ -4,8 +4,9 @@ using System.Text;
 using Xunit;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary;
+using SvnBridge.SourceControl;
 
-namespace SvnBridge.SourceControl
+namespace UnitTests
 {
     public class TFSSourceControlServiceTest
     {

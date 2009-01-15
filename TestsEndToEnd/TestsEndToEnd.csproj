@@ -55,6 +55,7 @@
     <Compile Include="ConcurrentActionsTest.cs" />
     <Compile Include="CopyTest.cs" />
     <Compile Include="EndToEndTestBase.cs" />
+    <Compile Include="InfoTest.cs" />
     <Compile Include="IntegrationsTests.cs" />
     <Compile Include="ListItemTest.cs" />
     <Compile Include="LogTest.cs" />
