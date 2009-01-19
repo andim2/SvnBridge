@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
     public class PropertiesTest : EndToEndTestBase
     {

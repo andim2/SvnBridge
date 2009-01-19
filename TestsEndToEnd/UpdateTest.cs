@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
     public class UpdateTest : EndToEndTestBase
     {

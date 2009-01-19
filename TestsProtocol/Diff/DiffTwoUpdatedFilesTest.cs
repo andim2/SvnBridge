@@ -5,8 +5,9 @@ using CodePlex.TfsLibrary.RepositoryWebSvc;
 using Xunit;
 using Attach;
 using System.Text;
+using Tests;
 
-namespace Tests
+namespace ProtocolTests
 {
     public class DiffTwoUpdatedFilesTest : ProtocolTestsBase
     {

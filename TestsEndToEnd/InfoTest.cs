@@ -1,6 +1,6 @@
 ﻿using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
     public class InfoTest : EndToEndTestBase
     {

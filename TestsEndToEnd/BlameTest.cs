@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
     public class BlameTest : EndToEndTestBase
     {

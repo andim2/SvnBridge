@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
     public class CommitTest : EndToEndTestBase
     {

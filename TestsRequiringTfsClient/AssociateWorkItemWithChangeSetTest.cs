@@ -6,7 +6,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using SvnBridge.Infrastructure;
 using SvnBridge.SourceControl;
-using TestsEndToEnd;
+using EndToEndTests;
 using TestsRequiringTfsClient.Properties;
 using Xunit;
 

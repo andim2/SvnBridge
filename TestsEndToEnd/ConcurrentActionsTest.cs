@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using Xunit.Sdk;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
 	public class ConcurrentActionsTest : EndToEndTestBase
 	{

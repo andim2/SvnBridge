@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly : AssemblyTitle("TestsEndToEnd")]
+[assembly : AssemblyTitle("EndToEndTests")]
 [assembly : AssemblyDescription("")]
 [assembly : AssemblyConfiguration("")]
 [assembly : AssemblyCompany("MS")]
-[assembly : AssemblyProduct("TestsEndToEnd")]
+[assembly : AssemblyProduct("EndToEndTests")]
 [assembly : AssemblyCopyright("Copyright © MS 2008")]
 [assembly : AssemblyTrademark("")]
 [assembly : AssemblyCulture("")]

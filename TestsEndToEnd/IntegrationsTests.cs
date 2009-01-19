@@ -1,7 +1,7 @@
 using System.IO;
 using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
 	using System;
 	using SvnBridge;

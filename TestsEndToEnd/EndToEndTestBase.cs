@@ -10,7 +10,7 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
 using SvnBridge.Net;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
 	public abstract class EndToEndTestBase : TFSSourceControlProviderTestsBase
 	{

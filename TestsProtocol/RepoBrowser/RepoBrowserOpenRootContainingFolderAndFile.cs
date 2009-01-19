@@ -4,8 +4,9 @@ using CodePlex.TfsLibrary;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using Xunit;
 using Attach;
+using Tests;
 
-namespace Tests
+namespace ProtocolTests
 {
     public class RepoBrowserOpenRootContainingFolderAndFile : ProtocolTestsBase
     {

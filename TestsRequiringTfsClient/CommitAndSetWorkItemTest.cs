@@ -2,7 +2,7 @@ using System.IO;
 using IntegrationTests;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
-using TestsEndToEnd;
+using EndToEndTests;
 using TestsRequiringTfsClient.Properties;
 using Xunit;
 

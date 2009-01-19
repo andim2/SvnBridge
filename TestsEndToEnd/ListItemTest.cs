@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using Xunit;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
     public class ListItemTest : EndToEndTestBase
     {

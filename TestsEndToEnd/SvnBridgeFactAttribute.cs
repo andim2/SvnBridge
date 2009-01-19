@@ -10,7 +10,7 @@ using SvnBridge.PathParsing;
 using Xunit;
 using Xunit.Sdk;
 
-namespace TestsEndToEnd
+namespace EndToEndTests
 {
 	public class SvnBridgeFactAttribute : FactAttribute
 	{

@@ -7,8 +7,9 @@ using Attach;
 using CodePlex.TfsLibrary.ObjectModel;
 using System.Collections.Generic;
 using System.Text;
+using Tests;
 
-namespace Tests
+namespace ProtocolTests
 {
     public class MergeSingleFileFromBranchToTrunk : ProtocolTestsBase
     {
