@@ -9,7 +9,7 @@ using Tests;
 
 namespace ProtocolTests
 {
-    public class Tests : ProtocolTestsBase
+    public class UpdateWithModifiedFileAfterCommitModifiedFileTest : ProtocolTestsBase
     {
         [Fact]
         public void Test1()

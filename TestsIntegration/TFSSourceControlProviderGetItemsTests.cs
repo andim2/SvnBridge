@@ -211,5 +211,35 @@ namespace IntegrationTests
 
             Assert.NotNull(item);
         }
+
+        [IntegrationTestFact]
+        public void GetItems_PathContaining259CharactersAndRecursionNone_ReturnsSuccessfully()
+        {
+            string basePath = "$/" + PROJECT_NAME + "/";
+            string directory = "";
+            while (directory.Length < (259 - basePath.Length))
+            {
+                directory += "T";
+            }
+
+            Exception result = Record.Exception(() => _provider.GetItems(0, directory, Recursion.None));
+
+            Assert.Null(result);
+        }
+
+        [IntegrationTestFact]
+        public void GetItems_PathContaining259CharactersAndRecursionOneLevel_ReturnsSuccessfully()
+        {
+            string basePath = "$/" + PROJECT_NAME + "/";
+            string directory = "";
+            while (directory.Length < (259 - basePath.Length))
+            {
+                directory += "T";
+            }
+
+            Exception result = Record.Exception(() => _provider.GetItems(0, directory, Recursion.OneLevel));
+
+            Assert.Null(result);
+        }
     }
 }

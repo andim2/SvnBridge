@@ -641,6 +641,12 @@ namespace SvnBridge.SourceControl
                 version = GetLatestVersion();
             }
 
+            string propertiesForFile = GetPropertiesFileName(path, ItemType.File);
+            string propertiesForFolder = GetPropertiesFileName(path, ItemType.Folder);
+            string propertiesForFolderItems = path + "/" + Constants.PropFolder;
+            List<string> itemPaths = new List<string>();
+            itemPaths.Add(path);
+
             SourceItem[] items = null;
             if (returnPropertyFiles || recursion == Recursion.Full)
             {
@@ -648,16 +654,23 @@ namespace SvnBridge.SourceControl
             }
             else if (recursion == Recursion.None)
             {
-                string propertiesForFile = GetPropertiesFileName(path, ItemType.File);
-                string propertiesForFolder = GetPropertiesFileName(path, ItemType.Folder);
-                items = metaDataRepository.QueryItems(version, new string[] { path, propertiesForFile, propertiesForFolder }, recursion);
+                if (propertiesForFile.Length + rootPath.Length <= 259)
+                    itemPaths.Add(propertiesForFile);
+
+                if (propertiesForFolder.Length + rootPath.Length <= 259)
+                    itemPaths.Add(propertiesForFolder);
+
+                items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
             }
             else if (recursion == Recursion.OneLevel)
             {
-                string propertiesForFile = GetPropertiesFileName(path, ItemType.File);
-                string propertiesForFolder = GetPropertiesFileName(path, ItemType.Folder);
-                string propertiesForFolderItems = path + "/" + Constants.PropFolder;
-                items = metaDataRepository.QueryItems(version, new string[] { path, propertiesForFile, propertiesForFolderItems }, recursion);
+                if (propertiesForFile.Length + rootPath.Length <= 259)
+                    itemPaths.Add(propertiesForFile);
+
+                if (propertiesForFolderItems.Length + rootPath.Length <= 259)
+                    itemPaths.Add(propertiesForFolderItems);
+
+                items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
                 if (items.Length > 0 && items[0].ItemType == ItemType.Folder)
                 {
                     List<string> propertiesForSubFolders = new List<string>();
@@ -665,7 +678,9 @@ namespace SvnBridge.SourceControl
                     {
                         if (item.ItemType == ItemType.Folder && !IsPropertyFolder(item.RemoteName))
                         {
-                            propertiesForSubFolders.Add(GetPropertiesFileName(item.RemoteName, ItemType.Folder));
+                            propertiesForFolder = GetPropertiesFileName(item.RemoteName, ItemType.Folder);
+                            if (propertiesForFolder.Length + rootPath.Length <= 259)
+                                propertiesForSubFolders.Add(propertiesForFolder);
                         }
                     }
                     SourceItem[] subFolderProperties = metaDataRepository.QueryItems(version, propertiesForSubFolders.ToArray(), Recursion.None);
