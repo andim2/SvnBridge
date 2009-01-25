@@ -90,12 +90,6 @@ namespace SvnBridge.Handlers
             response.AppendHeader("ETag", "W/\"" + folder.ItemRevision + "//" + Helper.EncodeB(folder.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
 
-            string applicationPath = PathParser.GetApplicationPath(context.Request);
-            if (!applicationPath.EndsWith("/"))
-                applicationPath += "/";
-            if (applicationPath.StartsWith("/") == false)
-                applicationPath = "/" + applicationPath;
-            
             using (StreamWriter writer = new StreamWriter(context.Response.OutputStream))
             {
                 writer.Write("<html><head><title>");
