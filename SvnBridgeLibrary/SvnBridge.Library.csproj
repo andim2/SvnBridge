@@ -74,7 +74,6 @@
     <Compile Include="RequestHandlers\CheckOutHandler.cs" />
     <Compile Include="RequestHandlers\CopyHandler.cs" />
     <Compile Include="RequestHandlers\DeleteHandler.cs" />
-    <Compile Include="RequestHandlers\GetHandler\FolderRenderer.cs" />
     <Compile Include="RequestHandlers\GetHandler.cs" />
     <Compile Include="Infrastructure\Logging.cs" />
     <Compile Include="Cache\RequestCache.cs" />

@@ -55,6 +55,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Browse\BrowseTests.cs" />
     <Compile Include="Checkout\CheckoutEmptyFolderTest.cs" />
     <Compile Include="Checkout\CheckoutFolderWithAmpersandInNameTest.cs" />
     <Compile Include="Checkout\CheckoutFolderWithBinaryFileTest.cs" />

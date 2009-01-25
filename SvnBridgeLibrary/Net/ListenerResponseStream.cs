@@ -130,6 +130,9 @@ namespace SvnBridge.Net
                     case 207:
                         statusCodeDescription = "Multi-Status";
                         break;
+                    case 301:
+                        statusCodeDescription = "Moved Permanently";
+                        break;
                     case 401:
                         statusCodeDescription = "Authorization Required";
                         break;

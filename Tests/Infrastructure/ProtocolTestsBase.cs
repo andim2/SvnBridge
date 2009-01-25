@@ -145,5 +145,28 @@ namespace Tests
             writer.Flush();
             return xml.ToString();
         }
+
+        protected ItemMetaData CreateItem(string name)
+        {
+            ItemMetaData item = new ItemMetaData();
+            item.Name = name;
+            return item;
+        }
+
+        protected FolderMetaData CreateFolder(string name)
+        {
+            FolderMetaData folder = new FolderMetaData();
+            folder.Name = name;
+            return folder;
+        }
+
+        protected FolderMetaData CreateFolder(string name, int revision, string lastModifiedDate)
+        {
+            FolderMetaData folder = new FolderMetaData();
+            folder.Name = name;
+            folder.ItemRevision = revision;
+            folder.LastModifiedDate = DateTime.Parse(lastModifiedDate);
+            return folder;
+        }
     }
 }
