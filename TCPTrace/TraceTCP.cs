@@ -44,9 +44,10 @@ namespace Trace
             WriteTestLogLine("using CodePlex.TfsLibrary.RepositoryWebSvc;");
             WriteTestLogLine("using Xunit;");
             WriteTestLogLine("using Attach;");
+            WriteTestLogLine("using Tests;");
 
             WriteTestLogLine("");
-            WriteTestLogLine("namespace Tests");
+            WriteTestLogLine("namespace ProtocolTests");
             WriteTestLogLine("{");
             WriteTestLogLine("    public class Tests : ProtocolTestsBase");
             WriteTestLogLine("    {");
