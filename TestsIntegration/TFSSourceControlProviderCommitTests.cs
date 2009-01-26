@@ -792,11 +792,13 @@ namespace IntegrationTests
         [IntegrationTestFact]
         public void Commit_FileWithReallyLongPath()
         {
+            string basePath = "$/" + PROJECT_NAME + testPath;
             string filename = "/";
-            for (int i = 0; i < 149; i++)
+            while (filename.Length < (238 - basePath.Length))
             {
                 filename += "T";
             }
+
             bool created = _provider.WriteFile(_activityId, MergePaths(testPath, filename), GetBytes("Test"));
 
             MergeActivityResponse response = Commit();
