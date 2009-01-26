@@ -113,7 +113,7 @@ namespace SvnBridge.Handlers
                 "<title>404 Not Found</title>\n" +
                 "</head><body>\n" +
                 "<h1>Not Found</h1>\n" +
-                "<p>The requested URL " + Helper.Decode(GetPath(request)) +
+                "<p>The requested URL " + Helper.EncodeB(GetPath(request)) +
                 " was not found on this server.</p>\n" +
                 "<hr>\n" +
                 "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host +
@@ -122,10 +122,5 @@ namespace SvnBridge.Handlers
 
             WriteToResponse(response, responseContent);
         }
-
-	    public int GetLatestVersion()
-	    {
-	        return sourceControlProvider.GetLatestVersion();
-	    }
 	}
 }

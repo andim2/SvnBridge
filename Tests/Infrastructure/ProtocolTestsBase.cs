@@ -160,6 +160,14 @@ namespace Tests
             return folder;
         }
 
+        protected FolderMetaData CreateFolder(string name, int revision)
+        {
+            FolderMetaData folder = new FolderMetaData();
+            folder.Name = name;
+            folder.ItemRevision = revision;
+            return folder;
+        }
+
         protected FolderMetaData CreateFolder(string name, int revision, string lastModifiedDate)
         {
             FolderMetaData folder = new FolderMetaData();

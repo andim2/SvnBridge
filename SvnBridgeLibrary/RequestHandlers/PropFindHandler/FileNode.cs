@@ -134,7 +134,7 @@ namespace SvnBridge.Nodes
 
         private string GetCheckedIn(RequestHandlerBase handler)
         {
-        	string href = handler.GetLocalPath("/!svn/ver/" + handler.GetLatestVersion() + "/" + Helper.Encode(item.Name, true));
+        	string href = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
         	return
                 "<lp1:checked-in><D:href>" + Helper.UrlEncodeIfNeccesary(href) +
                 "</D:href></lp1:checked-in>";
