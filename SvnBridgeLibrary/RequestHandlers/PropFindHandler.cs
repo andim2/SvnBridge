@@ -259,6 +259,10 @@ namespace SvnBridge.Handlers
             {
                 WriteBcResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
             }
+            else if (requestPath.StartsWith("/!svn/wrk/"))
+            {
+                WriteWrkResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
+            }
             else
             {
                 WritePathResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
@@ -365,6 +369,35 @@ namespace SvnBridge.Handlers
                     WriteProperties(node, data.Properties, writer, item.ItemType == ItemType.Folder);
                 }
 
+                writer.Write("</D:multistatus>\n");
+            }
+        }
+
+        private void WriteWrkResponse(TFSSourceControlProvider sourceControlProvider,
+                                       string requestPath,
+                                       string depth,
+                                       PropData data,
+                                       Stream outputStream)
+        {
+            string activityId = requestPath.Split('/')[3];
+            if (depth != "0")
+            {
+                throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
+            }
+            string path = requestPath.Substring(11 + activityId.Length);
+            ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, Helper.Decode(path));
+
+            if (item == null)
+            {
+                throw new FileNotFoundException("Unable to find file '" + path + "'in the specified activity", path);
+            }
+
+            using (StreamWriter writer = new StreamWriter(outputStream))
+            {
+                writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+                WriteMultiStatusStart(writer, data.Properties);
+                INode node = new FileNode(item, sourceControlProvider);
+                WriteProperties(node, data.Properties, writer, item.ItemType == ItemType.Folder);
                 writer.Write("</D:multistatus>\n");
             }
         }

@@ -449,7 +449,7 @@ namespace ProtocolTests
         [Fact]
         public void Test11()
         {
-            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, false);
+            stubs.Attach((MyMocks.GetItemInActivity)provider.GetItemInActivity, null);
 
             string request =
                 "PROPFIND //!svn/wrk/7a6c73b2-7e7c-2141-817d-9bd653873445/trunk/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60.txt HTTP/1.1\r\n" +
