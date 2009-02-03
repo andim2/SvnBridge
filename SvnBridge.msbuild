@@ -12,7 +12,7 @@
 
 	<!-- CruiseControl targets -->
 
-	<Target Name="Cruise" DependsOnTargets="Clean;SetVersionNumber;Test;Zip" />
+	<Target Name="Cruise" DependsOnTargets="Clean;Test;Zip" />
 
 	<!-- Meta-targets -->
 
@@ -20,6 +20,12 @@
 
 	<Target Name="Zip" DependsOnTargets="Merge">
 		<Exec Command="$(CodePlex3rdParty)\zip.exe -9 -q -j $(ZipStoragePath)\SvnBridge-build-$(Revision).zip Merge\SvnBridge.exe Merge\SvnBridgeServer.dll"/>
+	</Target>
+
+	<Target Name="Merge">
+		<MakeDir Directories="Merge"/>
+		<Exec Command="$(CodePlex3rdParty)\ilmerge.exe /out:Merge\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
+		<Exec Command="$(CodePlex3rdParty)\ilmerge.exe /out:Merge\SvnBridgeServer.dll SvnBridgeServer\bin\$(BuildType)\SvnBridgeServer.dll SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
 	</Target>
 
 	<!-- Individiual targets -->
@@ -33,11 +39,11 @@
 	</Target>
 
 	<Target Name="UnitTest" DependsOnTargets="Build">
-		<Exec Command="References\xunit.console.exe Tests\bin\$(BuildType)\Tests.dll  /xml TestsUnit.results.xml "/>
+		<xunit Assembly="Tests\bin\$(BuildType)\Tests.dll" Xml="TestsUnit.results.xml"/>
 	</Target>
 
 	<Target Name="ProtocolTest" DependsOnTargets="Build">
-		<Exec Command="References\xunit.console.exe TestsProtocol\bin\$(BuildType)\TestsProtocol.dll /xml TestsProtocol.results.xml "/>
+		<xunit Assembly="TestsProtocol\bin\$(BuildType)\TestsProtocol.dll" Xml="TestsProtocol.results.xml"/>
 	</Target>
 
 	<Target Name="EndToEndTest" DependsOnTargets="Build">
@@ -46,20 +52,6 @@
 	
 	<Target Name="IntegrationTest" DependsOnTargets="Build">
 		<xunit Assembly="TestsIntegration\bin\$(BuildType)\TestsIntegration.dll" Xml="TestsIntegration.results.xml"/>
-	</Target>
-
-	<Target Name="SetVersionNumber">
-		<Exec Command="$(CodePlex3rdParty)\AssemblyInfoUpdater.exe $(Revision) SvnBridge\Properties\AssemblyInfo.cs"/>
-		<Exec Command="$(CodePlex3rdParty)\AssemblyInfoUpdater.exe $(Revision) SvnBridge.PerfCounter.Installer\Properties\AssemblyInfo.cs"/>
-		<Exec Command="$(CodePlex3rdParty)\AssemblyInfoUpdater.exe $(Revision) SvnBridgeLibrary\Properties\AssemblyInfo.cs"/>
-		<Exec Command="$(CodePlex3rdParty)\AssemblyInfoUpdater.exe $(Revision) SvnBridgeServer\Properties\AssemblyInfo.cs"/>
-		<Exec Command="$(CodePlex3rdParty)\AssemblyInfoUpdater.exe $(Revision) SvnBridgeViaIis\Properties\AssemblyInfo.cs"/>
-	</Target>
-
-	<Target Name="Merge">
-		<MakeDir Directories="Merge"/>
-		<Exec Command="$(CodePlex3rdParty)\ilmerge.exe /out:Merge\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
-		<Exec Command="$(CodePlex3rdParty)\ilmerge.exe /out:Merge\SvnBridgeServer.dll SvnBridgeServer\bin\$(BuildType)\SvnBridgeServer.dll SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
 	</Target>
 
 </Project>
