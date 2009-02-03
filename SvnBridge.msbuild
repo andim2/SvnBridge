@@ -22,7 +22,7 @@
 		<Exec Command="$(CodePlex3rdParty)\zip.exe -9 -q -j $(ZipStoragePath)\SvnBridge-build-$(Revision).zip Merge\SvnBridge.exe Merge\SvnBridgeServer.dll"/>
 	</Target>
 
-	<Target Name="Merge">
+	<Target Name="Merge" DependsOnTargets="Build">
 		<MakeDir Directories="Merge"/>
 		<Exec Command="$(CodePlex3rdParty)\ilmerge.exe /out:Merge\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
 		<Exec Command="$(CodePlex3rdParty)\ilmerge.exe /out:Merge\SvnBridgeServer.dll SvnBridgeServer\bin\$(BuildType)\SvnBridgeServer.dll SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
