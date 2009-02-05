@@ -111,6 +111,21 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
+        public void GetItems_OnDeletedFolderContainingUpdatesWithRecursionNone_ReturnsLatestChangesetOfContainedItems()
+        {
+            CreateFolder(MergePaths(testPath, "/Test"), true);
+            WriteFile(MergePaths(testPath, "/Test/Test.txt"), "whee", true);
+            int revision = _lastCommitRevision;
+            DeleteItem(MergePaths(testPath, "/Test"), true);
+
+            FolderMetaData folder = (FolderMetaData)_provider.GetItems(revision, MergePaths(testPath, "/Test"), Recursion.None);
+
+            ItemMetaData item = _provider.GetItems(revision, MergePaths(testPath, "/Test/Test.txt"), Recursion.None);
+            Assert.Equal(item.Revision, folder.Revision);
+            Assert.Equal(item.LastModifiedDate, folder.LastModifiedDate);
+        }
+
+        [IntegrationTestFact]
         public void GetItems_ReturnsCorrectRevisionWhenPropertyHasBeenAddedToFileAndRecursionIsFull()
         {
             WriteFile(MergePaths(testPath, "/Test.txt"), "whee", true);

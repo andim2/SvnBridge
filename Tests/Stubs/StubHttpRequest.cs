@@ -10,7 +10,7 @@ namespace UnitTests
     {
         private NameValueCollection headers = new NameValueCollection();
         private string httpMethod;
-        private string applicationPath = "/";
+        private string applicationPath = "";
         private Stream inputStream = new MemoryStream();
         private Uri url;
 
@@ -39,7 +39,12 @@ namespace UnitTests
 
         public string ApplicationPath
         {
-            get { return applicationPath; }
+            get {
+                if (applicationPath == "")
+                    return "/";
+                else
+                    return applicationPath;
+            }
             set { applicationPath = value; }
         }
 
@@ -71,7 +76,7 @@ namespace UnitTests
         {
             get
             {
-                return url.LocalPath;
+                return url.LocalPath.Substring(applicationPath.Length);
             }
         }
     }
