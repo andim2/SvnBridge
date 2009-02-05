@@ -11,6 +11,7 @@ using SvnBridge.SourceControl;
 using SvnBridge.Utility;
 using SvnBridge.Handlers;
 using Tests;
+using SvnBridge.Net;
 
 namespace UnitTests
 {
@@ -311,6 +312,19 @@ namespace UnitTests
 
             Assert.Equal("7a6c73b2-7e7c-2141-817d-9bd653873445", r1.Parameters[0]);
             Assert.Equal("trunk/A !@#$%^&()_-+={[}];',.~`.txt", r1.Parameters[1]);
+        }
+
+
+        [Fact]
+        public void Handle_ErrorOccurs_RequestBodyIsSetInRequestCache()
+        {
+            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, new Exception("Test"));
+            request.Path = "http://localhost:8080/Quick%20Starts";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/><resourcetype xmlns=\"DAV:\"/><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/><repository-uuid xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
+
+            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null); });
+
+            Assert.NotNull(RequestCache.Items["RequestBody"]);
         }
     }
 }

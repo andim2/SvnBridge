@@ -161,6 +161,30 @@ namespace SvnBridge.Utility
 			return sw.GetStringBuilder().ToString();
 		}
 
+        public static string GetMd5Checksum(Stream data)
+        {
+            MD5 md5 = MD5.Create();
+            int num;
+            byte[] buffer = new byte[0x1000];
+            do
+            {
+                num = data.Read(buffer, 0, buffer.Length);
+                if (num > 0)
+                {
+                    md5.TransformBlock(buffer, 0, num, null, 0);
+                }
+            }
+            while (num > 0);
+            md5.TransformFinalBlock(buffer, 0, num);
+
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in md5.Hash)
+            {
+                sb.Append(b.ToString("x2").ToLower());
+            }
+
+            return sb.ToString();
+        }
 
 		public static string GetMd5Checksum(byte[] data)
 		{

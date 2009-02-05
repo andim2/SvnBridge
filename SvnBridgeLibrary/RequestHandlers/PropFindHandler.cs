@@ -59,6 +59,11 @@ namespace SvnBridge.Handlers
             {
                 WriteFileNotFoundResponse(request, response);
             }
+            catch
+            {
+                RequestCache.Items["RequestBody"] = propfind;
+                throw;
+            }
         }
 
         private void HandleSvnSyncProp(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream stream)

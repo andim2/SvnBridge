@@ -10,19 +10,13 @@ namespace SvnBridge.Handlers
 {
     public class PutHandler : RequestHandlerBase
     {
-        protected override void Handle(IHttpContext context,
-                                       TFSSourceControlProvider sourceControlProvider)
+        protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
 
             string path = GetPath(request);
-            bool created =
-                Put(sourceControlProvider,
-                    path,
-                    request.InputStream,
-                    request.Headers["X-SVN-Base-Fulltext-MD5"],
-                    request.Headers["X-SVN-Result-Fulltext-MD5"]);
+            bool created = Put(sourceControlProvider, path, request.InputStream, request.Headers["X-SVN-Base-Fulltext-MD5"], request.Headers["X-SVN-Result-Fulltext-MD5"]);
 
             if (created)
             {
@@ -50,11 +44,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private bool Put(TFSSourceControlProvider sourceControlProvider,
-                         string path,
-                         Stream inputStream,
-                         string baseHash,
-                         string resultHash)
+        private bool Put(TFSSourceControlProvider sourceControlProvider, string path, Stream inputStream, string baseHash, string resultHash)
         {
             if (!path.StartsWith("//"))
             {
