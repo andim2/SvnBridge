@@ -101,6 +101,7 @@
     <Compile Include="Update\UpdateAfterCommitFileDeleteTest.cs" />
     <Compile Include="Update\UpdateAfterCommitNewFolderTest.cs" />
     <Compile Include="Update\UpdateAfterCommitRenamedFile.cs" />
+    <Compile Include="Update\UpdateForInvalidFileTest.cs" />
     <Compile Include="Update\UpdateOfDeletedFileTest.cs" />
     <Compile Include="Update\UpdateOneFileTest.cs" />
     <Compile Include="Update\UpdateWithDeletedFileTest.cs" />

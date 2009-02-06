@@ -46,11 +46,18 @@ namespace SvnBridge.Handlers
                         data = Helper.DeserializeXml<UpdateReportData>(reader);
                         int targetRevision;
                         FolderMetaData update = GetMetadataForUpdate(request, (UpdateReportData)data, sourceControlProvider, out targetRevision);
-                        SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        response.SendChunked = true;
-                        using (var output = new StreamWriter(response.OutputStream))
+                        if (update != null)
                         {
-                            UpdateReport(sourceControlProvider, (UpdateReportData)data, output, update, targetRevision);
+                            SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
+                            response.SendChunked = true;
+                            using (var output = new StreamWriter(response.OutputStream))
+                            {
+                                UpdateReport(sourceControlProvider, (UpdateReportData)data, output, update, targetRevision);
+                            }
+                        }
+                        else
+                        {
+                            SendTargetDoesNotExistResponse(response);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "replay-report")
@@ -125,6 +132,24 @@ namespace SvnBridge.Handlers
                 output.Write("<C:error/>\n");
                 output.Write("<m:human-readable errcode=\"200007\">\n");
                 output.Write("The requested report is unknown.\n");
+                output.Write("</m:human-readable>\n");
+                output.Write("</D:error>\n");
+                return;
+            }
+        }
+
+        private void SendTargetDoesNotExistResponse(IHttpResponse response)
+        {
+            SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.InternalServerError);
+            response.AppendHeader("Connection", "close");
+
+            using (var output = new StreamWriter(response.OutputStream))
+            {
+                output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+                output.Write("<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n");
+                output.Write("<C:error/>\n");
+                output.Write("<m:human-readable errcode=\"160005\">\n");
+                output.Write("Target path does not exist\n");
                 output.Write("</m:human-readable>\n");
                 output.Write("</D:error>\n");
                 return;
@@ -400,23 +425,20 @@ namespace SvnBridge.Handlers
             }
             if (updatereport.IsCheckOut)
             {
-                metadata =
-                    (FolderMetaData)
-                    sourceControlProvider.GetItemsWithoutProperties(targetRevision, basePath, Recursion.Full);
+                metadata = (FolderMetaData)sourceControlProvider.GetItemsWithoutProperties(targetRevision, basePath, Recursion.Full);
             }
             else
             {
-                metadata =
-                    sourceControlProvider.GetChangedItems(basePath,
+                metadata = sourceControlProvider.GetChangedItems(basePath,
                                                           int.Parse(updatereport.Entries[0].Rev),
                                                           targetRevision,
                                                           updatereport);
             }
-            if (metadata == null)
-                throw new InvalidOperationException("Could not find " + basePath + " in revision " + targetRevision);
-
-            loader = new AsyncItemLoader(metadata, sourceControlProvider);
-            ThreadPool.QueueUserWorkItem(state => loader.Start());
+            if (metadata != null)
+            {
+                loader = new AsyncItemLoader(metadata, sourceControlProvider);
+                ThreadPool.QueueUserWorkItem(state => loader.Start());
+            }
             return metadata;
         }
 

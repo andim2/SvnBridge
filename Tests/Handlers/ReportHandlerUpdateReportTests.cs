@@ -438,5 +438,21 @@ namespace UnitTests
 
             Assert.True(output.Contains("<S:add-directory name=\"foo\""));
         }
+
+        [Fact]
+        public void Handle_UpdateForInvalidFile()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            stubs.Attach(provider.GetItems, Return.Value(null));
+            request.Path = "localhost:8080/!svn/vcc/default";
+            request.Input =
+                "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\"><entry rev=\"5795\" start-empty=\"true\" /><src-path>http://localhost:8080/svn/robots.txt</src-path><target-revision>5795</target-revision></update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.Equal(500, response.StatusCode);
+            Assert.True(output.Contains("<m:human-readable errcode=\"160005\">\nTarget path does not exist\n</m:human-readable>\n"));
+        }
     }
 }

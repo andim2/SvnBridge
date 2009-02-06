@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge", "SvnBridge\SvnB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsIntegration", "TestsIntegration\TestsIntegration.csproj", "{1FDFAA1A-E23E-47A7-B50D-E9812D674E1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPTrace", "TCPTrace\TCPTrace.csproj", "{8ED37441-BF40-4CE1-A514-27182894CE90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.TCPTrace", "TCPTrace\Tools.TCPTrace.csproj", "{8ED37441-BF40-4CE1-A514-27182894CE90}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsProtocol", "TestsProtocol\TestsProtocol.csproj", "{593B4F22-DB4E-451C-BC6E-5F620CE818E4}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge.PerfCounter.Installer", "SvnBridge.PerfCounter.Installer\SvnBridge.PerfCounter.Installer.csproj", "{13020B7B-21DD-48F4-8F30-DC18AEABAC02}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridgeServer", "SvnBridgeServer\SvnBridgeServer.csproj", "{6B6E0E6A-82DD-4CD3-A7D9-EF26CE365EC6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpSend", "HttpSend\HttpSend.csproj", "{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,6 +75,10 @@ Global
 		{6B6E0E6A-82DD-4CD3-A7D9-EF26CE365EC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B6E0E6A-82DD-4CD3-A7D9-EF26CE365EC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B6E0E6A-82DD-4CD3-A7D9-EF26CE365EC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

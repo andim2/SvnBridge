@@ -142,6 +142,9 @@ namespace SvnBridge.Net
                     case 405:
                         statusCodeDescription = "Method Not Allowed";
                         break;
+                    case 500:
+                        statusCodeDescription = "Internal Server Error";
+                        break;
                     case 501:
                         statusCodeDescription = "Method Not Implemented";
                         break;

@@ -81,7 +81,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SvnBridgeLibrary\SvnBridge.Library.csproj">
       <Project>{95E4E16B-0975-4705-B3A0-83700DE483C2}</Project>
-      <Name>SvnBridgeLibrary</Name>
+      <Name>SvnBridge.Library</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestsEndToEnd\TestsEndToEnd.csproj">
       <Project>{7913B9B3-9BDA-48D9-8928-4F46E1CF0E1D}</Project>
