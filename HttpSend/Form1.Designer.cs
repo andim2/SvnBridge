@@ -34,6 +34,7 @@
             this.btnSend = new System.Windows.Forms.Button();
             this.txtServer = new System.Windows.Forms.TextBox();
             this.txtPort = new System.Windows.Forms.TextBox();
+            this.btnRefresh = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // txtInput
@@ -58,7 +59,7 @@
             // 
             // btnSend
             // 
-            this.btnSend.Location = new System.Drawing.Point(460, 9);
+            this.btnSend.Location = new System.Drawing.Point(379, 9);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(75, 23);
             this.btnSend.TabIndex = 2;
@@ -82,11 +83,22 @@
             this.txtPort.TabIndex = 4;
             this.txtPort.Text = "80";
             // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Location = new System.Drawing.Point(460, 9);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnRefresh.TabIndex = 5;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(547, 354);
+            this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.txtPort);
             this.Controls.Add(this.txtServer);
             this.Controls.Add(this.btnSend);
@@ -106,6 +118,7 @@
         private System.Windows.Forms.Button btnSend;
         private System.Windows.Forms.TextBox txtServer;
         private System.Windows.Forms.TextBox txtPort;
+        private System.Windows.Forms.Button btnRefresh;
     }
 }
 

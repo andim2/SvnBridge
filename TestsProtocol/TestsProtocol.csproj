@@ -88,6 +88,7 @@
     <Compile Include="Commit\CommitUpdatedFileWithSpecialCharactersTest.cs" />
     <Compile Include="Diff\DiffTwoUpdatedFilesTest.cs" />
     <Compile Include="Merge\MergeSingleFileFromBranchToTrunk.cs" />
+    <Compile Include="Misc\PropFindAllPropVccDefaultTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RepoBrowser\BrowseFolderContainingSpaceInNameTest.cs" />
     <Compile Include="RepoBrowser\ListWithRevisionSpecifiedUsingCurrentDateTime.cs" />

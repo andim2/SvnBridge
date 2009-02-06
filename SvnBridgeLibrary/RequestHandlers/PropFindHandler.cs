@@ -40,7 +40,7 @@ namespace SvnBridge.Handlers
 
                 if (propfind.AllProp != null && requestPath.EndsWith("/!svn/vcc/default"))
                 {
-                    HandleSvnSyncProp(sourceControlProvider, requestPath, response.OutputStream);
+                    HandleAllPropVccDefault(sourceControlProvider, requestPath, response.OutputStream);
                 }
                 else if (propfind.AllProp != null)
                 {
@@ -66,40 +66,31 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void HandleSvnSyncProp(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream stream)
+        private void HandleAllPropVccDefault(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream stream)
         {
-            ItemMetaData firstVersion = GetItems(sourceControlProvider, 1, Constants.ServerRootPath, Recursion.None, true);
-
-            using (StreamWriter sw = new StreamWriter(stream))
+            int latestVersion = sourceControlProvider.GetLatestVersion();
+            using (StreamWriter writer = new StreamWriter(stream))
             {
-                
-                sw.Write(@"<?xml version=""1.0"" encoding=""utf-8""?>
-<D:multistatus xmlns:D=""DAV:"" xmlns:ns0=""DAV:"">
-<D:response xmlns:S=""http://subversion.tigris.org/xmlns/svn/"" xmlns:C=""http://subversion.tigris.org/xmlns/custom/"" xmlns:V=""http://subversion.tigris.org/xmlns/dav/"" xmlns:lp1=""DAV:"" xmlns:lp2=""http://subversion.tigris.org/xmlns/dav/"">
-<D:href>" + Helper.UrlEncodeIfNeccesary(GetLocalPath("/!svn/bln/0")) + @"</D:href>
-<D:propstat>
-<D:prop>
-<S:date>" + Helper.FormatDate(firstVersion.LastModifiedDate) + @"</S:date>
-<lp1:getetag/>
-<lp1:creationdate>" + Helper.FormatDate(firstVersion.LastModifiedDate) + @"</lp1:creationdate>
-<lp1:getlastmodified>" + Helper.FormatDateB(firstVersion.LastModifiedDate) + @"</lp1:getlastmodified>
-<lp1:baseline-collection><D:href>" + GetLocalPath("/!svn/bc/0/") + @"</D:href></lp1:baseline-collection>
-<lp1:version-name>0</lp1:version-name>
-<lp2:repository-uuid>" + sourceControlProvider.GetRepositoryUuid() + @"</lp2:repository-uuid>
-<lp1:resourcetype><D:baseline/></lp1:resourcetype>
-<D:supportedlock>
-<D:lockentry>
-<D:lockscope><D:exclusive/></D:lockscope>
-<D:locktype><D:write/></D:locktype>
-</D:lockentry>
-</D:supportedlock>
-<D:lockdiscovery/>
-</D:prop>
-<D:status>HTTP/1.1 200 OK</D:status>
-</D:propstat>
-</D:response>
-</D:multistatus>
-");
+                writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+                writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
+                writer.Write("<D:response xmlns:lp1=\"DAV:\" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\">\n");
+                writer.Write("<D:href>" + GetLocalPath("/!svn/vcc/default") + "</D:href>\n");
+                writer.Write("<D:propstat>\n");
+                writer.Write("<D:prop>\n");
+                writer.Write("<lp1:checked-in><D:href>" + GetLocalPath("/!svn/bln/" + latestVersion) + "</D:href></lp1:checked-in>\n");
+                writer.Write("<lp2:repository-uuid>" + sourceControlProvider.GetRepositoryUuid() + "</lp2:repository-uuid>\n");
+                writer.Write("<D:supportedlock>\n");
+                writer.Write("<D:lockentry>\n");
+                writer.Write("<D:lockscope><D:exclusive/></D:lockscope>\n");
+                writer.Write("<D:locktype><D:write/></D:locktype>\n");
+                writer.Write("</D:lockentry>\n");
+                writer.Write("</D:supportedlock>\n");
+                writer.Write("<D:lockdiscovery/>\n");
+                writer.Write("</D:prop>\n");
+                writer.Write("<D:status>HTTP/1.1 200 OK</D:status>\n");
+                writer.Write("</D:propstat>\n");
+                writer.Write("</D:response>\n");
+                writer.Write("</D:multistatus>\n");
             }
         }
 
@@ -421,17 +412,12 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void WriteProperties(INode node,
-                                     List<XmlElement> properties,
-                                     TextWriter output)
+        private void WriteProperties(INode node, List<XmlElement> properties, TextWriter output)
         {
             WriteProperties(node, properties, output, false);
         }
 
-        private void WriteProperties(INode node,
-                                     List<XmlElement> properties,
-                                     TextWriter output,
-                                     bool isFolder)
+        private void WriteProperties(INode node, List<XmlElement> properties, TextWriter output, bool isFolder)
         {
             bool writeGetContentLengthForFolder = isFolder && PropertiesContains(properties, "getcontentlength");
 
