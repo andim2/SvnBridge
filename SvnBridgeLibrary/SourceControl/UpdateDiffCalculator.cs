@@ -287,7 +287,6 @@ namespace SvnBridge.SourceControl
             }
             return ((change.ChangeType & ChangeType.Add) == ChangeType.Add) ||
                    ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch) ||
-                   ((change.ChangeType & ChangeType.Merge) == ChangeType.Merge) ||
                    ((change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete);
         }
 

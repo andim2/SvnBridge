@@ -75,7 +75,7 @@
           <AutoAssignPort>False</AutoAssignPort>
           <DevelopmentServerPort>3737</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://svnbridge.redmond.corp.microsoft.com/</IISUrl>
+          <IISUrl>http://svnbridge.redmond.corp.microsoft.com/svn/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
         </WebProjectProperties>

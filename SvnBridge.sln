@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge.PerfCounter.Insta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridgeServer", "SvnBridgeServer\SvnBridgeServer.csproj", "{6B6E0E6A-82DD-4CD3-A7D9-EF26CE365EC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpSend", "HttpSend\HttpSend.csproj", "{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.HttpSend", "HttpSend\Tools.HttpSend.csproj", "{E97CA0E7-EAA6-49FE-9016-55F7F8B0C63A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
