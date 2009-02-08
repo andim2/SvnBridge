@@ -820,30 +820,34 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private bool RevertDelete(string activityId, string path)
+        private bool IsDeleted(string activityId, string path)
         {
-            bool reverted = false;
+            bool result = false;
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 if (activity.DeletedItems.Contains(path))
                 {
-                    sourceControlService.UndoPendingChanges(serverUrl,
-                                                            credentials,
-                                                            activityId,
-                                                            new string[] { Helper.CombinePath(rootPath, path) });
-                    activity.DeletedItems.Remove(path);
-                    for (int j = activity.MergeList.Count - 1; j >= 0; j--)
-                    {
-                        if (activity.MergeList[j].Path == Helper.CombinePath(rootPath, path))
-                        {
-                            activity.MergeList.RemoveAt(j);
-                        }
-                    }
-
-                    reverted = true;
+                    result = true;
                 }
             });
-            return reverted;
+            return result;
+        }
+
+        private void RevertDelete(string activityId, string path)
+        {
+            ActivityRepository.Use(activityId, delegate(Activity activity)
+            {
+                string serverItemPath = Helper.CombinePath(rootPath, path);
+                sourceControlService.UndoPendingChanges(serverUrl, credentials, activityId, new string[] { serverItemPath });
+                activity.DeletedItems.Remove(path);
+                for (int j = activity.MergeList.Count - 1; j >= 0; j--)
+                {
+                    if (activity.MergeList[j].Path == serverItemPath)
+                    {
+                        activity.MergeList.RemoveAt(j);
+                    }
+                }
+            });
         }
 
         private MergeActivityResponse GenerateMergeResponse(string activityId, int changesetId)
@@ -927,7 +931,12 @@ namespace SvnBridge.SourceControl
 
         private bool WriteFile(string activityId, string path, byte[] fileData, bool reportUpdatedFile)
         {
-            bool replaced = RevertDelete(activityId, path);
+            bool replaced = false;
+            if (IsDeleted(activityId, path))
+            {
+                replaced = true;
+                RevertDelete(activityId, path);
+            }
             bool newFile = true;
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -1054,7 +1063,12 @@ namespace SvnBridge.SourceControl
                 string localPath = GetLocalPath(activityId, copyAction.Path);
                 string localTargetPath = GetLocalPath(activityId, copyAction.TargetPath);
 
-                bool copyIsRename = RevertDelete(activityId, copyAction.Path);
+                bool copyIsRename = false;
+                if (IsDeleted(activityId, copyAction.Path))
+                {
+                    copyIsRename = true;
+                    RevertDelete(activityId, copyAction.Path);
+                }
                 ItemMetaData item = GetItemsWithoutProperties(-1, copyAction.Path, Recursion.None);
                 UpdateLocalVersion(activityId, item, localPath);
 
