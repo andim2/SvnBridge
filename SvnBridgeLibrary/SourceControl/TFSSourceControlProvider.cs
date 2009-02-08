@@ -842,7 +842,8 @@ namespace SvnBridge.SourceControl
                 activity.DeletedItems.Remove(path);
                 for (int j = activity.MergeList.Count - 1; j >= 0; j--)
                 {
-                    if (activity.MergeList[j].Path == serverItemPath)
+                    if (activity.MergeList[j].Action == ActivityItemAction.Deleted
+                        && activity.MergeList[j].Path == serverItemPath)
                     {
                         activity.MergeList.RemoveAt(j);
                     }
@@ -1074,8 +1075,7 @@ namespace SvnBridge.SourceControl
 
                 if (copyIsRename)
                 {
-                    activity.MergeList.Add(
-                        new ActivityItem(Helper.CombinePath(rootPath, copyAction.Path), item.ItemType, ActivityItemAction.RenameDelete));
+                    activity.MergeList.Add(new ActivityItem(Helper.CombinePath(rootPath, copyAction.Path), item.ItemType, ActivityItemAction.RenameDelete));
                 }
 
                 if (!copyIsRename)
@@ -1146,18 +1146,42 @@ namespace SvnBridge.SourceControl
                     }
                 }
 
-                List<PendRequest> pendRequests = new List<PendRequest>();
+                PendRequest pendRequest = null;
+                PendRequest pendRequestPending = null;
                 if (copyIsRename || forceRename)
                 {
-                    pendRequests.Add(PendRequest.Rename(localPath, localTargetPath));
+                    if (IsDeleted(activityId, copyAction.TargetPath))
+                    {
+                        activity.PendingRenames[localTargetPath] = PendRequest.Rename(localPath, localTargetPath);
+                    }
+                    else
+                    {
+                        pendRequest = PendRequest.Rename(localPath, localTargetPath);
+                        if (activity.PendingRenames.ContainsKey(localPath))
+                        {
+                            pendRequestPending = activity.PendingRenames[localPath];
+                            activity.PendingRenames.Remove(localPath);
+                        }
+                    }
                     copyAction.Rename = true;
                 }
                 else
                 {
-                    pendRequests.Add(PendRequest.Copy(localPath, localTargetPath));
+                    pendRequest = PendRequest.Copy(localPath, localTargetPath);
                 }
-
-                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                if (pendRequest != null)
+                {
+                    List<PendRequest> pendRequests = new List<PendRequest>();
+                    pendRequests.Add(pendRequest);
+                    sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                    UpdateLocalVersion(activityId, item, localTargetPath);
+                    if (pendRequestPending != null)
+                    {
+                        pendRequests = new List<PendRequest>();
+                        pendRequests.Add(pendRequestPending);
+                        sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                    }
+                }
                 if (copyAction.Rename)
                 {
                     activity.MergeList.Add(

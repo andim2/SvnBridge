@@ -106,6 +106,21 @@ namespace EndToEndTests
 			Svn("commit -m copy");
 		}
 
+        [SvnBridgeFact]
+        public void CanRenameFileThenRenameAnotherFileToOriginalNameOfFirstFile()
+        {
+            CheckoutAndChangeDirectory();
+            File.WriteAllText("test1.txt", "blah");
+            File.WriteAllText("test2.txt", "blah");
+            Svn("add test1.txt");
+            Svn("add test2.txt");
+            Svn("commit -m test");
+            Svn("update");
+            Svn("rename test2.txt test3.txt");
+            Svn("rename test1.txt test2.txt");
+            Svn("commit -m copy");
+        }
+
         private static void GenerateFile()
         {
             int lines = 1024 * 10;

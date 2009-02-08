@@ -697,8 +697,7 @@ namespace IntegrationTests
 			Assert.True(_provider.ItemExists(MergePaths(testPath, "/TestFile.txt")));
 			Assert.Equal("new", ReadFile(MergePaths(testPath, "/TestFile.txt")));
 			// Assert TFS history
-			LogItem log1 =
-				_provider.GetLog(MergePaths(testPath, "/TestFile.txt"), 1, _provider.GetLatestVersion(), Recursion.None, 1);
+			LogItem log1 = _provider.GetLog(MergePaths(testPath, "/TestFile.txt"), 1, _provider.GetLatestVersion(), Recursion.None, 1);
 			Assert.Equal(ChangeType.Edit, log1.History[0].Changes[0].ChangeType);
 			// Assert commit output
 			Assert.Equal(_provider.GetLatestVersion(), response.Version);
@@ -809,6 +808,39 @@ namespace IntegrationTests
             Assert.Equal(2, response.Items.Count);
             Assert.True(ResponseContains(response, MergePaths(testPath, filename), ItemType.File));
             Assert.True(ResponseContains(response, testPath, ItemType.Folder));
+        }
+
+        [IntegrationTestFact]
+        public void Commit_RenamedFileWithSecondFileRenamedToOriginalNameOfFirstFile()
+        {
+            byte[] testFile1 = GetBytes("Test1");
+            byte[] testFile2 = GetBytes("Test2");
+            WriteFile(MergePaths(testPath, "/TestFile1.txt"), testFile1, false);
+            WriteFile(MergePaths(testPath, "/TestFile2.txt"), testFile2, true);
+
+            bool delResponse1 = _provider.DeleteItem(_activityId, MergePaths(testPath, "/TestFile1.txt"));
+            bool delResponse2 = _provider.DeleteItem(_activityId, MergePaths(testPath, "/TestFile2.txt"));
+            _provider.CopyItem(_activityId, MergePaths(testPath, "/TestFile1.txt"), MergePaths(testPath, "/TestFile2.txt"));
+            _provider.CopyItem(_activityId, MergePaths(testPath, "/TestFile2.txt"), MergePaths(testPath, "/TestFile3.txt"));
+            MergeActivityResponse response = Commit();
+
+            // Assert repository state
+            Assert.False(_provider.ItemExists(MergePaths(testPath, "/TestFile1.txt")));
+            Assert.Equal(GetString(testFile1), ReadFile(MergePaths(testPath, "/TestFile2.txt")));
+            Assert.Equal(GetString(testFile2), ReadFile(MergePaths(testPath, "/TestFile3.txt")));
+            // Assert repository history
+            LogItem log1 = _provider.GetLog(testPath, 1, _provider.GetLatestVersion(), Recursion.Full, 1);
+            Assert.Equal(2, log1.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Rename, log1.History[0].Changes[0].ChangeType);
+            Assert.Equal(ChangeType.Rename, log1.History[0].Changes[1].ChangeType);
+            // Assert responses
+            Assert.Equal(true, delResponse1);
+            Assert.Equal(true, delResponse2);
+            Assert.Equal(_provider.GetLatestVersion(), response.Version);
+            Assert.Equal(3, response.Items.Count);
+            Assert.True(ResponseContains(response, testPath, ItemType.Folder));
+            Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile2.txt"), ItemType.File));
+            Assert.True(ResponseContains(response, MergePaths(testPath, "/TestFile3.txt"), ItemType.File));
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CodePlex.TfsLibrary.ObjectModel;
 
 namespace SvnBridge.SourceControl.Dto
 {
@@ -11,6 +12,7 @@ namespace SvnBridge.SourceControl.Dto
         public readonly List<string> DeletedItems = new List<string>();
         public readonly List<ActivityItem> MergeList = new List<ActivityItem>();
         public readonly List<string> PostCommitDeletedItems = new List<string>();
+        public readonly Dictionary<string, PendRequest> PendingRenames = new Dictionary<string, PendRequest>();
         public string Comment;
     }
 }
