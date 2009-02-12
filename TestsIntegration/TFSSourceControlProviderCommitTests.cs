@@ -813,10 +813,8 @@ namespace IntegrationTests
         [IntegrationTestFact]
         public void Commit_RenamedFileWithSecondFileRenamedToOriginalNameOfFirstFile()
         {
-            byte[] testFile1 = GetBytes("Test1");
-            byte[] testFile2 = GetBytes("Test2");
-            WriteFile(MergePaths(testPath, "/TestFile1.txt"), testFile1, false);
-            WriteFile(MergePaths(testPath, "/TestFile2.txt"), testFile2, true);
+            WriteFile(MergePaths(testPath, "/TestFile1.txt"), "Test1", false);
+            WriteFile(MergePaths(testPath, "/TestFile2.txt"), "Test2", true);
 
             bool delResponse1 = _provider.DeleteItem(_activityId, MergePaths(testPath, "/TestFile1.txt"));
             bool delResponse2 = _provider.DeleteItem(_activityId, MergePaths(testPath, "/TestFile2.txt"));
@@ -826,8 +824,8 @@ namespace IntegrationTests
 
             // Assert repository state
             Assert.False(_provider.ItemExists(MergePaths(testPath, "/TestFile1.txt")));
-            Assert.Equal(GetString(testFile1), ReadFile(MergePaths(testPath, "/TestFile2.txt")));
-            Assert.Equal(GetString(testFile2), ReadFile(MergePaths(testPath, "/TestFile3.txt")));
+            Assert.Equal("Test1", ReadFile(MergePaths(testPath, "/TestFile2.txt")));
+            Assert.Equal("Test2", ReadFile(MergePaths(testPath, "/TestFile3.txt")));
             // Assert repository history
             LogItem log1 = _provider.GetLog(testPath, 1, _provider.GetLatestVersion(), Recursion.Full, 1);
             Assert.Equal(2, log1.History[0].Changes.Count);

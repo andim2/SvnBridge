@@ -75,6 +75,7 @@ namespace Tests
         public delegate int GetVersionForDate(DateTime date);
         public delegate ProjectLocationInformation GetProjectLocation(string projectName);
         public delegate void Cancel();
+        public delegate void DeleteActivity(string activityId);
 
         public Results Attach(DeleteItem method, bool returnValue)
         {

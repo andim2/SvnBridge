@@ -80,6 +80,7 @@
     <Compile Include="Commit\CommitNewFolderTest.cs" />
     <Compile Include="Commit\CommitRenamedAndEditedFileTest.cs" />
     <Compile Include="Commit\CommitRenamedFileTest.cs" />
+    <Compile Include="Commit\CommitRenamedFileWithSecondFileRenamedToOriginalNameOfFirstFileTest.cs" />
     <Compile Include="Commit\CommitRenamedFolderWithRenamedFileAndNotRenamedFile.cs" />
     <Compile Include="Commit\CommitReplacedFileTest.cs" />
     <Compile Include="Commit\CommitUpdatedFileTest.cs" />
