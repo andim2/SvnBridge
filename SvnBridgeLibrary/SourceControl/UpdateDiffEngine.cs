@@ -182,8 +182,12 @@ namespace SvnBridge.SourceControl
                         itemName += nameParts[i];
 
                     ItemMetaData item = folder.FindItem(itemName);
-                    if (item == null)
+                    if (item == null || item.Revision < change.Item.RemoteChangesetId)
                     {
+                        if (item != null)
+                        {
+                            folder.Items.Remove(item);
+                        }
                         item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
                         if (item == null)
                         {

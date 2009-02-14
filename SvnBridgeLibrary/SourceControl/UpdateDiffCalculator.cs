@@ -27,46 +27,15 @@ namespace SvnBridge.SourceControl
         {
             clientExistingFiles = GetClientExistingFiles(checkoutRootPath, updateReportData);
             clientMissingFiles = GetClientDeletedFiles(checkoutRootPath, updateReportData);
-
-            if (versionFrom != versionTo)
-            {
-                // we have to calculate the difference from the project root
-                // this is because we may have a file move from below the checkoutRootPath, 
-                // which we still need to consider
-                string projectRootPath = GetProjectRoot(checkoutRootPath);
-                FolderMetaData projectRoot = checkoutRoot;
-                if (projectRootPath != checkoutRootPath)
-                {
-                    projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
-                }
-                CalculateChangeBetweenVersions(projectRootPath, -1, projectRoot, versionFrom, versionTo);
-
-                if (projectRootPath != checkoutRootPath)
-                {
-                    // we will now copy all the children to the real checkoutRoot
-                    FolderMetaData checkoutRootFromProjectRoot = (FolderMetaData)projectRoot.FindItem(checkoutRootPath);
-                    // if it is null, then there were no changes in this diff
-                    if (checkoutRootFromProjectRoot != null)
-                    {
-                        foreach (ItemMetaData item in checkoutRootFromProjectRoot.Items)
-                        {
-                            checkoutRoot.Items.Add(item);
-                        }
-                    }
-                }
-            }
+            string projectRootPath = GetProjectRoot(checkoutRootPath);
 
             if (updateReportData.Entries != null)
             {
                 foreach (EntryData data in updateReportData.Entries)
                 {
                     int itemVersionFrom = int.Parse(data.Rev);
-                    // we already checked that version at the root level
-                    if (itemVersionFrom == versionFrom)
-                        continue;
-                    if (itemVersionFrom != versionTo)
+                    if (itemVersionFrom < versionFrom)
                     {
-
                         string rootPath = checkoutRootPath;
                         if (updateReportData.UpdateTarget != null)
                             rootPath += "/" + updateReportData.UpdateTarget;
@@ -76,13 +45,29 @@ namespace SvnBridge.SourceControl
                         if (targetPath.StartsWith("/"))
                             targetPath = targetPath.Substring(1);
 
-                        FindOrCreateResults results = FindItemOrCreateItem(checkoutRoot, rootPath, data.path, versionTo, Recursion.None);
-                        bool changed = CalculateChangeBetweenVersions(targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionTo);
-                        if (changed == false)
-                            results.RevertAddition();
+                        CalculateChangeBetweenVersions(projectRootPath, targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionFrom);
                     }
                 }
             }
+
+            if (versionFrom != versionTo)
+            {
+                // we have to calculate the difference from the project root
+                // this is because we may have a file move from below the checkoutRootPath, 
+                // which we still need to consider
+                FolderMetaData projectRoot = checkoutRoot;
+                if (projectRootPath != checkoutRootPath)
+                {
+                    projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
+                    string path = checkoutRootPath.Substring(0, checkoutRootPath.LastIndexOf('/'));
+                    path = path.Substring(path.IndexOf('/') + 1);
+                    FolderMetaData result = (FolderMetaData)FindItemOrCreateItem(projectRoot, projectRootPath, path, versionTo, Recursion.None);
+                    result.Items.Add(checkoutRoot);
+                }
+
+                CalculateChangeBetweenVersions(projectRootPath, -1, projectRoot, versionFrom, versionTo);
+            }
+
             foreach (string missingItem in clientMissingFiles.Values)
             {
                 if (sourceControlProvider.ItemExists(checkoutRootPath + "/" + missingItem, versionTo))
@@ -123,9 +108,8 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private FindOrCreateResults FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)
+        private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)
         {
-            FindOrCreateResults results = new FindOrCreateResults();
             FolderMetaData folder = root;
             string[] parts = path.Split('/');
             string itemName = pathRoot;
@@ -153,39 +137,36 @@ namespace SvnBridge.SourceControl
                     }
                     item = item ?? new MissingItemMetaData(itemName, targetVersion, false);
                     folder.Items.Add(item);
-                    if (results.FirstItemAdded == null)
-                    {
-                        results.FirstItemAdded = item;
-                        results.FirstItemAddedFolder = folder;
-                    }
                 }
                 if (lastNamePart == false)
                 {
                     folder = (FolderMetaData)item;
                 }
             }
-            results.Item = item;
-            return results;
+            return item;
         }
 
-        private bool CalculateChangeBetweenVersions(string checkoutRootPath, int checkoutRootVersion, FolderMetaData root, int sourceVersion, int targetVersion)
+        private void CalculateChangeBetweenVersions(string checkoutRootPath, int checkoutRootVersion, FolderMetaData root, int sourceVersion, int targetVersion)
+        {
+            CalculateChangeBetweenVersions(checkoutRootPath, checkoutRootPath, checkoutRootVersion, root, sourceVersion, targetVersion);
+        }
+
+        private void CalculateChangeBetweenVersions(string checkoutRootPath, string changePath, int changeVersion, FolderMetaData root, int sourceVersion, int targetVersion)
         {
             bool updatingForwardInTime = sourceVersion <= targetVersion;
             int lastVersion = sourceVersion;
-            bool changed = false;
             while (targetVersion != lastVersion)
             {
                 int previousLoopLastVersion = lastVersion;
                 LogItem logItem = sourceControlProvider.GetLog(
-                    checkoutRootPath,
-                    checkoutRootVersion,
+                    changePath,
+                    changeVersion,
                     Math.Min(lastVersion, targetVersion) + 1,
                     Math.Max(lastVersion, targetVersion),
                     Recursion.Full, 256);
 
                 foreach (SourceItemHistory history in Helper.SortHistories(updatingForwardInTime, logItem.History))
                 {
-                    changed = true;
                     lastVersion = history.ChangeSetID;
                     if (updatingForwardInTime == false)
                     {
@@ -237,7 +218,6 @@ namespace SvnBridge.SourceControl
                     break;
                 }
             }
-            return changed;
         }
 
         private static void RemoveMissingItemsWhichAreChildrenOfRenamedItem(string itemName, FolderMetaData root)

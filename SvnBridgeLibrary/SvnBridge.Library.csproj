@@ -128,7 +128,6 @@
     <Compile Include="SourceControl\Dto\ItemProperties.cs" />
     <Compile Include="SourceControl\Dto\Properties.cs" />
     <Compile Include="SourceControl\Dto\Property.cs" />
-    <Compile Include="SourceControl\FindOrCreateResults.cs" />
     <Compile Include="SourceControl\FutureInvocationException.cs" />
     <Compile Include="SourceControl\MissingItemMetaData.cs" />
     <Compile Include="SourceControl\ProjectLocationInformation.cs" />
