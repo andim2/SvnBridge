@@ -182,7 +182,7 @@ namespace SvnBridge.SourceControl
                         itemName += nameParts[i];
 
                     ItemMetaData item = folder.FindItem(itemName);
-                    if (item == null || item.Revision < change.Item.RemoteChangesetId)
+                    if (item == null || (lastNamePart && item.Revision < change.Item.RemoteChangesetId))
                     {
                         if (item != null)
                         {
