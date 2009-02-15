@@ -65,8 +65,9 @@ namespace SvnBridge.PathParsing
 			string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
 			string urlFromRequest = GetUrlFromRequest(urlAsUri);
 			string localPath = path.Substring(urlFromRequest.Length);
-			if (localPath == "")
-				return "/";
+			if (!localPath.StartsWith("/"))
+				localPath = "/" + localPath;
+
 			return localPath;
 		}
 

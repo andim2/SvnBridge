@@ -45,7 +45,12 @@ namespace UnitTests
                 else
                     return applicationPath;
             }
-            set { applicationPath = value; }
+            set {
+                if (value.StartsWith("/"))
+                    applicationPath = value;
+                else
+                    applicationPath = "/" + value;
+            }
         }
 
         public NameValueCollection Headers

@@ -37,12 +37,24 @@ namespace UnitTests
         }
 
         [Fact]
-        public void VerifyGetLocalPathWhenPathIsRootReturnsRootPath()
+        public void GetLocalPath_PathIsRoot_ReturnsRootPath()
         {
             PathParserSingleServerWithProjectInPath parser = new PathParserSingleServerWithProjectInPath("http://www.codeplex.com");
             StubHttpRequest request = new StubHttpRequest();
 
             string result = parser.GetLocalPath(request, "http://www.root.com");
+
+            Assert.Equal("/", result);
+        }
+
+        [Fact]
+        public void GetLocalPath_PathIsApplicationRoot_ReturnsRootPath()
+        {
+            PathParserSingleServerWithProjectInPath parser = new PathParserSingleServerWithProjectInPath("http://www.codeplex.com");
+            StubHttpRequest request = new StubHttpRequest();
+            request.ApplicationPath = "/svn";
+
+            string result = parser.GetLocalPath(request, "http://www.root.com/svn");
 
             Assert.Equal("/", result);
         }

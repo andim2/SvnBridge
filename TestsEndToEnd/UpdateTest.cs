@@ -543,9 +543,8 @@ namespace EndToEndTests
             Assert.Equal("aas", File.ReadAllText("testFolder1/blah.txt"));
         }
 
-
         [SvnBridgeFact]
-        public void UpdateAfterRemovingFileFromFileSystemShouldReturnFile()
+        public void Update_RemovingFileFromFileSystem_ReturnsFile()
         {
             WriteFile(testPath + "/test.txt", "abc", true);
             CheckoutAndChangeDirectory();
@@ -554,6 +553,19 @@ namespace EndToEndTests
             Assert.Equal("abc", File.ReadAllText("test.txt"));
         }
 
+        [SvnBridgeFact]
+        public void Update_RemovingFolderFromFileSystem_ReturnsFolderAndContents()
+        {
+            CreateFolder(testPath + "/test", false);
+            WriteFile(testPath + "/test/test.txt", "abc", true);
+            CheckoutAndChangeDirectory();
+            ForAllFilesIn("test",  delegate(FileInfo file) {
+                file.Attributes = file.Attributes & ~FileAttributes.ReadOnly;
+            });
+            Directory.Delete(@"test", true);
+            Svn("update");
+            Assert.Equal("abc", File.ReadAllText(@"test\test.txt"));
+        }
 
         [SvnBridgeFact]
         public void UpdateAfterRename()

@@ -13,6 +13,7 @@ using SvnBridge.Infrastructure;
 using System.IO;
 using System.Web;
 using SvnBridge.Net;
+using SvnBridge;
 
 namespace UnitTests
 {
@@ -101,36 +102,55 @@ namespace UnitTests
         //    System.Diagnostics.Debug.WriteLine(output);
         //}
 
-        //[Fact]
-        //public void Repro()
-        //{
-        //    BootStrapper.Start();
-        //    IPathParser pathParser = new PathParserProjectInDomainCodePlex();
-        //    HttpContextDispatcher dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
+//        [Fact]
+//        public void Repro()
+//        {
+//            BootStrapper.Start();
+//            IPathParser pathParser = new PathParserProjectInDomainCodePlex();
+//            HttpContextDispatcher dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
 
-        //    StubHttpContext context = new StubHttpContext();
-        //    StubHttpRequest request = new StubHttpRequest();
-        //    StubHttpResponse response = new StubHttpResponse();
-        //    context.Request = request;
-        //    context.Response = response;
-        //    response.OutputStream = new MemoryStream(Constants.BufferSize);
+//            StubHttpContext context = new StubHttpContext();
+//            StubHttpRequest request = new StubHttpRequest();
+//            StubHttpResponse response = new StubHttpResponse();
+//            context.Request = request;
+//            context.Response = response;
+//            response.OutputStream = new MemoryStream(Constants.BufferSize);
 
-        //    RequestCache.Init();
-        //    request.ApplicationPath = "/svn";
-        //    request.HttpMethod = "REPORT";
-        //    request.Path = "http://mosa.redmond.corp.microsoft.com/svn/!svn/vcc/default";
-        //    request.Input =
-        //        //"<?xml version=\"1.0\" encoding=\"utf-16\"?>" +
-        //        "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
-        //        "  <entry rev=\"45197\" start-empty=\"false\" />" +
-        //        "  <src-path>http://mosa.redmond.corp.microsoft.com/svn</src-path>" +
-        //        "  <target-revision>45294</target-revision>" +
-        //        "</update-report>";
-        //    dispatcher.Dispatch(context);
+//            RequestCache.Init();
+//            request.ApplicationPath = "/svn";
+//            request.HttpMethod = "REPORT";
+//            request.Path = "http://bigvisiblecruise.redmond.corp.microsoft.com/svn/!svn/vcc/default";
+//            request.Input =
+//                //"<?xml version=\"1.0\" encoding=\"utf-16\"?>" +
+//"<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
+//"  <entry rev=\"8902\" start-empty=\"false\" />" +
+//"  <entry rev=\"8904\" start-empty=\"false\">install/vs/BigVisibleCruise2Installer.vdproj</entry>" +
+//"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/Services/HttpWebClient.cs</entry>" +
+//"  <entry rev=\"8924\" start-empty=\"false\">src/BigVisibleCruise/app.config</entry>" +
+//"  <entry rev=\"8904\" start-empty=\"false\">src/BigVisibleCruise/DummyProjectStatus.xml</entry>" +
+//"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/Skins/StackPhotoSkin.xaml</entry>" +
+//"  <entry rev=\"8906\" start-empty=\"false\">src/BigVisibleCruise/Skins/GridSkin.xaml</entry>" +
+//"  <entry rev=\"8906\" start-empty=\"false\">src/BigVisibleCruise/Skins/StackSkin.xaml</entry>" +
+//"  <entry rev=\"8904\" start-empty=\"false\">src/BigVisibleCruise/Converters/BuildNameToMessageConverter.cs</entry>" +
+//"  <entry rev=\"8916\" start-empty=\"false\">src/BigVisibleCruise/Converters/OneBreakerConverter.cs</entry>" +
+//"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/Converters/ImageSizeConverter.cs</entry>" +
+//"  <entry rev=\"8916\" start-empty=\"false\">src/BigVisibleCruise/Converters/ImagePathConverter.cs</entry>" +
+//"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/Views/BigVisibleCruisePresenter.cs</entry>" +
+//"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/BigVisibleCruise2.csproj</entry>" +
+//"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise.Tests/Converters/ImageWidthConverter_Tests.cs</entry>" +
+//"  <entry rev=\"8904\" start-empty=\"false\">src/BigVisibleCruise.Tests/Converters/OneBreakerConverter_Tests.cs</entry>" +
+//"  <missing>src/BigVisibleCruise/Converters/ImageBorderColorConverter.cs</missing>" +
+//"  <missing>src/BigVisibleCruise/Converters/ImageWidthConverter.cs</missing>" +
+//"  <missing>src/BigVisibleCruise/Images/Check.png</missing>" +
+//"  <missing>src/BigVisibleCruise/Images/Stop.png</missing>" +
+//"  <src-path>https://BigVisibleCruise.svn.codeplex.com/svn</src-path>" +
+//"  <target-revision>11158</target-revision>" +
+//"</update-report>";
+//            dispatcher.Dispatch(context);
 
-        //    string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
-        //    System.Diagnostics.Debug.WriteLine(output);
-        //}
+//            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+//            System.Diagnostics.Debug.WriteLine(output);
+//        }
 
         [Fact]
         public void Dispatch_ServerIsCodePlexAndUsernameIsMissingDomainAndSuffix_DomainAndSuffixIsAdded()

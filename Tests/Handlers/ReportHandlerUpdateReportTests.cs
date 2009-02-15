@@ -440,6 +440,29 @@ namespace UnitTests
         }
 
         [Fact]
+        public void Handle_UpdateAtApplicationRootWithFolderMissingInClientState()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "";
+            metadata.ItemRevision = 5734;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2008-01-20T08:55:13.330897Z");
+            FolderMetaData folder = new FolderMetaData("Test");
+            metadata.Items.Add(folder);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            stubs.Attach(provider.ItemExists, true);
+            request.ApplicationPath = "/svn";
+            request.Path = "http://127.0.0.1:25169/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://127.0.0.1:25169/svn</S:src-path><S:target-revision>5733</S:target-revision><S:entry rev=\"5733\" ></S:entry><S:missing>Test</S:missing></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:add-directory name=\"Test\""));
+        }
+
+        [Fact]
         public void Handle_UpdateForInvalidFile()
         {
             FolderMetaData metadata = new FolderMetaData();

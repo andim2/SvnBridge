@@ -31,16 +31,19 @@ namespace SvnBridge.PathParsing
 			return request.LocalPath;
 		}
 
-		public override string GetLocalPath(IHttpRequest request, string url)
-		{
-			Uri urlAsUri = new Uri(url);
-			string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
-		    path = "/" + path;
-            if (path.StartsWith(GetApplicationPath(request), StringComparison.InvariantCultureIgnoreCase) && GetApplicationPath(request) != "/")
-                return path.Substring(GetApplicationPath(request).Length);
-		    return path;
-		}
+        public override string GetLocalPath(IHttpRequest request, string url)
+        {
+            Uri urlAsUri = new Uri(url);
+            string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
+            path = "/" + path;
+            if (path.StartsWith(GetApplicationPath(request), StringComparison.InvariantCultureIgnoreCase))
+                path = path.Substring(GetApplicationPath(request).Length);
 
+            if (!path.StartsWith("/"))
+                path = "/" + path;
+
+            return path;
+        }
 		public override string GetProjectName(IHttpRequest request)
 		{
 			return null;
