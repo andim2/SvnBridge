@@ -127,8 +127,7 @@ namespace UnitTests
             engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
             engine.Add(CreateChange(ChangeType.Add, "project/file.txt", ItemType.File));
 
-            AssertFolder(root, "project", 0, 1);
-            AssertItem(root.Items[0], "project/file.txt", 1);
+            AssertFolder(root, "project", 0, 0);
         }
 
         [Fact(Skip="Temporary disable")]
