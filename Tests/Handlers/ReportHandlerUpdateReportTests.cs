@@ -477,5 +477,171 @@ namespace UnitTests
             Assert.Equal(500, response.StatusCode);
             Assert.True(output.Contains("<m:human-readable errcode=\"160005\">\nTarget path does not exist\n</m:human-readable>\n"));
         }
+
+        [Fact]
+        public void Handle_UpdateIncludesDeletedFolderContainingFileThenFolderAndFileAreReAdded_ShouldIncludeDeleteEntryForFolderButNotFile()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "";
+            metadata.ItemRevision = 5810;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            FolderMetaData item1 = new FolderMetaData();
+            item1.Name = "test";
+            item1.ItemRevision = 5810;
+            item1.Author = "jwanagel";
+            item1.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            metadata.Items.Add(item1);
+            ItemMetaData item2 = new ItemMetaData();
+            item2.Name = "test/test1.txt";
+            item2.ItemRevision = 5810;
+            item2.Author = "jwanagel";
+            item2.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            item1.Items.Add(item2);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            byte[] fileData = Encoding.UTF8.GetBytes("456");
+            stubs.Attach(provider.ReadFileAsync, fileData);
+            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, Return.DelegateResult(delegate(object[] p)
+            {
+                if (p[0].ToString() == "test" && p[1].ToString() == "5808")
+                    return true;
+                else if (p[0].ToString() == "test/test1.txt" && p[1].ToString() == "5808")
+                    return true;
+                else
+                    return false;
+            }));
+
+            request.Path = "localhost:8080/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(output.Contains("<S:delete-entry name=\"test1.txt\"/>"));
+        }
+
+        [Fact]
+        public void Handle_UpdateIncludesDeletedFolderContainingFileThenFolderIsReAdded_ShouldIncludeDeleteEntryForFolderButNotFile()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "";
+            metadata.ItemRevision = 5810;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            FolderMetaData item1 = new FolderMetaData();
+            item1.Name = "test";
+            item1.ItemRevision = 5810;
+            item1.Author = "jwanagel";
+            item1.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            metadata.Items.Add(item1);
+            DeleteMetaData item2 = new DeleteMetaData();
+            item2.Name = "test/test1.txt";
+            item2.ItemRevision = 5810;
+            item1.Items.Add(item2);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, Return.DelegateResult(delegate(object[] p)
+            {
+                if (p[0].ToString() == "test" && p[1].ToString() == "5808")
+                    return true;
+                else if (p[0].ToString() == "test/test1.txt" && p[1].ToString() == "5808")
+                    return true;
+                else
+                    return false;
+            }));
+
+            request.Path = "localhost:8080/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(output.Contains("<S:delete-entry name=\"test1.txt\"/>"));
+        }
+
+        [Fact]
+        public void Handle_UpdateIncludesDeletedFolderContainingFolderThenFolderAndSubFolderAreReAdded_ShouldIncludeDeleteEntryForFolderButNotSubFolder()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "";
+            metadata.ItemRevision = 5810;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            FolderMetaData item1 = new FolderMetaData();
+            item1.Name = "test";
+            item1.ItemRevision = 5810;
+            item1.Author = "jwanagel";
+            item1.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            metadata.Items.Add(item1);
+            FolderMetaData item2 = new FolderMetaData();
+            item2.Name = "test/test2";
+            item2.ItemRevision = 5810;
+            item2.Author = "jwanagel";
+            item2.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            item1.Items.Add(item2);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, Return.DelegateResult(delegate(object[] p)
+            {
+                if (p[0].ToString() == "test" && p[1].ToString() == "5808")
+                    return true;
+                else if (p[0].ToString() == "test/test2" && p[1].ToString() == "5808")
+                    return true;
+                else
+                    return false;
+            }));
+
+            request.Path = "localhost:8080/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(output.Contains("<S:delete-entry name=\"test2\"/>"));
+        }
+
+        [Fact]
+        public void Handle_UpdateIncludesDeletedFolderContainingFolderThenFolderIsReAdded_ShouldIncludeDeleteEntryForFolderButNotSubFolder()
+        {
+            FolderMetaData metadata = new FolderMetaData();
+            metadata.Name = "";
+            metadata.ItemRevision = 5810;
+            metadata.Author = "jwanagel";
+            metadata.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            FolderMetaData item1 = new FolderMetaData();
+            item1.Name = "test";
+            item1.ItemRevision = 5810;
+            item1.Author = "jwanagel";
+            item1.LastModifiedDate = DateTime.Parse("2009-02-16T08:10:34.759836Z");
+            metadata.Items.Add(item1);
+            DeleteFolderMetaData item2 = new DeleteFolderMetaData();
+            item2.Name = "test/test2";
+            item2.ItemRevision = 5810;
+            item1.Items.Add(item2);
+            stubs.Attach(provider.GetChangedItems, metadata);
+            stubs.Attach((MyMocks.ItemExists)provider.ItemExists, Return.DelegateResult(delegate(object[] p)
+            {
+                if (p[0].ToString() == "test" && p[1].ToString() == "5808")
+                    return true;
+                else if (p[0].ToString() == "test/test2" && p[1].ToString() == "5808")
+                    return true;
+                else
+                    return false;
+            }));
+
+            request.Path = "localhost:8080/!svn/vcc/default";
+            request.Input =
+                "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+
+            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(output.Contains("<S:delete-entry name=\"test2\"/>"));
+        }
     }
 }

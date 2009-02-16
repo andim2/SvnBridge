@@ -22,11 +22,14 @@ namespace SvnBridge.Infrastructure
 			this.sourceControlProvider = sourceControlProvider;
 		}
 
-		public void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, StreamWriter output)
+		public void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, StreamWriter output, bool parentFolderWasDeleted)
 		{
 			if (item is DeleteMetaData)
 			{
-				output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\"/>\n");
+                if (!parentFolderWasDeleted)
+                {
+                    output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\"/>\n");
+                }
 			}
 			else
 			{
@@ -39,7 +42,7 @@ namespace SvnBridge.Infrastructure
 				}
 
 				//another item with the same name already exists, need to remove it.
-				if (ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, existingFile))
+				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, existingFile))
 				{
 					output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\"/>\n");
 				}
@@ -105,16 +108,20 @@ namespace SvnBridge.Infrastructure
 			return url;
 		}
 
-		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool rootFolder)
+		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool rootFolder, bool parentFolderWasDeleted)
 		{
 			if (folder is DeleteFolderMetaData)
 			{
-				output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(folder.Name)) + "\"/>\n");
+                if (!parentFolderWasDeleted)
+                {
+                    output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(folder.Name)) + "\"/>\n");
+                }
 			}
 			else
 			{
 				bool existingFolder = false;
-				if (rootFolder)
+                bool folderWasDeleted = parentFolderWasDeleted;
+                if (rootFolder)
 				{
 					output.Write("<S:open-directory rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
 				}
@@ -128,9 +135,10 @@ namespace SvnBridge.Infrastructure
 					}
 
 					//another item with the same name already exists, need to remove it.
-					if (ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
+					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
 					{
 						output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(folder.Name)) + "\"/>\n");
+                        folderWasDeleted = true;
 					}
 
 					if (existingFolder)
@@ -166,11 +174,11 @@ namespace SvnBridge.Infrastructure
 					ItemMetaData item = folder.Items[i];
 					if (item.ItemType == ItemType.Folder)
 					{
-						ProcessUpdateReportForDirectory(updateReportRequest, (FolderMetaData)item, output, false);
+						ProcessUpdateReportForDirectory(updateReportRequest, (FolderMetaData)item, output, false, folderWasDeleted);
 					}
 					else
 					{
-						ProcessUpdateReportForFile(updateReportRequest, item, output);
+						ProcessUpdateReportForFile(updateReportRequest, item, output, folderWasDeleted);
 					}
 				}
 				output.Write("<S:prop></S:prop>\n");
