@@ -182,7 +182,14 @@ namespace SvnBridge.SourceControl
                         itemName += nameParts[i];
 
                     ItemMetaData item = folder.FindItem(itemName);
-                    if (item == null || (lastNamePart && item.Revision < change.Item.RemoteChangesetId))
+                    if (item == null ||
+                         (
+                            lastNamePart &&
+                            item.Revision < change.Item.RemoteChangesetId &&
+                            !(item is DeleteFolderMetaData) &&
+                            !(item is DeleteMetaData)
+                         )
+                        )
                     {
                         if (item != null)
                         {
@@ -230,8 +237,6 @@ namespace SvnBridge.SourceControl
                         if (!propertyChange)
                         {
                             folder.Items.Remove(item);
-                            item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
-                            folder.Items.Add(item);
                         }
                     }
                     if (lastNamePart == false)

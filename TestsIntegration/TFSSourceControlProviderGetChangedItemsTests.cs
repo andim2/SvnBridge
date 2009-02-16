@@ -370,7 +370,7 @@ namespace IntegrationTests
 		}
 
         [IntegrationTestFact]
-        public void GetChangedItems_WithDeletedFileThenAddedFile_ReturnsFile()
+        public void GetChangedItems_WithDeletedFileThenAddedAgain_ReturnsFile()
         {
             string path = MergePaths(testPath, "/TestFile.txt");
             WriteFile(path, "Test file contents", true);
@@ -386,6 +386,24 @@ namespace IntegrationTests
             Assert.Equal(1, folder.Items.Count);
             Assert.Equal(path.Substring(1), folder.Items[0].Name);
             Assert.NotNull(folder.Items[0].DownloadUrl);
+        }
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFileThenAddedThenDeletedAgain()
+        {
+            string path = MergePaths(testPath, "/TestFile.txt");
+            WriteFile(path, "Test file contents", true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            WriteFile(path, "Test file contents", true);
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.True(folder.Items[0] is DeleteMetaData);
+            Assert.Equal(path.Substring(1), folder.Items[0].Name);
         }
 
 		[IntegrationTestFact]
@@ -439,6 +457,41 @@ namespace IntegrationTests
 			Assert.True(folder.Items[0] is DeleteFolderMetaData);
 			Assert.Equal(path.Substring(1), folder.Items[0].Name);
 		}
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFolderThenAddedAgain()
+        {
+            string path = MergePaths(testPath, "/Test Folder");
+            CreateFolder(path, true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            CreateFolder(path, true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(0, folder.Items.Count);
+        }
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFolderThenAddedThenDeletedAgain()
+        {
+            string path = MergePaths(testPath, "/Test Folder");
+            CreateFolder(path, true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            CreateFolder(path, true);
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.True(folder.Items[0] is DeleteFolderMetaData);
+            Assert.Equal(path.Substring(1), folder.Items[0].Name);
+        }
 
         [IntegrationTestFact]
         public void GetChangedItems_WithDeletedFolderContainingFile()
