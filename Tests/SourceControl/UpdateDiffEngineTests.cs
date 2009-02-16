@@ -119,7 +119,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void DeleteFileThenAddFile()
+        public void DeleteFileThenAddFile_ReturnsUpdatedFile()
         {
             ItemMetaData item = CreateItem("project/file.txt", 1);
             stub.Attach(sourceControlProvider.GetItems, Return.Value(item));
@@ -127,7 +127,8 @@ namespace UnitTests
             engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
             engine.Add(CreateChange(ChangeType.Add, "project/file.txt", ItemType.File));
 
-            AssertFolder(root, "project", 0, 0);
+            AssertFolder(root, "project", 0, 1);
+            AssertItem(root.Items[0], "project/file.txt", 1);
         }
 
         [Fact(Skip="Temporary disable")]

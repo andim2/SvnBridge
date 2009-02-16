@@ -45,11 +45,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public void Handle_NoContentTypeAndAcceptEncodingIsSpecified_ReturnCorrectContentType()
+        public void Handle_PathIsRoot_ReturnCorrectContentType()
         {
             Results r = stubs.Attach(provider.ItemExists, true);
             request.Headers["Accept-Encoding"] = "gzip";
-            request.Path = "http://localhost:8082/Spikes/SvnFacade/trunk/New%20Folder%207";
+            request.Path = "http://localhost:8082";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 

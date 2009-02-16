@@ -370,7 +370,7 @@ namespace IntegrationTests
 		}
 
         [IntegrationTestFact]
-        public void GetChangedItems_WithDeletedFileThenAddedAgain_ReturnsFile()
+        public void GetChangedItems_WithDeletedFileThenAddedAgain_ReturnsUpdatedFile()
         {
             string path = MergePaths(testPath, "/TestFile.txt");
             WriteFile(path, "Test file contents", true);
@@ -459,7 +459,7 @@ namespace IntegrationTests
 		}
 
         [IntegrationTestFact]
-        public void GetChangedItems_WithDeletedFolderThenAddedAgain()
+        public void GetChangedItems_WithDeletedFolderThenAddedAgain_ReturnsUpdatedFolder()
         {
             string path = MergePaths(testPath, "/Test Folder");
             CreateFolder(path, true);
@@ -471,7 +471,9 @@ namespace IntegrationTests
 
             FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
-            Assert.Equal(0, folder.Items.Count);
+            Assert.Equal(1, folder.Items.Count);
+            Assert.Equal(MergePaths(testPath, "/Test Folder").Substring(1), folder.Items[0].Name);
+            Assert.Equal(_lastCommitRevision, folder.Items[0].Revision);
         }
 
         [IntegrationTestFact]

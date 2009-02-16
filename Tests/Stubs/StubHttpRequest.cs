@@ -24,13 +24,10 @@ namespace UnitTests
             set
             {
                 string path = value;
-                if (path.Length > path.IndexOf("/", path.IndexOf("://") + 3) + 1)
-                {
-                    if (path.Substring(path.IndexOf("/", path.IndexOf("://") + 3), 2) == "//")
-                    {
-                        path = path.Remove(path.IndexOf("/", path.IndexOf("://") + 3), 1);
-                    }
-                }
+
+                int fileIndex = path.IndexOf("/", path.IndexOf("://") + 3);
+                if (fileIndex != -1 && path.Length > fileIndex + 1 && path.Substring(fileIndex, 2) == "//")
+                    path = path.Remove(fileIndex, 1);
 
                 url = new Uri(path);
                 headers["Host"] = url.Authority;

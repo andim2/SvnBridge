@@ -13,6 +13,7 @@ namespace SvnBridge.SourceControl
 
         public string Author;
         public bool DataLoaded = false;
+        public bool OriginallyDeleted = false;
         public string Base64DiffData = null;
         public string Md5Hash = null;
         public Exception DataLoadedError;
@@ -62,13 +63,6 @@ namespace SvnBridge.SourceControl
 		{
 			return Name + " @" + Revision;
 		}
-
-    	public void RemoveFromParent()
-    	{
-    		Guard.ArgumentNotNull(parent, "parent");
-    		parent.Items.Remove(this);
-    		parent = null;
-    	}
 
     	public void SetParent(FolderMetaData parentFolder)
     	{

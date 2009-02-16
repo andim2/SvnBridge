@@ -237,6 +237,9 @@ namespace SvnBridge.SourceControl
                         if (!propertyChange)
                         {
                             folder.Items.Remove(item);
+                            item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
+                            item.OriginallyDeleted = true;
+                            folder.Items.Add(item);
                         }
                     }
                     if (lastNamePart == false)
@@ -312,13 +315,9 @@ namespace SvnBridge.SourceControl
                 if (isLastNamePart)
                 {
                     if (change.Item.ItemType == ItemType.File)
-                    {
                         item = new DeleteMetaData();
-                    }
                     else
-                    {
                         item = new DeleteFolderMetaData();
-                    }
 
                     item.Name = remoteName;
                     item.ItemRevision = change.Item.RemoteChangesetId;
@@ -337,7 +336,19 @@ namespace SvnBridge.SourceControl
             }
             else if (isLastNamePart) // we need to revert the item addition
             {
-                if (item is StubFolderMetaData)
+                if (item.OriginallyDeleted) // convert back into a delete
+                {
+                    folder.Items.Remove(item);
+                    if (change.Item.ItemType == ItemType.File)
+                        item = new DeleteMetaData();
+                    else
+                        item = new DeleteFolderMetaData();
+
+                    item.Name = remoteName;
+                    item.ItemRevision = change.Item.RemoteChangesetId;
+                    folder.Items.Add(item);
+                }
+                else if (item is StubFolderMetaData)
                 {
                     DeleteFolderMetaData removeFolder = new DeleteFolderMetaData();
                     removeFolder.Name = item.Name;

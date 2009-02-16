@@ -143,9 +143,7 @@ namespace ProtocolTests
         public void Test4()
         {
             stubs.Attach(provider.ItemExists, true);
-            FolderMetaData folder = new FolderMetaData();
-            folder.Name = "";
-            stubs.Attach(provider.GetItems, folder);
+            stubs.Attach(provider.GetItems, CreateFolder(""));
 
             string request =
                 "PROPFIND / HTTP/1.1\r\n" +

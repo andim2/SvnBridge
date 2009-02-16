@@ -108,6 +108,7 @@
     <Compile Include="Update\UpdateOneFileTest.cs" />
     <Compile Include="Update\UpdateWithDeletedFileTest.cs" />
     <Compile Include="Update\UpdateWithDeletedFolderTest.cs" />
+    <Compile Include="Update\UpdateWithDeletedFolderThenAddedAgainTest.cs" />
     <Compile Include="Update\UpdateWithModifiedFileAfterCommitModifiedFile.cs" />
     <Compile Include="Update\UpdateWithNewFileTest.cs" />
     <Compile Include="Update\UpdateWithNewProperty.cs" />

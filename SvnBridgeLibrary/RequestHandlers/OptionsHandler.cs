@@ -17,6 +17,13 @@ namespace SvnBridge.Handlers
             IHttpResponse response = context.Response;
             string path = GetPath(request);
 
+            response.AppendHeader("DAV", "1,2");
+            response.AppendHeader("DAV", "version-control,checkout,working-resource");
+            response.AppendHeader("DAV", "merge,baseline,activity,version-controlled-collection");
+            response.AppendHeader("MS-Author-Via", "DAV");
+            response.AppendHeader("Allow", "OPTIONS,GET,HEAD,POST,DELETE,TRACE,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,CHECKOUT");
+            sourceControlProvider.ItemExists(Helper.Decode(path)); // Verify permissions to access
+
             OptionsData data = null;
             if (request.InputStream.Length != 0)
             {
@@ -29,19 +36,11 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                if (context.Request.Headers["Content-Type"] != "text/xml" &&
-                    context.Request.Headers["Accept-Encoding"] == "gzip")
+                if (path == "/")
                     SetResponseSettings(response, "httpd/unix-directory", Encoding.UTF8, 200);
                 else
                     SetResponseSettings(response, "text/plain", Encoding.UTF8, 200);
             }
-
-            response.AppendHeader("DAV", "1,2");
-            response.AppendHeader("DAV", "version-control,checkout,working-resource");
-            response.AppendHeader("DAV", "merge,baseline,activity,version-controlled-collection");
-            response.AppendHeader("MS-Author-Via", "DAV");
-            response.AppendHeader("Allow", "OPTIONS,GET,HEAD,POST,DELETE,TRACE,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,CHECKOUT");
-            sourceControlProvider.ItemExists(Helper.Decode(path)); // Verify permissions to access
 
             if (data != null)
             {

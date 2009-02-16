@@ -128,8 +128,9 @@
     <Compile Include="SourceControl\Dto\ItemProperties.cs" />
     <Compile Include="SourceControl\Dto\Properties.cs" />
     <Compile Include="SourceControl\Dto\Property.cs" />
+    <Compile Include="SourceControl\ItemMetaData\FolderMetaData.cs" />
     <Compile Include="SourceControl\FutureInvocationException.cs" />
-    <Compile Include="SourceControl\MissingItemMetaData.cs" />
+    <Compile Include="SourceControl\ItemMetaData\MissingItemMetaData.cs" />
     <Compile Include="SourceControl\ProjectLocationInformation.cs" />
     <Compile Include="Net\ListenerContext.cs" />
     <Compile Include="Net\HttpContextDispatcher.cs" />
@@ -177,15 +178,14 @@
     <Compile Include="Protocol\UpdateReportData.cs" />
     <Compile Include="Protocol\UpdateReportResponseData.cs" />
     <Compile Include="SourceControl\CredentialsHelper.cs" />
-    <Compile Include="SourceControl\DeleteFolderMetaData.cs" />
-    <Compile Include="SourceControl\DeleteMetaData.cs" />
-    <Compile Include="SourceControl\FolderMetaData.cs" />
-    <Compile Include="SourceControl\ItemMetaData.cs" />
+    <Compile Include="SourceControl\ItemMetaData\DeleteFolderMetaData.cs" />
+    <Compile Include="SourceControl\ItemMetaData\DeleteMetaData.cs" />
+    <Compile Include="SourceControl\ItemMetaData\ItemMetaData.cs" />
     <Compile Include="SourceControl\MergeActivityResponse.cs" />
     <Compile Include="SourceControl\MergeActivityResponseItem.cs" />
     <Compile Include="SourceControl\Recursion.cs" />
     <Compile Include="SourceControl\RenamedSourceItem.cs" />
-    <Compile Include="SourceControl\StubFolderMetaData.cs" />
+    <Compile Include="SourceControl\ItemMetaData\StubFolderMetaData.cs" />
     <Compile Include="SourceControl\TFSSourceControlService.cs" />
     <Compile Include="SourceControl\TFSSourceControlProvider.cs">
       <SubType>Code</SubType>
