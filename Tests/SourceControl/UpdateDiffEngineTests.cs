@@ -237,6 +237,19 @@ namespace UnitTests
             AssertFolder(root, "project", 0, 0);
         }
 
+        [Fact]
+        public void DeleteFileThenUnDeleteFile()
+        {
+            ItemMetaData item = CreateItem("project/file.txt", 1);
+            stub.Attach(sourceControlProvider.GetItems, Return.Value(item));
+
+            engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
+            engine.Add(CreateChange(ChangeType.Undelete | ChangeType.Edit, "project/file.txt", ItemType.File));
+
+            AssertFolder(root, "project", 0, 1);
+            AssertItem(root.Items[0], "project/file.txt", 1);
+        }
+
         private void AssertFolder(object folder, string name, int changeset, int itemCount)
         {
             Assert.IsType<FolderMetaData>(folder);

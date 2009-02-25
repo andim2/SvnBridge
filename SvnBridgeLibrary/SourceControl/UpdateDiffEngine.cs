@@ -231,8 +231,7 @@ namespace SvnBridge.SourceControl
                     {
                         return;
                     }
-                    else if (((item is DeleteFolderMetaData) || (item is DeleteMetaData)) &&
-                             ((change.ChangeType & ChangeType.Add) == ChangeType.Add))
+                    else if (((item is DeleteFolderMetaData) || (item is DeleteMetaData)) && IsAddOperation(change))
                     {
                         if (!propertyChange)
                         {
@@ -248,6 +247,13 @@ namespace SvnBridge.SourceControl
                     }
                 }
             }
+        }
+
+        private static bool IsAddOperation(SourceItemChange change)
+        {
+            return ((change.ChangeType & ChangeType.Add) == ChangeType.Add) ||
+                   ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch) ||
+                   ((change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete);
         }
 
         private void SetAdditionForPropertyChangeOnly(ItemMetaData item, bool propertyChange)
