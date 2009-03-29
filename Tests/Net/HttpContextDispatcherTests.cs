@@ -119,12 +119,18 @@ namespace UnitTests
 //            RequestCache.Init();
 //            request.ApplicationPath = "/svn";
 //            request.HttpMethod = "REPORT";
-//            request.Path = "http://bigvisiblecruise.redmond.corp.microsoft.com/svn/!svn/vcc/default";
+//            request.Path = "https://bigvisiblecruise.redmond.corp.microsoft.com/svn/!svn/vcc/default";
 //            request.Input =
 //                //"<?xml version=\"1.0\" encoding=\"utf-16\"?>" +
 //"<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\">" +
-//"  <entry rev=\"8902\" start-empty=\"false\" />" +
+//"  <entry rev=\"11158\" start-empty=\"true\" />" +
+//"  <entry rev=\"8902\" start-empty=\"false\">artifacts</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">License.txt</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">images</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">install</entry>" +
 //"  <entry rev=\"8904\" start-empty=\"false\">install/vs/BigVisibleCruise2Installer.vdproj</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">lib</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">src</entry>" +
 //"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/Services/HttpWebClient.cs</entry>" +
 //"  <entry rev=\"8924\" start-empty=\"false\">src/BigVisibleCruise/app.config</entry>" +
 //"  <entry rev=\"8904\" start-empty=\"false\">src/BigVisibleCruise/DummyProjectStatus.xml</entry>" +
@@ -139,12 +145,14 @@ namespace UnitTests
 //"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise/BigVisibleCruise2.csproj</entry>" +
 //"  <entry rev=\"8921\" start-empty=\"false\">src/BigVisibleCruise.Tests/Converters/ImageWidthConverter_Tests.cs</entry>" +
 //"  <entry rev=\"8904\" start-empty=\"false\">src/BigVisibleCruise.Tests/Converters/OneBreakerConverter_Tests.cs</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">BigVisibleCruise2.sln</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">ReleaseNotes.txt</entry>" +
+//"  <entry rev=\"8902\" start-empty=\"false\">ReadMe.txt</entry>" +
 //"  <missing>src/BigVisibleCruise/Converters/ImageBorderColorConverter.cs</missing>" +
 //"  <missing>src/BigVisibleCruise/Converters/ImageWidthConverter.cs</missing>" +
 //"  <missing>src/BigVisibleCruise/Images/Check.png</missing>" +
 //"  <missing>src/BigVisibleCruise/Images/Stop.png</missing>" +
 //"  <src-path>https://BigVisibleCruise.svn.codeplex.com/svn</src-path>" +
-//"  <target-revision>11158</target-revision>" +
 //"</update-report>";
 //            dispatcher.Dispatch(context);
 
@@ -167,6 +175,23 @@ namespace UnitTests
             
             Assert.Equal(@"username_cp", dispatcher.Handler.Handle_credentials.UserName);
             Assert.Equal(@"snd", dispatcher.Handler.Handle_credentials.Domain);
+        }
+
+        [Fact]
+        public void Dispatch_ProjectNotFound_Return404Response()
+        {
+            TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
+            dispatcher.Parser.GetServerUrl_Return = null;
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            StubHttpResponse response = new StubHttpResponse();
+            context.Request = request;
+            context.Response = response;
+            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+
+            dispatcher.Dispatch(context);
+
+            Assert.Equal(404, context.Response.StatusCode);
         }
 
         [Fact]
@@ -222,7 +247,12 @@ namespace UnitTests
     {
         public StubHandler Handler = new StubHandler();
 
-        public TestableHttpContextDispatcher() : base(new StubParser(), new StubActionTracking()) { }
+        public TestableHttpContextDispatcher() : base(new StubParser(), new StubActionTracking()) {}
+
+        public StubParser Parser
+        {
+            get { return (StubParser)parser; }
+        }
 
         public override RequestHandlerBase GetHandler(string httpMethod)
         {
@@ -242,9 +272,11 @@ namespace UnitTests
 
     public class StubParser : IPathParser
     {
+        public string GetServerUrl_Return = "https://tfs01.codeplex.com";
+
         public string GetServerUrl(IHttpRequest request, ICredentials credentials)
         {
-            return "https://tfs01.codeplex.com";
+            return GetServerUrl_Return;
         }
 
         public string GetLocalPath(IHttpRequest request)

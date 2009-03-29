@@ -11,7 +11,7 @@ namespace UnitTests
         private readonly List<KeyValuePair<string, string>> headers;
         private Encoding contentEncoding;
         private string contentType;
-        private Stream outputStream;
+        private Stream outputStream = new MemoryStream();
         private bool sendChunked;
         private int statusCode;
         private bool bufferOutput;

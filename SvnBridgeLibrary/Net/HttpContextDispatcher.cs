@@ -16,8 +16,8 @@ namespace SvnBridge.Net
 {
     public class HttpContextDispatcher
     {
-        private readonly IPathParser parser;
-        private readonly ActionTrackingViaPerfCounter actionTracking;
+        protected readonly IPathParser parser;
+        protected readonly ActionTrackingViaPerfCounter actionTracking;
 
         public HttpContextDispatcher(IPathParser parser, ActionTrackingViaPerfCounter actionTracking)
         {
@@ -74,7 +74,7 @@ namespace SvnBridge.Net
                 string tfsUrl = parser.GetServerUrl(request, credential);
                 if (string.IsNullOrEmpty(tfsUrl))
                 {
-                    throw new InvalidOperationException("A TFS server URL must be specified before connections can be dispatched.");
+                    SendFileNotFoundResponse(connection);
                 }
 
                 if (credential != null && tfsUrl.ToLowerInvariant().EndsWith("codeplex.com"))
@@ -221,16 +221,12 @@ namespace SvnBridge.Net
         private static void SendUnsupportedMethodResponse(IHttpContext connection)
         {
             IHttpResponse response = connection.Response;
-
             response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-
             response.ContentType = "text/html";
 
-            response.AppendHeader("Allow",
-                                  "PROPFIND, REPORT, OPTIONS, MKACTIVITY, CHECKOUT, PROPPATCH, PUT, MERGE, DELETE, MKCOL");
+            response.AppendHeader("Allow", "PROPFIND, REPORT, OPTIONS, MKACTIVITY, CHECKOUT, PROPPATCH, PUT, MERGE, DELETE, MKCOL");
 
-            string content =
-                @"
+            string content = @"
                 <html>
                     <head>
                         <title>405 Method Not Allowed</title>
@@ -241,7 +237,25 @@ namespace SvnBridge.Net
                 </html>";
 
             byte[] buffer = Encoding.UTF8.GetBytes(content);
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
 
+        protected void SendFileNotFoundResponse(IHttpContext connection)
+        {
+            IHttpResponse response = connection.Response;
+            response.StatusCode = (int)HttpStatusCode.NotFound;
+            response.ContentType = "text/html; charset=iso-8859-1";
+
+            string content =
+                "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
+                "<html><head>\n" +
+                "<title>404 Not Found</title>\n" +
+                "</head><body>\n" +
+                "<h1>Not Found</h1>\n" +
+                "<hr>\n" +
+                "</body></html>\n";
+
+            byte[] buffer = Encoding.UTF8.GetBytes(content);
             response.OutputStream.Write(buffer, 0, buffer.Length);
         }
     }

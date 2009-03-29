@@ -15,10 +15,10 @@ namespace IntegrationTests
         {
             PathParserProjectInDomainCodePlex pathParser = new PathParserProjectInDomainCodePlex();
             StubHttpRequest request = new StubHttpRequest();
-            request.Headers["Host"] = "subsonic.svn.codeplex.com";
+            request.Headers["Host"] = "ajaxcontroltoolkit.svn.codeplex.com";
             string result = pathParser.GetProjectName(request);
 
-            Assert.Equal("actionpack", result);
+            Assert.Equal("AtlasControlToolkit", result);
         }
 
         [Fact]
@@ -30,6 +30,17 @@ namespace IntegrationTests
             string result = pathParser.GetServerUrl(request, null);
 
             Assert.Equal("https://tfs03.codeplex.com", result);
+        }
+
+        [Fact]
+        public void GetServerUrl_ProjectDoesNotExist_ReturnsNull()
+        {
+            PathParserProjectInDomainCodePlex pathParser = new PathParserProjectInDomainCodePlex();
+            StubHttpRequest request = new StubHttpRequest();
+            request.Headers["Host"] = "doesnotexist.svn.codeplex.com";
+            string result = pathParser.GetProjectName(request);
+
+            Assert.Null(result);
         }
     }
 }

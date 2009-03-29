@@ -4,6 +4,7 @@ using System.Threading;
 using SvnBridge.CodePlexWebServices;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
+using System;
 
 namespace SvnBridge.PathParsing
 {
@@ -36,7 +37,20 @@ namespace SvnBridge.PathParsing
                     try
                     {
                         var service = new ProjectInfoService();
-                        ProjectTfsInfo info = service.GetTfsInfoForProject(projectName);
+                        ProjectTfsInfo info;
+                        try
+                        {
+                            info = service.GetTfsInfoForProject(projectName);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex.Message.Contains("Unknown project name"))
+                            {
+                                return new ProjectLocationInformation(null, null);
+                            }
+                            else
+                                throw;
+                        }
                         string tfsServerUrl = info.TfsServerUrl.Substring(0, info.TfsServerUrl.Length - 5);
                         string tfsProjectName = info.ProjectPrefix.Substring(2, info.ProjectPrefix.Length - 3);
                         projectLocations[projectName] = new ProjectLocationInformation(tfsProjectName, tfsServerUrl);
