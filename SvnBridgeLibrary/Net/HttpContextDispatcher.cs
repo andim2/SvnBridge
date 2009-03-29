@@ -75,6 +75,7 @@ namespace SvnBridge.Net
                 if (string.IsNullOrEmpty(tfsUrl))
                 {
                     SendFileNotFoundResponse(connection);
+                    return;
                 }
 
                 if (credential != null && tfsUrl.ToLowerInvariant().EndsWith("codeplex.com"))
