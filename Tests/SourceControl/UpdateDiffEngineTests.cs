@@ -165,6 +165,29 @@ namespace UnitTests
         }
 
         [Fact]
+        public void DeleteFolderThenAddFolderAgainContainingFile()
+        {
+            ItemMetaData item = new ItemMetaData("project/new folder/file.txt");
+            FolderMetaData folder = new FolderMetaData("project/new folder");
+            stub.Attach(sourceControlProvider.GetItems, Return.DelegateResult(delegate(object[] parameters) {
+                if (((string)parameters[1]) == "project/new folder")
+                    return folder;
+                else if (((string)parameters[1]) == "project/new folder/file.txt")
+                    return item;
+                else
+                    return null;
+            }));
+
+            engine.Delete(CreateChange(ChangeType.Delete, "project/new folder", ItemType.Folder));
+            engine.Add(CreateChange(ChangeType.Add, "project/new folder/file.txt", ItemType.File));
+            engine.Add(CreateChange(ChangeType.Add, "project/new folder", ItemType.Folder));
+
+            AssertFolder(root, "project", 0, 1);
+            AssertFolder(root.Items[0], "project/new folder", 0, 1);
+            AssertItem(((FolderMetaData)root.Items[0]).Items[0], "project/new folder/file.txt", 0);
+        }
+
+        [Fact]
         public void EditFile()
         {
             ItemMetaData item = new ItemMetaData("project/file.txt");

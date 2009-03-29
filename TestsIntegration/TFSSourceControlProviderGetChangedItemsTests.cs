@@ -477,6 +477,27 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFolderThenAddedAgainContaingingFile_ReturnsUpdatedFolderAndFile()
+        {
+            string path = MergePaths(testPath, "/Test Folder");
+            CreateFolder(path, true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            CreateFolder(path, false);
+            WriteFile(path + "/Test.txt", "test", true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.Equal(MergePaths(testPath, "/Test Folder").Substring(1), folder.Items[0].Name);
+            Assert.Equal(_lastCommitRevision, folder.Items[0].Revision);
+            Assert.Equal(1, ((FolderMetaData)folder.Items[0]).Items.Count);
+            Assert.Equal(MergePaths(testPath, "/Test Folder/Test.txt").Substring(1), ((FolderMetaData)folder.Items[0]).Items[0].Name);
+        }
+
+        [IntegrationTestFact]
         public void GetChangedItems_WithDeletedFolderThenAddedThenDeletedAgain()
         {
             string path = MergePaths(testPath, "/Test Folder");

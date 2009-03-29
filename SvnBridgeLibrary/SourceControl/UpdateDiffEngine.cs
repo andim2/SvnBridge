@@ -227,10 +227,6 @@ namespace SvnBridge.SourceControl
                         folder.Items.Remove(item);
                         folder.Items.Add(((StubFolderMetaData)item).RealFolder);
                     }
-                    else if ((item is DeleteFolderMetaData) && !lastNamePart)
-                    {
-                        return;
-                    }
                     else if (((item is DeleteFolderMetaData) || (item is DeleteMetaData)) && IsAddOperation(change))
                     {
                         if (!propertyChange)

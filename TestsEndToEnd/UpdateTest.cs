@@ -741,5 +741,20 @@ namespace EndToEndTests
 
             Assert.True(Directory.Exists("test"));
         }
+
+        [SvnBridgeFact]
+        public void Update_DeleteFolderThenAddFolderAgainContainingFile_ReturnsUpdatedFolderAndFile()
+        {
+            CreateFolder(testPath + "/test", true);
+            CheckoutAndChangeDirectory();
+            DeleteItem(testPath + "/test", true);
+            CreateFolder(testPath + "/test", false);
+            WriteFile(testPath + "/test/test.txt", "data", true);
+
+            Svn("update");
+
+            Assert.True(Directory.Exists("test"));
+            Assert.Equal("data", File.ReadAllText(@"test\test.txt"));
+        }
     }
 }
