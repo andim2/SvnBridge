@@ -134,10 +134,22 @@ namespace SvnBridge.Handlers
 
         private void HandleAllProp(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream outputStream)
         {
-            string revision = requestPath.Split('/')[3];
-            string path = requestPath.Substring("/!svn/vcc".Length + revision.Length);
+            int revision;
+            string path;
+            bool bcPath = false;
+            if (requestPath.StartsWith("/!svn/bc"))
+            {
+                bcPath = true;
+                revision = int.Parse(requestPath.Split('/')[3]);
+                path = requestPath.Substring("/!svn/bc/".Length + revision.ToString().Length);
+            }
+            else
+            {
+                revision = sourceControlProvider.GetItems(-1, requestPath, Recursion.None).Revision;
+                path = requestPath;
+            }
 
-            ItemMetaData item = GetItems(sourceControlProvider, int.Parse(revision), path, Recursion.None, true);
+            ItemMetaData item = GetItems(sourceControlProvider, revision, path, Recursion.None, true);
 
             if (item == null)
             {
@@ -148,7 +160,7 @@ namespace SvnBridge.Handlers
             {
                 if (item.ItemType == ItemType.Folder)
                 {
-                    WriteAllPropForFolder(writer, requestPath, item, sourceControlProvider);
+                    WriteAllPropForFolder(writer, requestPath, item, bcPath, sourceControlProvider);
                 }
                 else
                 {
@@ -157,10 +169,17 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void WriteAllPropForFolder(TextWriter writer, string requestPath, ItemMetaData item, TFSSourceControlProvider sourceControlProvider)
+        private void WriteAllPropForFolder(TextWriter writer, string requestPath, ItemMetaData item, bool bcPath, TFSSourceControlProvider sourceControlProvider)
         {
             writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-            writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
+            if (bcPath)
+            {
+                writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
+            }
+            else
+            {
+                writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns2=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ns1=\"http://www.w3.org/2001/XMLSchema\" xmlns:ns0=\"DAV:\">\n");
+            }
             writer.Write("<D:response xmlns:S=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:C=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:lp1=\"DAV:\" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\">\n");
             writer.Write("<D:href>" + Helper.Encode(requestPath) + "/</D:href>\n");
             writer.Write("<D:propstat>\n");
