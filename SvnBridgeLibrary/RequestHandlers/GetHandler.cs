@@ -78,7 +78,10 @@ namespace SvnBridge.Handlers
             response.AppendHeader("ETag", "\"" + item.ItemRevision + "//" + Helper.EncodeB(item.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
             byte[] itemData = sourceControlProvider.ReadFile(item);
-            response.OutputStream.Write(itemData, 0, itemData.Length);
+            if (itemData.Length > 0) // Write throw exception if zero bytes
+            {
+                response.OutputStream.Write(itemData, 0, itemData.Length);
+            }
         }
 
         private void RenderFolder(IHttpContext context, TFSSourceControlProvider sourceControlProvider, FolderMetaData folder)
