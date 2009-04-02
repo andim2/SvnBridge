@@ -15,9 +15,9 @@ namespace SvnBridge.SourceControl
 	public class TFSSourceControlService : SourceControlService
 	{
         private readonly DefaultLogger logger;
-		private readonly IRepositoryWebSvcFactory webSvcFactory;
+        private readonly IRepositoryWebSvcFactory webSvcFactory;
 
-		public TFSSourceControlService(IRegistrationService registrationService, IRepositoryWebSvcFactory webSvcFactory, IWebTransferService webTransferService, IFileSystem fileSystem, DefaultLogger logger)
+        public TFSSourceControlService(IRegistrationService registrationService, IRepositoryWebSvcFactory webSvcFactory, IWebTransferService webTransferService, IFileSystem fileSystem, DefaultLogger logger)
 			: base(registrationService, webSvcFactory, webTransferService, fileSystem)
 		{
 			this.webSvcFactory = webSvcFactory;
@@ -60,7 +60,25 @@ namespace SvnBridge.SourceControl
             return WrapWebException<ItemSet[]>(delegate
             {
                 Repository webSvc = CreateProxy(tfsUrl, credentials);
-                return webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                ItemSet[] result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                if (result[0].Items.Length == 0)
+                {
+                    // Check if no items returned due to no permissions.  QueryHistory throws exception for bad path.
+                    bool error = false;
+                    try
+                    {
+                        webSvc.QueryHistory(null, null, items[0], version, null, VersionSpec.First, version, 1, false, false, false);
+                    }
+                    catch
+                    {
+                        error = true;
+                    }
+                    if (!error)
+                    {
+                        throw new NetworkAccessDeniedException();
+                    }
+                }
+                return result;
             });
         }
 
