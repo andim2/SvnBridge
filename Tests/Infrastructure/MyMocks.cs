@@ -62,6 +62,7 @@ namespace Tests
         public delegate bool ItemExists(string path, int version);
         public delegate void MakeActivity(string activityId);
         public delegate void MakeCollection(string activityId, string path);
+        public delegate void SetActivityComment(string activityId, string comment);
         public delegate MergeActivityResponse MergeActivity(string activityId);
         public delegate byte[] ReadFile(ItemMetaData item);
         public delegate void ReadFileAsync(ItemMetaData item);
@@ -254,6 +255,11 @@ namespace Tests
         }
 
         public Results Attach(GetLatestVersion method, Return action)
+        {
+            return base.Attach((Delegate)method, action);
+        }
+
+        public Results Attach(SetActivityComment method, Return action)
         {
             return base.Attach((Delegate)method, action);
         }

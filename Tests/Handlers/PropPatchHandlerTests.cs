@@ -7,6 +7,8 @@ using SvnBridge.Infrastructure;
 using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Handlers;
+using System;
+using SvnBridge.Net;
 
 namespace UnitTests
 {
@@ -233,6 +235,18 @@ namespace UnitTests
             Assert.True(
                 result.Contains(
                     "<D:href>//!svn/wrk/208d5649-1590-0247-a7d6-831b1e447dbf/Spikes/SvnFacade/trunk/New%20Folder%2010/banner_top_project.jpg</D:href>"));
+        }
+
+        [Fact]
+        public void Handle_ErrorOccurs_RequestBodyIsSetInRequestCache()
+        {
+            Results r = stubs.Attach(provider.SetActivityComment, Return.Exception(new Exception("Test")));
+            request.Path = "http://localhost:8082//!svn/wbl/c512ecbe-7577-ce46-939c-a9e81eb4d98e/5465";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<D:propertyupdate xmlns:D=\"DAV:\"><D:set><D:prop><log xmlns=\"http://subversion.tigris.org/xmlns/svn/\">Deleted a file</log></D:prop></D:set>\n</D:propertyupdate>\n";
+
+            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+
+            Assert.NotNull(RequestCache.Items["RequestBody"]);
         }
     }
 }

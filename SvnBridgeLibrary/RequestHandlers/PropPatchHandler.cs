@@ -17,23 +17,33 @@ namespace SvnBridge.Handlers
 			IHttpRequest request = context.Request;
 			IHttpResponse response = context.Response;
 
-			string path = GetPath(request);
-			string correctXml;
+            string originalXml;
 			using (StreamReader sr = new StreamReader(request.InputStream))
 			{
-				correctXml = BrokenXml.Escape(sr.ReadToEnd());
+                originalXml = sr.ReadToEnd();
 			}
-            bool extendedNamespaces = false;
-            if (correctXml.Contains("http://subversion.tigris.org/xmlns/custom/"))
-                extendedNamespaces = true;
+            try
+            {
+                string correctXml = BrokenXml.Escape(originalXml);
+                string path = GetPath(request);
 
-			PropertyUpdateData data = Helper.DeserializeXml<PropertyUpdateData>(correctXml);
-			SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
+                bool extendedNamespaces = false;
+                if (correctXml.Contains("http://subversion.tigris.org/xmlns/custom/"))
+                    extendedNamespaces = true;
 
-			using (StreamWriter output = new StreamWriter(response.OutputStream))
-			{
-				PropPatch(sourceControlProvider, data, extendedNamespaces,path, output);
-			}
+                PropertyUpdateData data = Helper.DeserializeXml<PropertyUpdateData>(correctXml);
+                SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
+
+                using (StreamWriter output = new StreamWriter(response.OutputStream))
+                {
+                    PropPatch(sourceControlProvider, data, extendedNamespaces, path, output);
+                }
+            }
+            catch
+            {
+                RequestCache.Items["RequestBody"] = originalXml;
+                throw;
+            }
 		}
 
         private void PropPatch(TFSSourceControlProvider sourceControlProvider, PropertyUpdateData request, bool extendedNamespaces, string path, TextWriter output)
