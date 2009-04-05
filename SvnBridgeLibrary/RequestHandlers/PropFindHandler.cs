@@ -21,16 +21,14 @@ namespace SvnBridge.Handlers
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
-
-            string requestPath = GetPath(request);
-
             PropFindData propfind = Helper.DeserializeXml<PropFindData>(request.InputStream);
-
-            string depthHeader = request.Headers["Depth"];
-            string labelHeader = request.Headers["Label"];
 
             try
             {
+                string requestPath = GetPath(request);
+                string depthHeader = request.Headers["Depth"];
+                string labelHeader = request.Headers["Label"];
+
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
                 if (request.Headers["Label"] != null)

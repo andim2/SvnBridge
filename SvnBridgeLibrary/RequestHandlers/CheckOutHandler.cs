@@ -10,18 +10,16 @@ namespace SvnBridge.Handlers
 {
 	public class CheckOutHandler : RequestHandlerBase
 	{
-		protected override void Handle(IHttpContext context,
-                                       TFSSourceControlProvider sourceControlProvider)
+		protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
 		{
 			IHttpRequest request = context.Request;
 			IHttpResponse response = context.Response;
-
-			string path = GetPath(request);
-        	CheckoutData data = Helper.DeserializeXml<CheckoutData>(request.InputStream);
+            CheckoutData data = Helper.DeserializeXml<CheckoutData>(request.InputStream);
 
 			try
 			{
-				string location = CheckOut(sourceControlProvider, data, path);
+                string path = GetPath(request);
+                string location = CheckOut(sourceControlProvider, data, path);
 				SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
 				response.AppendHeader("Cache-Control", "no-cache");
 				string locationUrl = "http://" + request.Headers["Host"] + Helper.EncodeC(location);
@@ -52,7 +50,12 @@ namespace SvnBridge.Handlers
 					"</D:error>\n";
 				WriteToResponse(response, responseContent);
 			}
-		}
+            catch
+            {
+                RequestCache.Items["RequestBody"] = data;
+                throw;
+            }
+        }
 
 		private string CheckOut(TFSSourceControlProvider sourceControlProvider, CheckoutData request, string path)
 		{
