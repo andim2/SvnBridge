@@ -326,14 +326,10 @@ namespace SvnBridge.Handlers
 
                         output.Write(@"<S:file-rev path=""" + change.Item.RemoteName + @""" rev=""" +
                                      change.Item.RemoteChangesetId + @""">
-<S:rev-prop name=""svn:log"">" +
-                                     history.Comment + @"</S:rev-prop>
-<S:rev-prop name=""svn:author"">" +
-                                     history.Username + @"</S:rev-prop>
-<S:rev-prop name=""svn:date"">" +
-                                     Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
-<S:txdelta>" +
-                                     Convert.ToBase64String(svnDiffData) +
+<S:rev-prop name=""svn:log"">" + history.Comment + @"</S:rev-prop>
+<S:rev-prop name=""svn:author"">" + history.Username + @"</S:rev-prop>
+<S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
+<S:txdelta>" + Convert.ToBase64String(svnDiffData) +
                                      @"</S:txdelta></S:file-rev>");
                     }
                 }
@@ -350,8 +346,7 @@ namespace SvnBridge.Handlers
 <D:error xmlns:D=""DAV:"" xmlns:m=""http://apache.org/dav/xmlns"" xmlns:C=""svn:"">
 <C:error/>
 <m:human-readable errcode=""160017"">
-'" +
-                            serverPath + @"' is not a file
+'" + serverPath + @"' is not a file
 </m:human-readable>
 </D:error>");
         }
@@ -479,19 +474,18 @@ namespace SvnBridge.Handlers
 
                 foreach (SourceItemChange change in history.Changes)
                 {
-                    if ((change.ChangeType & ChangeType.Add) == ChangeType.Add)
+                    if ((change.ChangeType & ChangeType.Add) == ChangeType.Add ||
+                        (change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete)
                     {
                         output.Write("<S:added-path>/" + Helper.EncodeB(change.Item.RemoteName) + "</S:added-path>\n");
                     }
                     else if ((change.ChangeType & ChangeType.Edit) == ChangeType.Edit)
                     {
-                        output.Write("<S:modified-path>/" + Helper.EncodeB(change.Item.RemoteName) +
-                                     "</S:modified-path>\n");
+                        output.Write("<S:modified-path>/" + Helper.EncodeB(change.Item.RemoteName) + "</S:modified-path>\n");
                     }
                     else if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
                     {
-                        output.Write("<S:deleted-path>/" + Helper.EncodeB(change.Item.RemoteName) +
-                                     "</S:deleted-path>\n");
+                        output.Write("<S:deleted-path>/" + Helper.EncodeB(change.Item.RemoteName) + "</S:deleted-path>\n");
                     }
                     else if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
                     {

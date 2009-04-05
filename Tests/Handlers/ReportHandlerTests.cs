@@ -9,6 +9,8 @@ using SvnBridge.Net;
 using SvnBridge.Handlers;
 using SvnBridge.PathParsing;
 using Tests;
+using CodePlex.TfsLibrary.ObjectModel;
+using CodePlex.TfsLibrary.RepositoryWebSvc;
 
 namespace UnitTests
 {
@@ -49,6 +51,25 @@ namespace UnitTests
             Assert.Equal(501, response.StatusCode);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.Equal("close", response.GetHeader("Connection"));
+        }
+
+        [Fact]
+        public void Handle_LogReportWithUndelete_ReturnsAddedPath()
+        {
+            LogItem logitem = new LogItem();
+            logitem.History = new SourceItemHistory[] { new SourceItemHistory() };
+            logitem.History[0].Changes = new List<SourceItemChange>();
+            SourceItemChange change = new SourceItemChange(new SourceItem(), ChangeType.Undelete);
+            change.Item.RemoteName = "filename";
+            logitem.History[0].Changes.Add(change);
+
+            stubs.Attach(provider.GetLog, Return.Value(logitem));
+            request.Path = "http://localhost:8082/!svn/bc/5532/newFolder4";
+            request.Input = "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5532</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:path></S:path></S:log-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
+
+            Assert.True(response.Output.Contains("<S:added-path>/filename</S:added-path>"));
         }
 
         [Fact]
