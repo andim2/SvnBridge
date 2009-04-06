@@ -65,10 +65,20 @@ namespace SvnBridge.Handlers
 				return GetLocalPath("//!svn/wbl/" + activityId + path.Substring(9));
 
 			int revisionStart = path.IndexOf("/ver/") + 5;
-			int revisionEnd = path.IndexOf('/', revisionStart + 1);
-			string itemPath = path.Substring(revisionEnd);
+            int version;
+            string itemPath;
+            if (path.IndexOf('/', revisionStart + 1) != -1)
+            {
+                int revisionEnd = path.IndexOf('/', revisionStart + 1);
+                version = int.Parse(path.Substring(revisionStart, revisionEnd - revisionStart));
+                itemPath = path.Substring(revisionEnd);
+            }
+            else
+            {
+                version = int.Parse(path.Substring(revisionStart));
+                itemPath = "/";
+            }
        
-			int version = int.Parse(path.Substring(revisionStart, revisionEnd - revisionStart));
 		    itemPath = itemPath.Replace("//", "/");
 			string location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
 		

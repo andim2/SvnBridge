@@ -62,5 +62,17 @@ namespace UnitTests
 
             Assert.NotNull(RequestCache.Items["RequestBody"]);
         }
+
+        [Fact]
+        public void Handle_PathIsRoot_NoError()
+        {
+            ItemMetaData item = new ItemMetaData();
+            item.ItemRevision = 0;
+            Results r = stubs.Attach(provider.GetItems, item);
+            request.Path = "http://localhost:8084/!svn/ver/5718";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+        }
     }
 }
