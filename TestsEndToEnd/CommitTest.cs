@@ -10,7 +10,7 @@ namespace EndToEndTests
     public class CommitTest : EndToEndTestBase
     {
         [SvnBridgeFact]
-        public void CanCommitNewFile()
+        public void Commit_NewFile()
         {
             CheckoutAndChangeDirectory();
             File.WriteAllText("test.txt", "hab");
@@ -22,7 +22,7 @@ namespace EndToEndTests
         }
 
         [SvnBridgeFact]
-        public void CanCommitBigFile()
+        public void Commit_BigFile()
         {
             CheckoutAndChangeDirectory();
             GenerateFile();
@@ -38,7 +38,7 @@ namespace EndToEndTests
         }
 
 		[SvnBridgeFact]
-		public void CanCopyFile()
+        public void Commit_CopyFile()
 		{
 			CheckoutAndChangeDirectory();
 			File.WriteAllText("test.txt", "blah");
@@ -49,7 +49,7 @@ namespace EndToEndTests
 		}
 
 		[SvnBridgeFact]
-		public void CanRenameFile()
+        public void Commit_RenameFile()
 		{
 			CheckoutAndChangeDirectory();
 			File.WriteAllText("test.txt", "blah");
@@ -59,8 +59,25 @@ namespace EndToEndTests
 			Svn("commit -m copy");
 		}
 
+        [SvnBridgeFact]
+        public void Commit_RenameFolder()
+        {
+            CreateFolder(testPath + "/test", true);
+            CheckoutAndChangeDirectory();
+            Svn("ren test test2");
+
+            Svn("commit -m rename");
+
+            FolderMetaData items = (FolderMetaData)_provider.GetItems(_provider.GetLatestVersion(), testPath, Recursion.Full);
+            Assert.Equal(1, items.Items.Count);
+            Assert.IsType(typeof(FolderMetaData), items.Items[0]);
+            Assert.Equal(MergePaths(testPath, "/test2").Substring(1), items.Items[0].Name);
+            LogItem log = _provider.GetLog(testPath + "/test2", 1, _provider.GetLatestVersion(), Recursion.None, 1);
+            Assert.Equal(ChangeType.Rename, log.History[0].Changes[0].ChangeType);
+        }
+
 		[SvnBridgeFact]
-		public void CanRenameAndEditFile()
+        public void Commit_RenameAndEditFile()
 		{
 			CheckoutAndChangeDirectory();
 			File.WriteAllText("test.txt", "blah");
@@ -72,7 +89,7 @@ namespace EndToEndTests
 		}
 
 		[SvnBridgeFact]
-		public void CanEditAndRenameFile()
+        public void Commit_EditAndRenameFile()
 		{
 			CheckoutAndChangeDirectory();
 			File.WriteAllText("test.txt", "blah");
@@ -85,7 +102,7 @@ namespace EndToEndTests
 		}
 
 		[SvnBridgeFact]
-		public void CanCopyThenDeleteFile()
+        public void Commit_CopyThenDeleteFile()
 		{
 			CheckoutAndChangeDirectory();
 			File.WriteAllText("test.txt", "blah");
@@ -97,7 +114,7 @@ namespace EndToEndTests
 		}
 
 		[SvnBridgeFact]
-		public void CanCopyEditThenDeleteFile()
+        public void Commit_CopyEditThenDeleteFile()
 		{
 			CheckoutAndChangeDirectory();
 			File.WriteAllText("test.txt", "blah");
@@ -110,7 +127,7 @@ namespace EndToEndTests
 		}
 
         [SvnBridgeFact]
-        public void CanRenameFileThenRenameAnotherFileToOriginalNameOfFirstFile()
+        public void Commit_RenameFileThenRenameAnotherFileToOriginalNameOfFirstFile()
         {
             WriteFile(MergePaths(testPath, "/test1.txt"), "test1", false);
             WriteFile(MergePaths(testPath, "/test2.txt"), "test2", true);
@@ -137,7 +154,7 @@ namespace EndToEndTests
         }
 
         [SvnBridgeFact(Skip="Not fixed yet")]
-        public void CanRenameFilesToSwapNames()
+        public void Commit_RenameFilesToSwapNames()
         {
             WriteFile(MergePaths(testPath, "/test1.txt"), "test1", false);
             WriteFile(MergePaths(testPath, "/test2.txt"), "test2", true);
