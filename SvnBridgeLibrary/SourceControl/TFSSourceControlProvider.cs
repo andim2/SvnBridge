@@ -251,6 +251,8 @@ namespace SvnBridge.SourceControl
             foreach (SourceItemHistory history in logItem.History)
             {
                 List<SourceItem> renamedItems = new List<SourceItem>();
+                List<SourceItem> branchedItems = new List<SourceItem>();
+
                 foreach (SourceItemChange change in history.Changes)
                 {
                     if (change.Item.RemoteName.Length > rootPath.Length)
@@ -264,24 +266,7 @@ namespace SvnBridge.SourceControl
                     }
                     else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
                     {
-                        ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
-                        branchChangeset.cs = history.ChangeSetID;
-                        ItemSpec spec = new ItemSpec();
-                        spec.item = Helper.CombinePath(rootPath, change.Item.RemoteName);
-                        BranchRelative[][] branches =
-                            sourceControlService.QueryBranches(serverUrl,
-                                                               credentials,
-                                                               null,
-                                                               new ItemSpec[] { spec },
-                                                               branchChangeset);
-                        if (branches[0].Length == 0)
-                        {
-                            // it is a branch without a source ...
-                            continue;
-                        }
-                        string oldName = branches[0][branches[0].GetUpperBound(0)].BranchFromItem.item.Substring(rootPath.Length);
-                        int oldRevision = change.Item.RemoteChangesetId - 1;
-                        change.Item = new RenamedSourceItem(change.Item, oldName, oldRevision);
+                        branchedItems.Add(change.Item);
                     }
                 }
                 if (renamedItems.Count > 0)
@@ -299,6 +284,32 @@ namespace SvnBridge.SourceControl
                         if (oldItemsByKey.TryGetValue(change.Item.ItemId, out oldItem))
                         {
                             change.Item = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
+                        }
+                    }
+                }
+                if (branchedItems.Count > 0)
+                {
+                    foreach (SourceItem item in branchedItems)
+                    {
+                        ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
+                        branchChangeset.cs = history.ChangeSetID;
+                        ItemSpec spec = new ItemSpec();
+                        spec.item = Helper.CombinePath(rootPath, item.RemoteName);
+                        BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, new ItemSpec[] { spec }, branchChangeset);
+                        if (branches[0].Length == 0)
+                        {
+                            // it is a branch without a source ...
+                            continue;
+                        }
+                        string oldName = branches[0][branches[0].GetUpperBound(0)].BranchFromItem.item.Substring(rootPath.Length);
+                        int oldRevision = item.RemoteChangesetId - 1;
+
+                        foreach (SourceItemChange change in history.Changes)
+                        {
+                            if (change.Item.ItemId == item.ItemId)
+                            {
+                                change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                            }
                         }
                     }
                 }
