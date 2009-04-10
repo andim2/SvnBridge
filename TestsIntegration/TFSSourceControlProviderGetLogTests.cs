@@ -51,6 +51,26 @@ namespace IntegrationTests
 			Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
 		}
 
+        [IntegrationTestFact]
+        public void GetLog_WithTwoBranchedFiles_ContainsOriginalNameAndRevisionForBoth()
+        {
+            WriteFile(MergePaths(testPath, "/TestFile1.txt"), "Fun1", false);
+            WriteFile(MergePaths(testPath, "/TestFile2.txt"), "Fun2", true);
+            int versionFrom = _lastCommitRevision;
+            CopyItem(MergePaths(testPath, "/TestFile1.txt"), MergePaths(testPath, "/TestFile1Branch.txt"), false);
+            CopyItem(MergePaths(testPath, "/TestFile2.txt"), MergePaths(testPath, "/TestFile2Branch.txt"), true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionTo, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(ChangeType.Branch, logItem.History[0].Changes[0].ChangeType & ChangeType.Branch);
+            Assert.Equal(ChangeType.Branch, logItem.History[0].Changes[1].ChangeType & ChangeType.Branch);
+            Assert.Equal(MergePaths(testPath, "/TestFile1.txt").Substring(1), ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRemoteName);
+            Assert.Equal(MergePaths(testPath, "/TestFile2.txt").Substring(1), ((RenamedSourceItem)logItem.History[0].Changes[1].Item).OriginalRemoteName);
+            Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
+            Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[1].Item).OriginalRevision);
+        }
+
 		[IntegrationTestFact]
 		public void GetLog_WithBranchedFileContainsOriginalVersionAsRevisionImmediatelyBeforeBranch()
 		{

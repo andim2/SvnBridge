@@ -289,26 +289,39 @@ namespace SvnBridge.SourceControl
                 }
                 if (branchedItems.Count > 0)
                 {
+                    List<ItemSpec> items = new List<ItemSpec>();
                     foreach (SourceItem item in branchedItems)
                     {
-                        ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
-                        branchChangeset.cs = history.ChangeSetID;
                         ItemSpec spec = new ItemSpec();
                         spec.item = Helper.CombinePath(rootPath, item.RemoteName);
-                        BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, new ItemSpec[] { spec }, branchChangeset);
-                        if (branches[0].Length == 0)
-                        {
-                            // it is a branch without a source ...
-                            continue;
-                        }
-                        string oldName = branches[0][branches[0].GetUpperBound(0)].BranchFromItem.item.Substring(rootPath.Length);
-                        int oldRevision = item.RemoteChangesetId - 1;
+                        items.Add(spec);
+                    }
 
-                        foreach (SourceItemChange change in history.Changes)
+                    ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
+                    branchChangeset.cs = history.ChangeSetID;
+                    BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, items.ToArray(), branchChangeset);
+
+                    foreach (BranchRelative[] branch in branches)
+                    {
+                        //if (branch.Length == 0)
+                        //{
+                        //    // it is a branch without a source ...
+                        //    continue;
+                        //}
+                        foreach (SourceItem item in branchedItems)
                         {
-                            if (change.Item.ItemId == item.ItemId)
+                            BranchRelative branchItem = branch[branch.GetUpperBound(0)];
+                            if (item.ItemId == branchItem.BranchToItem.itemid)
                             {
-                                change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                                foreach (SourceItemChange change in history.Changes)
+                                {
+                                    if (change.Item.ItemId == item.ItemId)
+                                    {
+                                        string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
+                                        int oldRevision = item.RemoteChangesetId - 1;
+                                        change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                                    }
+                                }
                             }
                         }
                     }
