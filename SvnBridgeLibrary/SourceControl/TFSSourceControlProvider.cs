@@ -413,8 +413,7 @@ namespace SvnBridge.SourceControl
 
         private void ClearExistingTempWorkspaces(bool skipExistingActivities)
         {
-            WorkspaceInfo[] workspaces = sourceControlService.GetWorkspaces(serverUrl, credentials,
-                                                                            WorkspaceComputers.ThisComputer);
+            WorkspaceInfo[] workspaces = sourceControlService.GetWorkspaces(serverUrl, credentials, WorkspaceComputers.ThisComputer);
             foreach (WorkspaceInfo workspace in workspaces)
             {
                 if (workspace.Comment != Constants.WorkspaceComment)

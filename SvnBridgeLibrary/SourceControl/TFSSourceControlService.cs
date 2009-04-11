@@ -24,6 +24,21 @@ namespace SvnBridge.SourceControl
 			this.logger = logger;
 		}
 
+        public override WorkspaceInfo[] GetWorkspaces(string tfsUrl, ICredentials credentials, WorkspaceComputers computers)
+        {
+            try
+            {
+                return base.GetWorkspaces(tfsUrl, credentials, computers);
+            }
+            catch (Exception e)
+            {
+                if (e.Message.StartsWith("TF14002:")) // The identity is not a member of the Team Foundation Valid Users group.
+                    throw new NetworkAccessDeniedException(e);
+
+                throw;
+            }
+        }
+
 		public ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType)
 		{
             return WrapWebException<ExtendedItem[][]>(delegate
