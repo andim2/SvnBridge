@@ -804,5 +804,18 @@ namespace IntegrationTests
             Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), folder.Items[0].Name);
             Assert.Equal(versionTo, folder.Items[0].ItemRevision);
         }
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithAddedFilePropertyForFileThatDoesNotExist_ReturnsNothing()
+        {
+            int versionFrom = _lastCommitRevision;
+            SetProperty(MergePaths(testPath, "/Test1.txt"), "prop1", "prop1value", true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(0, folder.Items.Count);
+        }
     }
 }

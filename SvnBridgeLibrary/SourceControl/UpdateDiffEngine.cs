@@ -206,6 +206,10 @@ namespace SvnBridge.SourceControl
                             {
                                 return;
                             }
+                            if (lastNamePart && propertyChange)
+                            {
+                                return;
+                            }
                             item = new MissingItemMetaData(itemName, _targetVersion, edit);
                         }
                         if (!lastNamePart)
