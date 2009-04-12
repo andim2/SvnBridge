@@ -71,6 +71,27 @@ namespace IntegrationTests
             Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[0].Changes[1].Item).OriginalRevision);
         }
 
+        [IntegrationTestFact]
+        public void GetLog_WhenFileIsBranchedTwice()
+        {
+            WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun", true);
+            int versionFrom = _lastCommitRevision;
+            CopyItem(MergePaths(testPath, "/TestFile.txt"), MergePaths(testPath, "/TestBranch1.txt"), true);
+            CopyItem(MergePaths(testPath, "/TestFile.txt"), MergePaths(testPath, "/TestBranch2.txt"), true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom + 1, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(ChangeType.Branch, logItem.History[1].Changes[0].ChangeType & ChangeType.Branch);
+            Assert.Equal(ChangeType.Branch, logItem.History[0].Changes[0].ChangeType & ChangeType.Branch);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), ((RenamedSourceItem)logItem.History[1].Changes[0].Item).OriginalRemoteName);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRemoteName);
+            Assert.Equal(MergePaths(testPath, "/TestBranch1.txt").Substring(1), logItem.History[1].Changes[0].Item.RemoteName);
+            Assert.Equal(MergePaths(testPath, "/TestBranch2.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+            Assert.Equal(versionFrom, ((RenamedSourceItem)logItem.History[1].Changes[0].Item).OriginalRevision);
+            Assert.Equal(versionFrom + 1, ((RenamedSourceItem)logItem.History[0].Changes[0].Item).OriginalRevision);
+        }
+
 		[IntegrationTestFact]
 		public void GetLog_WithBranchedFileContainsOriginalVersionAsRevisionImmediatelyBeforeBranch()
 		{

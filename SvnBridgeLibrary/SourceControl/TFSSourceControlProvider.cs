@@ -303,23 +303,20 @@ namespace SvnBridge.SourceControl
 
                     foreach (BranchRelative[] branch in branches)
                     {
-                        //if (branch.Length == 0)
-                        //{
-                        //    // it is a branch without a source ...
-                        //    continue;
-                        //}
                         foreach (SourceItem item in branchedItems)
                         {
-                            BranchRelative branchItem = branch[branch.GetUpperBound(0)];
-                            if (item.ItemId == branchItem.BranchToItem.itemid)
+                            foreach (BranchRelative branchItem in branch)
                             {
-                                foreach (SourceItemChange change in history.Changes)
+                                if (item.ItemId == branchItem.BranchToItem.itemid)
                                 {
-                                    if (change.Item.ItemId == item.ItemId)
+                                    foreach (SourceItemChange change in history.Changes)
                                     {
-                                        string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
-                                        int oldRevision = item.RemoteChangesetId - 1;
-                                        change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                                        if (change.Item.ItemId == item.ItemId)
+                                        {
+                                            string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
+                                            int oldRevision = item.RemoteChangesetId - 1;
+                                            change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                                        }
                                     }
                                 }
                             }
