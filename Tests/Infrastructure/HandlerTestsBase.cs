@@ -36,7 +36,7 @@ namespace UnitTests
             RequestCache.Init();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Clock.FrozenCurrentTime = null;
             Container.Reset();

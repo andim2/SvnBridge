@@ -77,6 +77,7 @@ namespace Tests
         public delegate ProjectLocationInformation GetProjectLocation(string projectName);
         public delegate void Cancel();
         public delegate void DeleteActivity(string activityId);
+        public delegate void ErrorFullDetails(Exception exception, IHttpContext context);
 
         public Results Attach(DeleteItem method, bool returnValue)
         {
@@ -260,6 +261,11 @@ namespace Tests
         }
 
         public Results Attach(SetActivityComment method, Return action)
+        {
+            return base.Attach((Delegate)method, action);
+        }
+
+        public Results Attach(ErrorFullDetails method, Return action)
         {
             return base.Attach((Delegate)method, action);
         }

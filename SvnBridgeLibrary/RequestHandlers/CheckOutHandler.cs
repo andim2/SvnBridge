@@ -5,6 +5,7 @@ using SvnBridge.Net;
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
+using SvnBridge.Infrastructure;
 
 namespace SvnBridge.Handlers
 {
@@ -37,9 +38,13 @@ namespace SvnBridge.Handlers
 					"</body></html>\n";
 				WriteToResponse(response, responseContent);
 			}
-			catch (ConflictException)
+			catch (ConflictException ex)
 			{
-				SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 409);
+                RequestCache.Items["RequestBody"] = data;
+                DefaultLogger logger = Container.Resolve<DefaultLogger>();
+                logger.ErrorFullDetails(ex, context);
+                
+                SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 409);
 				string responseContent =
 					"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
 					"<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +

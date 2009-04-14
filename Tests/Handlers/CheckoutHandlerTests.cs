@@ -10,15 +10,29 @@ using SvnBridge.SourceControl;
 using SvnBridge.Handlers;
 using SvnBridge.Net;
 using System;
+using SvnBridge.Exceptions;
 
 namespace UnitTests
 {
-    public class CheckoutHandlerTests : HandlerTestsBase
+    public class CheckoutHandlerTests : HandlerTestsBase, IDisposable
     {
         protected CheckOutHandler handler = new CheckOutHandler();
+        protected DefaultLogger logger;
+
+        public CheckoutHandlerTests()
+        {
+            logger = stubs.CreateObject<DefaultLogger>();
+            Container.Register(typeof(DefaultLogger), logger);
+        }
+
+        public override void Dispose()
+        {
+            Container.Reset();
+            base.Dispose();
+        }
 
         [Fact]
-        public void VerifyHandleEncodesCheckedOutResourceOutput()
+        public void Handle_PathContainsSpecialCharacters_EncodesCheckedOutResourceOutput()
         {
             ItemMetaData item = new ItemMetaData();
             item.ItemRevision = 0;
@@ -36,7 +50,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void VerifyHandleEncodesLocationResponseHeader()
+        public void Handle_PathContainsSpecialCharacters_EncodesLocationResponseHeader()
         {
             ItemMetaData item = new ItemMetaData();
             item.ItemRevision = 0;
@@ -61,6 +75,20 @@ namespace UnitTests
             Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
 
             Assert.NotNull(RequestCache.Items["RequestBody"]);
+        }
+
+        [Fact]
+        public void Handle_ConflictErrorOccurs_ErrorIsLogged()
+        {
+            stubs.Attach(provider.GetItems, Return.Exception(new ConflictException("Test")));
+            Results r = stubs.Attach(logger.ErrorFullDetails, Return.Nothing);
+            request.Path = "http://localhost:8084/!svn/ver/5718/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',~%60..txt";
+            request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
+
+            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+
+            Assert.NotNull(RequestCache.Items["RequestBody"]);
+            Assert.True(r.WasCalled);
         }
 
         [Fact]
