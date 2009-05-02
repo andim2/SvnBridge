@@ -162,24 +162,31 @@ namespace SvnBridge.Net
             string authorizationHeader = context.Request.Headers["Authorization"];
             if (!string.IsNullOrEmpty(authorizationHeader))
             {
-                if (authorizationHeader.StartsWith("Negotiate"))
+                if (authorizationHeader.StartsWith("Digest"))
                 {
                     return (NetworkCredential)CredentialCache.DefaultCredentials;
                 }
-                string encodedCredential = authorizationHeader.Substring(authorizationHeader.IndexOf(' ') + 1);
-                string credential = UTF8Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredential));
-                string[] credentialParts = credential.Split(':');
-
-                string username = credentialParts[0];
-                string password = credentialParts[1];
-
-                if (username.IndexOf('\\') >= 0)
+                else if (authorizationHeader.StartsWith("Basic"))
                 {
-                    string domain = username.Substring(0, username.IndexOf('\\'));
-                    username = username.Substring(username.IndexOf('\\') + 1);
-                    return new NetworkCredential(username, password, domain);
+                    string encodedCredential = authorizationHeader.Substring(authorizationHeader.IndexOf(' ') + 1);
+                    string credential = UTF8Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredential));
+                    string[] credentialParts = credential.Split(':');
+
+                    string username = credentialParts[0];
+                    string password = credentialParts[1];
+
+                    if (username.IndexOf('\\') >= 0)
+                    {
+                        string domain = username.Substring(0, username.IndexOf('\\'));
+                        username = username.Substring(username.IndexOf('\\') + 1);
+                        return new NetworkCredential(username, password, domain);
+                    }
+                    return new NetworkCredential(username, password);
                 }
-                return new NetworkCredential(username, password);
+                else
+                {
+                    throw new Exception("Unrecognized authorization header: " + authorizationHeader.StartsWith("Basic"));
+                }
             }
             return CredentialsHelper.NullCredentials;
         }

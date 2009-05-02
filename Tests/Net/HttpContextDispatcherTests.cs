@@ -160,6 +160,38 @@ namespace UnitTests
 //            System.Diagnostics.Debug.WriteLine(output);
 //        }
 
+//        [Fact]
+//        public void Repro()
+//        {
+//            BootStrapper.Start();
+//            IPathParser pathParser = new PathParserProjectInDomainCodePlex();
+//            HttpContextDispatcher dispatcher = new HttpContextDispatcher(pathParser, Container.Resolve<ActionTrackingViaPerfCounter>());
+
+//            StubHttpContext context = new StubHttpContext();
+//            StubHttpRequest request = new StubHttpRequest();
+//            StubHttpResponse response = new StubHttpResponse();
+//            context.Request = request;
+//            context.Response = response;
+//            response.OutputStream = new MemoryStream(Constants.BufferSize);
+
+//            RequestCache.Init();
+//            request.ApplicationPath = "/svn";
+//            request.HttpMethod = "REPORT";
+//            request.Path = "http://dasblog.redmond.corp.microsoft.com/svn/!svn/bc/18879/trunk";
+//            request.Input = 
+//"<log-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"svn:\">" +
+//"  <discover-changed-paths />" +
+//"  <end-revision>18879</end-revision>" +
+//"  <path />" +
+//"  <start-revision>15999</start-revision>" +
+//"</log-report>";
+
+//            dispatcher.Dispatch(context);
+
+//            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+//            System.Diagnostics.Debug.WriteLine(output);
+//        }
+
         [Fact]
         public void Dispatch_ServerIsCodePlexAndUsernameIsMissingDomainAndSuffix_DomainAndSuffixIsAdded()
         {
@@ -206,6 +238,37 @@ namespace UnitTests
             dispatcher.Dispatch(context);
 
             Assert.Null(dispatcher.Handler.Handle_credentials);
+        }
+
+        [Fact]
+        public void Dispatch_DigestAuthorizationHeader_ReturnDefaultCredentials()
+        {
+            TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            context.Request = request;
+            request.Headers["Authorization"] = "Digest ...";
+            request.Url = new Uri("http://tfsserver");
+            dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
+
+            dispatcher.Dispatch(context);
+
+            Assert.Same(CredentialCache.DefaultCredentials, dispatcher.Handler.Handle_credentials);
+        }
+
+        [Fact]
+        public void Dispatch_UnknownAuthorizationHeader_ThrowsException()
+        {
+            TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            context.Request = request;
+            request.Headers["Authorization"] = "abcdef ...";
+            request.Url = new Uri("http://tfsserver");
+
+            Exception exception = Record.Exception(delegate { dispatcher.Dispatch(context); } );
+
+            Assert.NotNull(exception);
         }
 
         [Fact]
