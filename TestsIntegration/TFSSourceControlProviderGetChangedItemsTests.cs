@@ -365,9 +365,28 @@ namespace IntegrationTests
 
 			FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
 
-			Assert.True(folder.Items[0] is DeleteMetaData);
+            Assert.Equal(1, folder.Items.Count);
+            Assert.True(folder.Items[0] is DeleteMetaData);
 			Assert.Equal(path.Substring(1), folder.Items[0].Name);
 		}
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithDeletedFileContainingProperty()
+        {
+            string path = MergePaths(testPath, "/TestFile.txt");
+            WriteFile(path, "Test file contents", false);
+            SetProperty(path, "test", "value", true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.True(folder.Items[0] is DeleteMetaData);
+            Assert.Equal(path.Substring(1), folder.Items[0].Name);
+        }
 
         [IntegrationTestFact]
         public void GetChangedItems_WithDeletedFileThenAddedAgain_ReturnsUpdatedFile()
