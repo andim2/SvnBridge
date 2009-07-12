@@ -237,6 +237,48 @@ namespace IntegrationTests
 			Assert.IsType(typeof (DeleteFolderMetaData), folder.Items[0]);
 		}
 
+        [IntegrationTestFact]
+        public void GetChangedItems_WithAddedFolder()
+        {
+            int versionFrom = _lastCommitRevision;
+            CreateFolder(MergePaths(testPath, "/Folder1"), true);
+            int versionTo = _lastCommitRevision;
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            Assert.Equal(1, folder.Items.Count);
+            Assert.Equal(MergePaths(testPath, "/Folder1").Substring(1), folder.Items[0].Name);
+            Assert.IsType(typeof(FolderMetaData), folder.Items[0]);
+        }
+
+        [IntegrationTestFact]
+        public void GetChangedItems_WithAddedFolderSeveralFoldersDeepThatWasLaterRenamed()
+        {
+            // This test is specifically for a workaround to a bug in TFS2008sp1
+            CreateFolder(MergePaths(testPath, "/Folder1"), false);
+            CreateFolder(MergePaths(testPath, "/Folder1/Folder2"), false);
+            CreateFolder(MergePaths(testPath, "/Folder1/Folder2/Folder3"), false);
+            CreateFolder(MergePaths(testPath, "/Folder1/Folder2/Folder3/Folder4"), false);
+            CreateFolder(MergePaths(testPath, "/Folder1/Folder2/Folder3/Folder4/Folder5"), true);
+            int versionFrom = _lastCommitRevision;
+            CreateFolder(MergePaths(testPath, "/Folder1/Folder2/Folder3/Folder4/Folder5/Folder6"), true);
+            int versionTo = _lastCommitRevision;
+            RenameItem(MergePaths(testPath, "/Folder1/Folder2/Folder3/Folder4/Folder5"), MergePaths(testPath, "/Folder1/Folder2/Folder3/Folder4/Folder5New"), true);
+            UpdateReportData reportData = new UpdateReportData();
+
+            FolderMetaData folder = _provider.GetChangedItems(testPath, versionFrom, versionTo, reportData);
+
+            folder = (FolderMetaData)folder.Items[0];
+            folder = (FolderMetaData)folder.Items[0];
+            folder = (FolderMetaData)folder.Items[0];
+            folder = (FolderMetaData)folder.Items[0];
+            folder = (FolderMetaData)folder.Items[0];
+            Assert.Equal(1, folder.Items.Count);
+            Assert.Equal(MergePaths(testPath, "/Folder1/Folder2/Folder3/Folder4/Folder5/Folder6").Substring(1), folder.Items[0].Name);
+            Assert.IsType(typeof(FolderMetaData), folder.Items[0]);
+        }
+
 		[IntegrationTestFact]
 		public void GetChangedItems_WithAddedFolderAndFileWithinFolderInSingleCommitThenDeleteFolder()
 		{

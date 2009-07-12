@@ -787,9 +787,29 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    LogItem log = GetLog(item.Name, version, 1, version, Recursion.Full, 1);
-                    item.SubItemRevision = log.History[0].ChangeSetID;
-                    item.LastModifiedDate = log.History[0].CommitDateTime;
+                    LogItem log = null;
+                    try
+                    {
+                        log = GetLog(item.Name, version, 1, version, Recursion.Full, 1);
+                        item.SubItemRevision = log.History[0].ChangeSetID;
+                        item.LastModifiedDate = log.History[0].CommitDateTime;
+                    }
+                    catch (Exception) // Workaround for bug in TFS2008sp1
+                    {
+                        int latestVersion = GetLatestVersion();
+                        log = GetLog(item.Name, version, 1, latestVersion, Recursion.None, 1);
+                        log = GetLog(log.History[0].Changes[0].Item.RemoteName, latestVersion, 1, latestVersion, Recursion.Full, int.MaxValue);
+
+                        foreach (var history in log.History)
+                        {
+                            if (history.ChangeSetID <= version)
+                            {
+                                item.SubItemRevision = history.ChangeSetID;
+                                item.LastModifiedDate = history.CommitDateTime;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
