@@ -111,6 +111,12 @@ namespace SvnBridge.Handlers
                     {
                         SendUnknownReportResponse(response);
                     }
+                    //if (data != null)
+                    //{
+                    //    RequestCache.Items["RequestBody"] = data;
+                    //    DefaultLogger logger = Container.Resolve<DefaultLogger>();
+                    //    logger.ErrorFullDetails(new Exception("Logging"), context);
+                    //}
                 }
                 catch
                 {
@@ -496,13 +502,16 @@ namespace SvnBridge.Handlers
                         output.Write("<S:deleted-path>/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
                                      "</S:deleted-path>\n");
                     }
-                    else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch ||
-						(change.ChangeType & ChangeType.Merge) == ChangeType.Merge)
+                    else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
                     {
                         var renamedItem = (RenamedSourceItem) change.Item;
                         output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
                                      "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
                                      Helper.EncodeB(change.Item.RemoteName) + "</S:added-path>\n");
+                    }
+                    else if (change.ChangeType  == ChangeType.Merge)
+                    {
+                        // Ignore merge entries that are not an add, edit, delete, or rename
                     }
                     else
                     {

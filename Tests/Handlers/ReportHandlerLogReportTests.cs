@@ -175,5 +175,45 @@ namespace UnitTests
             Assert.Equal(Recursion.Full, r.Parameters[3]);
             Assert.Equal(100, r.Parameters[4]);
         }
+
+        [Fact]
+        public void Handle_MergedItems_ProducesCorrectOutput()
+        {
+            List<SourceItemHistory> histories = new List<SourceItemHistory>();
+            SourceItemHistory history1 =
+                new SourceItemHistory(5531, "jwanagel", DateTime.Parse("2007-07-24T07:46:20.635845Z"), "Merged file");
+            history1.Changes.Add(TestHelper.MakeChange(ChangeType.Merge, "newFolder3"));
+            history1.Changes.Add(TestHelper.MakeChange(ChangeType.Merge | ChangeType.Edit, "newFolder3/NewFile.txt", "newFolder3/NewFile.txt", 5530));
+            histories.Add(history1);
+            Results r = stubs.Attach(provider.GetLog, Return.Value(new LogItem(@"C:\", "newFolder2", histories.ToArray())));
+            request.Path = "http://localhost:8082/!svn/bc/5522/File.txt";
+            request.Input =
+                "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5531</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:path></S:path></S:log-report>";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            string expected =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n" +
+                "<S:log-item>\n" +
+                "<D:version-name>5531</D:version-name>\n" +
+                "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
+                "<S:date>2007-07-24T07:46:20.635845Z</S:date>\n" +
+                "<D:comment>Merged file</D:comment>\n" +
+                "<S:modified-path>/newFolder3/NewFile.txt</S:modified-path>\n" +
+                "</S:log-item>\n" +
+                "</S:log-report>\n";
+
+            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+            Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
+            Assert.Equal(Encoding.UTF8, response.ContentEncoding);
+            Assert.Equal(200, response.StatusCode);
+            Assert.True(response.SendChunked);
+            Assert.Equal("/File.txt", r.Parameters[0]);
+            Assert.Equal(1, r.Parameters[1]);
+            Assert.Equal(5531, r.Parameters[2]);
+            Assert.Equal(Recursion.Full, r.Parameters[3]);
+            Assert.Equal(100, r.Parameters[4]);
+        }
     }
 }
