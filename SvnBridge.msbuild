@@ -12,7 +12,8 @@
 
 	<!-- CruiseControl targets -->
 
-	<Target Name="Cruise" DependsOnTargets="Clean;Test;Zip" />
+	<!-- Target Name="Cruise" DependsOnTargets="Clean;Test;Zip" -->
+	<Target Name="Cruise" DependsOnTargets="Clean;Test" />
 
 	<!-- Meta-targets -->
 
