@@ -19,6 +19,7 @@ namespace SvnBridge.SourceControl
     using Proxies;
     using Utility;
     using SvnBridge.Cache;
+    using System.Web.Services.Protocols;
 
     [Interceptor(typeof(TracingInterceptor))]
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]
@@ -350,8 +351,35 @@ namespace SvnBridge.SourceControl
             const int QUERY_LIMIT = 256;
 
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
-            Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false);
-            List<SourceItemHistory> histories = ConvertChangesetsToSourceItemHistory(changes);
+            Changeset[] changes;
+            List<SourceItemHistory> histories;
+            try
+            {
+                changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false);
+            }
+            catch (SoapException ex)
+            {
+                if ((recursionType == RecursionType.Full) && (ex.Message.EndsWith(" does not exist at the specified version.")))
+                {
+                    // Workaround for bug in TFS2008sp1
+                    int latestVersion = GetLatestVersion();
+                    LogItem log = GetLogItem(serverPath, itemVersion, 1, latestVersion, RecursionType.None, 1);
+                    LogItem result = GetLogItem(log.History[0].Changes[0].Item.RemoteName, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue);
+                    histories = new List<SourceItemHistory>(result.History);
+                    while ((histories.Count > 0) && (histories[0].ChangeSetID > versionTo))
+                    {
+                        histories.RemoveAt(0);
+                    }
+                    while (histories.Count > maxCount)
+                    {
+                        histories.RemoveAt(histories.Count - 1);
+                    }
+                    return new LogItem(null, serverPath, histories.ToArray());
+                }
+                else
+                   throw;
+            }
+            histories = ConvertChangesetsToSourceItemHistory(changes);
 
             // TFS QueryHistory API won't return more then 256 items, so need to call multiple times if more
             if (maxCount > QUERY_LIMIT)
@@ -787,29 +815,9 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    LogItem log = null;
-                    try
-                    {
-                        log = GetLog(item.Name, version, 1, version, Recursion.Full, 1);
-                        item.SubItemRevision = log.History[0].ChangeSetID;
-                        item.LastModifiedDate = log.History[0].CommitDateTime;
-                    }
-                    catch (Exception) // Workaround for bug in TFS2008sp1
-                    {
-                        int latestVersion = GetLatestVersion();
-                        log = GetLog(item.Name, version, 1, latestVersion, Recursion.None, 1);
-                        log = GetLog(log.History[0].Changes[0].Item.RemoteName, latestVersion, 1, latestVersion, Recursion.Full, int.MaxValue);
-
-                        foreach (var history in log.History)
-                        {
-                            if (history.ChangeSetID <= version)
-                            {
-                                item.SubItemRevision = history.ChangeSetID;
-                                item.LastModifiedDate = history.CommitDateTime;
-                                break;
-                            }
-                        }
-                    }
+                    LogItem log = GetLog(item.Name, version, 1, version, Recursion.Full, 1);
+                    item.SubItemRevision = log.History[0].ChangeSetID;
+                    item.LastModifiedDate = log.History[0].CommitDateTime;
                 }
             }
         }
