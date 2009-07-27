@@ -16,7 +16,8 @@
 
 	<!-- Meta-targets -->
 
-	<Target Name="Test" DependsOnTargets="UnitTest;ProtocolTest;IntegrationTest;EndToEndTest" />
+	<!-- Target Name="Test" DependsOnTargets="UnitTest;ProtocolTest;IntegrationTest;EndToEndTest" -->
+	<Target Name="Test" DependsOnTargets="UnitTest;ProtocolTest" />
 
 	<Target Name="Zip" DependsOnTargets="Merge">
 		<Exec Command="$(CodePlex3rdParty)\zip.exe -9 -q -j $(ZipStoragePath)\SvnBridge-build-$(Revision).zip Merge\SvnBridge.exe Merge\SvnBridgeServer.dll"/>
