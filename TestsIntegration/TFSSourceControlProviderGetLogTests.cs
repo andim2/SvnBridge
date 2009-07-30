@@ -117,7 +117,7 @@ namespace IntegrationTests
 
 			Assert.Equal(2, logItem.History.Length);
 			Assert.Equal(1, logItem.History[0].Changes.Count);
-			Assert.Equal(ChangeType.Add | ChangeType.Encoding, logItem.History[0].Changes[0].ChangeType);
+			Assert.Equal(ChangeType.Add, logItem.History[0].Changes[0].ChangeType);
 			Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
 			Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
 		}
@@ -128,6 +128,155 @@ namespace IntegrationTests
             LogItem logItem = _provider.GetLog("", 1, _lastCommitRevision, Recursion.None, Int32.MaxValue);
 
             Assert.Equal("", logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_WithPropertyAddedOnFile_ShowsAsUpdatedFile()
+        {
+            string path = MergePaths(testPath, "/TestFile.txt");
+            WriteFile(path, "123", true);
+            int versionFrom = _lastCommitRevision;
+            SetProperty(path, "mime-type", "123", true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Edit, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.File, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_WithPropertyOnFileEdited_ShowsAsUpdatedFile()
+        {
+            string path = MergePaths(testPath, "/TestFile.txt");
+            WriteFile(path, "123", false);
+            SetProperty(path, "mime-type", "123", true);
+            int versionFrom = _lastCommitRevision;
+            SetProperty(path, "mime-type", "1234", true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Edit, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.File, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_FileAddedWithProperty_ShowsAsAddedFile()
+        {
+            string path = MergePaths(testPath, "/TestFile.txt");
+            int versionFrom = _lastCommitRevision;
+            WriteFile(path, "123", false);
+            SetProperty(path, "mime-type", "123", true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Add, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.File, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_FileWithPropertyDeleted_ShowsJustDeletedFile()
+        {
+            string path = MergePaths(testPath, "/TestFile.txt");
+            WriteFile(path, "123", false);
+            SetProperty(path, "mime-type", "123", true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Delete, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.File, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFile.txt").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_WithPropertyAddedOnFolder_ShowsAsUpdatedFolder()
+        {
+            string path = MergePaths(testPath, "/TestFolder");
+            string mimeType = "application/octet-stream";
+            CreateFolder(path, true);
+            int versionFrom = _lastCommitRevision;
+            SetProperty(path, "mime-type", mimeType, true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Edit, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_WithPropertyOnFolderEdited_ShowsAsUpdatedFolder()
+        {
+            string path = MergePaths(testPath, "/TestFolder");
+            CreateFolder(path, false);
+            SetProperty(path, "mime-type", "1234", true);
+            int versionFrom = _lastCommitRevision;
+            SetProperty(path, "mime-type", "1234", true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Edit, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_FolderAddedWithProperty_ShowsAsAddedFolder()
+        {
+            string path = MergePaths(testPath, "/TestFolder");
+            int versionFrom = _lastCommitRevision;
+            CreateFolder(path, false);
+            SetProperty(path, "mime-type", "1234", true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Add, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
+        }
+
+        [IntegrationTestFact]
+        public void GetLog_FolderWithPropertyDeleted_ShowsJustDeletedFolder()
+        {
+            string path = MergePaths(testPath, "/TestFolder");
+            CreateFolder(path, false);
+            SetProperty(path, "mime-type", "1234", true);
+            int versionFrom = _lastCommitRevision;
+            DeleteItem(path, true);
+            int versionTo = _lastCommitRevision;
+
+            LogItem logItem = _provider.GetLog(testPath, versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
+
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Delete, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
         }
     }
 }

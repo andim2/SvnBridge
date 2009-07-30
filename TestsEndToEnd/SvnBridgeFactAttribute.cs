@@ -14,10 +14,10 @@ namespace EndToEndTests
 {
 	public class SvnBridgeFactAttribute : FactAttribute
 	{
-		protected override IEnumerable<ITestCommand> EnumerateTestCommands(MethodInfo method)
+		protected override IEnumerable<ITestCommand> EnumerateTestCommands(IMethodInfo method)
 		{
 			if (Skip != null)
-				yield return new SkipCommand(method, "");
+				yield return new SkipCommand(method, "", "");
 
 			foreach (ITestCommand command in GetTestCommandsFromBase(method))
 			{
@@ -29,7 +29,7 @@ namespace EndToEndTests
 			}
 		}
 
-		private IEnumerable<ITestCommand> GetTestCommandsFromBase(MethodInfo method)
+		private IEnumerable<ITestCommand> GetTestCommandsFromBase(IMethodInfo method)
 		{
 			return base.EnumerateTestCommands(method);
 		}
@@ -43,8 +43,6 @@ namespace EndToEndTests
 		{
 			this.command = command;
 		}
-
-		#region ITestCommand Members
 
 		public MethodResult Execute(object testClass)
 		{
@@ -73,14 +71,21 @@ namespace EndToEndTests
 			}
 		}
 
-		public string Name
-		{
-			get { return command.Name; }
-		}
+        public string DisplayName
+        {
+            get { return command.DisplayName; }
+        }
 
-		#endregion
+        public bool ShouldCreateInstance
+        {
+            get { throw new NotImplementedException(); }
+        }
 
-	}
+        public System.Xml.XmlNode ToStartXml()
+        {
+            throw new NotImplementedException();
+        }
+    }
 
 	public class ConsoleColorer : IDisposable
 	{

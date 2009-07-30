@@ -338,8 +338,40 @@ namespace SvnBridge.SourceControl
                 SourceItemHistory sourceItemHistory = new SourceItemHistory(changeset.Changes[0].Item.cs, changeset.cmtr, changeset.date, changeset.Comment);
                 foreach (Change change in changeset.Changes)
                 {
-                    SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
-                    sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, change.type));
+                    if (!IsPropertyFolder(change.Item.item))
+                    {
+                        SourceItem sourceItem;
+                        if (!IsPropertyFile(change.Item.item))
+                        {
+                            sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
+                            if ((change.type == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
+                               (change.type == (ChangeType.Add | ChangeType.Encoding)))
+                                sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Add));
+                            else
+                                sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, change.type));
+                        }
+                        else
+                        {
+                            string item = GetItemFileNameFromPropertiesFileName(change.Item.item);
+                            bool itemFileIncludedInChanges = false;
+                            foreach (Change itemChange in changeset.Changes)
+                            {
+                                if (itemChange.Item.item == item)
+                                {
+                                    itemFileIncludedInChanges = true;
+                                }
+                            }
+                            if (!itemFileIncludedInChanges)
+                            {
+                                if (change.Item.item.EndsWith(Constants.PropFolder + "/" + Constants.FolderPropFile))
+                                    sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, ItemType.Folder, item, change.Item.cs, change.Item.len, change.Item.date, null);
+                                else
+                                    sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, ItemType.File, item, change.Item.cs, change.Item.len, change.Item.date, null);
+
+                                sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Edit));
+                            }
+                        }
+                    }
                 }
                 history.Add(sourceItemHistory);
             }

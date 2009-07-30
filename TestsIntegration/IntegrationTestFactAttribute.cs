@@ -9,11 +9,11 @@ namespace IntegrationTests
 {
     public class IntegrationTestFactAttribute : FactAttribute
     {
-        protected override IEnumerable<ITestCommand> EnumerateTestCommands(MethodInfo method)
+        protected override IEnumerable<ITestCommand> EnumerateTestCommands(IMethodInfo method)
         {
             if (Skip != null)
             {
-                yield return new SkipCommand(method, "");
+                yield return new SkipCommand(method, "", "");
             }
             else
             {
@@ -25,7 +25,7 @@ namespace IntegrationTests
             }
         }
 
-        private IEnumerable<ITestCommand> GetTestCommandsFromBase(MethodInfo method)
+        private IEnumerable<ITestCommand> GetTestCommandsFromBase(IMethodInfo method)
         {
             return base.EnumerateTestCommands(method);
         }
@@ -48,9 +48,19 @@ namespace IntegrationTests
             return command.Execute(testClass);
         }
 
-        public string Name
+        public string DisplayName
         {
-            get { return command.Name; }
+            get { return command.DisplayName; }
+        }
+
+        public bool ShouldCreateInstance
+        {
+            get { return command.ShouldCreateInstance; }
+        }
+
+        public System.Xml.XmlNode ToStartXml()
+        {
+            return command.ToStartXml();
         }
     }
 
@@ -71,9 +81,19 @@ namespace IntegrationTests
             return command.Execute(testClass);
         }
 
-        public string Name
+        public string DisplayName
         {
-            get { return command.Name + "AtRoot"; }
+            get { return command.DisplayName + "AtRoot"; }
+        }
+
+        public bool ShouldCreateInstance
+        {
+            get { return command.ShouldCreateInstance; }
+        }
+
+        public System.Xml.XmlNode ToStartXml()
+        {
+            return command.ToStartXml();
         }
     }
 }

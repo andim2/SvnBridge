@@ -84,10 +84,8 @@ namespace EndToEndTests
 		public ConcurrentTestCommand(string testUrl, MethodInfo method)
 		{
 			this.testUrl = testUrl;
-			this.testCommand = new TestCommand(method);
+            this.testCommand = new TestCommand(Xunit.Sdk.Reflector.Wrap(method));
 		}
-
-		#region ITestCommand Members
 
 		public MethodResult Execute(object testClass)
 		{
@@ -95,11 +93,19 @@ namespace EndToEndTests
 			return testCommand.Execute(testClass);
 		}
 
-		public string Name
-		{
-			get { return testCommand.Name; }
-		}
+        public string DisplayName
+        {
+            get { return testCommand.DisplayName; }
+        }
 
-		#endregion
-	}
+        public bool ShouldCreateInstance
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public System.Xml.XmlNode ToStartXml()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
