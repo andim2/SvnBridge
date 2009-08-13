@@ -5,7 +5,6 @@
 	<!-- Settings -->
 
 	<PropertyGroup>
-		<ZipStoragePath>D:\Builds\Zips\SvnBridge</ZipStoragePath>
 		<BuildType>Debug</BuildType>
 		<Revision>$(ccnetlabel)</Revision>
 	</PropertyGroup>
