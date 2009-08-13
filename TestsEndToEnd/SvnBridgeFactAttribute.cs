@@ -78,12 +78,12 @@ namespace EndToEndTests
 
         public bool ShouldCreateInstance
         {
-            get { throw new NotImplementedException(); }
+            get { return command.ShouldCreateInstance; }
         }
 
         public System.Xml.XmlNode ToStartXml()
         {
-            throw new NotImplementedException();
+            return command.ToStartXml();
         }
     }
 
