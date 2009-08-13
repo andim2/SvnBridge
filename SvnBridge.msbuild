@@ -24,8 +24,8 @@
 
 	<Target Name="Merge" DependsOnTargets="Build">
 		<MakeDir Directories="Merge"/>
-		<Exec Command="$(ProgramFiles)\Microsoft\ILMerge\ilmerge.exe /out:Merge\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
-		<Exec Command="$(ProgramFiles)\Microsoft\ILMerge\ilmerge.exe /out:Merge\SvnBridgeServer.dll SvnBridgeServer\bin\$(BuildType)\SvnBridgeServer.dll SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
+		<Exec Command="&quot;$(ProgramFiles)\Microsoft\ILMerge\ilmerge.exe&quot; /out:Merge\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
+		<Exec Command="&quot;$(ProgramFiles)\Microsoft\ILMerge\ilmerge.exe&quot; /out:Merge\SvnBridgeServer.dll SvnBridgeServer\bin\$(BuildType)\SvnBridgeServer.dll SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
 	</Target>
 
 	<!-- Individiual targets -->
