@@ -320,23 +320,16 @@ namespace SvnBridge.Handlers
                 {
                     foreach (SourceItemChange change in history.Changes)
                     {
-                        ItemMetaData items = sourceControlProvider.GetItems(change.Item.RemoteChangesetId,
-                                                                            change.Item.RemoteName, Recursion.None);
-                        var svnDiffStream = new MemoryStream();
-                        SvnDiff svnDiff = SvnDiffEngine.CreateReplaceDiff(
-                            sourceControlProvider.ReadFile(items)
-                            );
-                        SvnDiffParser.WriteSvnDiff(svnDiff, svnDiffStream);
-                        byte[] svnDiffData = svnDiffStream.ToArray();
-
+                        ItemMetaData items = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, change.Item.RemoteName, Recursion.None);
+                        byte[] itemData = sourceControlProvider.ReadFile(items);
+                        string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
 
                         output.Write(@"<S:file-rev path=""" + change.Item.RemoteName + @""" rev=""" +
-                                     change.Item.RemoteChangesetId + @""">
-<S:rev-prop name=""svn:log"">" + history.Comment + @"</S:rev-prop>
-<S:rev-prop name=""svn:author"">" + history.Username + @"</S:rev-prop>
-<S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
-<S:txdelta>" + Convert.ToBase64String(svnDiffData) +
-                                     @"</S:txdelta></S:file-rev>");
+                            change.Item.RemoteChangesetId + @""">
+                            <S:rev-prop name=""svn:log"">" + history.Comment + @"</S:rev-prop>
+                            <S:rev-prop name=""svn:author"">" + history.Username + @"</S:rev-prop>
+                            <S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
+                            <S:txdelta>" + txdelta + @"</S:txdelta></S:file-rev>");
                     }
                 }
                 output.Write("</S:file-revs-report>");

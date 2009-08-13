@@ -767,11 +767,6 @@ namespace ProtocolTests
             byte[] fileData =
                 GetBytes(
                     "GIF89a\u0004\0\u0007\0\u0080\0\0\u00FF\u00FF\u00FF\u00D1\u008D\u000F!\u00F9\u0004\u0001\0\0\0\0,\0\0\0\0\u0004\0\u0007\0\0\u0002\u0008L\0\u0086\u00A8i\u00E7\u00D6*\0;");
-            SvnDiff svnDiff = SvnDiffEngine.CreateReplaceDiff(fileData);
-            MemoryStream svnDiffStream = new MemoryStream();
-            SvnDiffParser.WriteSvnDiff(svnDiff, svnDiffStream);
-            byte[] svnDiffData = svnDiffStream.ToArray();
-            string txdelta = Convert.ToBase64String(svnDiffData);
             stubs.Attach(provider.ReadFileAsync, fileData);
 
             string request =

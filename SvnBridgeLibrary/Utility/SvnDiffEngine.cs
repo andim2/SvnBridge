@@ -1,13 +1,12 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace SvnBridge.Utility
 {
     public class SvnDiffEngine
     {
-        public static byte[] ApplySvnDiff(SvnDiff svnDiff,
-                                          byte[] source,
-                                          int sourceDataStartIndex)
+        public static byte[] ApplySvnDiff(SvnDiff svnDiff, byte[] source, int sourceDataStartIndex)
         {
             const int BUFFER_EXPAND_SIZE = 5000;
             byte[] buffer = new byte[BUFFER_EXPAND_SIZE];
@@ -60,30 +59,30 @@ namespace SvnBridge.Utility
             return buffer;
         }
 
-        public static SvnDiff CreateReplaceDiff(byte[] bytes)
+        public static SvnDiff CreateReplaceDiff(byte[] bytes, int index, int length)
         {
             SvnDiff svnDiff = null;
-            if (bytes.Length > 0)
+            if (length > 0)
             {
                 svnDiff = new SvnDiff();
 
                 svnDiff.SourceViewOffset = 0;
                 svnDiff.SourceViewLength = 0;
-                svnDiff.TargetViewLength = (ulong) bytes.Length;
+                svnDiff.TargetViewLength = (ulong)length;
 
                 MemoryStream instructionStream = new MemoryStream();
                 BinaryWriter instructionWriter = new BinaryWriter(instructionStream);
                 MemoryStream dataStream = new MemoryStream();
                 BinaryWriter dataWriter = new BinaryWriter(dataStream);
 
-                dataWriter.Write(bytes);
+                dataWriter.Write(bytes, index, length);
                 dataWriter.Flush();
 
                 svnDiff.DataSectionBytes = dataStream.ToArray();
 
                 SvnDiffInstruction instruction = new SvnDiffInstruction();
                 instruction.OpCode = SvnDiffInstructionOpCode.CopyFromNewData;
-                instruction.Length = (ulong) bytes.Length;
+                instruction.Length = (ulong)length;
 
                 WriteInstruction(instructionWriter, instruction);
                 instructionWriter.Flush();
@@ -91,6 +90,78 @@ namespace SvnBridge.Utility
                 svnDiff.InstructionSectionBytes = instructionStream.ToArray();
             }
             return svnDiff;
+        }
+
+        public static SvnDiff[] ParseSvnDiff(byte[] bytes)
+        {
+            MemoryStream stream = new MemoryStream(bytes);
+            return ParseSvnDiff(stream);
+        }
+
+        public static SvnDiff[] ParseSvnDiff(Stream inputStream)
+        {
+            BinaryReaderEOF reader = new BinaryReaderEOF(inputStream);
+
+            byte[] signature = reader.ReadBytes(3);
+            byte version = reader.ReadByte();
+
+            if (signature[0] != 'S' || signature[1] != 'V' || signature[2] != 'N')
+            {
+                throw new InvalidOperationException("The signature is invalid.");
+            }
+            if (version != 0)
+            {
+                throw new Exception("Unsupported SVN diff version");
+            }
+
+            List<SvnDiff> diffs = new List<SvnDiff>();
+            while (!reader.EOF)
+            {
+                SvnDiff diff = new SvnDiff();
+
+                diff.SourceViewOffset = ReadInt(reader);
+                diff.SourceViewLength = ReadInt(reader);
+                diff.TargetViewLength = ReadInt(reader);
+                int instructionSectionLength = (int)ReadInt(reader);
+                int dataSectionLength = (int)ReadInt(reader);
+
+                diff.InstructionSectionBytes = reader.ReadBytes(instructionSectionLength);
+                diff.DataSectionBytes = reader.ReadBytes(dataSectionLength);
+
+                diffs.Add(diff);
+            }
+            return diffs.ToArray();
+        }
+
+        public static void WriteSvnDiffSignature(Stream stream)
+        {
+            BinaryWriter writer = new BinaryWriter(stream);
+
+            byte[] signature = new byte[] { (byte)'S', (byte)'V', (byte)'N' };
+            byte version = 0;
+            writer.Write(signature);
+            writer.Write(version);
+
+            writer.Flush();
+        }
+
+        public static void WriteSvnDiff(SvnDiff svnDiff, Stream stream)
+        {
+            BinaryWriter writer = new BinaryWriter(stream);
+
+            if (svnDiff != null)
+            {
+                int bytesWritten;
+                WriteInt(writer, svnDiff.SourceViewOffset, out bytesWritten);
+                WriteInt(writer, svnDiff.SourceViewLength, out bytesWritten);
+                WriteInt(writer, svnDiff.TargetViewLength, out bytesWritten);
+                WriteInt(writer, (ulong)svnDiff.InstructionSectionBytes.Length, out bytesWritten);
+                WriteInt(writer, (ulong)svnDiff.DataSectionBytes.Length, out bytesWritten);
+
+                writer.Write(svnDiff.InstructionSectionBytes);
+                writer.Write(svnDiff.DataSectionBytes);
+            }
+            writer.Flush();
         }
 
         private static SvnDiffInstruction ReadInstruction(BinaryReaderEOF reader)
@@ -109,7 +180,7 @@ namespace SvnBridge.Utility
             byte length = (byte) (opCodeAndLength & 0x3F);
             if (length == 0)
             {
-                instruction.Length = SvnDiffParser.ReadInt(reader);
+                instruction.Length = ReadInt(reader);
             }
             else
             {
@@ -119,14 +190,13 @@ namespace SvnBridge.Utility
             if (instruction.OpCode == SvnDiffInstructionOpCode.CopyFromSource ||
                 instruction.OpCode == SvnDiffInstructionOpCode.CopyFromTarget)
             {
-                instruction.Offset = SvnDiffParser.ReadInt(reader);
+                instruction.Offset = ReadInt(reader);
             }
 
             return instruction;
         }
 
-        private static void WriteInstruction(BinaryWriter writer,
-                                             SvnDiffInstruction instruction)
+        private static void WriteInstruction(BinaryWriter writer, SvnDiffInstruction instruction)
         {
             byte opCodeAndLength = (byte) ((int) instruction.OpCode << 6);
             int bytesWritten = 0;
@@ -140,13 +210,65 @@ namespace SvnBridge.Utility
             else
             {
                 writer.Write(opCodeAndLength);
-                SvnDiffParser.WriteInt(writer, instruction.Length, out bytesWritten);
+                WriteInt(writer, instruction.Length, out bytesWritten);
             }
 
             if (instruction.OpCode == SvnDiffInstructionOpCode.CopyFromSource ||
                 instruction.OpCode == SvnDiffInstructionOpCode.CopyFromTarget)
             {
-                SvnDiffParser.WriteInt(writer, instruction.Offset, out bytesWritten);
+                WriteInt(writer, instruction.Offset, out bytesWritten);
+            }
+        }
+
+        private static ulong ReadInt(BinaryReaderEOF reader)
+        {
+            int bytesRead;
+            return ReadInt(reader, out bytesRead);
+        }
+
+        private static ulong ReadInt(BinaryReaderEOF reader, out int bytesRead)
+        {
+            ulong value = 0;
+
+            bytesRead = 0;
+
+            byte b = reader.ReadByte();
+            bytesRead++;
+
+            while ((b & 0x80) != 0)
+            {
+                value |= (byte)(b & 0x7F);
+                value <<= 7;
+
+                b = reader.ReadByte();
+                bytesRead++;
+            }
+
+            value |= (ulong)b;
+
+            return value;
+        }
+
+        private static void WriteInt(BinaryWriter writer, ulong value, out int bytesWritten)
+        {
+            int count = 1;
+            ulong temp = value >> 7;
+            while (temp > 0)
+            {
+                temp = temp >> 7;
+                count++;
+            }
+
+            bytesWritten = count;
+            while (--count >= 0)
+            {
+                byte b = (byte)((byte)(value >> ((byte)count * 7)) & 0x7F);
+                if (count > 0)
+                {
+                    b |= 0x80;
+                }
+
+                writer.Write(b);
             }
         }
     }

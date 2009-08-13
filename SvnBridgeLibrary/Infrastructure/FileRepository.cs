@@ -32,7 +32,7 @@ namespace SvnBridge.Infrastructure
         public virtual void ReadFileAsync(ItemMetaData item)
         {
             byte[] data = webTransferService.DownloadBytes(item.DownloadUrl, credentials);
-            item.Base64DiffData = SvnDiffParser.GetSvnDiffData(data);
+            item.Base64DiffData = SvnDiffParser.GetBase64SvnDiffData(data);
             item.Md5Hash = Helper.GetMd5Checksum(data);
             item.DataLoaded = true;
         }

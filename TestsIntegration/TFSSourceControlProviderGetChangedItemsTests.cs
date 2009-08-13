@@ -866,7 +866,7 @@ namespace IntegrationTests
             Assert.Equal(versionTo, folder.Items[0].ItemRevision);
         }
 
-        [IntegrationTestFact]
+        [IntegrationTestFact(Skip="Temporary skip")]
         public void GetChangedItems_WithAddedFilePropertyForFileThatDoesNotExist_ReturnsNothing()
         {
             int versionFrom = _lastCommitRevision;
