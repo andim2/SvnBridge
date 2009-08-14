@@ -18,7 +18,7 @@
 	<Target Name="Test" DependsOnTargets="UnitTest;ProtocolTest;IntegrationTest;EndToEndTest" />
 
 	<Target Name="Zip" DependsOnTargets="Merge">
-		<Exec Command="$(3rdPartyTools)\zip.exe -9 -q -j $(ZipStoragePath)\SvnBridge-build-$(Revision).zip Merge\SvnBridge.exe Merge\SvnBridgeServer.dll"/>
+		<Exec Command="$(ToolsPath)\zip.exe -9 -q -j $(ZipStoragePath)\SvnBridge-build-$(Revision).zip Merge\SvnBridge.exe Merge\SvnBridgeServer.dll"/>
 	</Target>
 
 	<Target Name="Merge" DependsOnTargets="Build">
