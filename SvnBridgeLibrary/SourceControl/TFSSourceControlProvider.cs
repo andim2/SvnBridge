@@ -624,12 +624,12 @@ namespace SvnBridge.SourceControl
 
         public virtual byte[] ReadFile(ItemMetaData item)
         {
-            return fileRepository.GetFile(item);
+            return fileRepository.GetFile(item, GetRepositoryUuid());
         }
 
         public virtual void ReadFileAsync(ItemMetaData item)
         {
-            fileRepository.ReadFileAsync(item);
+            fileRepository.ReadFileAsync(item, GetRepositoryUuid());
         }
 
         public virtual Guid GetRepositoryUuid()

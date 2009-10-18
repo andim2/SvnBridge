@@ -12,6 +12,11 @@ namespace SvnBridge.Views
 {
     public partial class ProxySettings : Form
     {
+        public string TfsProxyUrl
+        {
+            get { return tfsProxyUrlTxtBox.Text; }
+        }
+
         public string ProxyUrl
         {
             get { return proxyUrlTxtBox.Text;  }
@@ -75,8 +80,7 @@ namespace SvnBridge.Views
         }
 
 
-        private void OnCancelButtonClicked(object sender,
-                                           EventArgs e)
+        private void OnCancelButtonClicked(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
             Close();
@@ -89,7 +93,7 @@ namespace SvnBridge.Views
             useDefaultCredetialsCheckBox.Checked = information.UseDefaultCredentails;
             passwordTxtBox.Text = information.Password;
             proxyUrlTxtBox.Text = information.Url;
-
+            tfsProxyUrlTxtBox.Text = information.TfsProxyUrl;
         }
     }
 }

@@ -23,6 +23,7 @@ namespace SvnBridge.Infrastructure
             ProxyUsername,
             TfsPort,
             TfsUrl,
+            TfsProxyUrl,
             TraceEnabled,
             UseCodePlexServers,
             UseProxy
@@ -83,6 +84,12 @@ namespace SvnBridge.Infrastructure
         {
             get { return ReadConfig<int>(ConfigSettings.TfsPort, 8080); }
             set { userConfig[ConfigSettings.TfsPort.ToString()] = value.ToString(); }
+        }
+
+        public static string TfsProxyUrl
+        {
+            get { return ReadConfig<string>(ConfigSettings.TfsProxyUrl, null); }
+            set { userConfig[ConfigSettings.TfsProxyUrl.ToString()] = value.ToString(); }
         }
 
         public static string TfsUrl

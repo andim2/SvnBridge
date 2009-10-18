@@ -24,17 +24,28 @@ namespace SvnBridge.Infrastructure
             this.webTransferService = webTransferService;
         }
 
-        public virtual byte[] GetFile(ItemMetaData item)
+        public virtual byte[] GetFile(ItemMetaData item, Guid repositoryUuid)
         {
-            return webTransferService.DownloadBytes(item.DownloadUrl, credentials);
+            return webTransferService.DownloadBytes(GetDownloadUrl(item.DownloadUrl, repositoryUuid), credentials);
         }
 
-        public virtual void ReadFileAsync(ItemMetaData item)
+        public virtual void ReadFileAsync(ItemMetaData item, Guid repositoryUuid)
         {
-            byte[] data = webTransferService.DownloadBytes(item.DownloadUrl, credentials);
+            byte[] data = GetFile(item, repositoryUuid);
             item.Base64DiffData = SvnDiffParser.GetBase64SvnDiffData(data);
             item.Md5Hash = Helper.GetMd5Checksum(data);
             item.DataLoaded = true;
+        }
+
+        private string GetDownloadUrl(string downloadUrl, Guid repositoryUuid)
+        {
+            string newDownloadUrl = downloadUrl;
+            if (!string.IsNullOrEmpty(Configuration.TfsProxyUrl))
+            {
+                newDownloadUrl = Configuration.TfsProxyUrl + "/VersionControlProxy/" + downloadUrl.Substring(downloadUrl.IndexOf("/VersionControl/") + 16);
+                newDownloadUrl += "&rid=" + repositoryUuid.ToString();
+            }
+            return newDownloadUrl;
         }
     }
 }

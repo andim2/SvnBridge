@@ -70,6 +70,7 @@ namespace SvnBridge
         {
             var proxyInfo = new ProxyInformation();
             proxyInfo.UseProxy = Configuration.UseProxy;
+            proxyInfo.TfsProxyUrl = Configuration.TfsProxyUrl;
             proxyInfo.Url = Configuration.ProxyUrl;
             proxyInfo.Port = Configuration.ProxyPort;
             proxyInfo.UseDefaultCredentails = Configuration.ProxyUseDefaultCredentials;
@@ -115,6 +116,7 @@ namespace SvnBridge
     				);
     		}
             Configuration.TfsPort = port;
+            Configuration.TfsProxyUrl = proxyInfo.TfsProxyUrl;
             Configuration.UseProxy = proxyInfo.UseProxy;
             Configuration.ProxyUrl = proxyInfo.Url;
             Configuration.ProxyPort = proxyInfo.Port;

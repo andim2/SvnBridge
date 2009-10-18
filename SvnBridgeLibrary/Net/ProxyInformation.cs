@@ -10,6 +10,7 @@ namespace SvnBridge.Net
 		private string password;
 		private bool useDefaultCredentails;
 		private string url;
+        private string tfsProxyUrl;
 
 		public bool UseProxy
 		{
@@ -41,6 +42,12 @@ namespace SvnBridge.Net
 			set { useDefaultCredentails = value; }
 		}
 
+        public string TfsProxyUrl
+        {
+            get { return tfsProxyUrl; }
+            set { tfsProxyUrl = value; }
+        }
+
 		public string Url
 		{
 			get { return url; }
@@ -67,7 +74,8 @@ namespace SvnBridge.Net
 				Equals(other.username, username) &&
 				Equals(other.password, password) &&
 				Equals(other.useDefaultCredentails, useDefaultCredentails) &&
-				Equals(other.url, url);
+                Equals(other.url, url) &&
+                Equals(other.tfsProxyUrl, tfsProxyUrl);
 		}
 
 		public override bool Equals(object other)
@@ -87,7 +95,8 @@ namespace SvnBridge.Net
 				result = (result * 397) ^ (password != null ? password.GetHashCode() : 0);
 				result = (result * 397) ^ useDefaultCredentails.GetHashCode();
 				result = (result * 397) ^ (url != null ? url.GetHashCode() : 0);
-				return result;
+                result = (result * 397) ^ (tfsProxyUrl != null ? tfsProxyUrl.GetHashCode() : 0);
+                return result;
 			}
 		}
 	}
