@@ -24,7 +24,7 @@ namespace TestsRequiringTfsClient
             TeamFoundationServer server = TeamFoundationServerFactory.GetServer(Settings.Default.ServerUrl);
             store = (WorkItemStore) server.GetService(typeof (WorkItemStore));
             int latestChangeSetId;
-            AssociateWorkItemWithChangeSetTest.CreateWorkItemAndGetLatestChangeSet(out latestChangeSetId, out workItemId);
+            TfsWorkItemModifierTest.CreateWorkItemAndGetLatestChangeSet(out latestChangeSetId, out workItemId);
         }
 
         public override void Dispose()
@@ -75,7 +75,7 @@ namespace TestsRequiringTfsClient
         {
             int oldWorkItemId = workItemId;
             int latestChangeSetId;
-            AssociateWorkItemWithChangeSetTest.CreateWorkItemAndGetLatestChangeSet(out latestChangeSetId, out workItemId);
+            TfsWorkItemModifierTest.CreateWorkItemAndGetLatestChangeSet(out latestChangeSetId, out workItemId);
             string workItems = oldWorkItemId + ", " + workItemId;
 
             CheckoutAndChangeDirectory();

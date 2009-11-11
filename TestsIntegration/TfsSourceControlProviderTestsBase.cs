@@ -27,7 +27,7 @@ namespace IntegrationTests
 		protected string testPath;
 		protected readonly TFSSourceControlProvider _provider;
 		protected int _lastCommitRevision;
-		protected readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
+		protected readonly TfsWorkItemModifier associateWorkItemWithChangeSet;
 		private readonly AuthenticateAsLowPrivilegeUser authenticateAsLowPrivilegeUser;
 
 		public TFSSourceControlProviderTestsBase()
@@ -39,7 +39,7 @@ namespace IntegrationTests
 
 			authenticateAsLowPrivilegeUser = new AuthenticateAsLowPrivilegeUser();
 			_activityId = Guid.NewGuid().ToString();
-			associateWorkItemWithChangeSet = new AssociateWorkItemWithChangeSet(ServerUrl, GetCredentials());
+			associateWorkItemWithChangeSet = new TfsWorkItemModifier(ServerUrl, GetCredentials());
             _provider = CreateSourceControlProvider(PROJECT_NAME);
             _provider.MakeActivity(_activityId);
             testPath = "/";

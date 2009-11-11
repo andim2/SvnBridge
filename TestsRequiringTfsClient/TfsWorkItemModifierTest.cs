@@ -12,14 +12,14 @@ using Xunit;
 
 namespace TestsRequiringTfsClient
 {
-    public class AssociateWorkItemWithChangeSetTest : IDisposable
+    public class TfsWorkItemModifierTest : IDisposable
     {
         private int workItemId;
         private int changesetId;
         private WorkItemStore store;
         private AuthenticateAsLowPrivilegeUser authenticateAsLowPrivilegeUser;
 
-        public  AssociateWorkItemWithChangeSetTest()
+        public  TfsWorkItemModifierTest()
         {
             authenticateAsLowPrivilegeUser = new AuthenticateAsLowPrivilegeUser(Settings.Default.NonAdminUserName,
                                                                                 Settings.Default.NonAdminUserPassword,
@@ -58,10 +58,10 @@ namespace TestsRequiringTfsClient
         [Fact]
         public void CanAssociateWorkItemWithChangeSet()
         {
-            AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet =
-                new AssociateWorkItemWithChangeSet(Settings.Default.ServerUrl, CredentialsHelper.DefaultCredentials);
+            TfsWorkItemModifier associateWorkItemWithChangeSet =
+                new TfsWorkItemModifier(Settings.Default.ServerUrl, CredentialsHelper.DefaultCredentials);
             associateWorkItemWithChangeSet.Associate(workItemId, changesetId);
-            associateWorkItemWithChangeSet.SetWorkItemFixed(workItemId);
+            associateWorkItemWithChangeSet.SetWorkItemFixed(workItemId, changesetId);
 
             WorkItem item = store.GetWorkItem(workItemId);
             Assert.Equal(1, item.Links.Count);
@@ -72,8 +72,8 @@ namespace TestsRequiringTfsClient
         [Fact]
         public void CanAssociateWithWorkItemAfterWorkItemHasBeenModified()
         {
-            AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet =
-               new AssociateWorkItemWithChangeSet(Settings.Default.ServerUrl, CredentialsHelper.DefaultCredentials);
+            TfsWorkItemModifier associateWorkItemWithChangeSet =
+               new TfsWorkItemModifier(Settings.Default.ServerUrl, CredentialsHelper.DefaultCredentials);
 
             WorkItem item = store.GetWorkItem(workItemId);
             item.History = "test foo";
@@ -82,7 +82,7 @@ namespace TestsRequiringTfsClient
             Assert.Equal(2, item.Revision);
 
             associateWorkItemWithChangeSet.Associate(workItemId, changesetId);
-            associateWorkItemWithChangeSet.SetWorkItemFixed(workItemId);
+            associateWorkItemWithChangeSet.SetWorkItemFixed(workItemId, changesetId);
 
             item = store.GetWorkItem(workItemId);
             Assert.Equal(1, item.Links.Count);

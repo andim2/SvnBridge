@@ -15,7 +15,7 @@ namespace SvnBridge.Infrastructure
     /// <remarks>
     /// Yes, we shouldn't have to write our own SOAP handling, sorry about that.
     /// </remarks>
-    public class AssociateWorkItemWithChangeSet
+    public class TfsWorkItemModifier : IWorkItemModifier
     {
         private readonly static string associateWorkItemWithChangeSetMessage;
         private readonly static string getWorkItemInformationMessage;
@@ -26,33 +26,33 @@ namespace SvnBridge.Infrastructure
         private readonly string username;
 
 
-        public AssociateWorkItemWithChangeSet(string serverUrl, ICredentials credentials)
+        public TfsWorkItemModifier(string serverUrl, ICredentials credentials)
         {
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(serverUrl, credentials);
             username = this.credentials.GetCredential(new Uri(serverUrl), "basic").UserName;
         }
 
-        static AssociateWorkItemWithChangeSet()
+        static TfsWorkItemModifier()
         {
-            using (Stream stream = typeof(AssociateWorkItemWithChangeSet).Assembly.GetManifestResourceStream(
+            using (Stream stream = typeof(TfsWorkItemModifier).Assembly.GetManifestResourceStream(
                 "SvnBridge.Infrastructure.Messages.AssociateWorkItemWithChangeSetMessage.xml"))
             {
                 associateWorkItemWithChangeSetMessage = new StreamReader(stream).ReadToEnd();
             }
 
 			
-            using (Stream stream = typeof(AssociateWorkItemWithChangeSet).Assembly.GetManifestResourceStream(
-			   "SvnBridge.Infrastructure.Messages.GetWorkItemInformationMessage.xml"))
+            using (Stream stream = typeof(TfsWorkItemModifier).Assembly.GetManifestResourceStream(
+                "SvnBridge.Infrastructure.Messages.GetWorkItemInformationMessage.xml"))
             {
                 getWorkItemInformationMessage = new StreamReader(stream).ReadToEnd();
             }
 
-			using (Stream stream = typeof(AssociateWorkItemWithChangeSet).Assembly.GetManifestResourceStream(
-		   "SvnBridge.Infrastructure.Messages.SetWorkItemStatusToFixedMessage.xml"))
-			{
-				setWorkItemStatusToFixedMessage = new StreamReader(stream).ReadToEnd();
-			}
+            using (Stream stream = typeof(TfsWorkItemModifier).Assembly.GetManifestResourceStream(
+                "SvnBridge.Infrastructure.Messages.SetWorkItemStatusToFixedMessage.xml"))
+            {
+                setWorkItemStatusToFixedMessage = new StreamReader(stream).ReadToEnd();
+            }
         }
 
         public virtual void Associate(int workItemId, int changeSetId)
@@ -69,7 +69,7 @@ namespace SvnBridge.Infrastructure
                 {
                     int workItemRevisionId = GetWorkItemInformation(workItemId).Revision;
                     string text =
-						GetAssociateWorkItemWithChangeSetMessage()
+                        GetAssociateWorkItemWithChangeSetMessage()
                             .Replace("{Guid}", Guid.NewGuid().ToString())
                             .Replace("{WorkItemId}", workItemId.ToString())
                             .Replace("{ChangeSetId}", changeSetId.ToString())
@@ -95,7 +95,7 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-    	public virtual void SetWorkItemFixed(int workItemId)
+        public virtual void SetWorkItemFixed(int workItemId, int changeSetId)
         {
 
             HttpWebRequest request = GetWebRequest();
@@ -137,27 +137,27 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-    	private string GetSetWorkItemStatusToFixedMessage()
-    	{
-			string custom = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SetWorkItemStatusToFixedMessage.xml");
-			if (File.Exists(custom))
-				return File.ReadAllText(custom);
-    		return setWorkItemStatusToFixedMessage;
-    	}
+        private string GetSetWorkItemStatusToFixedMessage()
+        {
+            string custom = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SetWorkItemStatusToFixedMessage.xml");
+            if (File.Exists(custom))
+                return File.ReadAllText(custom);
+            return setWorkItemStatusToFixedMessage;
+        }
 
-		private string GetAssociateWorkItemWithChangeSetMessage()
-		{
-			string custom = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AssociateWorkItemWithChangeSetMessage.xml");
-			if (File.Exists(custom))
-				return File.ReadAllText(custom);
-			return associateWorkItemWithChangeSetMessage;
-		}
+        private string GetAssociateWorkItemWithChangeSetMessage()
+        {
+            string custom = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AssociateWorkItemWithChangeSetMessage.xml");
+            if (File.Exists(custom))
+                return File.ReadAllText(custom);
+            return associateWorkItemWithChangeSetMessage;
+        }
 
-    	public WorkItemInformation GetWorkItemInformation(int workItemId)
+        private WorkItemInformation GetWorkItemInformation(int workItemId)
         {
             HttpWebRequest request = GetWebRequest();
             request.ContentType =
-                   "application/soap+xml; charset=utf-8; action=\"http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03/GetWorkItem\"";
+                "application/soap+xml; charset=utf-8; action=\"http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03/GetWorkItem\"";
 
             request.Method = "POST";
             using (Stream stream = request.GetRequestStream())

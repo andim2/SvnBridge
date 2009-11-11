@@ -32,18 +32,18 @@ namespace SvnBridge.SourceControl
         private readonly string serverUrl;
         private readonly ICredentials credentials;
         private readonly TFSSourceControlService sourceControlService;
-        private readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
+        private readonly IWorkItemModifier workItemModifier;
         private readonly DefaultLogger logger;
         private readonly WebCache cache;
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
 
-        public TFSSourceControlProvider(string serverUrl, string projectName, ICredentials credentials, TFSSourceControlService sourceControlService, AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet, DefaultLogger logger, WebCache cache, FileRepository fileRepository)
+        public TFSSourceControlProvider(string serverUrl, string projectName, ICredentials credentials, TFSSourceControlService sourceControlService, IWorkItemModifier workItemModifier, DefaultLogger logger, WebCache cache, FileRepository fileRepository)
         {
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(this.serverUrl, credentials);
             this.sourceControlService = sourceControlService;
-            this.associateWorkItemWithChangeSet = associateWorkItemWithChangeSet;
+            this.workItemModifier = workItemModifier;
             this.logger = logger;
             this.cache = cache;
             this.fileRepository = fileRepository;
@@ -606,8 +606,8 @@ namespace SvnBridge.SourceControl
                     }
                     try
                     {
-                        associateWorkItemWithChangeSet.Associate(id, changesetId);
-                        associateWorkItemWithChangeSet.SetWorkItemFixed(id);
+                        workItemModifier.Associate(id, changesetId);
+                        workItemModifier.SetWorkItemFixed(id, changesetId);
                     }
                     catch (Exception e)
                     {

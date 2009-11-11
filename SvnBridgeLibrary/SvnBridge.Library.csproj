@@ -55,6 +55,7 @@
     <Compile Include="BootStrapper.cs" />
     <Compile Include="Cache\HashSet.cs" />
     <Compile Include="Cache\MemoryBasedPersistentCache.cs" />
+    <Compile Include="Infrastructure\CodePlexWorkItemModifier.cs" />
     <Compile Include="Infrastructure\StatsRenderer.cs" />
     <Compile Include="Infrastructure\Configuration.cs" />
     <Compile Include="Infrastructure\FileRepository.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Exceptions\CacheMissException.cs" />
     <Compile Include="Exceptions\EnvironmentValidationException.cs" />
     <Compile Include="Exceptions\RepositoryUnavailableException.cs" />
+    <Compile Include="Infrastructure\TfsWorkItemModifier.cs" />
     <Compile Include="PathParsing\PathParserProjectInDomainCodePlex.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -98,7 +100,7 @@
     <Compile Include="Proxies\ProxyFactory.cs" />
     <Compile Include="Proxies\RemotingInvocation.cs" />
     <Compile Include="Proxies\RetryOnExceptionsInterceptor.cs" />
-    <Compile Include="Infrastructure\AssociateWorkItemWithChangeSet.cs" />
+    <Compile Include="Infrastructure\IWorkItemModifier.cs" />
     <Compile Include="Infrastructure\BrokenXml.cs" />
     <Compile Include="Infrastructure\Clock.cs" />
     <Compile Include="Infrastructure\Container.cs" />
@@ -204,6 +206,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.map</DependentUpon>
     </Compile>
+    <Compile Include="Web References\WorkItemService.cs" />
     <Compile Include="WebRequestSetup.cs" />
   </ItemGroup>
   <ItemGroup>

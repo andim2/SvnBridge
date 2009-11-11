@@ -1,4 +1,3 @@
-using System;
 using CodePlex.TfsLibrary.ObjectModel;
 using SvnBridge.Infrastructure;
 using CodePlex.TfsLibrary.RegistrationWebSvc;
@@ -17,6 +16,10 @@ namespace SvnBridge
             Container.Register(typeof(IRegistrationWebSvcFactory), typeof(RegistrationWebSvcFactory));
             Container.Register(typeof(IRepositoryWebSvcFactory), typeof(RepositoryWebSvcFactory));
             Container.Register(typeof(IFileSystem), typeof(FileSystem));
+            Container.Register(typeof (IWorkItemModifier),
+                               string.IsNullOrEmpty(Configuration.CodePlexWorkItemUrl)
+                                   ? typeof (TfsWorkItemModifier)
+                                   : typeof (CodePlexWorkItemModifier));
         }
     }
 }

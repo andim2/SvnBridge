@@ -12,6 +12,7 @@ namespace SvnBridge.Infrastructure
         private enum ConfigSettings
         {
             CacheEnabled,
+            CodePlexWorkItemUrl,
             DomainIncludesProjectName,
             LogCancelErrors,
             LogPath,
@@ -65,6 +66,11 @@ namespace SvnBridge.Infrastructure
             get { return ReadConfig<bool>(ConfigSettings.CacheEnabled, false); }
         }
 
+        public static string CodePlexWorkItemUrl
+        {
+            get { return ReadConfig<string>(ConfigSettings.CodePlexWorkItemUrl, null); }
+        }
+
         public static string LogPath
         {
             get { return ReadConfig<string>(ConfigSettings.LogPath, null); }
@@ -89,7 +95,7 @@ namespace SvnBridge.Infrastructure
         public static string TfsProxyUrl
         {
             get { return ReadConfig<string>(ConfigSettings.TfsProxyUrl, null); }
-            set { userConfig[ConfigSettings.TfsProxyUrl.ToString()] = value.ToString(); }
+            set { userConfig[ConfigSettings.TfsProxyUrl.ToString()] = value; }
         }
 
         public static string TfsUrl

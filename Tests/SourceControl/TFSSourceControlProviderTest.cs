@@ -14,13 +14,13 @@ namespace UnitTests
     public class TFSSourceControlProviderTest
     {
         private readonly MyMocks stubs;
-        private readonly AssociateWorkItemWithChangeSet associateWorkItemWithChangeSet;
+        private readonly TfsWorkItemModifier associateWorkItemWithChangeSet;
         private readonly TFSSourceControlProvider provider;
 
         public TFSSourceControlProviderTest()
         {
             stubs = new MyMocks();
-            associateWorkItemWithChangeSet = stubs.CreateObject<AssociateWorkItemWithChangeSet>("http://www.codeplex.com", null);
+            associateWorkItemWithChangeSet = stubs.CreateObject<TfsWorkItemModifier>("http://www.codeplex.com", null);
             provider = new TFSSourceControlProvider(
                 "http://www.blah.com",
                 null,
