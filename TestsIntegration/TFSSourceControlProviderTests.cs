@@ -76,6 +76,7 @@ namespace IntegrationTests
         [IntegrationTestFact]
         public void GetVersionForDate_CurrentDateAndTime_ReturnsLatestChangeSet()
         {
+            Thread.Sleep(1000);
             int result = _provider.GetVersionForDate(DateTime.Now);
 
             Assert.Equal(_lastCommitRevision, result);
@@ -103,6 +104,7 @@ namespace IntegrationTests
         [IntegrationTestFact]
         public void GetVersionForDate_DateAndTimeBeforeLastCommit_ReturnsChangesetBeforeLastCommit()
         {
+            Thread.Sleep(1000);
             int expected = _lastCommitRevision;
             DateTime startDate = DateTime.Now;
             Thread.Sleep(1000);

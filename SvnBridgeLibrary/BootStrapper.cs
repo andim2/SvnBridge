@@ -1,3 +1,4 @@
+using System.Net;
 using CodePlex.TfsLibrary.ObjectModel;
 using SvnBridge.Infrastructure;
 using CodePlex.TfsLibrary.RegistrationWebSvc;
@@ -10,6 +11,7 @@ namespace SvnBridge
     {
         public static void Start()
         {
+            ServicePointManager.DefaultConnectionLimit = 5000;
             TfsUtil.OnSetupWebRequest = WebRequestSetup.OnWebRequest;
             Container.Register(typeof(IRegistrationService), typeof(RegistrationService));
             Container.Register(typeof(IWebTransferService), typeof(WebTransferService));

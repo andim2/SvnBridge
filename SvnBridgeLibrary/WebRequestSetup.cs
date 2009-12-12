@@ -11,7 +11,6 @@ namespace SvnBridge
 			if (httpWebRequest!=null)
 			{
                 httpWebRequest.UnsafeAuthenticatedConnectionSharing = false;
-                httpWebRequest.ServicePoint.ConnectionLimit = 5000;
 			}
 		}
 	}
