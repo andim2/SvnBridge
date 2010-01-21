@@ -67,11 +67,11 @@ namespace ProtocolTests
         public void Test2()
         {
             stubs.Attach(provider.GetLatestVersion, 5793);
-            FolderMetaData folder = CreateFolder("Quick Starts", 5784, "Sun, 14 Dec 2008 11:23:39 GMT");
-            folder.Items.Add(CreateItem("Quick Starts/Test.txt"));
+            FolderMetaData folder = CreateFolder("Quick", 5784, "Sun, 14 Dec 2008 11:23:39 GMT");
+            folder.Items.Add(CreateItem("Quick/Test.txt"));
             stubs.Attach(provider.GetItems, folder);
             string request =
-                "GET /Quick%20Starts/ HTTP/1.1\r\n" +
+                "GET /Quick/ HTTP/1.1\r\n" +
                 "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-ms-application, application/vnd.ms-xpsdocument, application/xaml+xml, application/x-ms-xbap, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, application/x-shockwave-flash, */*\r\n" +
                 "Referer: http://localhost:8080/\r\n" +
                 "Accept-Language: en-us\r\n" +
@@ -87,16 +87,16 @@ namespace ProtocolTests
                 "Date: Sun, 25 Jan 2009 12:30:10 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
                 "Last-Modified: Sun, 14 Dec 2008 11:23:39 GMT\r\n" +
-                "ETag: W/\"5784//Quick Starts\"\r\n" +
+                "ETag: W/\"5784//Quick\"\r\n" +
                 "Accept-Ranges: bytes\r\n" +
-                "Content-Length: 346\r\n" +
+                "Content-Length: 332\r\n" +
                 "Keep-Alive: timeout=15, max=100\r\n" +
                 "Connection: Keep-Alive\r\n" +
                 "Content-Type: text/html; charset=UTF-8\r\n" +
                 "\r\n" +
-                "<html><head><title>Revision 5793: /Quick Starts</title></head>\n" +
+                "<html><head><title>Revision 5793: /Quick</title></head>\n" +
                 "<body>\n" +
-                " <h2>Revision 5793: /Quick Starts</h2>\n" +
+                " <h2>Revision 5793: /Quick</h2>\n" +
                 " <ul>\n" +
                 "  <li><a href=\"../\">..</a></li>\n" +
                 "  <li><a href=\"Test.txt\">Test.txt</a></li>\n" +
