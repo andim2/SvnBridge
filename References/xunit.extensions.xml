@@ -669,11 +669,12 @@
             Represents a single invocation of a data theory test method.
             </summary>
         </member>
-        <member name="M:Xunit.Extensions.TheoryCommand.#ctor(Xunit.Sdk.IMethodInfo,System.Object[])">
+        <member name="M:Xunit.Extensions.TheoryCommand.#ctor(Xunit.Sdk.IMethodInfo,System.String,System.Object[])">
             <summary>
             Creates a new instance of <see cref="T:Xunit.Extensions.TheoryCommand"/>.
             </summary>
             <param name="testMethod">The method under test</param>
+            <param name="displayName">The display name of the method under test</param>
             <param name="parameters">The parameters to be passed to the test method</param>
         </member>
         <member name="M:Xunit.Extensions.TheoryCommand.Execute(System.Object)">

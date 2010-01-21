@@ -125,9 +125,16 @@ namespace IntegrationTests
         [IntegrationTestFact]
         public void GetLog_Root_ReturnsCorrectResult()
         {
-            LogItem logItem = _provider.GetLog("", 1, _lastCommitRevision, Recursion.None, Int32.MaxValue);
+            int versionFrom = _lastCommitRevision;
+            CreateFolder(MergePaths(testPath, "/TestFolder"), true);
+            int versionTo = _lastCommitRevision;
+            LogItem logItem = _provider.GetLog("", versionFrom, versionTo, Recursion.Full, Int32.MaxValue);
 
-            Assert.Equal("", logItem.History[0].Changes[0].Item.RemoteName);
+            Assert.Equal(2, logItem.History.Length);
+            Assert.Equal(1, logItem.History[0].Changes.Count);
+            Assert.Equal(ChangeType.Add, logItem.History[0].Changes[0].ChangeType);
+            Assert.Equal(ItemType.Folder, logItem.History[0].Changes[0].Item.ItemType);
+            Assert.Equal(MergePaths(testPath, "/TestFolder").Substring(1), logItem.History[0].Changes[0].Item.RemoteName);
         }
 
         [IntegrationTestFact]

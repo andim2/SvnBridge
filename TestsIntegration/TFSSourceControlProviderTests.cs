@@ -91,17 +91,6 @@ namespace IntegrationTests
         }
 
         [IntegrationTestFact]
-        public void GetVersionForDate_DateAndTimeBeforeProjectExistedButAfterRepositoryExisted_ReturnsZero()
-        {
-            LogItem item = _provider.GetLog("", 1, _lastCommitRevision, Recursion.None, int.MaxValue);
-            DateTime checkTime = item.History[item.History.Length - 1].CommitDateTime.AddDays(-1);
-
-            int result = _provider.GetVersionForDate(checkTime);
-
-            Assert.Equal(0, result);
-        }
-
-        [IntegrationTestFact]
         public void GetVersionForDate_DateAndTimeBeforeLastCommit_ReturnsChangesetBeforeLastCommit()
         {
             Thread.Sleep(1000);

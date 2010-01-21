@@ -198,13 +198,16 @@ namespace SvnBridge.Net
                     writer.WriteLine("Connection: {0}", connection);
                 }
 
-                string[] connectionHeaderParts = request.Headers["Connection"].Split(',');
-                foreach (string directive in connectionHeaderParts)
+                if (request.Headers["Connection"] != null)
                 {
-                    if (directive.TrimStart() == "Keep-Alive")
+                    string[] connectionHeaderParts = request.Headers["Connection"].Split(',');
+                    foreach (string directive in connectionHeaderParts)
                     {
-                        writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
-                        writer.WriteLine("Connection: Keep-Alive");
+                        if (directive.TrimStart() == "Keep-Alive")
+                        {
+                            writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
+                            writer.WriteLine("Connection: Keep-Alive");
+                        }
                     }
                 }
 

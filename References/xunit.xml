@@ -801,16 +801,67 @@
             http://www.dotnetjunkies.com/WebLog/chris.taylor/archive/2004/03/03/8353.aspx
             </remarks>
         </member>
-        <member name="T:Xunit.Sdk.StackFrameTransformer">
+        <member name="T:Xunit.Sdk.MultiValueDictionary`2">
             <summary>
-            Transforms stack frames and stack traces into compiler-like output
-            so they can be double-clicked in Visual Studio.
+            A dictionary which contains multiple unique values for each key.
+            </summary>
+            <typeparam name="TKey">The type of the key.</typeparam>
+            <typeparam name="TValue">The type of the value.</typeparam>
+        </member>
+        <member name="M:Xunit.Sdk.MultiValueDictionary`2.AddValue(`0,`1)">
+            <summary>
+            Adds the value for the given key. If the key does not exist in the
+            dictionary yet, it will add it.
+            </summary>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="M:Xunit.Sdk.MultiValueDictionary`2.Clear">
+            <summary>
+            Removes all keys and values from the dictionary.
             </summary>
         </member>
-        <member name="M:Xunit.Sdk.StackFrameTransformer.TransformFrame(System.String)">
-            <summary/>
+        <member name="M:Xunit.Sdk.MultiValueDictionary`2.Contains(`0,`1)">
+            <summary>
+            Determines whether the dictionary contains to specified key and value.
+            </summary>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
         </member>
-        <member name="M:Xunit.Sdk.StackFrameTransformer.TransformStack(System.String)">
+        <member name="M:Xunit.Sdk.MultiValueDictionary`2.ForEach(Xunit.Sdk.MultiValueDictionary{`0,`1}.ForEachDelegate)">
+            <summary>
+            Calls the delegate once for each key/value pair in the dictionary.
+            </summary>
+        </member>
+        <member name="M:Xunit.Sdk.MultiValueDictionary`2.Remove(`0)">
+            <summary>
+            Removes the given key and all of its values.
+            </summary>
+        </member>
+        <member name="M:Xunit.Sdk.MultiValueDictionary`2.RemoveValue(`0,`1)">
+            <summary>
+            Removes the given value from the given key. If this was the
+            last value for the key, then the key is removed as well.
+            </summary>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="P:Xunit.Sdk.MultiValueDictionary`2.Item(`0)">
+            <summary>
+            Gets the values for the given key.
+            </summary>
+        </member>
+        <member name="P:Xunit.Sdk.MultiValueDictionary`2.Count">
+            <summary>
+            Gets the count of the keys in the dictionary.
+            </summary>
+        </member>
+        <member name="P:Xunit.Sdk.MultiValueDictionary`2.Keys">
+            <summary>
+            Gets the keys.
+            </summary>
+        </member>
+        <member name="T:Xunit.Sdk.MultiValueDictionary`2.ForEachDelegate">
             <summary/>
         </member>
         <member name="T:Xunit.Sdk.XmlUtility">
@@ -1710,7 +1761,7 @@
             <param name="displayName">The display name for the test. If null, the fully qualified
             type name is used.</param>
         </member>
-        <member name="M:Xunit.Sdk.MethodResult.#ctor(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+        <member name="M:Xunit.Sdk.MethodResult.#ctor(System.String,System.String,System.String,Xunit.Sdk.MultiValueDictionary{System.String,System.String})">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.Sdk.MethodResult"/> class.
             </summary>
@@ -1763,7 +1814,7 @@
             <param name="displayName">The display name for the test. If null, the fully qualified
             type name is used.</param>
         </member>
-        <member name="M:Xunit.Sdk.FailedResult.#ctor(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.String,System.String)">
+        <member name="M:Xunit.Sdk.FailedResult.#ctor(System.String,System.String,System.String,Xunit.Sdk.MultiValueDictionary{System.String,System.String},System.String,System.String,System.String)">
             <summary>
             Creates a new instance of the <see cref="T:Xunit.Sdk.FailedResult"/> class.
             </summary>
@@ -1810,7 +1861,7 @@
             <param name="displayName">The display name for the test. If null, the fully qualified
             type name is used.</param>
         </member>
-        <member name="M:Xunit.Sdk.PassedResult.#ctor(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+        <member name="M:Xunit.Sdk.PassedResult.#ctor(System.String,System.String,System.String,Xunit.Sdk.MultiValueDictionary{System.String,System.String})">
             <summary>
             Create a new instance of the <see cref="T:Xunit.Sdk.PassedResult"/> class.
             </summary>
@@ -1842,7 +1893,7 @@
             type name is used.</param>
             <param name="reason">The reason the test was skipped.</param>
         </member>
-        <member name="M:Xunit.Sdk.SkipResult.#ctor(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.String)">
+        <member name="M:Xunit.Sdk.SkipResult.#ctor(System.String,System.String,System.String,Xunit.Sdk.MultiValueDictionary{System.String,System.String},System.String)">
             <summary>
             Creates a new instance of the <see cref="T:Xunit.Sdk.SkipResult"/> class.
             </summary>
@@ -2181,10 +2232,15 @@
             <param name="method">The test method</param>
             <returns>The test commands which will execute the test runs for the given method</returns>
         </member>
-        <member name="P:Xunit.FactAttribute.Name">
+        <member name="P:Xunit.FactAttribute.DisplayName">
             <summary>
             Gets the name of the test to be used when the test is skipped. Defaults to
             null, which will cause the fully qualified test name to be used.
+            </summary>
+        </member>
+        <member name="P:Xunit.FactAttribute.Name">
+            <summary>
+            Obsolete. Please use the <see cref="P:Xunit.FactAttribute.DisplayName"/> property instead.
             </summary>
         </member>
         <member name="P:Xunit.FactAttribute.Skip">

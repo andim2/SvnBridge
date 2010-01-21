@@ -73,5 +73,24 @@ namespace UnitTests
             Assert.Equal(1, readFileResult.CallCount);
             Assert.Equal(item, readFileResult.Parameters[0]);
         }
+
+        [Fact]
+        public void Handle_ReturnsCorrect404WhenPathContainsMercurialConvertPath()
+        {
+            request.Path = "http://localhost:8082/!svn/ver/0/.svn";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            string expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                              "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
+                              "<C:error/>\n" +
+                              "<m:human-readable errcode=\"160013\">\n" +
+                              "Path does not exist in repository.\n" +
+                              "</m:human-readable>\n" +
+                              "</D:error>";
+            Assert.Equal(400, response.StatusCode);
+            Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
+            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+        }
     }
 }

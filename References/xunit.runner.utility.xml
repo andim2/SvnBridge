@@ -275,6 +275,16 @@
             <returns>The <see cref="T:Xunit.TestAssembly"/> which represents the newly
             loaded test assembly.</returns>
         </member>
+        <member name="M:Xunit.MultiAssemblyTestEnvironment.Load(System.String,System.String,System.Boolean)">
+            <summary>
+            Loads the specified assembly using the specified configuration file.
+            </summary>
+            <param name="assemblyFilename">The assembly filename.</param>
+            <param name="configFilename">The config filename.</param>
+            <param name="shadowCopy">Whether the DLLs should be shadow copied.</param>
+            <returns>The <see cref="T:Xunit.TestAssembly"/> which represents the newly
+            loaded test assembly.</returns>
+        </member>
         <member name="M:Xunit.MultiAssemblyTestEnvironment.Load(Xunit.IExecutorWrapper)">
             <summary>
             Adds the assembly loaded into the given <see cref="T:Xunit.IExecutorWrapper"/>
@@ -303,22 +313,29 @@
             Base class for all test results in the object model.
             </summary>
         </member>
-        <member name="M:Xunit.TestResult.#ctor(System.Double)">
+        <member name="M:Xunit.TestResult.#ctor(System.Double,System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.TestResult"/> class.
             </summary>
             <param name="duration">The duration the test took to run. For skipped tests, should be 0.0.</param>
+            <param name="displayName">The display name of the test result.</param>
+        </member>
+        <member name="P:Xunit.TestResult.DisplayName">
+            <summary>
+            Gets the display name of the test result.
+            </summary>
         </member>
         <member name="P:Xunit.TestResult.Duration">
             <summary>
             Gets the duration the test took to run.
             </summary>
         </member>
-        <member name="M:Xunit.TestFailedResult.#ctor(System.Double,System.String,System.String,System.String,System.String)">
+        <member name="M:Xunit.TestFailedResult.#ctor(System.Double,System.String,System.String,System.String,System.String,System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.TestFailedResult"/> class.
             </summary>
             <param name="duration">The duration the test took to run.</param>
+            <param name="displayName">The display name of the test result.</param>
             <param name="output">The output that was captured during the test run.</param>
             <param name="exceptionType">Type of the exception.</param>
             <param name="exceptionMessage">The exception message.</param>
@@ -349,10 +366,11 @@
             Represents a skipped test run in the object model.
             </summary>
         </member>
-        <member name="M:Xunit.TestSkippedResult.#ctor(System.String)">
+        <member name="M:Xunit.TestSkippedResult.#ctor(System.String,System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.TestSkippedResult"/> class.
             </summary>
+            <param name="displayName">The display name of the test result.</param>
             <param name="reason">The skip reason.</param>
         </member>
         <member name="P:Xunit.TestSkippedResult.Reason">
@@ -457,14 +475,6 @@
             <param name="method">The name of the method.</param>
             <returns>Return true to continue running tests; return false to stop the test run.</returns>
         </member>
-        <member name="M:Xunit.IRunnerLogger.TransformStart(System.String,System.String)">
-            <summary>
-            Called when a transform is being run against the assembly XML.
-            </summary>
-            <param name="outputType">The transform's output type, if known; null if not.</param>
-            <param name="filename">The filename the transform is writing to, if known;
-            null if the results are not being written to file.</param>
-        </member>
         <member name="M:Xunit.TestClassCallbackDispatcher.#ctor(Xunit.TestClass,Xunit.ITestMethodRunnerCallback)">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.TestClassCallbackDispatcher"/> class.
@@ -499,25 +509,115 @@
         <member name="M:Xunit.TestClassCallbackDispatcher.TestStart(System.String,System.String,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Xunit.TestClassCallbackDispatcher.TransformStart(System.String,System.String)">
-            <inheritdoc/>
-        </member>
         <member name="T:Xunit.TestPassedResult">
             <summary>
             Represents a passed test run in the object model.
             </summary>
         </member>
-        <member name="M:Xunit.TestPassedResult.#ctor(System.Double,System.String)">
+        <member name="M:Xunit.TestPassedResult.#ctor(System.Double,System.String,System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.TestPassedResult"/> class.
             </summary>
             <param name="duration">The duration the test took to run.</param>
+            <param name="displayName">The display name of the test result.</param>
             <param name="output">The output that was captured during the test run.</param>
         </member>
         <member name="P:Xunit.TestPassedResult.Output">
             <summary>
             Gets the output that was captured during the test run.
             </summary>
+        </member>
+        <member name="T:Xunit.TestStatus">
+            <summary>
+            Indicates the composite test method status
+            </summary>
+        </member>
+        <member name="F:Xunit.TestStatus.NotRun">
+            <summary>
+            The method has not been run
+            </summary>
+        </member>
+        <member name="F:Xunit.TestStatus.Passed">
+            <summary>
+            All test results for the last run passed
+            </summary>
+        </member>
+        <member name="F:Xunit.TestStatus.Failed">
+            <summary>
+            At least one test result for the last run failed
+            </summary>
+        </member>
+        <member name="F:Xunit.TestStatus.Skipped">
+            <summary>
+            At least one test result for the last run was skipped, and none failed
+            </summary>
+        </member>
+        <member name="T:Xunit.XunitProject">
+            <summary>
+            Represents an xUnit Test Project file (.xunit file)
+            </summary>
+        </member>
+        <member name="M:Xunit.XunitProject.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Xunit.XunitProject"/> class.
+            </summary>
+        </member>
+        <member name="M:Xunit.XunitProject.Load(System.String)">
+            <summary>
+            Loads an xUnit.net Test Project file from disk.
+            </summary>
+            <param name="filename">The test project filename</param>
+        </member>
+        <member name="M:Xunit.XunitProject.Save(System.String)">
+            <summary>
+            Saves the xUnit.net Test Project file to disk.
+            </summary>
+            <param name="filename">The test project filename</param>
+        </member>
+        <member name="P:Xunit.XunitProject.Assemblies">
+            <summary>
+            Gets or sets the assemblies in the project.
+            </summary>
+        </member>
+        <member name="T:Xunit.XunitProjectAssembly">
+            <summary>
+            Represents an assembly in an <see cref="T:Xunit.XunitProject"/>.
+            </summary>
+        </member>
+        <member name="M:Xunit.XunitProjectAssembly.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Xunit.XunitProjectAssembly"/> class.
+            </summary>
+        </member>
+        <member name="P:Xunit.XunitProjectAssembly.AssemblyFilename">
+            <summary>
+            Gets or sets the assembly filename.
+            </summary>
+        </member>
+        <member name="P:Xunit.XunitProjectAssembly.ConfigFilename">
+            <summary>
+            Gets or sets the config filename.
+            </summary>
+        </member>
+        <member name="P:Xunit.XunitProjectAssembly.ShadowCopy">
+            <summary>
+            Gets or sets a value indicating whether to shadow copy the assembly
+            when running the tests.
+            </summary>
+            <remarks>
+            The xUnit.net GUI runner does not support this field.
+            </remarks>
+        </member>
+        <member name="P:Xunit.XunitProjectAssembly.Output">
+            <summary>
+            Gets or sets the output filenames. The dictionary key is the type
+            of the file to be output; the dictionary value is the filename to
+            write the output to.
+            </summary>
+            <remarks>
+            The xUnit.net GUI runner does not support this field. The MSBuild
+            runner only supports output of type 'xml', 'html', and 'nunit'.
+            </remarks>
         </member>
         <member name="T:Xunit.ITestRunner">
             <summary>
@@ -652,7 +752,7 @@
             Represents a single test method.
             </summary>
         </member>
-        <member name="M:Xunit.TestMethod.#ctor(System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+        <member name="M:Xunit.TestMethod.#ctor(System.String,System.String,Xunit.MultiValueDictionary{System.String,System.String})">
             <summary>
             Initializes a new instance of the <see cref="T:Xunit.TestMethod"/> class.
             </summary>
@@ -665,14 +765,19 @@
             Gets the method's display name.
             </summary>
         </member>
-        <member name="P:Xunit.TestMethod.LastRunResult">
-            <summary>
-            Gets the last run result.
-            </summary>
-        </member>
         <member name="P:Xunit.TestMethod.MethodName">
             <summary>
             Gets the method's name.
+            </summary>
+        </member>
+        <member name="P:Xunit.TestMethod.RunResults">
+            <summary>
+            Gets the run results for the last run.
+            </summary>
+        </member>
+        <member name="P:Xunit.TestMethod.RunStatus">
+            <summary>
+            Gets the composite run status for all the results of the last run.
             </summary>
         </member>
         <member name="P:Xunit.TestMethod.TestClass">
@@ -797,6 +902,81 @@
         </member>
         <member name="P:Xunit.XslStreamTransformer.OutputType">
             <inheritdoc/>
+        </member>
+        <member name="T:Xunit.MultiValueDictionary`2">
+            <summary>
+            A dictionary which contains multiple unique values for each key.
+            </summary>
+            <typeparam name="TKey">The type of the key.</typeparam>
+            <typeparam name="TValue">The type of the value.</typeparam>
+        </member>
+        <member name="M:Xunit.MultiValueDictionary`2.AddValue(`0,`1)">
+            <summary>
+            Adds the value for the given key. If the key does not exist in the
+            dictionary yet, it will add it.
+            </summary>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="M:Xunit.MultiValueDictionary`2.Clear">
+            <summary>
+            Removes all keys and values from the dictionary.
+            </summary>
+        </member>
+        <member name="M:Xunit.MultiValueDictionary`2.Contains(`0,`1)">
+            <summary>
+            Determines whether the dictionary contains to specified key and value.
+            </summary>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="M:Xunit.MultiValueDictionary`2.ForEach(Xunit.MultiValueDictionary{`0,`1}.ForEachDelegate)">
+            <summary>
+            Calls the delegate once for each key/value pair in the dictionary.
+            </summary>
+        </member>
+        <member name="M:Xunit.MultiValueDictionary`2.Remove(`0)">
+            <summary>
+            Removes the given key and all of its values.
+            </summary>
+        </member>
+        <member name="M:Xunit.MultiValueDictionary`2.RemoveValue(`0,`1)">
+            <summary>
+            Removes the given value from the given key. If this was the
+            last value for the key, then the key is removed as well.
+            </summary>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="P:Xunit.MultiValueDictionary`2.Item(`0)">
+            <summary>
+            Gets the values for the given key.
+            </summary>
+        </member>
+        <member name="P:Xunit.MultiValueDictionary`2.Count">
+            <summary>
+            Gets the count of the keys in the dictionary.
+            </summary>
+        </member>
+        <member name="P:Xunit.MultiValueDictionary`2.Keys">
+            <summary>
+            Gets the keys.
+            </summary>
+        </member>
+        <member name="T:Xunit.MultiValueDictionary`2.ForEachDelegate">
+            <summary/>
+        </member>
+        <member name="T:Xunit.StackFrameTransformer">
+            <summary>
+            Transforms stack frames and stack traces into compiler-like output
+            so they can be double-clicked in Visual Studio.
+            </summary>
+        </member>
+        <member name="M:Xunit.StackFrameTransformer.TransformFrame(System.String)">
+            <summary/>
+        </member>
+        <member name="M:Xunit.StackFrameTransformer.TransformStack(System.String)">
+            <summary/>
         </member>
         <member name="T:Xunit.TestAssemblyBuilder">
             <summary>

@@ -22,8 +22,26 @@ namespace SvnBridge.Handlers
 			string requestPath = GetPath(request);
 			int itemVersion = 0;
 			string itemPath = null;
-            
-			if (requestPath.StartsWith("/!svn/bc/"))
+
+            if (requestPath.EndsWith("/!svn/ver/0/.svn", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // Note: Mercurial Convert sends across this specified path that it knows
+                // doesn't actually exist. We detect it and return the WebDav 404 message
+                // which it expects. A normal HTML 404 message does not suffice. Also note
+                // that IIS seems to be rewriting the 404 message, so using 400 still allows
+                // the conversion process to continue.
+                string output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                              "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
+                              "<C:error/>\n" +
+                              "<m:human-readable errcode=\"160013\">\n" +
+                              "Path does not exist in repository.\n" +
+                              "</m:human-readable>\n" +
+                              "</D:error>";
+                SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 400);
+                WriteToResponse(response, output);
+                return;
+            }
+            else if (requestPath.StartsWith("/!svn/bc/"))
 			{
 				string[] parts = requestPath.Split('/');
 				if (parts.Length >= 3)
