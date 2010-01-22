@@ -27,8 +27,6 @@ namespace SvnBridge.SourceControl
     {
         private static readonly Regex associatedWorkItems =
             new Regex(@"Work ?Items?: (.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex projectCreationComment =
-            new Regex(@"^Created team project folder \$/[a-zA-Z0-9]+ via the Team Project Creation Wizard$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private readonly string rootPath;
         private readonly string serverUrl;
@@ -337,9 +335,6 @@ namespace SvnBridge.SourceControl
 
             foreach (Changeset changeset in changes)
             {
-                if (projectCreationComment.IsMatch(changeset.Comment))
-                    continue;
-
                 SourceItemHistory sourceItemHistory = new SourceItemHistory(changeset.Changes[0].Item.cs, changeset.cmtr, changeset.date, changeset.Comment);
                 foreach (Change change in changeset.Changes)
                 {
@@ -1539,12 +1534,9 @@ namespace SvnBridge.SourceControl
             return itemSpec;
         }
 
-        private int GetEarliestVersion(string path)
+        public virtual int GetEarliestVersion(string path)
         {
             LogItem log = GetLog(path, 1, GetLatestVersion(), Recursion.None, int.MaxValue);
-            if (log.History.Length == 0)
-                return -1;
-
             return log.History[log.History.Length - 1].ChangeSetID;
         }
 

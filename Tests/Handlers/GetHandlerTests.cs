@@ -81,12 +81,12 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            string expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                              "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
-                              "<C:error/>\n" +
-                              "<m:human-readable errcode=\"160013\">\n" +
-                              "Path does not exist in repository.\n" +
-                              "</m:human-readable>\n" +
+            string expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
+                              "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\r\n" +
+                              "<C:error/>\r\n" +
+                              "<m:human-readable errcode=\"160013\">\r\n" +
+                              "Path does not exist in repository.\r\n" +
+                              "</m:human-readable>\r\n" +
                               "</D:error>";
             Assert.Equal(400, response.StatusCode);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);

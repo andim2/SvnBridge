@@ -70,7 +70,7 @@ namespace SvnBridge.SourceControl
             });
 		}
 
-        public ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items)
+        public virtual ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items)
         {
             return WrapWebException<ItemSet[]>(delegate
             {

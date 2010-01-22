@@ -78,6 +78,7 @@ namespace Tests
         public delegate void Cancel();
         public delegate void DeleteActivity(string activityId);
         public delegate void ErrorFullDetails(Exception exception, IHttpContext context);
+        public delegate int GetEarliestVersion(string path);
 
         public Results Attach(DeleteItem method, bool returnValue)
         {
@@ -268,6 +269,11 @@ namespace Tests
         public Results Attach(ErrorFullDetails method, Return action)
         {
             return base.Attach((Delegate)method, action);
+        }
+
+        public Results Attach(GetEarliestVersion method, int action)
+        {
+            return base.Attach((Delegate) method, (object) action);
         }
     }
 }

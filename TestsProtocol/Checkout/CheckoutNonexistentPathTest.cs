@@ -384,6 +384,7 @@ namespace ProtocolTests
         public void Test17()
         {
             stubs.Attach(provider.ItemExists, false);
+            stubs.Attach(provider.GetEarliestVersion, 1);
 
             string request =
                 "PROPFIND /!svn/bc/5469/Spikes/SvnFacade/InvalidFolder HTTP/1.1\r\n" +
@@ -1262,6 +1263,7 @@ namespace ProtocolTests
         public void Test34()
         {
             stubs.Attach(provider.ItemExists, false);
+            stubs.Attach(provider.GetEarliestVersion, 1);
 
             string request =
                 "PROPFIND /!svn/bc/5469/Spikes/SvnFacade/InvalidFolder HTTP/1.1\r\n" +

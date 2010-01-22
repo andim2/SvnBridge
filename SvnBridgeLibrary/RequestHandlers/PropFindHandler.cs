@@ -151,7 +151,14 @@ namespace SvnBridge.Handlers
 
             if (item == null)
             {
-                throw new FileNotFoundException("There is no item " + requestPath + " in revision " + revision);
+                if (IsSvnRequestForProjectCreation(path, revision, sourceControlProvider))
+                {
+                    item = GetItems(sourceControlProvider, revision, "", Recursion.None, true);
+                    item.Name = "trunk";
+                }
+
+                if (item == null)
+                    throw new FileNotFoundException("There is no item " + requestPath + " in revision " + revision);
             }
 
             using (StreamWriter writer = new StreamWriter(outputStream))
@@ -322,13 +329,19 @@ namespace SvnBridge.Handlers
         {
             int version = int.Parse(requestPath.Split('/')[3]);
             string path = requestPath.Substring(9 + version.ToString().Length);
+            bool setTrunkAsName = false;
 
             if (!sourceControlProvider.ItemExists(Helper.Decode(path), version))
             {
-                throw new FileNotFoundException();
+                if (!IsSvnRequestForProjectCreation(path, version, sourceControlProvider))
+                    throw new FileNotFoundException();
+                path = "";
+                setTrunkAsName = true;
             }
 
             FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depthHeader, path, version, false);
+            if (setTrunkAsName)
+                folderInfo.Name = "trunk";
 
             using (StreamWriter writer = new StreamWriter(outputStream))
             {
@@ -497,6 +510,17 @@ namespace SvnBridge.Handlers
             }
 
             return false;
+        }
+
+        private bool IsSvnRequestForProjectCreation(string requestPath, int version, TFSSourceControlProvider sourceControlProvider)
+        {
+            requestPath = Helper.Decode(requestPath);
+
+            bool isSvnPath = (requestPath.Equals("/trunk", StringComparison.OrdinalIgnoreCase)
+                              || requestPath.Equals("/branches", StringComparison.OrdinalIgnoreCase)
+                              || requestPath.Equals("/tags", StringComparison.OrdinalIgnoreCase));
+
+            return isSvnPath && version == sourceControlProvider.GetEarliestVersion(string.Empty);
         }
     }
 }
