@@ -395,9 +395,23 @@ namespace SvnBridge.SourceControl
                 {
                     // Workaround for bug in TFS2008sp1
                     int latestVersion = GetLatestVersion();
-                    LogItem log = GetLogItem(serverPath, itemVersion, 1, latestVersion, RecursionType.None, 1);
-                    LogItem result = GetLogItem(log.History[0].Changes[0].Item.RemoteName, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue);
-                    histories = new List<SourceItemHistory>(result.History);
+                    LogItem log = GetLogItem(serverPath, itemVersion, 1, latestVersion, RecursionType.None, 2);
+                    if (log.History[0].Changes[0].ChangeType == ChangeType.Delete && log.History.Length == 2)
+                        latestVersion = log.History[1].ChangeSetID;
+
+                    if (versionTo == latestVersion)
+                    {
+                        // in this case, there are only 2 revisions in TFS
+                        // the first being the initial checkin, and the second
+                        // being the deletion, there is no need to query further
+                        histories = new List<SourceItemHistory>(log.History);
+                    }
+                    else
+                    {
+                        LogItem result = GetLogItem(log.History[0].Changes[0].Item.RemoteName, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue);
+                        histories = new List<SourceItemHistory>(result.History);
+                    }
+
                     while ((histories.Count > 0) && (histories[0].ChangeSetID > versionTo))
                     {
                         histories.RemoveAt(0);
