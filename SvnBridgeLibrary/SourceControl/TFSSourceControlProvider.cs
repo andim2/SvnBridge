@@ -862,8 +862,11 @@ namespace SvnBridge.SourceControl
                 else
                 {
                     LogItem log = GetLog(item.Name, version, 1, version, Recursion.Full, 1);
-                    item.SubItemRevision = log.History[0].ChangeSetID;
-                    item.LastModifiedDate = log.History[0].CommitDateTime;
+                    if (log.History.Length != 0)
+                    {
+                        item.SubItemRevision = log.History[0].ChangeSetID;
+                        item.LastModifiedDate = log.History[0].CommitDateTime;
+                    }
                 }
             }
         }
