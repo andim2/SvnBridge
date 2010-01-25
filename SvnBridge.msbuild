@@ -6,7 +6,7 @@
 
 	<PropertyGroup>
 		<BuildType>Debug</BuildType>
-		<Revision>$(ccnetlabel)</Revision>
+		<Revision>$(build_number)</Revision>
 	</PropertyGroup>
 
 	<!-- CruiseControl targets -->
