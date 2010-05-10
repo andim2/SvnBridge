@@ -15,10 +15,10 @@ namespace IntegrationTests
         {
             PathParserProjectInDomainCodePlex pathParser = new PathParserProjectInDomainCodePlex();
             StubHttpRequest request = new StubHttpRequest();
-            request.Headers["Host"] = "ajaxcontroltoolkit.svn.codeplex.com";
+            request.Headers["Host"] = "wlquickapps.svn.codeplex.com";
             string result = pathParser.GetProjectName(request);
 
-            Assert.Equal("AtlasControlToolkit", result);
+            Assert.Equal("WLQuickAppsBeta", result);
         }
 
         [Fact]

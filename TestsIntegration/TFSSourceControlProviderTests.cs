@@ -107,7 +107,7 @@ namespace IntegrationTests
             Thread.Sleep(1000);
             int expected = _lastCommitRevision;
             DateTime startDate = DateTime.Now;
-            Thread.Sleep(1000);
+            Thread.Sleep(3000);
             WriteFile(MergePaths(testPath, "/TestFile.txt"), "Fun text", true);
 
             int result = _provider.GetVersionForDate(startDate);

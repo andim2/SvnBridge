@@ -20,6 +20,7 @@ namespace SvnBridge.SourceControl
     using Utility;
     using SvnBridge.Cache;
     using System.Web.Services.Protocols;
+    using System.Linq;
 
     [Interceptor(typeof(TracingInterceptor))]
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]
@@ -273,20 +274,28 @@ namespace SvnBridge.SourceControl
                 if (renamedItems.Count > 0)
                 {
                     ItemMetaData[] oldItems = GetPreviousVersionOfItems(renamedItems.ToArray(), history.ChangeSetID);
-                    Dictionary<int, ItemMetaData> oldItemsByKey = new Dictionary<int, ItemMetaData>();
-                    foreach (ItemMetaData oldItem in oldItems)
+                    var oldItemsById = new Dictionary<int, ItemMetaData>();
+                    for (var i = 0; i < renamedItems.Count; i++)
                     {
-                        oldItemsByKey[oldItem.Id] = oldItem;
+                        if(oldItems[i] != null)
+                            oldItemsById[renamedItems[i].ItemId] = oldItems[i];
                     }
 
-                    foreach (SourceItemChange change in history.Changes)
+                    var renamesWithNoPreviousVersion = new List<SourceItemChange>();
+                    foreach (var change in history.Changes.Where(change => (change.ChangeType & ChangeType.Rename) == ChangeType.Rename))
                     {
                         ItemMetaData oldItem;
-                        if (oldItemsByKey.TryGetValue(change.Item.ItemId, out oldItem))
-                        {
+                        if (oldItemsById.TryGetValue(change.Item.ItemId, out oldItem))
                             change.Item = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
-                        }
+                        else
+                            renamesWithNoPreviousVersion.Add(change);
                     }
+
+                    foreach (var rename in renamesWithNoPreviousVersion)
+                        history.Changes.Remove(rename);
+                    history.Changes.RemoveAll(item => item.ChangeType == ChangeType.None);
+                    history.Changes.RemoveAll(item => item.ChangeType == ChangeType.Delete &&
+                                              oldItems.Any(oldItem => oldItem != null && oldItem.Id == item.Item.ItemId));
                 }
                 if (branchedItems.Count > 0)
                 {
@@ -1528,27 +1537,38 @@ namespace SvnBridge.SourceControl
 
         public virtual ItemMetaData[] GetPreviousVersionOfItems(SourceItem[] items, int changeset)
         {
-            int previousRevision = (changeset - 1);
+            var branchQueries = sourceControlService.QueryBranches(serverUrl, 
+                                                                   credentials,
+                                                                   items.Select(item => CreateItemSpec(rootPath + item.RemoteName, RecursionType.None)).ToArray(), 
+                                                                   VersionSpec.FromChangeset(changeset));
+            var renamedItems = items.Select((item, i) =>
+                branchQueries[i].FirstOrDefault(branchItem => 
+                    branchItem.ToItem != null && 
+                    branchItem.ToItem.RemoteChangesetId == changeset && 
+                    branchItem.ToItem.RemoteName == rootPath + item.RemoteName)).ToList();
+            
+            var previousRevision = changeset - 1;
 
-            List<int> itemIds = new List<int>();
-            foreach (SourceItem item in items)
-                itemIds.Add(item.ItemId);
+            if (renamedItems.All(item => item == null || item.FromItem == null))
+            {
+                // fallback for TFS08 and earlier
+                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, items.Select(item => item.ItemId).ToArray(), previousRevision);
+                return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
+            }
 
-            SourceItem[] sourceItems = sourceControlService.QueryItems(serverUrl, credentials, itemIds.ToArray(), previousRevision);
-
-            List<ItemMetaData> result = new List<ItemMetaData>();
-            foreach (SourceItem sourceItem in sourceItems)
-                result.Add(ConvertSourceItem(sourceItem, rootPath));
-
+            var result = new List<ItemMetaData>();
+            for (var i = 0; i < renamedItems.Count; i++)
+            {
+                var previousSourceItemId = (renamedItems[i] != null && renamedItems[i].FromItem != null) ? renamedItems[i].FromItem.ItemId : items[i].ItemId;
+                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, new[] { previousSourceItemId }, previousRevision);
+                result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
+            }
             return result.ToArray();
         }
 
-        private ItemSpec CreateItemSpec(string item, RecursionType recurse)
+        static ItemSpec CreateItemSpec(string item, RecursionType recurse)
         {
-            ItemSpec itemSpec = new ItemSpec();
-            itemSpec.item = item;
-            itemSpec.recurse = recurse;
-            return itemSpec;
+            return new ItemSpec { item = item, recurse = recurse };
         }
 
         public virtual int GetEarliestVersion(string path)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Web.Services.Protocols;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary.Utility;
@@ -72,26 +73,26 @@ namespace SvnBridge.SourceControl
 
         public virtual ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items)
         {
-            return WrapWebException<ItemSet[]>(delegate
+            return WrapWebException(delegate
             {
                 Repository webSvc = CreateProxy(tfsUrl, credentials);
                 ItemSet[] result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
                 if (result[0].Items.Length == 0)
                 {
-                    // Check if no items returned due to no permissions.  QueryHistory throws exception for bad path.
-                    bool error = false;
+                    // Check if no items returned due to no permissions.  
+                    var noPermissions = true;
                     try
                     {
                         webSvc.QueryHistory(null, null, items[0], version, null, VersionSpec.First, version, 1, false, false, false);
                     }
-                    catch
+                    catch (SoapException)
                     {
-                        error = true;
+                        // For TFS08 and earlier, QueryHistory faults for bad path.
+                        noPermissions = false;
                     }
-                    if (!error)
-                    {
+
+                    if (noPermissions)
                         throw new NetworkAccessDeniedException();
-                    }
                 }
                 return result;
             });
