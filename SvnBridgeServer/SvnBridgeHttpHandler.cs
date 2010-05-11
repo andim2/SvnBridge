@@ -1,5 +1,6 @@
 using System;
 using System.Web;
+using System.Web.Services.Protocols;
 using SvnBridge.Net;
 using SvnBridge;
 using SvnBridge.Infrastructure;
@@ -59,8 +60,11 @@ namespace SvnBridgeServer
                 }
                 catch (Exception ex)
                 {
-                    DefaultLogger logger = Container.Resolve<DefaultLogger>();
-                    logger.ErrorFullDetails(ex, new HttpContextWrapper(context));
+                    if (!(ex is SoapException && ex.Message != null && ex.Message.Contains("Project is not a TFS project")))
+                    {
+                        var logger = Container.Resolve<DefaultLogger>();
+                        logger.ErrorFullDetails(ex, new HttpContextWrapper(context)); 
+                    }
                 }
 			}
 			finally

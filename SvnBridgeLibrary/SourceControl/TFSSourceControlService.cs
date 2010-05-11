@@ -93,10 +93,17 @@ namespace SvnBridge.SourceControl
 
                     if (!badPath && !string.IsNullOrEmpty(Configuration.ReadAllUserName))
                     {
-                        Repository readAllWebSvc = CreateProxy(tfsUrl, new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain));
-                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
-                        if (readAllResult[0].Items.Length == 0)
-                            badPath = true;
+                        try
+                        {
+                            Repository readAllWebSvc = CreateProxy(tfsUrl, new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain));
+                            ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                            if (readAllResult[0].Items.Length == 0)
+                                badPath = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
+                        }
                     }
 
                     if (!badPath)
