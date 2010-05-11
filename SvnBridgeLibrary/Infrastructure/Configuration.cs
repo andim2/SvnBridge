@@ -27,7 +27,10 @@ namespace SvnBridge.Infrastructure
             TfsProxyUrl,
             TraceEnabled,
             UseCodePlexServers,
-            UseProxy
+            UseProxy,
+            ReadAllUserDomain,
+            ReadAllUserName,
+            ReadAllUserPassword,
         }
         private static readonly string userConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\SvnBridge\3.0");
 
@@ -163,6 +166,24 @@ namespace SvnBridge.Infrastructure
                 else
                     userConfig[ConfigSettings.ProxyEncryptedPassword.ToString()] = Convert.ToBase64String(value);
             }
+        }
+
+        public static string ReadAllUserDomain
+        {
+            get { return ReadConfig(ConfigSettings.ReadAllUserDomain, ""); }
+            set { userConfig[ConfigSettings.ReadAllUserDomain.ToString()] = value; }
+        }
+
+        public static string ReadAllUserName
+        {
+            get { return ReadConfig(ConfigSettings.ReadAllUserName, ""); }
+            set { userConfig[ConfigSettings.ReadAllUserName.ToString()] = value; }
+        }
+
+        public static string ReadAllUserPassword
+        {
+            get { return ReadConfig(ConfigSettings.ReadAllUserPassword, ""); }
+            set { userConfig[ConfigSettings.ReadAllUserPassword.ToString()] = value; }
         }
 
         public static object AppSettings(string name)

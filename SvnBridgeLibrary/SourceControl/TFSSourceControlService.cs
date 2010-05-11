@@ -80,7 +80,7 @@ namespace SvnBridge.SourceControl
                 if (result[0].Items.Length == 0)
                 {
                     // Check if no items returned due to no permissions.  
-                    var noPermissions = true;
+                    var badPath = false;
                     try
                     {
                         webSvc.QueryHistory(null, null, items[0], version, null, VersionSpec.First, version, 1, false, false, false);
@@ -88,10 +88,18 @@ namespace SvnBridge.SourceControl
                     catch (SoapException)
                     {
                         // For TFS08 and earlier, QueryHistory faults for bad path.
-                        noPermissions = false;
+                        badPath = true;
                     }
 
-                    if (noPermissions)
+                    if (!badPath && !string.IsNullOrEmpty(Configuration.ReadAllUserName))
+                    {
+                        Repository readAllWebSvc = CreateProxy(tfsUrl, new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain));
+                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                        if (readAllResult[0].Items.Length == 0)
+                            badPath = true;
+                    }
+
+                    if (!badPath)
                         throw new NetworkAccessDeniedException();
                 }
                 return result;
