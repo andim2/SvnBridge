@@ -34,19 +34,18 @@ namespace SvnBridge.PathParsing
 		private string GetUrlFromRequest(Uri requestUrl)
 		{
 			string path = requestUrl.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
-			int firstIndexOfSlash = path.IndexOf('/');
+            
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new InvalidOperationException("Could not find server url in the url (" +
+                    requestUrl.AbsoluteUri + "). Not valid when using the RequestBasePathParser");
+            }
 
-			if (string.IsNullOrEmpty(path))
-			{
-				throw new InvalidOperationException("Could not find server url in the url (" + 
-					requestUrl.AbsoluteUri + "). Not valid when using the RequestBasePathParser");
-			}
-			
-			if(firstIndexOfSlash==-1)
-				return path;
-
-			string url = path.Substring(0, firstIndexOfSlash);
-			return url;
+		    int serverDelim = path.IndexOf("/$");
+            if (serverDelim == -1)
+			    serverDelim = path.IndexOf('/');
+            
+            return serverDelim == -1 ? path : path.Substring(0, serverDelim);
 		}
 
 		public override string GetLocalPath(IHttpRequest request)
@@ -65,6 +64,8 @@ namespace SvnBridge.PathParsing
 			string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
 			string urlFromRequest = GetUrlFromRequest(urlAsUri);
 			string localPath = path.Substring(urlFromRequest.Length);
+            if (localPath.StartsWith("/$"))
+                localPath = localPath.Length > 2 ? localPath.Substring(2) : string.Empty;
 			if (!localPath.StartsWith("/"))
 				localPath = "/" + localPath;
 
@@ -84,6 +85,8 @@ namespace SvnBridge.PathParsing
 				path = '/' + path;
 			if (path.EndsWith("/") == false)
 				path = path + '/';
+            if (path.Contains("/tfs"))
+                path += "$/";
 			return path;
 		}
 

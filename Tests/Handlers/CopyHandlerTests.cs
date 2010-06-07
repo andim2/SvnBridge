@@ -32,6 +32,19 @@ namespace UnitTests
         }
 
         [Fact]
+        public void TestRequestDestinationWithCollection()
+        {
+            Results r = stubs.Attach(provider.CopyItem);
+            request.Path = "http://localhost:8082/!svn/bc/5730/B%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60";
+            request.Headers["Destination"] =
+                "http://localhost:8084/tfserver/tfs/collection/$/!svn/wrk/15407bc3-2250-aa4c-aa51-4e65b2c824c3/BB%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60";
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            Assert.Equal("15407bc3-2250-aa4c-aa51-4e65b2c824c3", r.Parameters[0]);
+        }
+
+        [Fact]
         public void TestHandleProducesCorrectOutput()
         {
             Results r = stubs.Attach(provider.CopyItem);

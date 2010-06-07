@@ -22,10 +22,11 @@ namespace SvnBridge.PathParsing
 
 		public string GetActivityIdFromDestination(string href)
 		{
-			return href.Split('/')[6];
+		    var parts = href.Split('/');
+		    return href.Contains("/$") ? parts[9] : parts[6];
 		}
 
-		public string ToApplicationPath(IHttpRequest request, string href)
+	    public string ToApplicationPath(IHttpRequest request, string href)
 		{
 			string applicationPath = GetApplicationPath(request);
 			if (applicationPath.EndsWith("/"))

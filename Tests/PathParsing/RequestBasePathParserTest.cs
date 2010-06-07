@@ -90,7 +90,68 @@ namespace UnitTests
             PathParserServerAndProjectInPath parser = new PathParserServerAndProjectInPath(urlValidator);
             string url = parser.GetLocalPath(request);
             Assert.Equal("/SvnBridge", url);
+        }
 
+        [Fact]
+        public void CanParseServerFromUrl_WithCollection()
+        {
+            var urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
+            Results r1 = stubs.Attach((MyMocks.IsValidTfsServerUrl)urlValidator.IsValidTfsServerUrl, Return.Value(true));
+
+            var parser = new PathParserServerAndProjectInPath(urlValidator);
+            var request = new StubHttpRequest
+            {
+                Url = new Uri("http://localhost:8081/tfs03.codeplex.com/tfs/DefaultCollection/$/SvnBridge")
+            };
+            string url = parser.GetServerUrl(request, null);
+            Assert.Equal("https://tfs03.codeplex.com/tfs/DefaultCollection", url);
+            Assert.Equal("https://tfs03.codeplex.com/tfs/DefaultCollection", r1.Parameters[0]);
+        }
+
+        [Fact]
+        public void CanParseServerFromUrl_WithCollectionAndPortAndNestedFolder()
+        {
+            var urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
+            Results r1 = stubs.Attach((MyMocks.IsValidTfsServerUrl)urlValidator.IsValidTfsServerUrl, Return.Value(true));
+
+            var parser = new PathParserServerAndProjectInPath(urlValidator);
+            var request = new StubHttpRequest
+            {
+                Url = new Uri("http://localhost:8081/tfs03.codeplex.com:8080/tfs/DefaultCollection/$/SvnBridge/Foo")
+            };
+            string url = parser.GetServerUrl(request, null);
+            Assert.Equal("https://tfs03.codeplex.com:8080/tfs/DefaultCollection", url);
+            Assert.Equal("https://tfs03.codeplex.com:8080/tfs/DefaultCollection", r1.Parameters[0]);
+        }
+
+        [Fact]
+        public void CanGetLocalPath_WithCollection()
+        {
+            var request = new StubHttpRequest
+            {
+                Url = new Uri("http://localhost:8081/tfs03.codeplex.com/tfs/DefaultCollection/$/SvnBridge")
+            };
+
+            var urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
+
+            var parser = new PathParserServerAndProjectInPath(urlValidator);
+            string url = parser.GetLocalPath(request);
+            Assert.Equal("/SvnBridge", url);
+        }
+
+        [Fact]
+        public void CanGetLocalPath_WithCollectionAndPortAndNestedFolder()
+        {
+            var request = new StubHttpRequest
+            {
+                Url = new Uri("http://localhost:8081/tfs03.codeplex.com:8080/tfs/DefaultCollection/$/SvnBridge/Foo")
+            };
+
+            var urlValidator = stubs.CreateObject<TfsUrlValidator>(null);
+
+            var parser = new PathParserServerAndProjectInPath(urlValidator);
+            string url = parser.GetLocalPath(request);
+            Assert.Equal("/SvnBridge/Foo", url);
         }
     }
 }

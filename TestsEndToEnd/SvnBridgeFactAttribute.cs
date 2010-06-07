@@ -50,9 +50,11 @@ namespace EndToEndTests
             test.TestRoot = false;
             test.Initialize();
 
-			string testUrl = "http://" + IPAddress.Loopback + ":" + test.Port + "/" +
-			                 (new Uri(test.ServerUrl).Host + ":" + new Uri(test.ServerUrl).Port)
-			                 + "/SvnBridgeTesting" + test.TestPath;
+		    var serverUrl = new Uri(test.ServerUrl).Host + ":" + new Uri(test.ServerUrl).Port;
+            if (test.ServerUrl.Contains("/tfs"))
+                serverUrl += new Uri(test.ServerUrl).PathAndQuery + "/$";
+
+		    string testUrl = "http://" + IPAddress.Loopback + ":" + test.Port + "/" + serverUrl + "/SvnBridgeTesting" + test.TestPath;
 
 			IPathParser parser = new PathParserServerAndProjectInPath(new TfsUrlValidator(new WebCache()));
 
