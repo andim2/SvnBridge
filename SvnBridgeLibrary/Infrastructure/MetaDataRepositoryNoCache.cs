@@ -70,7 +70,7 @@ namespace SvnBridge.Infrastructure
                     sourceItem.ItemType = item.type;
                     sourceItem.ItemId = item.itemid;
                     sourceItem.RemoteName = item.item;
-                    var downloadUrlExtension = serverUrl.Contains("/tfs") ? "ashx" : "asmx"; 
+                    var downloadUrlExtension = serverUrl.Contains("/tfs/") ? "ashx" : "asmx"; 
                     sourceItem.DownloadUrl = serverUrl + "/VersionControl/v1.0/item." + downloadUrlExtension + "?" + item.durl;
                     if (!result.ContainsKey(sourceItem.RemoteName))
                     {
