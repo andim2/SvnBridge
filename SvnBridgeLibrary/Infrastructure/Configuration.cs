@@ -31,6 +31,9 @@ namespace SvnBridge.Infrastructure
             ReadAllUserDomain,
             ReadAllUserName,
             ReadAllUserPassword,
+            CodePlexAnonUserDomain,
+            CodePlexAnonUserName,
+            CodePlexAnonUserPassword
         }
         private static readonly string userConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\SvnBridge\3.0");
 
@@ -184,6 +187,24 @@ namespace SvnBridge.Infrastructure
         {
             get { return ReadConfig(ConfigSettings.ReadAllUserPassword, ""); }
             set { userConfig[ConfigSettings.ReadAllUserPassword.ToString()] = value; }
+        }
+
+        public static string CodePlexAnonUserDomain
+        {
+            get { return ReadConfig(ConfigSettings.CodePlexAnonUserDomain, ""); }
+            set { userConfig[ConfigSettings.CodePlexAnonUserDomain.ToString()] = value; }
+        }
+
+        public static string CodePlexAnonUserName
+        {
+            get { return ReadConfig(ConfigSettings.CodePlexAnonUserName, ""); }
+            set { userConfig[ConfigSettings.CodePlexAnonUserName.ToString()] = value; }
+        }
+
+        public static string CodePlexAnonUserPassword
+        {
+            get { return ReadConfig(ConfigSettings.CodePlexAnonUserPassword, ""); }
+            set { userConfig[ConfigSettings.CodePlexAnonUserPassword.ToString()] = value; } 
         }
 
         public static object AppSettings(string name)

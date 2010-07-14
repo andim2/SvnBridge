@@ -1,28 +1,38 @@
 using System;
 using System.Net;
+using SvnBridge.Infrastructure;
 
 namespace SvnBridge.SourceControl
 {
     public static class CredentialsHelper
     {
         public static NetworkCredential DefaultCredentials = CredentialCache.DefaultNetworkCredentials;
-        public static NetworkCredential NullCredentials = null;
+        public static NetworkCredential NullCredentials;
 
         public static ICredentials GetCredentialsForServer(string tfsUrl, ICredentials credentials)
         {
             if (credentials == null)
             {
-                Uri uri = new Uri(tfsUrl);
-                if (uri.Host.ToLowerInvariant().EndsWith("codeplex.com"))
+                var uri = new Uri(tfsUrl);
+                if (uri.Host.ToLowerInvariant().EndsWith("codeplex.com") || uri.Host.ToLowerInvariant().Contains("tfs.codeplex.com"))
                 {
-                    CredentialCache cache = new CredentialCache();
-                    cache.Add(uri, "Basic", new NetworkCredential("anonymous", null));
-                    credentials = cache;
+                    if (!string.IsNullOrEmpty(Configuration.CodePlexAnonUserName))
+                    {
+                        credentials = new NetworkCredential(Configuration.CodePlexAnonUserName,
+                                                            Configuration.CodePlexAnonUserPassword,
+                                                            Configuration.CodePlexAnonUserDomain);
+                    }
+                    else
+                    {
+                        var cache = new CredentialCache
+                        {
+                            { uri, "Basic", new NetworkCredential("anonymous", null) }
+                        };
+                        credentials = cache;
+                    }
                 }
                 else
-                {
                     credentials = DefaultCredentials;
-                }
             }
             return credentials;
         }

@@ -78,7 +78,7 @@ namespace SvnBridge.Net
                     return;
                 }
 
-                if (credential != null && tfsUrl.ToLowerInvariant().EndsWith("codeplex.com"))
+                if (credential != null && (tfsUrl.ToLowerInvariant().EndsWith("codeplex.com") || tfsUrl.ToLowerInvariant().Contains("tfs.codeplex.com")))
                 {
                     string username = credential.UserName;
                     string domain = credential.Domain;

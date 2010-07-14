@@ -51,7 +51,9 @@ namespace SvnBridge.PathParsing
                             else
                                 throw;
                         }
-                        string tfsServerUrl = info.TfsServerUrl.Substring(0, info.TfsServerUrl.Length - 5);
+                        string tfsServerUrl = info.TfsServerUrl.Contains("/tfs/") ? 
+                            info.TfsServerUrl.Substring(0, info.TfsServerUrl.Length - 1).Replace(":443", "") :
+                            info.TfsServerUrl.Substring(0, info.TfsServerUrl.Length - 5);
                         string tfsProjectName = info.ProjectPrefix.Substring(2, info.ProjectPrefix.Length - 3);
                         projectLocations[projectName] = new ProjectLocationInformation(tfsProjectName, tfsServerUrl);
                     }
