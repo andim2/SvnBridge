@@ -79,34 +79,27 @@ namespace SvnBridge.SourceControl
                 ItemSet[] result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
                 if (result[0].Items.Length == 0)
                 {
-                    // Check if no items returned due to no permissions.  
-                    var badPath = false;
+                    // Check if no items returned due to no permissions.
+                    var invalidPath = false;
+
+                    NetworkCredential readAllCredentials = CredentialCache.DefaultNetworkCredentials;
+                    if (!string.IsNullOrEmpty(Configuration.ReadAllUserName))
+                    {
+                        readAllCredentials = new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain);
+                    }
                     try
                     {
-                        webSvc.QueryHistory(null, null, items[0], version, null, VersionSpec.First, version, 1, false, false, false);
+                        Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
+                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                        if (readAllResult[0].Items.Length == 0)
+                            invalidPath = true;
                     }
-                    catch (SoapException)
+                    catch (Exception ex)
                     {
-                        // For TFS08 and earlier, QueryHistory faults for bad path.
-                        badPath = true;
+                        logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
                     }
 
-                    if (!badPath && !string.IsNullOrEmpty(Configuration.ReadAllUserName))
-                    {
-                        try
-                        {
-                            Repository readAllWebSvc = CreateProxy(tfsUrl, new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain));
-                            ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
-                            if (readAllResult[0].Items.Length == 0)
-                                badPath = true;
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
-                        }
-                    }
-
-                    if (!badPath)
+                    if (!invalidPath)
                         throw new NetworkAccessDeniedException();
                 }
                 return result;

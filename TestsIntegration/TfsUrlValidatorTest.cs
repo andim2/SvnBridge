@@ -11,14 +11,14 @@ namespace IntegrationTests
 		[Fact]
 		public void WillValidateHttpsUrl()
 		{
-			bool validUrl = new TfsUrlValidator(new WebCache()).IsValidTfsServerUrl("https://tfs03.codeplex.com");
+			bool validUrl = new TfsUrlValidator(new WebCache()).IsValidTfsServerUrl("https://tfs.codeplex.com/tfs/TFS03");
 			Assert.True(validUrl);
 		}
 
 		[Fact]
 		public void WillRejectHttpUrl()
 		{
-			bool validUrl = new TfsUrlValidator(new WebCache()).IsValidTfsServerUrl("http://tfs03.codeplex.com");
+			bool validUrl = new TfsUrlValidator(new WebCache()).IsValidTfsServerUrl("http://tfs.codeplex.com/tfs/TFS03");
 			Assert.False(validUrl);
 		}
 

@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsUnit", "Tests\TestsUnit.csproj", "{A374829E-4BE3-4DF5-9CCF-6EE9794D34A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge", "SvnBridge\SvnBridge.csproj", "{22D15920-C064-457D-889B-F7A2E16F3E05}"
@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.TCPTrace", "TCPTrace\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsProtocol", "TestsProtocol\TestsProtocol.csproj", "{593B4F22-DB4E-451C-BC6E-5F620CE818E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridgeViaIis", "SvnBridgeViaIis\SvnBridgeViaIis.csproj", "{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}"
+Project("{00000000-0000-0000-0000-000000000000}") = "SvnBridgeViaIis", "SvnBridgeViaIis\SvnBridgeViaIis.csproj", "{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge.Library", "SvnBridgeLibrary\SvnBridge.Library.csproj", "{95E4E16B-0975-4705-B3A0-83700DE483C2}"
 EndProject

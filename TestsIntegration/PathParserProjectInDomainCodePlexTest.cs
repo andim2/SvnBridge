@@ -29,7 +29,7 @@ namespace IntegrationTests
             request.Headers["Host"] = "svnbridge.svn.codeplex.com";
             string result = pathParser.GetServerUrl(request, null);
 
-            Assert.Equal("https://tfs03.codeplex.com", result);
+            Assert.Equal("https://tfs.codeplex.com/tfs/TFS03", result);
         }
 
         [Fact]
