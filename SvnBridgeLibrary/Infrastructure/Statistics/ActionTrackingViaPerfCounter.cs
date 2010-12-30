@@ -59,13 +59,13 @@ namespace SvnBridge.Infrastructure.Statistics
             {
                 CreatePerfCounters(handlers);
             }
-            catch (SecurityException)
+            catch (Exception e)
             {
                 enabled = false;
                 if (!Configuration.PerfCountersMandatory)
                     return;
                 throw new InvalidOperationException("Could not create performance counters for SvnBridge. Please run the SvnBridge.PerfCounter.Installer.exe program to install them." + Environment.NewLine +
-                    "You can also make them optional by turning off the 'PerfCountersAreMandatory' setting in the application configuration file.");
+                    "You can also make them optional by turning off the 'PerfCountersAreMandatory' setting in the application configuration file.", e);
             }
         }
 
