@@ -20,9 +20,13 @@ namespace SvnBridge.PathParsing
 		{
 			string url = GetUrlFromRequest(request.Url);
 
-			if (urlValidator.IsValidTfsServerUrl("https://" + url))
+            if (urlValidator.IsValidTfsServerUrl("http://" + url + ":8080/tfs"))
+                return "http://" + url + ":8080/tfs";
+            if (urlValidator.IsValidTfsServerUrl("https://" + url + ":8443/tfs"))
+                return "https://" + url + ":8443/tfs";
+            if (urlValidator.IsValidTfsServerUrl("https://" + url))
 				return "https://" + url;
-            if(urlValidator.IsValidTfsServerUrl("http://" + url))
+            if (urlValidator.IsValidTfsServerUrl("http://" + url))
                 return "http://" + url;
             if (urlValidator.IsValidTfsServerUrl("http://" + url + ":8080"))
                 return "http://" + url + ":8080";
