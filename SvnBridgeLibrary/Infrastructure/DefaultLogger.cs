@@ -77,7 +77,7 @@ namespace SvnBridge.Infrastructure
         {           
             string host = context.Request.Headers["Host"];
             if (!string.IsNullOrEmpty(host))
-                host = host.Replace('.', '-') + "-";
+                host = host.Replace('.', '-').Replace(':', '-') + "-";
 
             Guid errorId = Guid.NewGuid();
             string logFile = Path.Combine(LogPath, string.Format("{0}Error-{1}.log", !string.IsNullOrEmpty(host) ? host : "", errorId));
