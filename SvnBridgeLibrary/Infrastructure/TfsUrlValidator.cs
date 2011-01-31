@@ -5,8 +5,8 @@ using SvnBridge.Cache;
 
 namespace SvnBridge.Infrastructure
 {
-	public class TfsUrlValidator
-	{
+    public class TfsUrlValidator
+    {
 		private WebCache cache;
 
 		public TfsUrlValidator(WebCache cache)

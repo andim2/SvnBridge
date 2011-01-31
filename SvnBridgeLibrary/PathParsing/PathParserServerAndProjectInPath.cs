@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using System.Net;
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
 using SvnBridge.Infrastructure;
 
 namespace SvnBridge.PathParsing
@@ -20,10 +18,10 @@ namespace SvnBridge.PathParsing
 		{
 			string url = GetUrlFromRequest(request.Url);
 
-            if (urlValidator.IsValidTfsServerUrl("http://" + url + ":8080/tfs"))
-                return "http://" + url + ":8080/tfs";
             if (urlValidator.IsValidTfsServerUrl("https://" + url + ":8443/tfs"))
                 return "https://" + url + ":8443/tfs";
+            if (urlValidator.IsValidTfsServerUrl("http://" + url + ":8080/tfs"))
+                return "http://" + url + ":8080/tfs";
             if (urlValidator.IsValidTfsServerUrl("https://" + url))
 				return "https://" + url;
             if (urlValidator.IsValidTfsServerUrl("http://" + url))

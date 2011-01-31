@@ -74,9 +74,13 @@ namespace SvnBridge.Infrastructure
         }
 
         public virtual void ErrorFullDetails(Exception exception, IHttpContext context)
-        {
+        {           
+            string host = context.Request.Headers["Host"];
+            if (!string.IsNullOrEmpty(host))
+                host = host.Replace('.', '-') + "-";
+
             Guid errorId = Guid.NewGuid();
-            string logFile = Path.Combine(LogPath, "Error-" + errorId + ".log");
+            string logFile = Path.Combine(LogPath, string.Format("{0}Error-{1}.log", !string.IsNullOrEmpty(host) ? host : "", errorId));
             var output = new StringBuilder();
             output.AppendFormat("Time     : {0}\r\n", DateTime.Now);
             output.AppendFormat("Message  : {0}\r\n", exception.Message);
