@@ -22,6 +22,37 @@ namespace SvnBridge.SourceControl
     using System.Web.Services.Protocols; // SoapException
     using System.Linq; // System.Array extensions
 
+    /// <summary>
+    /// I don't quite know yet where to place these things,
+    /// but I do know that they shouldn't be needlessly restricted to
+    /// use within TFSSourceControlProvider only...
+    /// These file system path calculation helpers
+    /// are purely about path handling
+    /// i.e.: NOT ItemMetaData-based.
+    /// </summary>
+    public sealed class FilesysHelpers
+    {
+        /// <summary>
+        /// Helper to abstract/hide away the *internal* decision
+        /// on whether names of filesystem items ought to be case-mangled
+        /// (to repair TFS-side case-insensitive / case sensitivity handling issues).
+        /// It seems we have issues with caching file information wrongly
+        /// due to ToLower()ing filenames when in fact there are cases of similar-name
+        /// (changed case) renaming for certain changesets.
+        /// Thus we decide to NOT do ToLower() in case of case-sensitive operation mode...
+        /// </summary>
+        /// <param name="nameOrig">Original (likely not-yet-mangled) name</param>
+        public static string GetCaseMangledName(string nameOrig)
+        {
+            // I don't think it's useful to have this bool
+            // be made a local class member -
+            // after all this functionality
+            // should always directly follow the current Configuration-side setting.
+            bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // CS0429 warning workaround
+            return wantCaseSensitiveMatch ? nameOrig : nameOrig.ToLower();
+        }
+    }
+
     [Interceptor(typeof(TracingInterceptor))]
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]
     public class TFSSourceControlProvider : MarshalByRefObject
@@ -196,10 +227,7 @@ namespace SvnBridge.SourceControl
                 string targetPath = "/" + Helper.CombinePath(path, reportData.UpdateTarget);
                 foreach (ItemMetaData item in new List<ItemMetaData>(root.Items))
                 {
-                    string name = item.Name;
-                    if (name.StartsWith("/") == false)
-                        name = "/" + name;
-                    if (name.Equals(targetPath, StringComparison.InvariantCultureIgnoreCase) == false)
+                    if (!item.IsSamePath(targetPath))
                         root.Items.Remove(item);
                 }
             }
@@ -563,8 +591,25 @@ namespace SvnBridge.SourceControl
 
         public virtual bool ItemExists(string path, int version)
         {
+            bool itemExists = false;
             ItemMetaData item = GetItems(version, path, Recursion.None, true);
-            return (item != null);
+            if (item != null)
+            {
+                itemExists = true;
+                bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
+                if (needCheckCaseSensitiveItemMatch)
+                {
+                    if (path.StartsWith("/"))
+                    {
+                        path = path.Substring(1);
+                    }
+                    itemExists = false;
+                    bool haveCorrectlyCasedItem = item.Name.Equals(path);
+                    if (haveCorrectlyCasedItem)
+                        itemExists = true;
+                }
+            }
+            return itemExists;
         }
 
         public virtual bool ItemExists(int itemId, int version)
@@ -845,6 +890,14 @@ namespace SvnBridge.SourceControl
 
         private ItemMetaData GetItems(int version, string path, Recursion recursion, bool returnPropertyFiles)
         {
+            // WARNING: this interface will
+            // return filename items with a case-insensitive match,
+            // due to querying into TFS-side APIs!
+            // All users which rely on precise case-sensitive matching
+            // will need to account for this.
+            // Ideally we should offer a clean interface here
+            // which ensures case-sensitive matching when needed.
+
             if (path.StartsWith("/"))
             {
                 path = path.Substring(1);
@@ -928,7 +981,7 @@ namespace SvnBridge.SourceControl
                 {
                     if (item.ItemType == ItemType.Folder)
                     {
-                        folders[item.Name.ToLower()] = (FolderMetaData)item;
+                        folders[FilesysHelpers.GetCaseMangledName(item.Name)] = (FolderMetaData)item;
                     }
                     if (firstItem == null)
                     {
@@ -936,15 +989,15 @@ namespace SvnBridge.SourceControl
                         if (item.ItemType == ItemType.File)
                         {
                             string folderName = GetFolderName(item.Name);
-                            string folderNameLower = folderName.ToLower();
-                            folders[folderNameLower] = new FolderMetaData();
-                            folders[folderNameLower].Items.Add(item);
+                            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
+                            folders[folderNameMangled] = new FolderMetaData();
+                            folders[folderNameMangled].Items.Add(item);
                         }
                     }
                     else
                     {
                         string folderName = GetFolderName(item.Name);
-                        folders[folderName.ToLower()].Items.Add(item);
+                        folders[FilesysHelpers.GetCaseMangledName(folderName)].Items.Add(item);
                     }
                 }
             }
@@ -1025,9 +1078,10 @@ namespace SvnBridge.SourceControl
             {
                 string propertyKey = propertyRevision.Key;
 
-                if (folders.ContainsKey(propertyKey.ToLower()))
+                string propertyKeyMangled = propertyKey.ToLower();
+                if (folders.ContainsKey(propertyKeyMangled))
                 {
-                    ItemMetaData item = folders[propertyKey.ToLower()];
+                    ItemMetaData item = folders[propertyKeyMangled];
                     item.PropertyRevision = propertyRevision.Value;
                 }
                 else

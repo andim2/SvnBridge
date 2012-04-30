@@ -33,11 +33,11 @@ namespace SvnBridge.SourceControl
 
         public ItemMetaData FindItem(string name)
         {
-            if (string.Equals(this.Name, name, StringComparison.InvariantCultureIgnoreCase))
+            if (IsSamePath(name))
                 return this;
             foreach (ItemMetaData item in Items)
             {
-                if (string.Equals(item.Name, name, StringComparison.InvariantCultureIgnoreCase))
+                if (item.IsSamePath(name))
                 {
                     return item;
                 }

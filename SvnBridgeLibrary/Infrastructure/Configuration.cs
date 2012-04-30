@@ -26,6 +26,7 @@ namespace SvnBridge.Infrastructure
             TfsUrl,
             TfsTimeout,
             TfsProxyUrl,
+            SCMWantCaseSensitiveItemMatch,
             TraceEnabled,
             UseCodePlexServers,
             UseProxy,
@@ -119,6 +120,23 @@ namespace SvnBridge.Infrastructure
         public static int TfsTimeout
         {
             get { return ReadConfig<int>(ConfigSettings.TfsTimeout, 900000); }
+        }
+
+        /// <summary>
+        /// Central flag to indicate whether SvnBridge should try to do case-sensitive matching.
+        /// This is very important in case of similar-name file renames (case-only changes) within a changeset,
+        /// especially for users of case-sensitive filesystems (and perhaps also case-preserving ones).
+        /// Having this setting activated is strongly recommended,
+        /// however please note that that this activates some additional implementation checks
+        /// and thus incurs some (potentially sizeable) processing overhead.
+        /// For now this is configurable,
+        /// to keep implementation of the previous behaviour available
+        /// and to introduce this drastic (and thus potentially disrupting) change
+        /// in a sufficiently benign way where needed.
+        /// </summary>
+        public static bool SCMWantCaseSensitiveItemMatch
+        {
+            get { return ReadConfig<bool>(ConfigSettings.SCMWantCaseSensitiveItemMatch, false); }
         }
 
         public static bool TraceEnabled

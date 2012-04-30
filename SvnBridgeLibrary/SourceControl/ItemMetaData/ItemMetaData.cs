@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
+using SvnBridge.Infrastructure; // Configuration
 
 namespace SvnBridge.SourceControl
 {
@@ -65,5 +66,31 @@ namespace SvnBridge.SourceControl
     	{
     		parent = parentFolder;
     	}
+
+        public bool IsSamePath(string path)
+        {
+            return IsSamePath(Name, path);
+        }
+
+        public static bool IsSamePath(string itemPath, string pathCompare)
+        {
+            string itemPathCooked = itemPath;
+
+            if (pathCompare.StartsWith("/"))
+            {
+                if (itemPathCooked.StartsWith("/") == false)
+                    itemPathCooked = "/" + itemPathCooked;
+            }
+
+            return (string.Equals(
+                itemPathCooked, pathCompare,
+                WantCaseSensitiveMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase)
+            );
+        }
+
+        protected static bool WantCaseSensitiveMatch
+        {
+            get { return Configuration.SCMWantCaseSensitiveItemMatch; }
+        }
     }
 }

@@ -150,7 +150,7 @@ namespace SvnBridge.SourceControl
             }
 
             // Special case for changes of source root item (why? performance opt?):
-            if (string.Equals(remoteName, _checkoutRootPath, StringComparison.InvariantCultureIgnoreCase))
+            if (ItemMetaData.IsSamePath(remoteName, _checkoutRootPath))
             {
                 ItemMetaData item = sourceControlProvider.GetItems(_targetVersion, remoteName, Recursion.None);
                 if (item != null)
@@ -256,6 +256,10 @@ namespace SvnBridge.SourceControl
                           // Such TFS-side renames need to be reflected
                           // as a SVN delete/add (achieve rename *with* history!) operation,
                           // thus definitely *append* an ADD op to the *existing* DELETE op.
+                          // [Indeed, for different-name renames,
+                          // upon "svn diff" requests
+                          // SvnBridge does generate both delete and add diffs,
+                          // whereas for similar-name renames it previously did not -> buggy!]
                           item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
                           folder.Items.Add(item);
                         }
