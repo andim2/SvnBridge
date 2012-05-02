@@ -69,16 +69,29 @@ namespace SvnBridge.SourceControl
             {
                 itemOldName = oldItem.Name;
                 itemNewName = change.Item.RemoteName;
-                ProcessDeletedItem(itemOldName, change);
-                ProcessAddedOrUpdatedItem(itemNewName, change, false, false);
             }
             else
             {
                 itemOldName = change.Item.RemoteName;
                 itemNewName = oldItem.Name;
-                ProcessAddedOrUpdatedItem(itemNewName, change, false, false);
-                ProcessDeletedItem(itemOldName, change);
             }
+
+            // svn diff output of a real Subversion server
+            // always _first_ generates '-' diff for old file and _then_ '+' diff for new file
+            // irrespective of whether one is doing forward- or backward-diffs,
+            // and tools such as "svn up" or git-svn
+            // do rely on that order being correct
+            // (e.g. svn would otherwise suffer from
+            // failing property queries on non-existent files),
+            // thus need to always use _fixed order_ of delete/add.
+            // NOTE: maybe/possibly this constraint of diff ordering
+            // should be handled on UpdateReportService side only
+            // and not during ItemMetaData queueing here yet,
+            // in case subsequent ItemMetaData handling
+            // happened to expect a different order.
+            ProcessDeletedItem(itemOldName, change);
+            ProcessAddedOrUpdatedItem(itemNewName, change, false, false);
+
             if (change.Item.ItemType == ItemType.Folder)
             {
                 renamedItemsToBeCheckedForDeletedChildren.Add(itemNewName);
