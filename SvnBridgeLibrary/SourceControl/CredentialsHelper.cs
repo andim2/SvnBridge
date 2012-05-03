@@ -26,7 +26,10 @@ namespace SvnBridge.SourceControl
                     {
                         var cache = new CredentialCache
                         {
-                            { uri, "Basic", new NetworkCredential("anonymous", null) }
+                            // Cast required - avoid .NET4 NetworkCredential ctor signature ambiguity error:
+                            //     'System.Net.NetworkCredential.NetworkCredential(string, System.Security.SecureString)'
+                            // vs. 'System.Net.NetworkCredential.NetworkCredential(string, string)'
+                            { uri, "Basic", new NetworkCredential("anonymous", (string)null) }
                         };
                         credentials = cache;
                     }
