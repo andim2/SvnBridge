@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 
 namespace SvnBridge.Protocol
 {
-    [XmlRoot("update-report", Namespace = WebDav.Namespaces.SVN)]
+    [XmlRoot("update-report-response", Namespace = WebDav.Namespaces.SVN)]
     public class UpdateReportResponseData
     {
         [XmlElement("open-directory", Namespace = WebDav.Namespaces.SVN)] public List<OpenDirectoryData> OpenDirectories
