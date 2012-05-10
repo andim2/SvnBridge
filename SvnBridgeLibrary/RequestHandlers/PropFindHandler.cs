@@ -109,11 +109,12 @@ namespace SvnBridge.Handlers
                                                     bool loadPropertiesFromFile)
         {
             Recursion recursion = ConvertDepthHeaderToRecursion(depth);
+            var versionToFetch = version.HasValue ? version.Value : -1;
             if (recursion == Recursion.OneLevel)
-                return (FolderMetaData)GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, recursion, loadPropertiesFromFile);
+                return (FolderMetaData)GetItems(sourceControlProvider, versionToFetch, path, recursion, loadPropertiesFromFile);
 
             FolderMetaData folderInfo = new FolderMetaData();
-            ItemMetaData item = GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, recursion, loadPropertiesFromFile);
+            ItemMetaData item = GetItems(sourceControlProvider, versionToFetch, path, recursion, loadPropertiesFromFile);
             folderInfo.Items.Add(item);
             return folderInfo;
         }
