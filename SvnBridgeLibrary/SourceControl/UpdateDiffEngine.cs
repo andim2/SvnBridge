@@ -215,6 +215,29 @@ namespace SvnBridge.SourceControl
                         item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
                         if (item == null)
                         {
+                            // THIS IS *NOT* TRUE!!
+                            // A subsequently executed delete operation handler depends on being able to discover a previously added item
+                            // in order to have it *cleanly* removed (reverted!) into oblivion
+                            // rather than queueing a (bogus) *active* DeleteItemMetaData indication.
+                            // If there's no item remaining to revert against,
+                            // this means the bogus delete operation will remain standing,
+                            // which is a fatal error
+                            // when sending an SVN delete op to the client
+                            // which then complains
+                            // that *within this particular changeset update range* (for incremental updates!)
+                            // the file did not actually go from existence to non-existence
+                            // (--> "is not under version control").
+                            // Or, in other words,
+                            // we simply CANNOT TAKE ANY SHORTCUTS WITHIN THE FULLY INCREMENTAL HANDLING OF CHANGESET UPDATES,
+                            // each step needs to be properly accounted for
+                            // in order for subsequent steps to be able to draw their conclusions from prior state!
+                            // Adding dirty final "post-processing" to get rid of improper delete-only entries
+                            // (given an actually pre-non-existing item at client's start version!)
+                            // would be much less desirable
+                            // than having all incremental change recordings
+                            // resolve each other
+                            // in a nicely fully complementary manner.
+#if false
                             if (IsRenameOperation(change))
                             {
                                 // TFS will report renames even for deleted items -
@@ -224,6 +247,7 @@ namespace SvnBridge.SourceControl
                                 // We can safely ignore this and any of its children.
                                 return;
                             }
+#endif
                             if (lastNamePart && propertyChange)
                             {
                                 return;
