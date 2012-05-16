@@ -205,20 +205,38 @@ namespace SvnBridge.SourceControl
                     // that we're in the process of analyzing/collecting...
                     // This existing item may possibly be a placeholder (stub folder).
                     ItemMetaData item = folder.FindItem(itemName);
-                    if (item == null ||
-                         (
-                            lastNamePart &&
-                            item.Revision < change.Item.RemoteChangesetId &&
-                            !IsDeleteMetaDataKind(item)
-                         )
-                        )
+                    bool doReplaceByNewItem = (item == null);
+                    if (!doReplaceByNewItem) // further checks...
                     {
-                        // ...then remove this prior item...
+                        if (lastNamePart) // only if final item...
+                        {
+                            bool existingItemsVersionIsOutdated =
+                                updatingForwardInTime ?
+                                    (item.Revision < change.Item.RemoteChangesetId) : (item.Revision > change.Item.RemoteChangesetId);
+                            // I seem to not like this IsDeleteMetaDataKind() check here...
+                            // (reasoning: we're doing processing from Changeset to Changeset,
+                            // thus if an old Changeset item happened to be a Delete yet a new non-Delete
+                            // comes along, why *shouldn't* the Delete get superceded??)
+                            // Ah... because it's the *other* code branch below
+                            // which then deals with IsDeleteMetaDataKind() updating...
+                            // Still, that sounds like our logic evaluation here
+                            // is a bit too complex, could be simplified.
+                            // Well, the whole special-casing below seems to be
+                            // for properly setting the OriginallyDeleted member...
+                            if (existingItemsVersionIsOutdated && !IsDeleteMetaDataKind(item))
+                                doReplaceByNewItem = true;
+                        }
+                    }
+                    // So... do we actively want to grab a new item?
+                    if (doReplaceByNewItem)
+                    {
+                        // First remove this prior item...
                         if (item != null)
                         {
                             folder.Items.Remove(item);
                         }
                         // ...and fetch the updated one
+                        // (forward *or* backward change)
                         // for the currently processed version:
                         var processedVersion = _targetVersion;
                         Recursion recursionMode = GetRecursionModeForItemAdd(updatingForwardInTime);
@@ -326,10 +344,18 @@ namespace SvnBridge.SourceControl
         /// <remarks>
         /// In case of *backward*-adding a *forward*-deleted directory,
         /// we also need to resurrect the entire deleted directory's hierarchy (sub files etc.).
+        /// UPDATE: undoing this "questionable" feature now -
+        /// I believe that the actual reason that this commit decided to undo it
+        /// is that TFS history will already supply full Change info
+        /// (about all those sub items affected by a base directory state change,
+        /// that is).
+        /// IOW, again: never ever do strange "shortcuts"
+        /// rather than implementing fully incremental diff engine handling!
         /// </remarks>
         private static Recursion GetRecursionModeForItemAdd(bool updatingForwardInTime)
         {
-            return updatingForwardInTime ? Recursion.None : Recursion.Full;
+            //return updatingForwardInTime ? Recursion.None : Recursion.Full;
+            return Recursion.None;
         }
 
         private static bool IsAddOperation(SourceItemChange change)
@@ -418,9 +444,29 @@ namespace SvnBridge.SourceControl
                     item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, folderName, Recursion.None);
                     if (item == null)
                     {
+                        // FIXME: hmm, are we really supposed to actively Delete a non-isLastNamePart item
+                        // rather than indicating a MissingItemMetaData!?
+                        // After all the actual delete operation is expected to be carried out (possibly later) properly, too...
                         item = new DeleteFolderMetaData();
                         item.Name = folderName;
                         item.ItemRevision = processedVersion;
+                    }
+                    else
+                    {
+                        // This item is NOT the final one (isLastNamePart == true), only a helper,
+                        // thus it certainly shouldn't
+                        // directly indicate real actions (add/delete) yet
+                        // within the currently processed Changeset,
+                        // which it would if we now queued the live item directly rather than
+                        // providing a StubFolderMetaData indirection for it...
+                        StubFolderMetaData stubFolder = new StubFolderMetaData();
+                        stubFolder.RealFolder = (FolderMetaData)item;
+                        stubFolder.Name = item.Name;
+                        stubFolder.ItemRevision = item.ItemRevision;
+                        stubFolder.PropertyRevision = item.PropertyRevision;
+                        stubFolder.LastModifiedDate = item.LastModifiedDate;
+                        stubFolder.Author = item.Author;
+                        item = stubFolder;
                     }
                 }
                 folder.Items.Add(item);
