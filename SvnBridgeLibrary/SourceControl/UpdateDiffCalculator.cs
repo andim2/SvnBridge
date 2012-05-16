@@ -161,7 +161,11 @@ namespace SvnBridge.SourceControl
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
 
-                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
+                        // Fixed MEGA BUG: the UpdateDiffEngine's "target" version
+                        // should be the one of the current Changeset i.e. lastVersion!!
+                        // (since this specific loop iteration is supposed to apply changes relevant to this Changeset only,
+                        // and *not* the targetVersion of the global loop processing).
+                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, lastVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
 
                         ApplyChangeOps(engine, change, updatingForwardInTime);
                     }
