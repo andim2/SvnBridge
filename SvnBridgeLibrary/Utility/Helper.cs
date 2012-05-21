@@ -707,17 +707,20 @@ namespace SvnBridge.Utility
 		{
 			List<SourceItemHistory> histories = new List<SourceItemHistory>(items);
 
-			histories.Sort(delegate(SourceItemHistory x, SourceItemHistory y)
+			if (updatingForwardInTime)
 			{
-				if (updatingForwardInTime)
-				{
+			    histories.Sort(delegate(SourceItemHistory x, SourceItemHistory y)
+			    {
 					return x.ChangeSetID.CompareTo(y.ChangeSetID);
-				}
-				else
+				});
+            }
+            else
+			{
+			    histories.Sort(delegate(SourceItemHistory x, SourceItemHistory y)
 				{
 					return y.ChangeSetID.CompareTo(x.ChangeSetID);
-				}
-			});
+				});
+			}
 			return histories;
 		}
 
