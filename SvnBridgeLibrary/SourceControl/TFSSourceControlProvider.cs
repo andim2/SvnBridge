@@ -491,8 +491,6 @@ namespace SvnBridge.SourceControl
 
         private LogItem GetLogItem(string serverPath, VersionSpec itemVersion, int versionFrom, int versionTo, RecursionType recursionType, int maxCount, bool sortAscending)
         {
-            const int QUERY_LIMIT = 256;
-
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
             Changeset[] changesets;
             List<SourceItemHistory> histories;
@@ -549,10 +547,11 @@ namespace SvnBridge.SourceControl
 
             // TFS QueryHistory API won't return more than 256 items,
             // so need to call multiple times if more requested
-            if (maxCount > QUERY_LIMIT)
+            const int TFS_QUERY_LIMIT = 256;
+            if (maxCount > TFS_QUERY_LIMIT)
             {
                 int logItemsCount = changesets.Count();
-                while (logItemsCount == QUERY_LIMIT)
+                while (logItemsCount == TFS_QUERY_LIMIT)
                 {
                     int earliestVersionFound = changesets[changesets.Length - 1].cset - 1;
                     if (earliestVersionFound == versionFrom)
