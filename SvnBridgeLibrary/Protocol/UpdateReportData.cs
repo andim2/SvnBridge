@@ -30,7 +30,7 @@ namespace SvnBridge.Protocol
 
         public bool IsCheckOut
         {
-            get { return Entries[0].StartEmpty && Entries.Count == 1; }
+            get { return Entries.Count == 1 && Entries[0].StartEmpty; }
         }
     }
 }
