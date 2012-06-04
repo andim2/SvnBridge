@@ -660,6 +660,8 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
+                    changesets = null; // GC (large obj / long-running op)
+
                     maxCount_Allowed -= logItemsCount_ThisRun;
 
                     versionSpecTo = VersionSpec.FromChangeset(earliestVersionFound);

@@ -26,7 +26,9 @@ namespace SvnBridge.Infrastructure
             ItemMetaData item)
         {
             byte[] itemData = sourceControlProvider.ReadFile(item);
+            item = null; // enable release (large object)
             string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
+            itemData = null; // enable release (large object)
             PushTxDeltaData(
                 output,
                 txdelta);
