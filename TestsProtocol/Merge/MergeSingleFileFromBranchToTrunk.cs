@@ -762,7 +762,7 @@ namespace ProtocolTests
                 "HTTP/1.1 501 Method Not Implemented\r\n" +
                 "Date: Wed, 24 Sep 2008 21:30:34 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 228\r\n" +
+                "Transfer-Encoding: chunked\r\n" +
                 "Connection: close\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +
@@ -1540,7 +1540,7 @@ namespace ProtocolTests
                 "HTTP/1.1 501 Method Not Implemented\r\n" +
                 "Date: Wed, 24 Sep 2008 21:30:36 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 228\r\n" +
+                "Transfer-Encoding: chunked\r\n" +
                 "Connection: close\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +
@@ -2168,7 +2168,7 @@ namespace ProtocolTests
                 "HTTP/1.1 501 Method Not Implemented\r\n" +
                 "Date: Wed, 24 Sep 2008 21:30:38 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 228\r\n" +
+                "Transfer-Encoding: chunked\r\n" +
                 "Connection: close\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +
@@ -2613,7 +2613,7 @@ namespace ProtocolTests
                 "HTTP/1.1 501 Method Not Implemented\r\n" +
                 "Date: Wed, 24 Sep 2008 21:30:39 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 228\r\n" +
+                "Transfer-Encoding: chunked\r\n" +
                 "Connection: close\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +

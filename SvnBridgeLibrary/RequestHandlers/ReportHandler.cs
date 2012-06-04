@@ -96,10 +96,11 @@ namespace SvnBridge.Handlers
                 object data = null;
                 try
                 {
+                    ConfigureResponse_SendChunked();
+
                     if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "get-locks-report")
                     {
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        response.SendChunked = true;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             GetLocksReport(output);
@@ -113,7 +114,6 @@ namespace SvnBridge.Handlers
                         if (update != null)
                         {
                             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                            response.SendChunked = true;
                             using (var output = CreateStreamWriter(response.OutputStream))
                             {
                                 UpdateReport(sourceControlProvider, (UpdateReportData)data, output, update, targetRevision);
@@ -133,7 +133,6 @@ namespace SvnBridge.Handlers
                     {
                         data = Helper.DeserializeXml<LogReportData>(reader);
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        response.SendChunked = true;
                         response.BufferOutput = false;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
@@ -144,7 +143,6 @@ namespace SvnBridge.Handlers
                     {
                         data = Helper.DeserializeXml<GetLocationsReportData>(reader);
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        response.SendChunked = true;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             GetLocationsReport(sourceControlProvider, (GetLocationsReportData)data, requestPath, output);
@@ -154,7 +152,6 @@ namespace SvnBridge.Handlers
                     {
                         data = Helper.DeserializeXml<DatedRevReportData>(reader);
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        response.SendChunked = true;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             GetDatedRevReport(sourceControlProvider, (DatedRevReportData)data, output);

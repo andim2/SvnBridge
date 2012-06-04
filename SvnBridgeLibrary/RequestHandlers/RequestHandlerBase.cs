@@ -81,6 +81,15 @@ namespace SvnBridge.Handlers
             Initialize(context, pathParser);
             sourceControlProvider = Container.Resolve<TFSSourceControlProvider>();
 
+            // BIG FAT CENTRAL WARNING:
+            // all request handlers which are expected
+            // to need to send huge amounts of data
+            // (in the range of hundreds of MB)
+            // definitely ought to enable chunked transfers,
+            // otherwise the *single* output block
+            // (required due to indicating a *fixed* Content-Length before-hand!)
+            // will explode into a huge MemoryStream object
+            // (== potentially not allocatable due to linear-alloc requirement).
             Handle(
                 context,
                 sourceControlProvider);
@@ -163,6 +172,20 @@ namespace SvnBridge.Handlers
             }
 
             return recursion;
+        }
+
+        /// <summary>
+        /// Since almost all handlers were enabling SendChunked
+        /// and this is *dangerous* to not enable
+        /// (huge single-block memory allocations),
+        /// decide to enable it as often as possible,
+        /// at least where chunked transfer support is a *required* feature
+        /// (&gt;= HTTP 1.1).
+        /// </summary>
+        protected void ConfigureResponse_SendChunked(
+            )
+        {
+            httpContext.Response.SendChunked = true;
         }
 
         protected static void WriteHumanReadableError(TextWriter output, int svn_error_code, string error_string)

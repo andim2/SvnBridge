@@ -35,7 +35,7 @@ namespace ProtocolTests
                 "HTTP/1.1 500 Internal Server Error\r\n" +
                 "Date: Thu, 05 Feb 2009 23:41:13 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
-                "Content-Length: 222\r\n" +
+                "Transfer-Encoding: chunked\r\n" +
                 "Connection: close\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +
