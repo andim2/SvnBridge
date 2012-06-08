@@ -134,12 +134,23 @@ namespace SvnBridge.Handlers
             string result;
             string applicationPath = PathParser.GetApplicationPath(httpContext.Request);
 
-			if (href.StartsWith("/") == false && applicationPath.EndsWith("/") == false)
-			    result =  applicationPath + "/" + href;
-			if (href.StartsWith("/") && applicationPath.EndsWith("/"))
-			    result = applicationPath + href.Substring(1);
-		    else
-                result = applicationPath + href;
+            // two bools --> 4 resulting combinations to be handled.
+            bool haveAppTrailSlash = applicationPath.EndsWith("/");
+            bool haveHrefLeadSlash = href.StartsWith("/");
+            bool needAddSlash = !(haveAppTrailSlash || haveHrefLeadSlash);
+            bool needRemoveSlash = (haveAppTrailSlash && haveHrefLeadSlash);
+            if (needAddSlash)
+            {
+                result = applicationPath + "/" + href;
+            }
+            else
+            {
+                if (needRemoveSlash)
+                    result = applicationPath + href.Substring(1);
+                else
+                    // the remaining 2 cases (one existing slash somewhere)
+                    result = applicationPath + href;
+            }
 		    return result;
 		}
 
