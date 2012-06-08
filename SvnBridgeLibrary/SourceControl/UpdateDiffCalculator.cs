@@ -157,10 +157,11 @@ namespace SvnBridge.SourceControl
             ItemMetaData item = null;
             for (int i = 0; i < nameParts.Length; i++)
             {
+                bool isLastNamePart = (i == nameParts.Length - 1);
+
                 UpdateDiffEngine.PathAppendElem(ref itemName, nameParts[i]);
 
                 item = folder.FindItem(itemName);
-                bool isLastNamePart = i == nameParts.Length - 1;
                 if (item == null)
                 {
                     if (isLastNamePart)

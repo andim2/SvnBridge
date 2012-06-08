@@ -248,9 +248,7 @@ namespace SvnBridge.SourceControl
 
                 for (int i = 0; i < nameParts.Length; i++)
                 {
-                    bool isLastNamePart = false;
-                    if (i == nameParts.Length - 1)
-                        isLastNamePart = true;
+                    bool isLastNamePart = (i == nameParts.Length - 1);
 
                     PathAppendElem(ref itemName, nameParts[i]);
 
@@ -450,7 +448,7 @@ namespace SvnBridge.SourceControl
             FolderMetaData folder = _root;
             for (int i = 0; i < nameParts.Length; i++)
             {
-                bool isLastNamePart = i == nameParts.Length - 1;
+                bool isLastNamePart = (i == nameParts.Length - 1);
 
                 PathAppendElem(ref itemName, nameParts[i]);
 
