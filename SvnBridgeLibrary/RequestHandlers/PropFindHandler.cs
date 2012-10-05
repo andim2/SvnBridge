@@ -45,7 +45,7 @@ namespace SvnBridge.Handlers
                     response.AppendHeader("Vary", "Label");
                 }
 
-                if (propfind.AllProp != null && requestPath.EndsWith("/!svn/vcc/default"))
+                if (propfind.AllProp != null && requestPath.EndsWith(Constants.SvnVccPath))
                 {
                     HandleAllPropVccDefault(sourceControlProvider, requestPath, response.OutputStream);
                 }
@@ -82,7 +82,7 @@ namespace SvnBridge.Handlers
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
                 writer.Write("<D:response xmlns:lp1=\"DAV:\" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\">\n");
-                writer.Write("<D:href>" + GetLocalPath("/!svn/vcc/default") + "</D:href>\n");
+                writer.Write("<D:href>" + VccPath + "</D:href>\n");
                 writer.Write("<D:propstat>\n");
                 writer.Write("<D:prop>\n");
                 writer.Write("<lp1:checked-in><D:href>" + GetLocalPath("/!svn/bln/" + latestVersion) + "</D:href></lp1:checked-in>\n");
