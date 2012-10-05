@@ -118,6 +118,12 @@ namespace SvnBridge.Handlers
             IHttpContext context,
             TFSSourceControlProvider sourceControlProvider);
 
+        protected string[] GetSvnOptions()
+        {
+            string x_svn_options = httpContext.Request.Headers["X-SVN-Options"];
+            return (null != x_svn_options) ? x_svn_options.Split(new char[]{' '}) : new string[0];
+        }
+
     protected static string GetServerSidePath(string path)
     {
         // FIXME: quite likely instead of doing fugly open-coded crap
