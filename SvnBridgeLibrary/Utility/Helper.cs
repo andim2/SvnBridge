@@ -50,7 +50,15 @@ namespace SvnBridge.Utility
 		private static readonly string[] DECODED_B = new string[] { "&", "<", ">" };
 		private static readonly string[] ENCODED_B = new string[] { "&amp;", "&lt;", "&gt;" };
 
-		private static readonly string[] DECODED_C = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`" };
+        // XML has 5 (FIVE) mandatory entities to be encoded, not merely the 3 above.
+        // Possibly _B is thus buggy, but this should be decided on a case-by-case basis,
+        // thus provide another helper for the corrected(?) encoding.
+	// (note that it turned out that e.g. D:comment does not seem to require all of these escapes after all).
+	// See also http://stackoverflow.com/questions/1664208/encode-quotes-in-html-body
+        private static readonly string[] DECODED_B_FIXED = new string[] { "&", "<", ">", "\"", "'" };
+        private static readonly string[] ENCODED_B_FIXED = new string[] { "&amp;", "&lt;", "&gt;", "&quot;", "&apos;" };
+
+        private static readonly string[] DECODED_C = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`" };
 		private static readonly string[] ENCODED_C = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60" };
 
         public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
@@ -351,6 +359,11 @@ namespace SvnBridge.Utility
 		{
 			return Encode(ENCODED_B, DECODED_B, value, false);
 		}
+
+        public static string EncodeB_fixed(string value)
+        {
+            return Encode(ENCODED_B_FIXED, DECODED_B_FIXED, value, false);
+        }
 
 		public static string DecodeB(string value)
 		{
