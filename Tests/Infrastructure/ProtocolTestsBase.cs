@@ -80,6 +80,13 @@ namespace Tests
 
             expected = expected.Replace("Keep-Alive: timeout=15, max=99", "Keep-Alive: timeout=15, max=100");
 
+            bool haveKeepAlive = false;
+            if (!(haveKeepAlive))
+            {
+                expected = expected.Replace("Keep-Alive: timeout=15, max=100\r\n", "");
+                expected = expected.Replace("Connection: Keep-Alive", "Connection: close");
+            }
+
             expected = RemoveDate(expected);
             response = RemoveDate(response);
 

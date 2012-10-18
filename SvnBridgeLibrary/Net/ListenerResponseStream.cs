@@ -263,6 +263,10 @@ namespace SvnBridge.Net
                 writer.WriteLine("Transfer-Encoding: chunked");
             }
 
+            // FIXME: we are potentially writing multiple Connection: headers! (see below)
+            // Should be consolidating this by implementing a HTTP header helper
+            // which writes specific HTTP headers (with the corresponding values joined via ", ")
+            // iff the input values string array is non-empty.
             if (connection != null)
             {
                 writer.WriteLine("Connection: {0}", connection);
@@ -276,8 +280,31 @@ namespace SvnBridge.Net
                 {
                     if (directive.TrimStart() == "Keep-Alive")
                     {
-                        writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
-                        writer.WriteLine("Connection: Keep-Alive");
+                        // It seems that as long as our Listener.cs does an active socket close via TcpClient.Close(),
+                        // we really should *not* pretend to fulfill persistent connections via a HTTP Keep-Alive reply.
+                        // Subversion neon-debug-mask 511 indicates that Subversion is surprised about an interim socket close
+                        // via its "Could not read status line" / "Persistent connection timed out, retrying" log
+                        // despite requesting (and being falsely acknowledged!) HTTP Keep-Alive
+                        // (side note: it became the default mechanism in HTTP/1.1).
+                        // Hmm, despite advertising "close" Subversion 1.6.17 still attempts persistent connections.
+                        // This as observed on SvnBridge/.NET 2.0.5xxx.
+                        // Root cause probably is our Net Listener setup being based on IHttpRequest rather than
+                        // a full HttpWebRequest, i.e. we're rolling our own implementation.
+                        // Disabling the TcpClient.Close() does *not* help (Subversion hangs at subsequent request,
+                        // probably since the socket is not being served properly on our side; TODO: investigate...).
+                        // Search keywords: "ServicePoint", "HttpBehaviour", "DefaultConnectionLimit", "DefaultPersistentConnectionLimit", 
+                        bool isHttpKeepAliveSupported = false;
+
+                        if (isHttpKeepAliveSupported)
+                        {
+                            writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
+                            writer.WriteLine("Connection: Keep-Alive");
+                        }
+                        else
+                            // It *seems* HTTP header values are supposed to be treated case-insensitively,
+                            // however "close" is spelt lower-case in most cases,
+                            // thus write it in the more common variant:
+                            writer.WriteLine("Connection: close");
                     }
                 }
             }
