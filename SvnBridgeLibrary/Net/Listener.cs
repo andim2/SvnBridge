@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics; // Debug.WriteLine()
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -52,10 +53,31 @@ namespace SvnBridge.Net
             dispatcher = new HttpContextDispatcher(parser, actionTracking);
 
             isListening = true;
-            listener = new TcpListener(IPAddress.Loopback, Port);
+            listener = new TcpListener(DetermineNonPublicInterfaceBindAddress(), Port);
             listener.Start();
 
             listener.BeginAcceptTcpClient(Accept, null);
+        }
+
+        private static IPAddress DetermineNonPublicInterfaceBindAddress()
+        {
+            // CHANGE THIS IF NEEDED!
+            // (if you need to allow the desktop SvnBridge
+            // to offer its service externally,
+            // on ethernet network interface etc.).
+            // Convenient search keywords: interface bind ip port firewall localhost external
+            // Note: THIS SETTING MIGHT OBVIOUSLY CONSTITUTE A SECURITY ISSUE!
+            bool useSecureMode = true;
+
+            if (!useSecureMode)
+            {
+                Debug.WriteLine("Attention: SVN network listener configured to provide insecure global (not loopback-only) network interface bind.\n");
+            }
+
+            bool doLocalhostInterfaceBindOnly = useSecureMode;
+
+            IPAddress ipAddressToBindTo = doLocalhostInterfaceBindOnly ? IPAddress.Loopback : IPAddress.Any;
+            return ipAddressToBindTo;
         }
 
         private void OnErrorOccured(object sender, ListenErrorEventArgs e)
