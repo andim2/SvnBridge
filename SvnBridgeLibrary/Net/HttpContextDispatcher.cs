@@ -62,7 +62,6 @@ namespace SvnBridge.Net
 
         public void Dispatch(IHttpContext connection)
         {
-            RequestHandlerBase handler = null;
             try
             {
                 IHttpRequest request = connection.Request;
@@ -88,27 +87,9 @@ namespace SvnBridge.Net
                 RequestCache.Items["projectName"] = parser.GetProjectName(request);
                 RequestCache.Items["credentials"] = credential;
 
-                handler = GetHandler(connection.Request.HttpMethod);
-                if (handler == null)
-                {
-                    actionTracking.Error();
-                    SendUnsupportedMethodResponse(connection);
-                    return;
-                }
-
-                try
-                {
-                    actionTracking.Request(handler);
-                    handler.Handle(
-                        connection,
-                        parser,
-                        credential);
-                }
-                catch (TargetInvocationException e)
-                {
-                    ExceptionHelper.PreserveStackTrace(e.InnerException);
-                    throw e.InnerException;
-                }
+                HandleRequest(
+                    connection,
+                    credential);
             }
             // IMPORTANT: I assume that this series of catch()es
             // is generally intended
@@ -149,11 +130,6 @@ namespace SvnBridge.Net
 
                 if (Configuration.LogCancelErrors)
                     throw;
-            }
-            finally
-            {
-                if (handler != null)
-                    handler.Cancel();
             }
         }
 
@@ -217,6 +193,37 @@ namespace SvnBridge.Net
                     domain = "snd";
                 }
                 credential = new NetworkCredential(username, credential.Password, domain);
+            }
+        }
+
+        private void HandleRequest(
+            IHttpContext connection,
+            NetworkCredential credential)
+        {
+            RequestHandlerBase handler = GetHandler(connection.Request.HttpMethod);
+            if (handler == null)
+            {
+                actionTracking.Error();
+                SendUnsupportedMethodResponse(connection);
+                return;
+            }
+
+            try
+            {
+                actionTracking.Request(handler);
+                handler.Handle(
+                    connection,
+                    parser,
+                    credential);
+            }
+            catch (TargetInvocationException e)
+            {
+                ExceptionHelper.PreserveStackTrace(e.InnerException);
+                throw e.InnerException;
+            }
+            finally
+            {
+                handler.Cancel();
             }
         }
 
