@@ -9,7 +9,32 @@ using SvnBridge.Infrastructure;
 
 namespace SvnBridge.Handlers
 {
-	public abstract class RequestHandlerBase
+    /// <summary>
+    /// Have separate classes for both HTTP-generic parts and derived WebDAV-/SVN-specific parts.
+    /// </summary>
+    public abstract class RequestHandlerHttpBase
+    {
+        public virtual void Cancel()
+        {
+        }
+
+		protected static void SetResponseSettings(IHttpResponse response, string contentType, Encoding contentEncoding, int status)
+		{
+			response.ContentType = contentType;
+			response.ContentEncoding = contentEncoding;
+			response.StatusCode = status;
+		}
+
+		protected static void WriteToResponse(IHttpResponse response, string content)
+		{
+			using (StreamWriter writer = new StreamWriter(response.OutputStream))
+			{
+				writer.Write(content);
+			}
+		}
+    }
+
+    public abstract class RequestHandlerBase : RequestHandlerHttpBase
 	{
 		private IPathParser pathParser;
 		private IHttpContext httpContext;
@@ -52,28 +77,9 @@ namespace SvnBridge.Handlers
 			this.pathParser = parser;
 		}
 
-		public virtual void Cancel()
-		{
-		}
-
         protected abstract void Handle(
             IHttpContext context,
             TFSSourceControlProvider sourceControlProvider);
-
-		protected static void SetResponseSettings(IHttpResponse response, string contentType, Encoding contentEncoding, int status)
-		{
-			response.ContentType = contentType;
-			response.ContentEncoding = contentEncoding;
-			response.StatusCode = status;
-		}
-
-		protected static void WriteToResponse(IHttpResponse response, string content)
-		{
-			using (StreamWriter writer = new StreamWriter(response.OutputStream))
-			{
-				writer.Write(content);
-			}
-		}
 
 		protected string GetPath(IHttpRequest request)
 		{
