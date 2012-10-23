@@ -608,13 +608,17 @@ namespace SvnBridge.Handlers
 
         private static bool IsSvnRequestForProjectCreation(string requestPath, int version, TFSSourceControlProvider sourceControlProvider)
         {
-            requestPath = Helper.Decode(requestPath);
-
-            bool isSvnPath = (requestPath.Equals("/trunk", StringComparison.OrdinalIgnoreCase)
-                              || requestPath.Equals("/branches", StringComparison.OrdinalIgnoreCase)
-                              || requestPath.Equals("/tags", StringComparison.OrdinalIgnoreCase));
-
+            bool isSvnPath = IsSubPathOfSvnStdlayoutConvention(Helper.Decode(requestPath));
             return isSvnPath && version == sourceControlProvider.GetEarliestVersion(string.Empty);
+        }
+
+        private static bool IsSubPathOfSvnStdlayoutConvention(string itemPath)
+        {
+            // Check against all components of an svn standard layout (stdlayout).
+            bool isStdlayoutSubPath = (itemPath.Equals("/trunk", StringComparison.OrdinalIgnoreCase)
+                              || itemPath.Equals("/branches", StringComparison.OrdinalIgnoreCase)
+                              || itemPath.Equals("/tags", StringComparison.OrdinalIgnoreCase));
+            return isStdlayoutSubPath;
         }
     }
 }
