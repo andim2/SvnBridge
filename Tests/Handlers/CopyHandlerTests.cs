@@ -72,8 +72,8 @@ namespace UnitTests
                                                      "http://localhost:8082//!svn/wrk/cdfcf93f-8649-5e44-a8ec-b3f40e10e907/FileRenamed.txt")));
             Assert.Equal(1, r.CallCount);
             Assert.Equal("cdfcf93f-8649-5e44-a8ec-b3f40e10e907", r.Parameters[0]);
-            Assert.Equal("/File.txt", r.Parameters[1]);
-            Assert.Equal("/FileRenamed.txt", r.Parameters[2]);
+            Assert.Equal("/File.txt", r.Parameters[2]);
+            Assert.Equal("/FileRenamed.txt", r.Parameters[3]);
         }
 
         [Fact]
@@ -104,8 +104,8 @@ namespace UnitTests
 
             Assert.Equal(1, r.CallCount);
             Assert.Equal("15407bc3-2250-aa4c-aa51-4e65b2c824c3", r.Parameters[0]);
-            Assert.Equal("/B !@#$%^&()_-+={[}];',.~`", r.Parameters[1]);
-            Assert.Equal("/BB !@#$%^&()_-+={[}];',.~`", r.Parameters[2]);
+            Assert.Equal("/B !@#$%^&()_-+={[}];',.~`", r.Parameters[2]);
+            Assert.Equal("/BB !@#$%^&()_-+={[}];',.~`", r.Parameters[3]);
         }
     }
 }

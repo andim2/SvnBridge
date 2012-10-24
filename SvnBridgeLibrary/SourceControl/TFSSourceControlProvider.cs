@@ -184,14 +184,52 @@ namespace SvnBridge.SourceControl
             this.fileRepository = fileRepository;
         }
 
+        public virtual void CopyItem(string activityId, int versionFrom, string path, string targetPath)
+        {
+            // CopyAction is not capable of recording a version number that an item has been copied from,
+            // thus I assume that a Copy operation is about currently *existing* items only:
+            // "copying" == "file existing in HEAD to other file"
+            // "writing" == "foreign-revision file to new file (regardless of whether same-path or different-path)"
+
+            // I'm not really happy with this method layering / implementation - it's not very symmetric.
+            // But as a first guess it's ok I... guess. ;)
+            // FIXME: I'm also not sure about that revision handling here:
+            // the source file might have been created at an older revision yet still *exists* currently -
+            // we quite likely don't handle this properly here...
+            // All in all I'm still feeling very uncertain
+            // about how and what we're doing here...
+            bool copy_head_item = (LATEST_VERSION == versionFrom);
+            if (copy_head_item)
+            {
+                CopyAction copyAction = new CopyAction(path, targetPath, false);
+                ActivityRepository.Use(activityId, delegate(Activity activity)
+                {
+                    activity.CopiedItems.Add(copyAction);
+                });
+                ProcessCopyItem(activityId, versionFrom, copyAction, false);
+            }
+            else
+            {
+                // This implements handling for e.g. TortoiseSVN "Revert changes from this revision" operation
+                // as described by tracker #15317.
+                ItemMetaData itemExisting = GetItemsWithoutProperties(LATEST_VERSION, path, Recursion.None);
+                ItemMetaData item = GetItemsWithoutProperties(versionFrom, path, Recursion.None);
+                byte[] sourceData = ReadFile(item);
+                bool reportUpdatedFile = (null != itemExisting);
+                // FIXME: in case of a formerly deleted file, this erases all former file history
+                // due to adding a new file! However, a native-interface undelete operation on TFS2008
+                // (which could be said to be similar in its outcome to this operation in certain situations)
+                // *does* preserve history and gets logged as an Undelete
+                // (not to mention that doing this on an actual SVN is a copy *with* history, too!).
+                // I'm unsure whether we can massage things to have it improved,
+                // especially since flagging things as an Undelete seems to be out of reach in our API.
+                WriteFile(activityId, targetPath, sourceData, reportUpdatedFile);
+            }
+        }
+
         public virtual void CopyItem(string activityId, string path, string targetPath)
         {
-            CopyAction copyAction = new CopyAction(path, targetPath, false);
-            ActivityRepository.Use(activityId, delegate(Activity activity)
-            {
-                activity.CopiedItems.Add(copyAction);
-            });
-            ProcessCopyItem(activityId, copyAction, false);
+            CopyItem(activityId, LATEST_VERSION, path, targetPath);
         }
 
         public virtual bool DeleteItem(string activityId, string path)
@@ -1699,7 +1737,7 @@ namespace SvnBridge.SourceControl
                 string pathTargetFull = MakeTfsPath(copy.TargetPath);
                 UndoPendingRequests(activityId, activity, pathTargetFull);
 
-                ProcessCopyItem(activityId, copy, true);
+                ProcessCopyItem(activityId, LATEST_VERSION, copy, true);
             });
         }
 
@@ -1735,7 +1773,7 @@ namespace SvnBridge.SourceControl
             sourceControlService.UpdateLocalVersions(serverUrl, credentials, activityId, updates);
         }
 
-        private void ProcessCopyItem(string activityId, CopyAction copyAction, bool forceRename)
+        private void ProcessCopyItem(string activityId, int versionFrom, CopyAction copyAction, bool forceRename)
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
