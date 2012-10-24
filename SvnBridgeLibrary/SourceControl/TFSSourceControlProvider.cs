@@ -532,9 +532,7 @@ namespace SvnBridge.SourceControl
             string localPath = GetLocalPath(activityId, path);
             UpdateLocalVersion(activityId, item, localPath.Substring(0, localPath.LastIndexOf('\\')));
 
-            List<PendRequest> pendRequests = new List<PendRequest>();
-            pendRequests.Add(PendRequest.AddFolder(localPath));
-            sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
+            ServiceSubmitPendingRequest(activityId, PendRequest.AddFolder(localPath));
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 activity.MergeList.Add(
@@ -957,7 +955,7 @@ namespace SvnBridge.SourceControl
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 string serverItemPath = Helper.CombinePath(rootPath, path);
-                sourceControlService.UndoPendingChanges(serverUrl, credentials, activityId, new string[] { serverItemPath });
+                ServiceUndoPendingRequests(activityId, new string[] { serverItemPath });
                 activity.DeletedItems.Remove(path);
                 for (int j = activity.MergeList.Count - 1; j >= 0; j--)
                 {
@@ -1087,7 +1085,7 @@ namespace SvnBridge.SourceControl
                     updates.Add(LocalUpdate.FromLocal(item.Id, localPath, item.Revision));
                 }
 
-                sourceControlService.UpdateLocalVersions(serverUrl, credentials, activityId, updates);
+                ServiceUpdateLocalVersions(activityId, updates);
 
                 List<PendRequest> pendRequests = new List<PendRequest>();
 
@@ -1119,7 +1117,7 @@ namespace SvnBridge.SourceControl
                     }
                 }
 
-                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
+                ServiceSubmitPendingRequests(activityId, pendRequests);
                 sourceControlService.UploadFileFromBytes(serverUrl, credentials, activityId, fileData, Helper.CombinePath(rootPath, path));
 
                 if (addToMergeList)
@@ -1143,8 +1141,7 @@ namespace SvnBridge.SourceControl
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                sourceControlService.UndoPendingChanges(serverUrl,
-                                                    credentials,
+                ServiceUndoPendingRequests(
                                                     activityId,
                                                     new string[] { Helper.CombinePath(rootPath, copy.TargetPath) });
                 for (int i = activity.MergeList.Count - 1; i >= 0; i--)
@@ -1173,6 +1170,11 @@ namespace SvnBridge.SourceControl
         {
             List<LocalUpdate> updates = new List<LocalUpdate>();
             updates.Add(LocalUpdate.FromLocal(itemId, localPath, itemRevision));
+            ServiceUpdateLocalVersions(activityId, updates);
+        }
+
+        private void ServiceUpdateLocalVersions(string activityId, IEnumerable<LocalUpdate> updates)
+        {
             sourceControlService.UpdateLocalVersions(serverUrl, credentials, activityId, updates);
         }
 
@@ -1209,8 +1211,7 @@ namespace SvnBridge.SourceControl
                                 if (activity.DeletedItems[i] == path)
                                 {
                                     copyIsRename = true;
-                                    sourceControlService.UndoPendingChanges(serverUrl,
-                                                                            credentials,
+                                    ServiceUndoPendingRequests(
                                                                             activityId,
                                                                             new string[] { Helper.CombinePath(rootPath, activity.DeletedItems[i]) });
                                     for (int j = activity.MergeList.Count - 1; j >= 0; j--)
@@ -1238,8 +1239,7 @@ namespace SvnBridge.SourceControl
                         {
                             copyIsRename = true;
                             activity.PostCommitDeletedItems.Add(activity.DeletedItems[i]);
-                            sourceControlService.UndoPendingChanges(serverUrl,
-                                                                    credentials,
+                            ServiceUndoPendingRequests(
                                                                     activityId,
                                                                     new string[] { Helper.CombinePath(rootPath, activity.DeletedItems[i]) });
                             for (int j = activity.MergeList.Count - 1; j >= 0; j--)
@@ -1290,15 +1290,11 @@ namespace SvnBridge.SourceControl
                 }
                 if (pendRequest != null)
                 {
-                    List<PendRequest> pendRequests = new List<PendRequest>();
-                    pendRequests.Add(pendRequest);
-                    sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
+                    ServiceSubmitPendingRequest(activityId, pendRequest);
                     UpdateLocalVersion(activityId, item, localTargetPath);
                     if (pendRequestPending != null)
                     {
-                        pendRequests = new List<PendRequest>();
-                        pendRequests.Add(pendRequestPending);
-                        sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
+                        ServiceSubmitPendingRequest(activityId, pendRequestPending);
                     }
                 }
                 if (copyAction.Rename)
@@ -1384,9 +1380,7 @@ namespace SvnBridge.SourceControl
                     DeleteItem(activityId, propertiesFile);
                 }
 
-                List<PendRequest> pendRequests = new List<PendRequest>();
-                pendRequests.Add(PendRequest.Delete(localPath));
-                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
+                ServiceSubmitPendingRequest(activityId, PendRequest.Delete(localPath));
 
                 activity.MergeList.Add(new ActivityItem(Helper.CombinePath(rootPath, path), item.ItemType, ActivityItemAction.Deleted));
 
@@ -1589,6 +1583,70 @@ namespace SvnBridge.SourceControl
         {
             LogItem log = GetLog(path, 1, GetLatestVersion(), Recursion.None, int.MaxValue);
             return log.History[log.History.Length - 1].ChangeSetID;
+        }
+
+        // TODO: these helpers should perhaps eventually be moved
+        // into a helper class (SourceControlSession?)
+        // which encapsulates sourceControlService, serverUrl, credentials members,
+        // as a member of this provider class,
+        // thereby simplifying common invocations.
+        private void ServiceSubmitPendingRequest(string activityId, PendRequest pendRequest)
+        {
+            List<PendRequest> pendRequests = new List<PendRequest>();
+            pendRequests.Add(pendRequest);
+            ServiceSubmitPendingRequests(activityId, pendRequests);
+        }
+
+        /// <summary>
+        /// Will register (stage) file changes in our temporary TFS workspace
+        /// as ready for commit.
+        /// This is aka TFS Pending Changes,
+        /// which can actually be seen in Visual Studio Source Control Explorer
+        /// as filed in its proper SvnBridge-created temporary Workspace ID
+        /// while debugging (but note that at least on VS10+TFS08,
+        /// Workspace status gets refreshed rather very lazily -
+        /// use Context Menu -> Refresh to force a refresh to current status).
+        /// TFS error message in case Pending Changes were not done correctly:
+        /// "The item" ... "could not be found in your workspace."
+        ///
+        /// This is a queueing-only operation - final atomic commit transaction
+        /// of all these elements queued within this activity
+        /// will then happen on invocation of .Commit().
+        /// </summary>
+        /// <param name="activityId">ID of the activity to file these requests under</param>
+        /// <param name="pendRequests">list of pending requests (TFS Pending Changes)</param>
+        private void ServiceSubmitPendingRequests(string activityId, IEnumerable<PendRequest> pendRequests)
+        {
+            // Watch all pending items submitted for the TFS-side transaction / workspace
+            // during an entire SVN-side WebDAV
+            // MKACTIVITY
+            //   ... CHECKOUT / COPY / PUT / DELETE ...
+            // DELETE
+            // transaction lifecycle:
+
+            sourceControlService.PendChanges(
+                serverUrl, credentials,
+                activityId, pendRequests,
+                0, 0
+            );
+        }
+
+        /// <summary>
+        /// Will undo file changes in our temporary TFS workspace
+        /// for an item.
+        /// Note that this unfortunately is limited to undoing
+        /// *all* pending changes of a path,
+        /// which might turn out to be a problem in case of
+        /// *multiple* prior Pending Changes registered for one item.
+        /// </summary>
+        /// <param name="activityId">ID of the activity to file these requests under</param>
+        /// <param name="pendRequests">list of items to have all their Pending Changes undone</param>
+        private void ServiceUndoPendingRequests(string activityId, IEnumerable<string> serverItems)
+        {
+            sourceControlService.UndoPendingChanges(
+                serverUrl, credentials,
+                activityId, serverItems
+            );
         }
 
         private ItemMetaData ConvertSourceItem(SourceItem sourceItem, string rootPath)
