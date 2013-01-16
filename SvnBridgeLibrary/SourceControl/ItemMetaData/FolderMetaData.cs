@@ -34,14 +34,7 @@ namespace SvnBridge.SourceControl
 
         public ItemMetaData FindItem(string name)
         {
-            // Shortcut (many incoming folder requests have completely foreign path names,
-            // in which case traversing a whole completely foreign large directory
-            // hierarchy would become super expensive):
-            if (MightContain(name))
-            {
-                return FindItem_Internal(name);
-            }
-            return null;
+            return FindItem_Internal(name);
         }
 
         /// <remarks>
@@ -54,7 +47,14 @@ namespace SvnBridge.SourceControl
 
         private ItemMetaData FindItem_Internal(string name)
         {
-            return FindItem_Internal_Do(name);
+            // Shortcut (many incoming folder requests have completely foreign path names,
+            // in which case traversing a whole completely foreign large directory
+            // hierarchy would become super expensive):
+            if (MightContain(name))
+            {
+                return FindItem_Internal_Do(name);
+            }
+            return null;
         }
 
         /// <remarks>
