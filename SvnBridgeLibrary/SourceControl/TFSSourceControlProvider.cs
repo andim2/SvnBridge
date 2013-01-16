@@ -2234,7 +2234,9 @@ namespace SvnBridge.SourceControl
 
             var previousRevision = changeset_Newer - 1;
 
-            if (renamedItems.All(item => item == null || item.FromItem == null))
+            // What *exactly* is the significance of this check? Rename/comment variable as needed...
+            bool isAllItemsWithNullContent = (renamedItems.All(item => (null == item) || (null == item.FromItem)));
+            if (isAllItemsWithNullContent)
             {
                 // fallback for TFS08 and earlier
                 var previousSourceItemIds = items.Select(item => item.ItemId).ToArray();
