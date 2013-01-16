@@ -165,16 +165,19 @@ namespace SvnBridge.SourceControl
                 item = folder.FindItem(itemPath);
                 if (item == null)
                 {
-                    if (isLastPathElem)
+                    ItemMetaData itemFetched = sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
+
+                    bool isFolder = (!isLastPathElem);
+                    if (isFolder)
                     {
-                        item = sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
+                        FolderMetaData subFolder = (FolderMetaData)itemFetched;
+                        item = subFolder;
                     }
                     else
                     {
-                        FolderMetaData subFolder =
-                            (FolderMetaData)sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
-                        item = subFolder;
+                        item = itemFetched;
                     }
+
                     item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
                     folder.Items.Add(item);
                 }
