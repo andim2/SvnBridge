@@ -192,26 +192,28 @@ namespace SvnBridge.SourceControl
         private static string GetRemoteNameOfPropertyChange(SourceItemChange change)
         {
             string remoteName = change.Item.RemoteName;
-            if (remoteName.Contains("/" + Constants.PropFolder + "/"))
+            string propFolderPlusSlash = Constants.PropFolder + "/";
+            string propFolderSlashPrefix = "/" + propFolderPlusSlash;
+            if (remoteName.Contains(propFolderSlashPrefix))
             {
-                if (remoteName.EndsWith("/" + Constants.PropFolder + "/" + Constants.FolderPropFile))
+                if (remoteName.EndsWith(propFolderSlashPrefix + Constants.FolderPropFile))
                 {
-                    remoteName = remoteName.Substring(0, remoteName.Length - ("/" + Constants.PropFolder + "/" + Constants.FolderPropFile).Length);
+                    remoteName = remoteName.Substring(0, remoteName.Length - (propFolderSlashPrefix + Constants.FolderPropFile).Length);
                 }
                 else
                 {
-                    remoteName = remoteName.Replace("/" + Constants.PropFolder + "/", "/");
+                    remoteName = remoteName.Replace(propFolderSlashPrefix, "/");
                 }
             }
-            else if (remoteName.StartsWith(Constants.PropFolder + "/"))
+            else if (remoteName.StartsWith(propFolderPlusSlash))
             {
-                if (remoteName == Constants.PropFolder + "/" + Constants.FolderPropFile)
+                if (remoteName == propFolderPlusSlash + Constants.FolderPropFile)
                 {
                     remoteName = "";
                 }
                 else
                 {
-                    remoteName = remoteName.Substring(Constants.PropFolder.Length + 1);
+                    remoteName = remoteName.Substring(propFolderPlusSlash.Length);
                 }
             }
             return remoteName;
