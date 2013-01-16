@@ -439,15 +439,14 @@ namespace SvnBridge.SourceControl
                 return;
             }
 
+            FolderMetaData folder = _root;
             string itemName = _checkoutRootPath;
             // deactivated [well... that turned out to be the SAME value!! Perhaps it was either deprecated or future handling...]:
             //string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemName;
             string remoteNameStart = itemName;
 
-            string[] pathElems = remoteName.Substring(remoteNameStart.Length)
-                .Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] pathElems = remoteName.Substring(remoteNameStart.Length).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-            FolderMetaData folder = _root;
             for (int i = 0; i < pathElems.Length; i++)
             {
                 bool isLastPathElem = (i == pathElems.Length - 1);

@@ -149,10 +149,12 @@ namespace SvnBridge.SourceControl
 
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)
         {
-            FolderMetaData folder = root;
-            string[] pathElems = path.Split('/');
-            string itemName = pathRoot;
             ItemMetaData item = null;
+
+            FolderMetaData folder = root;
+            string itemName = pathRoot;
+            string[] pathElems = path.Split('/');
+
             for (int i = 0; i < pathElems.Length; i++)
             {
                 bool isLastPathElem = (i == pathElems.Length - 1);
@@ -180,6 +182,7 @@ namespace SvnBridge.SourceControl
                     folder = (FolderMetaData)item;
                 }
             }
+
             return item;
         }
 
