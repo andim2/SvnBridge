@@ -496,7 +496,10 @@ namespace SvnBridge.SourceControl
             StringComparison stringCompareMode =
                 Configuration.SCMWantCaseSensitiveItemMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
 
-            foreach (ItemMetaData data in new List<ItemMetaData>(root.Items))
+            // Since we're proceeding destructively (removing some entries) below,
+            // need to do iteration via an untouched *copy*.
+            var items_destructive_iteration_copy = new List<ItemMetaData>(root.Items);
+            foreach (ItemMetaData data in items_destructive_iteration_copy)
             {
                 // a child of the currently renamed item?
                 if (data is MissingItemMetaData)
