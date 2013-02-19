@@ -1364,16 +1364,17 @@ namespace SvnBridge.SourceControl
 
                     foreach (ItemMetaData folderItem in folder.Items)
                     {
-                        if (folderItem.Revision > maxChangeset)
+                        if (maxChangeset < folderItem.Revision)
                             maxChangeset = folderItem.Revision;
 
-                        if (folderItem.LastModifiedDate > maxLastModified)
+                        if (maxLastModified < folderItem.LastModifiedDate)
                             maxLastModified = folderItem.LastModifiedDate;
                     }
-                    if (maxChangeset > item.ItemRevision)
+                    // Hmm... is this syntax mismatch (ItemRevision vs. SubItemRevision) intended here?
+                    if (item.ItemRevision < maxChangeset)
                         item.SubItemRevision = maxChangeset;
 
-                    if (maxLastModified > item.LastModifiedDate)
+                    if (item.LastModifiedDate < maxLastModified)
                         item.LastModifiedDate = maxLastModified;
                 }
                 else
