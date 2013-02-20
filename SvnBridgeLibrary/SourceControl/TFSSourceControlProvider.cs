@@ -2287,24 +2287,28 @@ namespace SvnBridge.SourceControl
         private ItemProperties ReadPropertiesForItem(string path, ItemType itemType)
         {
             ItemProperties properties = null;
-            string propertiesPath = GetPropertiesFileName(path, itemType);
-            string cacheKey = "ReadPropertiesForItem_" + propertiesPath;
-            ItemMetaData item;
-            CachedResult cachedResult = cache.Get(cacheKey);
+            {
+                ItemMetaData item;
+                {
+                    string propertiesPath = GetPropertiesFileName(path, itemType);
+                    string cacheKey = "ReadPropertiesForItem_" + propertiesPath;
+                    CachedResult cachedResult = cache.Get(cacheKey);
 
-            if (cachedResult == null)
-            {
-                item = GetItems(LATEST_VERSION, propertiesPath, Recursion.None, true);
-                cache.Set(cacheKey, item);
-            }
-            else
-            {
-                item = (ItemMetaData)cachedResult.Value;
-            }
+                    if (cachedResult == null)
+                    {
+                        item = GetItems(LATEST_VERSION, propertiesPath, Recursion.None, true);
+                        cache.Set(cacheKey, item);
+                    }
+                    else
+                    {
+                        item = (ItemMetaData)cachedResult.Value;
+                    }
+                }
 
-            if (item != null)
-            {
-                properties = Helper.DeserializeXml<ItemProperties>(ReadFile(item));
+                if (item != null)
+                {
+                    properties = Helper.DeserializeXml<ItemProperties>(ReadFile(item));
+                }
             }
             return properties;
         }
