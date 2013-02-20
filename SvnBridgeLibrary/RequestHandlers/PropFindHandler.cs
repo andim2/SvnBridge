@@ -395,7 +395,8 @@ namespace SvnBridge.Handlers
                                       PropData data,
                                       Stream outputStream)
         {
-            INode node = new SvnBlnNode(requestPath, int.Parse(requestPath.Substring(10)));
+            int version = int.Parse(requestPath.Substring(10));
+            INode node = new SvnBlnNode(requestPath, version);
 
             using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
