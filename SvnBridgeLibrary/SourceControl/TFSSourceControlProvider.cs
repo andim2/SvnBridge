@@ -2473,6 +2473,9 @@ namespace SvnBridge.SourceControl
         /// changeset 2: branch foreign-TeamProject content into test sub dir
         /// changeset 3: rename test sub dir
         /// (it's best to try this in a small test TP)
+        ///
+        /// FIXME: note that I'm not sure any more whether that code is suitable for non-TFS08 servers
+        /// since it was completely reworked using a TFS08. And TFS10 *is* different, so there may be trouble.
         /// <param name="items">List of items to be queried</param>
         /// <param name="changeset_Newer">The changeset that is newer than the result that we're supposed to determine</param>
         /// <returns>Container of items at the older changeset revision</returns>
