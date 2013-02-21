@@ -39,18 +39,17 @@ namespace SvnBridge.Handlers
 
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
-                if (request.Headers["Label"] != null)
+                if (labelHeader != null)
                 {
                     response.AppendHeader("Vary", "Label");
                 }
 
-                if (propfind.AllProp != null && requestPath.EndsWith(Constants.SvnVccPath))
+                if (propfind.AllProp != null)
                 {
-                    HandleAllPropVccDefault(sourceControlProvider, requestPath, response.OutputStream);
-                }
-                else if (propfind.AllProp != null)
-                {
-                    HandleAllProp(sourceControlProvider, requestPath, response.OutputStream);
+                    if(requestPath.EndsWith(Constants.SvnVccPath))
+                        HandleAllPropVccDefault(sourceControlProvider, requestPath, response.OutputStream);
+                    else
+                        HandleAllProp(sourceControlProvider, requestPath, response.OutputStream);
                 }
                 else if (propfind.Prop != null)
                 {
