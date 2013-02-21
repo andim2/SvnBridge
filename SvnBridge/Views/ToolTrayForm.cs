@@ -32,12 +32,13 @@ namespace SvnBridge.Views
 
         public void OnListenerStarted()
         {
-            notifyIcon.Text = "Running: http://localhost:" + presenter.Port;
+            string serverAndPort = "http://localhost:" + presenter.Port;
+            notifyIcon.Text = "Running: " + serverAndPort;
             startToolStripMenuItem.Enabled = false;
             stopToolStripMenuItem.Enabled = true;
 
         	string text = "Started on port " + presenter.Port + "\r\nForward by request url. Sample:\r\n" +
-					"http://localhost:" + presenter.Port + "/tfs03.codeplex.com/SvnBridge";
+					serverAndPort + "/tfs03.codeplex.com/SvnBridge";
 
         	notifyIcon.ShowBalloonTip(500,
                                       "SvnBridge",
