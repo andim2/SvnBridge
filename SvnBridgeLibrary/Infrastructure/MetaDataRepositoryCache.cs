@@ -53,13 +53,6 @@ namespace SvnBridge.Infrastructure
             return items.ToArray();
         }
 
-        public override SourceItem[] QueryItems(int revision, int itemId)
-        {
-            return Service_QueryItems(
-                revision,
-                itemId);
-        }
-
         public override SourceItem[] QueryItems(int revision, string path, Recursion recursion)
         {
             List<SourceItem> list = null;
