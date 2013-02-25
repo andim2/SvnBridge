@@ -251,17 +251,21 @@ namespace SvnBridge.SourceControl
         {
             string remoteName = change.Item.RemoteName;
 
-            if (sourceControlProvider.IsPropertyFolder(remoteName))
-            {
-                return;
-            }
-
             bool propertyChange = false;
 
-            if (sourceControlProvider.IsPropertyFile(remoteName))
+            // Property stuff, similar to Delete() handler...
+            if (sourceControlProvider.IsPropertyFolderElement(remoteName))
             {
-                propertyChange = true;
-                remoteName = GetRemoteNameOfPropertyChange(change);
+                if (sourceControlProvider.IsPropertyFolder(remoteName))
+                {
+                    return;
+                }
+
+                if (sourceControlProvider.IsPropertyFile(remoteName))
+                {
+                    propertyChange = true;
+                    remoteName = GetRemoteNameOfPropertyChange(change);
+                }
             }
 
             ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit, updatingForwardInTime);
