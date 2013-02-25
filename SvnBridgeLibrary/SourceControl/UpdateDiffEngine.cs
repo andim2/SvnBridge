@@ -56,14 +56,16 @@ namespace SvnBridge.SourceControl
 
         public void Delete(SourceItemChange change)
         {
+            string remoteName = change.Item.RemoteName;
+
             // we ignore it here because this only happens when the related item
             // is deleted, and at any rate, this is a SvnBridge implementation detail
             // which the client is not concerned about
-            if (sourceControlProvider.IsPropertyFolderElement(change.Item.RemoteName))
+            if (sourceControlProvider.IsPropertyFolderElement(remoteName))
             {
                 return;
             }
-            ProcessDeletedItem(change.Item.RemoteName, change);
+            ProcessDeletedItem(remoteName, change);
         }
 
         public void Rename(SourceItemChange change, bool updatingForwardInTime)
