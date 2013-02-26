@@ -334,7 +334,7 @@ namespace UnitTests
             get { return (StubParser)parser; }
         }
 
-        public override RequestHandlerBase GetHandler(string httpMethod)
+        public override RequestHandlerBase GetHttpHandler(string httpMethod)
         {
             return Handler;
         }

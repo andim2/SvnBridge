@@ -26,7 +26,11 @@ namespace SvnBridge.Net
             this.actionTracking = actionTracking;
         }
 
-        public virtual RequestHandlerBase GetHandler(string httpMethod)
+        /// <remarks>
+        /// Naming: use name GetHttpHandler() since otherwise it would sort of conflict
+        /// with the naming of the handler objects it creates.
+        /// </remarks>
+        public virtual RequestHandlerBase GetHttpHandler(string httpMethod)
         {
             switch (httpMethod.ToLowerInvariant())
             {
@@ -358,7 +362,7 @@ namespace SvnBridge.Net
             IHttpContext connection,
             NetworkCredential credential)
         {
-            RequestHandlerBase handler = GetHandler(connection.Request.HttpMethod);
+            RequestHandlerBase handler = GetHttpHandler(connection.Request.HttpMethod);
             if (handler == null)
             {
                 actionTracking.Error();
