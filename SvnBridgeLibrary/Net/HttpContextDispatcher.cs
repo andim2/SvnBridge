@@ -384,7 +384,11 @@ namespace SvnBridge.Net
         public sealed class UnrecognizedAuthorizationHeaderException : Exception
         {
             public UnrecognizedAuthorizationHeaderException(string authorizationHeader)
-                : base("Unrecognized authorization header: " + authorizationHeader.StartsWith("Basic"))
+                // Message used to show a StartsWith() result only,
+                // however I don't think this is what was intended - unless it was done for security reasons
+                // (don't expose full auth header, or don't log potentially large string??).
+                // If so, this place was lacking a proper comment...
+                : base("Unrecognized authorization header: " + authorizationHeader)
             {
                 Helper.DebugUsefulBreakpointLocation();
             }
