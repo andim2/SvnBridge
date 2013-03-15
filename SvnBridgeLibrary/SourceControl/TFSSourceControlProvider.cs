@@ -198,7 +198,9 @@ namespace SvnBridge.SourceControl
             // we quite likely don't handle this properly here...
             // All in all I'm still feeling very uncertain
             // about how and what we're doing here...
-            bool copy_head_item = (LATEST_VERSION == versionFrom);
+
+            // Query both magic placeholder for "latest version" *and* do actual latest version HEAD value verify.
+            bool copy_head_item = ((LATEST_VERSION == versionFrom) || (GetLatestVersion() == versionFrom));
             copy_head_item = true; // hotfix (branch below IS BROKEN, NEEDS FIXING!!! - probably some transaction management issue in WriteFile() used below)
             if (copy_head_item)
             {
