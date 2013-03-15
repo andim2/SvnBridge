@@ -1891,6 +1891,16 @@ namespace SvnBridge.SourceControl
                         }
                     }
                 }
+                // Finally, check whether localPath vs. localTargetPath has a case mismatch only.
+                // If so, that copy needs to be a rename, too, since on case insensitive systems
+                // only one case variant can occupy the target place,
+                // i.e. duplication caused by a COPY would be a problem.
+                // Hmm, should we be using the ConvertCopyToRename() helper here?
+                if (!copyIsRename)
+                {
+                    if (ItemMetaData.IsSamePathCaseInsensitive(localPath, localTargetPath))
+                        copyIsRename = true;
+                }
 
                 PendRequest pendRequest = null;
                 PendRequest pendRequestPending = null;
