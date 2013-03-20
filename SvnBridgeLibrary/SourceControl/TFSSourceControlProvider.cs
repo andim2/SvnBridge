@@ -1377,13 +1377,13 @@ namespace SvnBridge.SourceControl
                 ref itemPathsToBeQueried,
                 recursion);
 
-            SourceItem[] items = metaDataRepository.QueryItems(version, itemPathsToBeQueried.ToArray(), recursion);
+            SourceItem[] sourceItems = metaDataRepository.QueryItems(version, itemPathsToBeQueried.ToArray(), recursion);
             if (recursion == Recursion.OneLevel)
             {
-                if (items.Length > 0 && items[0].ItemType == ItemType.Folder)
+                if (sourceItems.Length > 0 && sourceItems[0].ItemType == ItemType.Folder)
                 {
                     List<string> propertiesForSubFolders = new List<string>();
-                    foreach (SourceItem item in items)
+                    foreach (SourceItem item in sourceItems)
                     {
                         if (item.ItemType == ItemType.Folder && !IsPropertyFolder(item.RemoteName))
                         {
@@ -1393,18 +1393,18 @@ namespace SvnBridge.SourceControl
                         }
                     }
                     SourceItem[] subFolderProperties = metaDataRepository.QueryItems(version, propertiesForSubFolders.ToArray(), Recursion.None);
-                    List<SourceItem> combinedItems = new List<SourceItem>(items);
+                    List<SourceItem> combinedItems = new List<SourceItem>(sourceItems);
                     foreach (SourceItem item in subFolderProperties)
                         combinedItems.Add(item);
 
-                    items = combinedItems.ToArray();
+                    sourceItems = combinedItems.ToArray();
                 }
             }
 
             Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
             Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
             Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
-            foreach (SourceItem sourceItem in items)
+            foreach (SourceItem sourceItem in sourceItems)
             {
                 ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
                 bool isPropertyFile = IsPropertyFile(item.Name);
