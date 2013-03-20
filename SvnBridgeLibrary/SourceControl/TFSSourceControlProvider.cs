@@ -167,7 +167,7 @@ namespace SvnBridge.SourceControl
 
         public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
         {
-                ItemMetaData firstItem = null;
+                ItemMetaData rootItem = null;
 
                 Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
                 Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
@@ -195,9 +195,9 @@ namespace SvnBridge.SourceControl
                             string folderNameMangled = FilesysHelpers.GetCaseMangledName(item.Name);
                             folders[folderNameMangled] = (FolderMetaData)item;
                         }
-                        if (firstItem == null)
+                        if (rootItem == null)
                         {
-                            firstItem = item;
+                            rootItem = item;
                             if (item.ItemType == ItemType.File)
                             {
                                 string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
@@ -236,7 +236,8 @@ namespace SvnBridge.SourceControl
                 SetItemProperties(folders, properties);
                 UpdateItemRevisionsBasedOnPropertyItemRevisions(folders, itemPropertyRevision);
 
-                return firstItem;
+                // Either (usually) a folder or sometimes even single-item:
+                return rootItem;
         }
 
         /// <summary>
@@ -1731,7 +1732,7 @@ namespace SvnBridge.SourceControl
             // Ideally we should offer a clean interface here
             // which ensures case-sensitive matching when needed.
 
-            ItemMetaData firstItem = null;
+            ItemMetaData rootItem = null;
 
             SVNPathStripLeadingSlash(ref path);
 
@@ -1776,19 +1777,19 @@ namespace SvnBridge.SourceControl
                 {
                     var itemCollector = new ItemQueryCollector(this);
                     ItemMetaData[] items = sourceItems.Select(sourceItem => SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker)).ToArray();
-                    firstItem = itemCollector.process(items, returnPropertyFiles);
+                    rootItem = itemCollector.process(items, returnPropertyFiles);
 
                     if (!returnPropertyFiles)
                     {
-                        if (null != firstItem)
+                        if (null != rootItem)
                         {
-                            UpdateFolderRevisions(firstItem, version, recursion);
+                            UpdateFolderRevisions(rootItem, version, recursion);
                         }
                     }
                 }
             } // sourceItems.Length > 0
 
-            return firstItem;
+            return rootItem;
         }
 
         /// <summary>
