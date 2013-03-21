@@ -821,10 +821,21 @@ namespace SvnBridge.SourceControl
                 bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
                 if (needCheckCaseSensitiveItemMatch)
                 {
-                    itemExists = false;
-                    bool haveCorrectlyCasedItem = item.Name.Equals(path);
-                    if (haveCorrectlyCasedItem)
-                        itemExists = true;
+                    // If the result item is a folder,
+                    // then we'll have to do a hierarchy lookup,
+                    // otherwise (single file), then we can do a direct compare.
+                    if (ItemType.Folder == item.ItemType)
+                    {
+                        FolderMetaData folder = (FolderMetaData)item;
+                        itemExists = (null != folder.FindItem(path));
+                    }
+                    else
+                    {
+                        itemExists = false;
+                        bool haveCorrectlyCasedItem = item.Name.Equals(path);
+                        if (haveCorrectlyCasedItem)
+                            itemExists = true;
+                    }
                 }
             }
             return itemExists;
