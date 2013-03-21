@@ -2343,13 +2343,14 @@ namespace SvnBridge.SourceControl
                 PendRequest pendRequestPending = null;
                 if (copyIsRename || forceRename)
                 {
+                    PendRequest pendRequestRename = PendRequest.Rename(localPath, localTargetPath);
                     if (IsDeleted(activityId, copyAction.TargetPath))
                     {
-                        activity.PendingRenames[localTargetPath] = PendRequest.Rename(localPath, localTargetPath);
+                        activity.PendingRenames[localTargetPath] = pendRequestRename;
                     }
                     else
                     {
-                        pendRequest = PendRequest.Rename(localPath, localTargetPath);
+                        pendRequest = pendRequestRename;
                         if (activity.PendingRenames.ContainsKey(localPath))
                         {
                             pendRequestPending = activity.PendingRenames[localPath];
@@ -2372,17 +2373,18 @@ namespace SvnBridge.SourceControl
                     }
                 }
                 string pathCopyTarget = MakeTfsPath(copyAction.TargetPath);
+                ActivityItem activityItem;
                 if (copyAction.Rename)
                 {
-                    activity.MergeList.Add(
-                        new ActivityItem(pathCopyTarget, item.ItemType, ActivityItemAction.New));
+                    activityItem = new ActivityItem(pathCopyTarget, item.ItemType, ActivityItemAction.New);
                 }
                 else
                 {
-                    activity.MergeList.Add(
-                        new ActivityItem(pathCopyTarget, item.ItemType, ActivityItemAction.Branch,
-                            MakeTfsPath(copyAction.Path)));
+                    string pathCopySource = MakeTfsPath(copyAction.Path);
+                    activityItem = new ActivityItem(pathCopyTarget, item.ItemType, ActivityItemAction.Branch,
+                            pathCopySource);
                 }
+                activity.MergeList.Add(activityItem);
             });
         }
 
