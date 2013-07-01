@@ -213,7 +213,15 @@ namespace SvnBridge.SourceControl
             this.fileRepository = fileRepository;
         }
 
-        public virtual void CopyItem(string activityId, int versionFrom, string path, string targetPath)
+        /// <summary>
+        /// The main public interface handler for WebDAV COPY request.
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
+        /// <param name="versionFrom">The version of the originating item</param>
+        /// <param name="path">Location of originating item</param>
+        /// <param name="targetPath">Location of destination item</param>
+        /// <param name="overwrite">Specifies whether overwriting an existing item is allowed</param>
+        public virtual void CopyItem(string activityId, int versionFrom, string path, string targetPath, bool overwrite)
         {
             // CopyAction is not capable of recording a version number that an item has been copied from,
             // thus I assume that a Copy operation is about currently *existing* items only:
@@ -238,6 +246,7 @@ namespace SvnBridge.SourceControl
                 {
                     activity.CopiedItems.Add(copyAction);
                 });
+                // FIXME: obey overwrite param!
                 ProcessCopyItem(activityId, versionFrom, copyAction, false);
             }
             else
@@ -245,30 +254,34 @@ namespace SvnBridge.SourceControl
                 // This implements handling for e.g. TortoiseSVN "Revert changes from this revision" operation
                 // as described by tracker #15317.
                 ItemMetaData itemDestination = GetItemsWithoutProperties(LATEST_VERSION, targetPath, Recursion.None);
-                ItemMetaData itemSource = GetItemsWithoutProperties(versionFrom, path, Recursion.None);
-                byte[] sourceData = ReadFile(itemSource);
-                bool reportUpdatedFile = (null != itemDestination);
-
-                CopyAction copyAction = new CopyAction(path, targetPath, false);
-                ActivityRepository.Use(activityId, delegate(Activity activity)
+                bool can_write = ((null == itemDestination) || (overwrite));
+                if (can_write)
                 {
-                    activity.CopiedItems.Add(copyAction);
-                });
+                    ItemMetaData itemSource = GetItemsWithoutProperties(versionFrom, path, Recursion.None);
+                    byte[] sourceData = ReadFile(itemSource);
+                    bool reportUpdatedFile = (null != itemDestination);
 
-                // FIXME: in case of a formerly deleted file, this erases all former file history
-                // due to adding a new file! However, a native-interface undelete operation on TFS2008
-                // (which could be said to be similar in its outcome to this operation in certain situations)
-                // *does* preserve history and gets logged as an Undelete
-                // (not to mention that doing this on an actual SVN is a copy *with* history, too!).
-                // I'm unsure whether we can massage things to have it improved,
-                // especially since flagging things as an Undelete seems to be out of reach in our API.
-                WriteFile(activityId, targetPath, sourceData, reportUpdatedFile);
+                    CopyAction copyAction = new CopyAction(path, targetPath, false);
+                    ActivityRepository.Use(activityId, delegate(Activity activity)
+                    {
+                        activity.CopiedItems.Add(copyAction);
+                    });
+
+                    // FIXME: in case of a formerly deleted file, this erases all former file history
+                    // due to adding a new file! However, a native-interface undelete operation on TFS2008
+                    // (which could be said to be similar in its outcome to this operation in certain situations)
+                    // *does* preserve history and gets logged as an Undelete
+                    // (not to mention that doing this on an actual SVN is a copy *with* history, too!).
+                    // I'm unsure whether we can massage things to have it improved,
+                    // especially since flagging things as an Undelete seems to be out of reach in our API.
+                    WriteFile(activityId, targetPath, sourceData, reportUpdatedFile);
+                }
             }
         }
 
         public virtual void CopyItem(string activityId, string path, string targetPath)
         {
-            CopyItem(activityId, LATEST_VERSION, path, targetPath);
+            CopyItem(activityId, LATEST_VERSION, path, targetPath, true);
         }
 
         public virtual bool DeleteItem(string activityId, string path)

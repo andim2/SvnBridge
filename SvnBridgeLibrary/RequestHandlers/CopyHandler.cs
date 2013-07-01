@@ -34,7 +34,10 @@ namespace SvnBridge.Handlers
             string destinationHeaderDecoded = Helper.DecodeC(destinationHeader);
             string destination = PathParser.GetPathFromDestination(destinationHeaderDecoded);
             string targetPath = destination.Substring(destination.IndexOf('/', 12));
-            sourceControlProvider.CopyItem(activityId, itemVersion, serverPath, targetPath);
+            bool overwrite = DetermineOverwriteFlag(request);
+            // Hmm, do we need to evaluate a (currently not implemented) CopyItem() result here,
+            // and then provide different response content depending on whether COPY was successful?
+            sourceControlProvider.CopyItem(activityId, itemVersion, serverPath, targetPath, overwrite);
 
             response.AppendHeader("Location", destinationHeaderDecoded);
 
@@ -44,6 +47,16 @@ namespace SvnBridge.Handlers
                 request);
 
             WriteToResponse(response, responseContent);
+        }
+
+        private static bool DetermineOverwriteFlag(IHttpRequest request)
+        {
+            bool overwrite_default = true;
+            bool overwrite = overwrite_default;
+            string overwriteHeader = request.Headers["Overwrite"];
+            if ((null != overwriteHeader) && (overwriteHeader.Equals("F")))
+                overwrite = false;
+            return overwrite;
         }
     }
 }
