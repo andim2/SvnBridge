@@ -1374,6 +1374,16 @@ namespace SvnBridge.SourceControl
         }
 
         /// <summary>
+        /// Is it one of our special activity workspaces?
+        /// </summary>
+        /// <param name="workspace">Workspace to examine</param>
+        /// <returns>true in case it's one of our special workspaces, else false</returns>
+        private static bool IsActivityWorkspace(WorkspaceInfo workspace)
+        {
+            return Constants.WorkspaceComment == workspace.Comment;
+        }
+
+        /// <summary>
         /// Deletes an activity/transaction (WebDAV DELETE /!svn/act/), emulated via TFS workspace.
         /// </summary>
         /// <param name="activityId">ID of the activity (transaction)</param>
@@ -1390,7 +1400,7 @@ namespace SvnBridge.SourceControl
             WorkspaceInfo[] workspaces = sourceControlService.GetWorkspaces(serverUrl, credentials, WorkspaceComputers.ThisComputer, 0);
             foreach (WorkspaceInfo workspace in workspaces)
             {
-                if (workspace.Comment != Constants.WorkspaceComment)
+                if (!IsActivityWorkspace(workspace))
                     continue;
                 if (skipExistingActivities && ActivityRepository.Exists(workspace.Name))
                     continue;
