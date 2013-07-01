@@ -213,10 +213,10 @@ namespace SvnBridge.SourceControl
             {
                 // This implements handling for e.g. TortoiseSVN "Revert changes from this revision" operation
                 // as described by tracker #15317.
-                ItemMetaData itemExisting = GetItemsWithoutProperties(LATEST_VERSION, path, Recursion.None);
-                ItemMetaData item = GetItemsWithoutProperties(versionFrom, path, Recursion.None);
-                byte[] sourceData = ReadFile(item);
-                bool reportUpdatedFile = (null != itemExisting);
+                ItemMetaData itemDestination = GetItemsWithoutProperties(LATEST_VERSION, targetPath, Recursion.None);
+                ItemMetaData itemSource = GetItemsWithoutProperties(versionFrom, path, Recursion.None);
+                byte[] sourceData = ReadFile(itemSource);
+                bool reportUpdatedFile = (null != itemDestination);
                 // FIXME: in case of a formerly deleted file, this erases all former file history
                 // due to adding a new file! However, a native-interface undelete operation on TFS2008
                 // (which could be said to be similar in its outcome to this operation in certain situations)
