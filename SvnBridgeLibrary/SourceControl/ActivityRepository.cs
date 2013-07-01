@@ -22,10 +22,11 @@ namespace SvnBridge.SourceControl
 			rwLock.AcquireWriterLock(Timeout.Infinite);
 			try
 			{
+				DateTime timeUtcNow = DateTime.UtcNow;
 				foreach (KeyValuePair<string, DateTime> pair in new Dictionary<string, DateTime>(activitiesTimeStamps))
 				{
 					//It is not likely that a commit would last more than 24 hours
-					if((DateTime.UtcNow-pair.Value).TotalHours > 24)
+					if((timeUtcNow-pair.Value).TotalHours > 24)
 						Delete(pair.Key);
 				}
 			}
