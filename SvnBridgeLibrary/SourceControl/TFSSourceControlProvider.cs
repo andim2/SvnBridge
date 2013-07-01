@@ -536,25 +536,26 @@ namespace SvnBridge.SourceControl
         /// The main public interface handler for WebDAV DELETE request.
         /// </summary>
         /// <param name="activityId">ID of the activity (transaction)</param>
-        /// <param name="path">path to file item</param>
+        /// <param name="victimPath">path to file item</param>
         /// <returns>true when successfully deleted, else false</returns>
-        public virtual bool DeleteItem(string activityId, string path)
+        public virtual bool DeleteItem(string activityId, string victimPath)
         {
-            if ((GetItems(LATEST_VERSION, path, Recursion.None, true) == null) && (GetPendingItem(activityId, path) == null))
+            if ((GetItems(LATEST_VERSION, victimPath, Recursion.None, true) == null) && (GetPendingItem(activityId, victimPath) == null))
             {
                 return false;
             }
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                bool postCommitDelete = false;
+                bool haveAnyPostCommitDeletes = false;
                 foreach (CopyAction copy in activity.CopiedItems)
                 {
-                    if (copy.Path.StartsWith(path + "/"))
+                    bool item_sitting_below_deleted_path = copy.Path.StartsWith(victimPath + "/");
+                    if (item_sitting_below_deleted_path)
                     {
-                        if (!activity.PostCommitDeletedItems.Contains(path))
+                        if (!activity.PostCommitDeletedItems.Contains(victimPath))
                         {
-                            activity.PostCommitDeletedItems.Add(path);
+                            activity.PostCommitDeletedItems.Add(victimPath);
                         }
 
                         if (!copy.Rename)
@@ -562,16 +563,16 @@ namespace SvnBridge.SourceControl
                             ConvertCopyToRename(activityId, copy);
                         }
 
-                        postCommitDelete = true;
+                        haveAnyPostCommitDeletes = true;
                     }
                 }
 
-                if (!postCommitDelete)
+                if (!haveAnyPostCommitDeletes)
                 {
                     bool deleteIsRename = false;
                     foreach (CopyAction copy in activity.CopiedItems)
                     {
-                        if (copy.Path.Equals(path))
+                        if (copy.Path.Equals(victimPath))
                         {
                             ConvertCopyToRename(activityId, copy);
                             deleteIsRename = true;
@@ -579,8 +580,8 @@ namespace SvnBridge.SourceControl
                     }
                     if (!deleteIsRename)
                     {
-                        ProcessDeleteItem(activityId, path);
-                        activity.DeletedItems.Add(path);
+                        ProcessDeleteItem(activityId, victimPath);
+                        activity.DeletedItems.Add(victimPath);
                     }
                 }
             });
