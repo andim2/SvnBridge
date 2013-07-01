@@ -219,6 +219,13 @@ namespace SvnBridge.SourceControl
                 ItemMetaData itemSource = GetItemsWithoutProperties(versionFrom, path, Recursion.None);
                 byte[] sourceData = ReadFile(itemSource);
                 bool reportUpdatedFile = (null != itemDestination);
+
+                CopyAction copyAction = new CopyAction(path, targetPath, false);
+                ActivityRepository.Use(activityId, delegate(Activity activity)
+                {
+                    activity.CopiedItems.Add(copyAction);
+                });
+
                 // FIXME: in case of a formerly deleted file, this erases all former file history
                 // due to adding a new file! However, a native-interface undelete operation on TFS2008
                 // (which could be said to be similar in its outcome to this operation in certain situations)
