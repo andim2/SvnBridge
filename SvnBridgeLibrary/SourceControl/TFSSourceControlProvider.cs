@@ -2053,7 +2053,7 @@ namespace SvnBridge.SourceControl
             return WebDAVPropertyStorageAdaptor.IsPropertyFolderElement(path);
         }
 
-        private static bool IsDeleted(string activityId, string path)
+        private static bool HaveActivity_Deletion(string activityId, string path)
         {
             bool result = false;
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -2179,7 +2179,7 @@ namespace SvnBridge.SourceControl
 
             bool replaced = false;
             // Combo of prior deleteAction plus Write ends up as replace:
-            if (IsDeleted(activityId, path))
+            if (HaveActivity_Deletion(activityId, path))
             {
                 replaced = true;
                 RevertDelete(activityId, path);
@@ -2361,7 +2361,7 @@ namespace SvnBridge.SourceControl
 
                 bool copyIsRename = false;
                 // Combo of prior deleteAction plus copyAction ends up as rename:
-                if (IsDeleted(activityId, copyAction.Path))
+                if (HaveActivity_Deletion(activityId, copyAction.Path))
                 {
                     copyIsRename = true;
                     RevertDelete(activityId, copyAction.Path);
@@ -2446,7 +2446,8 @@ namespace SvnBridge.SourceControl
                 if (copyIsRename || forceRename)
                 {
                     PendRequest pendRequestRename = PendRequest.Rename(localPath, localTargetPath);
-                    if (IsDeleted(activityId, copyAction.TargetPath))
+                    bool targetFreeForTheTaking = HaveActivity_Deletion(activityId, copyAction.TargetPath);
+                    if (targetFreeForTheTaking)
                     {
                         activity.PendingRenames[localTargetPath] = pendRequestRename;
                     }
