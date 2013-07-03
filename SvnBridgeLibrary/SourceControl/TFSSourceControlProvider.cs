@@ -413,23 +413,7 @@ namespace SvnBridge.SourceControl
             foreach (KeyValuePair<string, ItemProperties> pairItemProperties in properties)
             {
                 string itemPath = pairItemProperties.Key;
-                ItemMetaData item = null;
-                string itemPathMangled = itemPath.ToLowerInvariant();
-                FolderMetaData itemFolder = folderMap.TryGetFolder(itemPathMangled);
-                if (null != itemFolder)
-                {
-                    item = itemFolder;
-                }
-                else
-                {
-                    string folderNameMangled = FilesysHelpers.GetFolderPathPart(itemPath)
-                        .ToLowerInvariant();
-                    itemFolder = folderMap.TryGetFolder(folderNameMangled);
-                    if (null != itemFolder)
-                    {
-                        item = itemFolder.FindItem(itemPath);
-                    }
-                }
+                ItemMetaData item = FindTargetItemForItemProperties(folderMap, itemPath);
                 if (item != null)
                 {
                     foreach (Property property in pairItemProperties.Value.Properties)
@@ -438,6 +422,28 @@ namespace SvnBridge.SourceControl
                     }
                 }
             }
+        }
+
+        private static ItemMetaData FindTargetItemForItemProperties(FolderMap folderMap, string itemPath)
+        {
+            ItemMetaData item = null;
+            string itemPathMangled = itemPath.ToLowerInvariant();
+            FolderMetaData itemFolder = folderMap.TryGetFolder(itemPathMangled);
+            if (null != itemFolder)
+            {
+                item = itemFolder;
+            }
+            else
+            {
+                string folderNameMangled = FilesysHelpers.GetFolderPathPart(itemPath)
+                    .ToLowerInvariant();
+                itemFolder = folderMap.TryGetFolder(folderNameMangled);
+                if (null != itemFolder)
+                {
+                    item = itemFolder.FindItem(itemPath);
+                }
+            }
+            return item;
         }
 
         private static void UpdatePropertiesRevisionOfItems(FolderMap folderMap, IEnumerable<KeyValuePair<string, int>> pairsPropertiesRevisionOfItems)
