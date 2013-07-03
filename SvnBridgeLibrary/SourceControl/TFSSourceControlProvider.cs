@@ -218,26 +218,35 @@ namespace SvnBridge.SourceControl
         /// <param name="newItem">The item to be inserted</param>
         public void Insert(ItemMetaData newItem)
         {
-            // FIXME: this optimistic handling relies on a folder-type item always being listed
-            // prior to its file-type sub content, which may sometimes not be the case.
-            // Might need to rearrange things more flexibly (by using the usual
-            // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
-            if (newItem.ItemType == ItemType.Folder)
+            // Figure out whether there's an existing item which might be parent
+            // of the new item:
+            bool haveRoot = (null != rootItem);
+            if (haveRoot)
             {
-                InsertFolder(newItem.Name, (FolderMetaData)newItem);
-            }
-            if (rootItem == null)
-            {
-                rootItem = newItem;
-                if (newItem.ItemType == ItemType.File)
+                if (newItem.IsBelowEqual(rootItem.Name))
                 {
-                    string folderName = FilesysHelpers.GetFolderPathPart(newItem.Name);
-                    FolderMetaData folder = new FolderMetaData();
-                    folder.Items.Add(newItem);
-                    InsertFolder(folderName, folder);
+                    Debugger.Launch(); // TODO UNFINISHED
                 }
             }
-            else
+
+            if (newItem.ItemType == ItemType.Folder)
+            {
+                InsertFolder((FolderMetaData)newItem);
+            }
+
+            if (newItem.ItemType == ItemType.File)
+            {
+                string folderName = FilesysHelpers.GetFolderPathPart(newItem.Name);
+                // Hmm... since this is a *helper-only* folder:
+                // perhaps we should wrap a new FolderMetaData in a *stub*
+                // StubFolderMetaData instead?
+                FolderMetaData folder = new FolderMetaData();
+                folder.Name = folderName;
+                InsertFolder(folder);
+                folder.Items.Add(newItem);
+                SubmitAsRootItem(newItem);
+            }
+
             {
                 FolderMetaData folder = FetchContainerFolderForItem(newItem);
                 // NO null check here - I'm not quite certain about the rootItem mechanism yet,
@@ -246,9 +255,23 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private void InsertFolder(string folderNameUnmangled, FolderMetaData folder)
+        private void SubmitAsRootItem(ItemMetaData item)
         {
-            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderNameUnmangled);
+            if (null == rootItem)
+            {
+                rootItem = item;
+            }
+        }
+
+        private void InsertFolder(FolderMetaData folder)
+        {
+            InsertFolderInMap(folder);
+            SubmitAsRootItem(folder);
+        }
+
+        private void InsertFolderInMap(FolderMetaData folder)
+        {
+            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folder.Name);
             folders[folderNameMangled] = folder;
         }
 
