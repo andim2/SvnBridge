@@ -446,6 +446,11 @@ namespace SvnBridge.SourceControl
             return item;
         }
 
+        private static void UpdateItemPropertiesRevision(ItemMetaData item, int revision)
+        {
+            item.PropertyRevision = revision;
+        }
+
         private static void UpdatePropertiesRevisionOfItems(FolderMap folderMap, IEnumerable<KeyValuePair<string, int>> pairsPropertiesRevisionOfItems)
         {
             foreach (KeyValuePair<string, int> pairItemPropertiesRevision in pairsPropertiesRevisionOfItems)
@@ -457,7 +462,7 @@ namespace SvnBridge.SourceControl
                 if (null != itemFolder)
                 {
                     ItemMetaData item = itemFolder;
-                    item.PropertyRevision = pairItemPropertiesRevision.Value;
+                    UpdateItemPropertiesRevision(item, pairItemPropertiesRevision.Value);
                 }
                 else
                 {
@@ -470,7 +475,11 @@ namespace SvnBridge.SourceControl
                         {
                             if (item.Name == itemPath)
                             {
-                                item.PropertyRevision = pairItemPropertiesRevision.Value;
+                                UpdateItemPropertiesRevision(item, pairItemPropertiesRevision.Value);
+                                // Hmm... to break; or not to break;?
+                                // Case (in)sensitivity might play a role here
+                                // (or multiple same-name items in folder!?),
+                                // but I don't think so after all...
                             }
                         }
                     }
