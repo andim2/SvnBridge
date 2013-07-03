@@ -1334,7 +1334,7 @@ namespace SvnBridge.SourceControl
                         firstItem = item;
                         if (item.ItemType == ItemType.File)
                         {
-                            string folderName = GetFolderName(item.Name);
+                            string folderName = GetFolderPathPart(item.Name);
                             string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
                             folders[folderNameMangled] = new FolderMetaData();
                             folders[folderNameMangled].Items.Add(item);
@@ -1342,7 +1342,7 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        string folderName = GetFolderName(item.Name);
+                        string folderName = GetFolderPathPart(item.Name);
                         string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
                         FolderMetaData folder = null;
                         if (!folders.TryGetValue(folderNameMangled, out folder))
@@ -1504,7 +1504,7 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    string folderName = GetFolderName(propertyKey).ToLowerInvariant();
+                    string folderName = GetFolderPathPart(propertyKey).ToLowerInvariant();
 
                     FolderMetaData folder;
                     if (folders.TryGetValue(folderName, out folder) == false)
@@ -1605,7 +1605,7 @@ namespace SvnBridge.SourceControl
 
         private void AddBaseFolderIfRequired(string activityId, ActivityItem item, ICollection<string> baseFolders, MergeActivityResponse mergeResponse)
         {
-            string folderName = GetFolderName(item.Path);
+            string folderName = GetFolderPathPart(item.Path);
             if (((item.Action == ActivityItemAction.New) || (item.Action == ActivityItemAction.Deleted) ||
                  (item.Action == ActivityItemAction.RenameDelete)) && !baseFolders.Contains(folderName))
             {
@@ -1626,7 +1626,7 @@ namespace SvnBridge.SourceControl
 
                 if (!folderFound)
                 {
-                    folderName = GetFolderName(item.Path.Substring(rootPath.Length));
+                    folderName = GetFolderPathPart(item.Path.Substring(rootPath.Length));
                     if (!folderName.StartsWith("/"))
                         folderName = "/" + folderName;
                     MergeActivityResponseItem responseItem = new MergeActivityResponseItem(ItemType.Folder, folderName);
@@ -2072,7 +2072,7 @@ namespace SvnBridge.SourceControl
             return properties;
         }
 
-        private static string GetFolderName(string path)
+        private static string GetFolderPathPart(string path)
         {
             string folderName = "";
             if (path.Contains("/"))
@@ -2119,7 +2119,7 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    string folderName = GetFolderName(itemProperties.Key)
+                    string folderName = GetFolderPathPart(itemProperties.Key)
                         .ToLowerInvariant();
                     if (folders.ContainsKey(folderName))
                     {
