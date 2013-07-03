@@ -107,6 +107,27 @@ namespace SvnBridge.SourceControl
         }
     }
 
+    public sealed class ItemHelpers
+    {
+        /// <summary>
+        /// Assigns or updates an SVN property name/value pair to a filesystem item.
+        /// </summary>
+        /// <param name="item">Item to have its properties updated</param>
+        /// <param name="property">Property (name/value pair) to be updated</param>
+        public static void UpdateItemProperty(ItemMetaData item, Property property)
+        {
+            item.Properties[property.Name] = property.Value;
+        }
+
+        public static void UpdateItemProperties(ItemMetaData item, ItemProperties itemProperties)
+        {
+            foreach (Property property in itemProperties.Properties)
+            {
+                UpdateItemProperty(item, property);
+            }
+        }
+    }
+
     public sealed class SCMHelpers
     {
         // Marker string to be used for cases where the author of an SCM item
@@ -416,10 +437,7 @@ namespace SvnBridge.SourceControl
                 ItemMetaData item = FindTargetItemForItemProperties(folderMap, itemPath);
                 if (item != null)
                 {
-                    foreach (Property property in pairItemProperties.Value.Properties)
-                    {
-                        item.Properties[property.Name] = property.Value;
-                    }
+                    ItemHelpers.UpdateItemProperties(item, pairItemProperties.Value);
                 }
             }
         }
