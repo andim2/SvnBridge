@@ -435,14 +435,14 @@ namespace SvnBridge.SourceControl
                     string baseFolderNameMangled = FilesysHelpers.GetFolderPathPart(itemPath).ToLowerInvariant();
 
                     itemFolder = folderMap.TryGetFolder(baseFolderNameMangled);
-                    if (null == itemFolder)
-                        continue;
-
-                    foreach (ItemMetaData item in itemFolder.Items)
+                    if (null != itemFolder)
                     {
-                        if (item.Name == itemPath)
+                        foreach (ItemMetaData item in itemFolder.Items)
                         {
-                            item.PropertyRevision = pairItemPropertiesRevision.Value;
+                            if (item.Name == itemPath)
+                            {
+                                item.PropertyRevision = pairItemPropertiesRevision.Value;
+                            }
                         }
                     }
                 }
