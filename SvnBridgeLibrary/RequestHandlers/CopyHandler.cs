@@ -21,13 +21,7 @@ namespace SvnBridge.Handlers
 
             string requestPath = GetPath(request);
 
-            int itemVersion = TFSSourceControlProvider.LATEST_VERSION;
-            if (requestPath.StartsWith("/!svn/bc/"))
-            {
-                string[] parts = requestPath.Split('/');
-                if (parts.Length >= 3)
-                    int.TryParse(parts[3], out itemVersion);
-            }
+            int itemVersion = DetermineItemVersion(requestPath);
 
             string serverPath = GetServerSidePath(requestPath);
 
@@ -47,6 +41,18 @@ namespace SvnBridge.Handlers
                 request);
 
             WriteToResponse(response, responseContent);
+        }
+
+        private static int DetermineItemVersion(string requestPath)
+        {
+            int itemVersion = TFSSourceControlProvider.LATEST_VERSION;
+            if (requestPath.StartsWith("/!svn/bc/"))
+            {
+                string[] parts = requestPath.Split('/');
+                if (parts.Length >= 3)
+                    int.TryParse(parts[3], out itemVersion);
+            }
+            return itemVersion;
         }
 
         private static bool DetermineOverwriteFlag(IHttpRequest request)
