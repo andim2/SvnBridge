@@ -1189,8 +1189,10 @@ namespace SvnBridge.SourceControl
         /// <param name="activityId">ID of the activity (transaction)</param>
         public virtual void DeleteActivity(string activityId)
         {
-            sourceControlService.DeleteWorkspace(serverUrl, credentials, activityId);
+            // Did create-workspace then create-activity,
+            // thus now delete-activity then delete-workspace (better obey scoped order).
             ActivityRepository.Delete(activityId);
+            sourceControlService.DeleteWorkspace(serverUrl, credentials, activityId);
         }
 
         private void ClearExistingTempWorkspaces(bool skipExistingActivities)
