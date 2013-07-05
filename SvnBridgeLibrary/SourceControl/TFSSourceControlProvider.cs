@@ -1259,21 +1259,7 @@ namespace SvnBridge.SourceControl
                 throw new FolderAlreadyExistsException();
             }
 
-            ItemMetaData item;
-            string existingPath = path.Substring(1);
-            do
-            {
-                if (existingPath.IndexOf('/') != -1)
-                {
-                    existingPath = existingPath.Substring(0, existingPath.LastIndexOf('/'));
-                }
-                else
-                {
-                    existingPath = "";
-                }
-
-                item = GetItemsWithoutProperties(LATEST_VERSION, existingPath, Recursion.None);
-            } while (item == null);
+            ItemMetaData item = DetermineOutermostExistingBaseDirectoryItem(path, false);
             string localPath = GetLocalPath(activityId, path);
             UpdateLocalVersion(activityId, item, localPath.Substring(0, localPath.LastIndexOf('\\')));
 
@@ -2133,20 +2119,7 @@ namespace SvnBridge.SourceControl
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                ItemMetaData item;
-                string existingPath = path.Substring(1);
-
-                do
-                {
-                    int lastIndexOf = existingPath.LastIndexOf('/');
-                    if (lastIndexOf != -1)
-                        existingPath = existingPath.Substring(0, lastIndexOf);
-                    else
-                        existingPath = "";
-
-                    item = GetItems(LATEST_VERSION, existingPath, Recursion.None, true);
-                } while (item == null);
-
+                ItemMetaData item = DetermineOutermostExistingBaseDirectoryItem(path, true);
                 string localPath = GetLocalPath(activityId, path);
                 List<LocalUpdate> updates = new List<LocalUpdate>();
                 updates.Add(LocalUpdate.FromLocal(item.Id,
@@ -2211,6 +2184,40 @@ namespace SvnBridge.SourceControl
             });
 
             return isNewFile;
+        }
+
+        /// <summary>
+        /// Given a path, figures out the item of the outermost existing
+        /// base directory of that path, at HEAD revision (LATEST_VERSION).
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="returnPropertyFiles">
+        /// whether to consider existing property storage filesystem items as well
+        /// (i.e., this indicates whether the caller of this method
+        /// may intend the result to be used for property storage purposes)
+        /// </param>
+        /// <returns>Base directory item</returns>
+        private ItemMetaData DetermineOutermostExistingBaseDirectoryItem(string path, bool returnPropertyFiles)
+        {
+            ItemMetaData item;
+            string existingPath = path.Substring(1);
+
+            do
+            {
+                int lastIndexOf = existingPath.LastIndexOf('/');
+                if (lastIndexOf != -1)
+                    existingPath = existingPath.Substring(0, lastIndexOf);
+                else
+                    existingPath = "";
+
+                if (returnPropertyFiles)
+                    item = GetItems(LATEST_VERSION, existingPath, Recursion.None, true);
+                else
+                    item = GetItemsWithoutProperties(LATEST_VERSION, existingPath, Recursion.None);
+                // We assume that loop abort condition is covered under all circumstances
+                // (i.e., existingPath "" --> valid item, right? Famous last words...)
+            } while (item == null);
+            return item;
         }
 
         private void UndoPendingRequests(string activityId, Activity activity, string path)
