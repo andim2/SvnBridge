@@ -1421,7 +1421,8 @@ namespace SvnBridge.SourceControl
 
             ItemMetaData item = DetermineOutermostExistingBaseDirectoryItem(path, false);
             string localPath = GetLocalPath(activityId, path);
-            UpdateLocalVersion(activityId, item, localPath.Substring(0, localPath.LastIndexOf('\\')));
+            string localBasePath = localPath.Substring(0, localPath.LastIndexOf('\\'));
+            UpdateLocalVersion(activityId, item, localBasePath);
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
@@ -2286,9 +2287,10 @@ namespace SvnBridge.SourceControl
             {
                 ItemMetaData item = DetermineOutermostExistingBaseDirectoryItem(path, true);
                 string localPath = GetLocalPath(activityId, path);
+                string localBasePath = localPath.Substring(0, localPath.LastIndexOf('\\'));
                 List<LocalUpdate> updates = new List<LocalUpdate>();
                 updates.Add(LocalUpdate.FromLocal(item.Id,
-                                                  localPath.Substring(0, localPath.LastIndexOf('\\')),
+                                                  localBasePath,
                                                   item.Revision));
 
                 item = GetItems(LATEST_VERSION, path.Substring(1), Recursion.None, true);
