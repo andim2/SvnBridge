@@ -199,6 +199,7 @@ namespace SvnBridge.SourceControl
             // All in all I'm still feeling very uncertain
             // about how and what we're doing here...
             bool copy_head_item = (LATEST_VERSION == versionFrom);
+            copy_head_item = true; // hotfix (branch below IS BROKEN, NEEDS FIXING!!! - probably some transaction management issue in WriteFile() used below)
             if (copy_head_item)
             {
                 CopyAction copyAction = new CopyAction(path, targetPath, false);
