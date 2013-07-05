@@ -16,9 +16,9 @@ namespace SvnBridge.Handlers
 
             string requestPath = GetPath(request);
 
-            bool fileDeleted = Delete(sourceControlProvider, requestPath);
+            bool isSuccessfullyDeleted = Delete(sourceControlProvider, requestPath);
 
-            if (fileDeleted)
+            if (isSuccessfullyDeleted)
             {
                 SetResponseSettings(response, "text/plain", Encoding.UTF8, 204);
             }
