@@ -48,8 +48,8 @@ namespace SvnBridge.Handlers
             TFSSourceControlProvider sourceControlProvider,
             string requestPath,
             Stream inputStream,
-            string baseHash,
-            string resultHash)
+            string baseHashSvnProvided,
+            string resultHashSvnProvided)
         {
             // Hmm, is this part really necessary??
             // See also MkColHandler where it's being fed into a regex match...
@@ -63,25 +63,26 @@ namespace SvnBridge.Handlers
             const int startIndex = 11;
             string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
             string serverPath = Helper.Decode(requestPath.Substring(startIndex + activityId.Length));
-            byte[] sourceData = new byte[0];
-            if (baseHash != null)
+            // Adopt proper SVN speak: "base" == original file, "result" == updated file.
+            byte[] baseData = new byte[0];
+            if (null != baseHashSvnProvided)
             {
                 ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, serverPath);
-                sourceData = sourceControlProvider.ReadFile(item);
-                if (ChecksumMismatch(baseHash, sourceData))
+                baseData = sourceControlProvider.ReadFile(item);
+                if (ChecksumMismatch(baseHashSvnProvided, baseData))
                 {
                     ReportErrorChecksumMismatch("with base file");
                 }
             }
-            byte[] fileData = SvnDiffParser.ApplySvnDiffsFromStream(inputStream, sourceData);
-            if (fileData.Length > 0)
+            byte[] resultData = SvnDiffParser.ApplySvnDiffsFromStream(inputStream, baseData);
+            if (resultData.Length > 0)
             {
-                if (ChecksumMismatch(resultHash, fileData))
+                if (ChecksumMismatch(resultHashSvnProvided, resultData))
                 {
-                    ReportErrorChecksumMismatch("with new file");
+                    ReportErrorChecksumMismatch("with updated result file");
                 }
             }
-            return sourceControlProvider.WriteFile(activityId, serverPath, fileData);
+            return sourceControlProvider.WriteFile(activityId, serverPath, resultData);
         }
 
         private static bool ChecksumMismatch(string hash, byte[] data)
