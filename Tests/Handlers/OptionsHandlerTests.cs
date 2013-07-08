@@ -52,6 +52,7 @@ namespace UnitTests
             request.Headers["Accept-Encoding"] = "gzip";
             request.Path = "http://localhost:8082";
 
+            //System.Diagnostics.Debugger.Launch();
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             Assert.Equal("httpd/unix-directory", response.ContentType);

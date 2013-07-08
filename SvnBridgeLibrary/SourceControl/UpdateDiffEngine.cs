@@ -427,6 +427,7 @@ namespace SvnBridge.SourceControl
                     else if (IsDeleteMetaDataKind(itemPrev))
                     { // former item was a DELETE...
 
+                        //System.Diagnostics.Debugger.Launch();
                         // ...and new one then _resurrects_ the (_actually_ deleted) item:
                         if (ChangeTypeAnalyzer.IsAddOperation(change))
                         {

@@ -91,6 +91,7 @@ namespace UnitTests
             request.Path = "http://localhost:8080//!svn/wrk/9c122f80-4f28-0e41-8978-d768e3343033/";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><D:propertyupdate xmlns:D=\"DAV:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:C=\"http://subversion.tigris.org/xmlns/custom/\" xmlns:S=\"http://subversion.tigris.org/xmlns/svn/\"><D:remove><D:prop><S:ignore /></D:prop></D:remove></D:propertyupdate>";
 
+            //System.Diagnostics.Debugger.Launch();
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
             string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
