@@ -172,6 +172,87 @@ namespace SvnBridge.Handlers
 			return PathParser.GetLocalPath(httpContext.Request, path);
 		}
 
+        protected enum WebDAVResourceType
+        {
+            Resource,
+            ResourceCheckedOut,
+            Copy,
+            Activity,
+            Collection,
+        }
+        protected static string GetResourceCreatedResponse(
+            WebDAVResourceType resource_type,
+            string location,
+            string server,
+            string port)
+        {
+            // Hmm, one might prefer to have this per-resource-type decision-making moved into a virtual
+            // in order to not have resource-specific knowledge in this generic base handler,
+            // however maybe a virtual doesn't quite precisely map it (as a consequence, all affected handlers ought to be derived
+            // from the new base class that provides that abstract virtual).
+            string resource_type_descr;
+            bool needPrependSlash; // hmm... where do or don't we really need it? I'm not entirely convinced yet that this is how we should be doing things...
+            switch(resource_type)
+            {
+                case WebDAVResourceType.Resource:
+                    resource_type_descr = "Resource";
+                    needPrependSlash = true;
+                    break;
+                case WebDAVResourceType.ResourceCheckedOut:
+                    resource_type_descr = "Checked-out resource";
+                    needPrependSlash = false;
+                    break;
+                case WebDAVResourceType.Copy:
+                    resource_type_descr = "Destination";
+                    needPrependSlash = true;
+                    break;
+                case WebDAVResourceType.Activity:
+                    resource_type_descr = "Activity";
+                    needPrependSlash = false;
+                    break;
+                case WebDAVResourceType.Collection:
+                    resource_type_descr = "Collection";
+                    needPrependSlash = true;
+                    break;
+                default:
+                    throw new InvalidOperationException("Invalid resource type " + resource_type);
+            }
+            // *We* are the ones assembling HTML syntax here,
+            // thus *we* are the ones expected to be doing the towards-HTML-protocol path encoding transition, *right here*.
+            // However, WTH is the difference between the different encoding operations for the different resource types?
+            // At this specific layer transition I would expect there to only be one specific transcoding transition to be applied...
+            // Or, IOW, I'm damn certain that there's some remaining annoying imprecision in transcoding transition handling here
+            // which ought to be made consistent...
+            string locationHTMLEncoded = (resource_type != WebDAVResourceType.ResourceCheckedOut) ? Helper.EncodeB(location) : Helper.Encode(location, true);
+            string responseContent = "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
+                                     "<html><head>\n" +
+                                     "<title>201 Created</title>\n" +
+                                     "</head><body>\n" +
+                                     "<h1>Created</h1>\n" +
+                                     "<p>" + resource_type_descr + " " + (needPrependSlash ? "/" : "") + locationHTMLEncoded + " has been created.</p>\n" +
+                                     "<hr />\n" +
+                                     "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + server + " Port " + port + "</address>\n" +
+                                     "</body></html>\n";
+
+            return responseContent;
+        }
+
+        /// <summary>
+        /// Convenience helper (the handlers always reply
+        /// with a host configuration that matches the request's one).
+        /// </summary>
+        protected static string GetResourceCreatedResponse(
+            WebDAVResourceType resource_type,
+            string path,
+            IHttpRequest request)
+        {
+            return GetResourceCreatedResponse(
+                resource_type,
+                path,
+                request.Url.Host,
+                request.Url.Port.ToString());
+        }
+
         /// <summary>
         /// Helper required for Cadaver (WebDAV) fix.
         /// I don't quite know yet where/how to centralize things properly,

@@ -26,17 +26,10 @@ namespace SvnBridge.Handlers
 
                 response.AppendHeader("Location", "http://" + request.Headers["Host"] + "/" + itemPath);
 
-                string responseContent = "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
-                                         "<html><head>\n" +
-                                         "<title>201 Created</title>\n" +
-                                         "</head><body>\n" +
-                                         "<h1>Created</h1>\n" +
-                                         "<p>Resource /" + Helper.EncodeB(itemPath) +
-                                         " has been created.</p>\n" +
-                                         "<hr />\n" +
-                                         "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host +
-                                         " Port " + request.Url.Port + "</address>\n" +
-                                         "</body></html>\n";
+                string responseContent = GetResourceCreatedResponse(
+                    WebDAVResourceType.Resource,
+                    itemPath,
+                    request);
 
                 WriteToResponse(response, responseContent);
             }
