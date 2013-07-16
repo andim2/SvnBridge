@@ -137,6 +137,9 @@ namespace UnitTests
             AssertItem(root.Items[0], "project/file.txt", 1);
         }
 
+        // The reason for remaining disabled for now possibly is
+        // that it crashes during Add processing due to having established
+        // an overly-dummy GetItems() which always returns null...
         [Fact(Skip="Temporary disable")]
         public void DeleteFileThenAddFileThenDeleteFile()
         {

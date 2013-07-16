@@ -25,5 +25,19 @@ namespace Tests
             result.Item = new RenamedSourceItem(result.Item, originalPath, originalRevision);
             return result;
         }
+
+        /// <summary>
+        /// Very convenient (if dirty) helper.
+        /// Definitely make sure to provide both strings, for convenient direct comparison.
+        /// </summary>
+        /// <param name="expected">Expected content</param>
+        /// <param name="actual">Actual content</param>
+        public static void AnalyzeStringContentAsHex(string expected, string actual)
+        {
+            System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+            //System.Diagnostics.Debugger.Launch();
+            string expected_hex = BitConverter.ToString(encoding.GetBytes(expected));
+            string actual_hex = BitConverter.ToString(encoding.GetBytes(actual));
+        }
     }
 }
