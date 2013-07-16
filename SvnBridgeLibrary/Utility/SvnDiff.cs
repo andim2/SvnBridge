@@ -2,10 +2,10 @@ namespace SvnBridge.Utility
 {
     public sealed class SvnDiffWindow
     {
-        public byte[] DataSectionBytes;
-        public byte[] InstructionSectionBytes;
-        public ulong SourceViewLength;
         public ulong SourceViewOffset;
+        public ulong SourceViewLength;
         public ulong TargetViewLength;
+        public byte[] InstructionSectionBytes;
+        public byte[] DataSectionBytes;
     }
 }
