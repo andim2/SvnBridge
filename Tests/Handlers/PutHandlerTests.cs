@@ -76,10 +76,9 @@ namespace UnitTests
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string expected_part = "Resource //!svn/wrk/b50ca3a0-05d8-5b4d-8b51-11fce9cbc603/A !@#$%^&amp;()_-+={[}];',.~`/B !@#$%^&amp;()_-+={[}];',.~`/C !@#$%^&amp;()_-+={[}];',.~`..txt has been created.";
 
-            Assert.True(
-                result.Contains(
-                    "Resource //!svn/wrk/b50ca3a0-05d8-5b4d-8b51-11fce9cbc603/A !@#$%^&amp;()_-+={[}];',.~`/B !@#$%^&amp;()_-+={[}];',.~`/C !@#$%^&amp;()_-+={[}];',.~`..txt has been created."));
+            Assert.True(result.Contains(expected_part));
         }
 
         [Fact]
