@@ -75,6 +75,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "HRCWPCM")]
         public void Handle_ReturnsCorrect404WhenPathContainsMercurialConvertPath()
         {
             request.Path = "http://localhost:8082/!svn/ver/0/.svn";

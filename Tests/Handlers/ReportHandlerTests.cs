@@ -82,6 +82,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "CLHBICL")]
         public void Cancel_LoaderHasBeenInitialized_CancelsLoader()
         {
             TestableReportHandler reportHandler = new TestableReportHandler();

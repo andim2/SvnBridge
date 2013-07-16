@@ -48,6 +48,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "TPIDWISCPFFP")]
         public void TestPathIsDecodedWhenInvokingSourceControlProviderForFolderPath()
         {
             stubs.Attach(provider.GetItemInActivity, new ItemMetaData());
@@ -63,6 +64,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "TRIPE")]
         public void TestResourceIsProperlyEncoded()
         {
             stubs.Attach(provider.GetItemInActivity, new ItemMetaData());

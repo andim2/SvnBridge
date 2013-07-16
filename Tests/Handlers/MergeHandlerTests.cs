@@ -20,6 +20,7 @@ namespace UnitTests
         protected MergeHandler handler = new MergeHandler();
 
         [Fact]
+        [Trait("TestName", "VHECIHE")]
         public void VerifyHandleEncodesCheckedInHrefElement()
         {
             MergeActivityResponse mergeResponse =
@@ -39,6 +40,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "VHEHE")]
         public void VerifyHandleEncodesHrefElement()
         {
             MergeActivityResponse mergeResponse =

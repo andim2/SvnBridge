@@ -45,6 +45,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "HPIRRCCT")]
         public void Handle_PathIsRoot_ReturnCorrectContentType()
         {
             Results r = stubs.Attach(provider.ItemExists, true);

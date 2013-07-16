@@ -84,6 +84,7 @@ namespace UnitTests
         }
 
         [Fact]
+        [Trait("TestName", "HRSPRCO")]
         public void Handle_RemovingSvnProperty_ReturnsCorrectOutput()
         {
             Results r = stubs.Attach(provider.RemoveProperty);
