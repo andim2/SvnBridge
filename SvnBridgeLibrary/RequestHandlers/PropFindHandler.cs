@@ -170,8 +170,16 @@ namespace SvnBridge.Handlers
             }
             else
             {
+                // There used to be a GetItems() call here simply to fetch the revision
+                // to use for the subsequent main request below,
+                // however I don't think that this is needed - if anything, it made matters worse
+                // since it might have returned the older (*creation*) revision of the path
+                // which might then below return older (non-updated)
+                // corresponding properties of that path,
+                // whereas a PROPFIND request most likely intends to return newest files/properties.
+                // Not to mention that it did not check for null item case...
+                revision = TFSSourceControlProvider.LATEST_VERSION;
                 itemPath = requestPath;
-                revision = sourceControlProvider.GetItems(TFSSourceControlProvider.LATEST_VERSION, itemPath, Recursion.None).Revision;
             }
 
             ItemMetaData item = GetItems(sourceControlProvider, revision, itemPath, Recursion.None, true);
