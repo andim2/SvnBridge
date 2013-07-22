@@ -2521,7 +2521,7 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        private ItemMetaData GetItemForItemProperties(string path, ItemType itemType)
+        private ItemMetaData GetItemForItemProperties(string path, ItemType itemType, int version)
         {
             ItemMetaData itemForItemProperties;
             string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
@@ -2530,7 +2530,7 @@ namespace SvnBridge.SourceControl
 
             if (cachedResult == null)
             {
-                itemForItemProperties = GetItems(LATEST_VERSION, propertiesPath, Recursion.None, true);
+                itemForItemProperties = GetItems(version, propertiesPath, Recursion.None, true);
                 cache.Set(cacheKey, itemForItemProperties);
             }
             else
@@ -2540,11 +2540,11 @@ namespace SvnBridge.SourceControl
             return itemForItemProperties;
         }
 
-        private ItemProperties ReadPropertiesForItem(string path, ItemType itemType)
+        private ItemProperties ReadPropertiesForItem(string path, ItemType itemType, int version)
         {
             ItemProperties properties = null;
             {
-                ItemMetaData itemForItemProperties = GetItemForItemProperties(path, itemType);
+                ItemMetaData itemForItemProperties = GetItemForItemProperties(path, itemType, version);
 
                 if (itemForItemProperties != null)
                 {
@@ -2593,10 +2593,22 @@ namespace SvnBridge.SourceControl
             });
         }
 
+
+        /// <summary>
+        /// Has some unorthodox itemType handling since it needs
+        /// to correctly discern between items and item-less WebDAV collections. Ugh.
+        /// Perhaps there's a way to cleanup things, but...
+        /// </summary>
+        /// <param name="activity">Current activity (transaction)</param>
+        /// <param name="path">path of the item</param>
+        /// <param name="item">returns the item residing at that path, if available</param>
+        /// <param name="itemType">returns the type of item (file, folder)</param>
+        /// <returns>List of Subversion properties of an item</returns>
         private ItemProperties GetItemProperties(Activity activity, string path, out ItemMetaData item, out ItemType itemType)
         {
+            int version = LATEST_VERSION;
             itemType = ItemType.File;
-            item = GetItems(LATEST_VERSION, path, Recursion.None);
+            item = GetItems(version, path, Recursion.None);
             if (item != null)
             {
                 itemType = item.ItemType;
@@ -2606,7 +2618,7 @@ namespace SvnBridge.SourceControl
                 itemType = ItemType.Folder;
             }
 
-            ItemProperties properties = ReadPropertiesForItem(path, itemType);
+            ItemProperties properties = ReadPropertiesForItem(path, itemType, version);
             if (properties == null)
             {
                 properties = new ItemProperties();
