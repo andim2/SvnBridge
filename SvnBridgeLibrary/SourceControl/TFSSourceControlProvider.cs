@@ -2554,6 +2554,11 @@ namespace SvnBridge.SourceControl
             return properties;
         }
 
+        public ItemProperties ReadPropertiesForItem(ItemMetaData item)
+        {
+            return ReadPropertiesForItem(item.Name, item.ItemType, item.ItemRevision);
+        }
+
         private void UpdateProperties(string activityId)
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)

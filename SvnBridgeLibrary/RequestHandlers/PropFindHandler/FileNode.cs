@@ -1,6 +1,7 @@
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ItemType
 using SvnBridge.Handlers; // RequestHandlerBase
 using SvnBridge.SourceControl; // ItemMetaData, TFSSourceControlProvider
+using SvnBridge.SourceControl.Dto; // ItemProperties
 using SvnBridge.Utility; // Helper.Encode()
 
 namespace SvnBridge.Nodes
@@ -209,12 +210,49 @@ namespace SvnBridge.Nodes
 
         private string GetExecutable()
         {
-            // STUB!!
+            bool isExecutable = GetStatus_svn_executable(item);
             // See "mod_dav's custom properties" http://www.webdav.org/mod_dav/
             // Returns T or F (case is significant) to indicate true/false bool of executable status of a resource (file).
             return
-                "<lp2:executable>" + "F" +
+                "<lp2:executable>" + GetBool_TF(isExecutable) +
                 "</lp2:executable>";
+        }
+
+        private bool GetStatus_svn_executable(ItemMetaData item)
+        {
+            bool isExecutable = false;
+            // "This property is not defined on collections"
+            bool isCollection = (item.ItemType == ItemType.Folder);
+            if (!isCollection)
+            {
+                ItemProperties properties = sourceControlProvider.ReadPropertiesForItem(item);
+                isExecutable = GetProperty_svn_executable(properties);
+            }
+            return isExecutable;
+        }
+
+        private static bool GetProperty_svn_executable(ItemProperties properties)
+        {
+            bool isExecutable_default = false;
+            bool isExecutable = isExecutable_default;
+            if (null != properties)
+            {
+                foreach (var property in properties.Properties)
+                {
+                    if (property.Name.Equals("svn:executable"))
+                    {
+                        isExecutable = (property.Value.Equals("*"));
+                        // For now, prefer having no "break;"
+                        // (perhaps there might be multiple such property strings?
+                    }
+                }
+            }
+            return isExecutable;
+        }
+
+        private static string GetBool_TF(bool true_false)
+        {
+            return true_false ? "T" : "F";
         }
 
         private string GetVersionName()
