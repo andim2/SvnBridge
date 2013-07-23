@@ -447,16 +447,12 @@ namespace SvnBridge.Handlers
 
                 if (depthHeader.Equals("1"))
                 {
-                    INode node = new BcFileNode(version, folderInfo, sourceControlProvider);
-
-                    WriteProperties(node, data.Properties, writer, folderInfo.ItemType == ItemType.Folder);
+                    WriteBcFileNodeProperties(writer, version, folderInfo, sourceControlProvider, data);
                 }
 
                 foreach (ItemMetaData item in folderInfo.Items)
                 {
-                    INode node = new BcFileNode(version, item, sourceControlProvider);
-
-                    WriteProperties(node, data.Properties, writer, item.ItemType == ItemType.Folder);
+                    WriteBcFileNodeProperties(writer, version, item, sourceControlProvider, data);
                 }
 
                 writer.Write("</D:multistatus>\n");
@@ -471,6 +467,13 @@ namespace SvnBridge.Handlers
                 }
                 WriteLog(itemPathUndecoded + ":" + propdesc);
             }
+        }
+
+        private void WriteBcFileNodeProperties(StreamWriter writer, int version, ItemMetaData item, TFSSourceControlProvider sourceControlProvider, PropData data)
+        {
+            INode node = new BcFileNode(version, item, sourceControlProvider);
+
+            WriteProperties(node, data.Properties, writer, item.ItemType == ItemType.Folder);
         }
 
         private void WritePathResponse(TFSSourceControlProvider sourceControlProvider,
