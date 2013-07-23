@@ -169,7 +169,7 @@ namespace SvnBridge.Handlers
                 output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/svn/\" xmlns:ns0=\"DAV:\">\n");
 
 			output.Write("<D:response>\n");
-			output.Write("<D:href>" + GetLocalPath("/"+requestPath) + "</D:href>\n");
+			output.Write("<D:href>" + GetLocalPath("/"+Helper.Encode(requestPath)) + "</D:href>\n");
 			output.Write("<D:propstat>\n");
 			output.Write("<D:prop>\n");
 			output.Write("<ns1:log/>\r\n");
