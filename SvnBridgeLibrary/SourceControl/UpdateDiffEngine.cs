@@ -504,6 +504,20 @@ namespace SvnBridge.SourceControl
             }
         }
 
+        private bool IsAdditionForPropertyChangeOnly(ItemMetaData item)
+        {
+            bool bResult = false;
+
+            // http://stackoverflow.com/questions/9382681/what-is-more-efficient-dictionary-trygetvalue-or-containskeyitem
+            if (additionForPropertyChangeOnly.ContainsKey(item))
+            {
+                bool bDictEntry = additionForPropertyChangeOnly[item];
+                bResult = bDictEntry;
+            }
+
+            return bResult;
+        }
+
         private void ProcessDeletedItem(string remoteName, SourceItemChange change)
         {
             bool isChangeAlreadyCurrentInClientState = clientStateTracker.IsChangeAlreadyCurrentInClientState(
@@ -615,7 +629,7 @@ namespace SvnBridge.SourceControl
                     folder.Items.Remove(item);
                     folder.Items.Add(itemDeleteFolder);
                 }
-                else if (additionForPropertyChangeOnly.ContainsKey(item) && additionForPropertyChangeOnly[item])
+                else if (IsAdditionForPropertyChangeOnly(item))
                 {
                     ItemMetaData itemDelete = item is FolderMetaData
                                                     ? (ItemMetaData)new DeleteFolderMetaData()
