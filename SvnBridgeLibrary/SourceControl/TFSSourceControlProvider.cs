@@ -308,7 +308,7 @@ namespace SvnBridge.SourceControl
                 path = path.Substring(1);
             }
 
-            string serverPath = Helper.CombinePath(rootPath, path);
+            string serverPath = MakeTfsPath(path);
             RecursionType recursionType = RecursionType.None;
             switch (recursion)
             {
@@ -671,7 +671,7 @@ namespace SvnBridge.SourceControl
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 activity.MergeList.Add(
-                    new ActivityItem(Helper.CombinePath(rootPath, path), ItemType.Folder, ActivityItemAction.New));
+                    new ActivityItem(MakeTfsPath(path), ItemType.Folder, ActivityItemAction.New));
                 activity.Collections.Add(path);
             });
 
@@ -736,7 +736,7 @@ namespace SvnBridge.SourceControl
                     foreach (string path in activity.PostCommitDeletedItems)
                     {
                         ProcessDeleteItem(activityId, path);
-                        commitServerList.Add(Helper.CombinePath(rootPath, path));
+                        commitServerList.Add(MakeTfsPath(path));
                     }
                     changesetId =
                         sourceControlService.Commit(serverUrl, credentials,
@@ -1114,7 +1114,7 @@ namespace SvnBridge.SourceControl
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                string serverItemPath = Helper.CombinePath(rootPath, path);
+                string serverItemPath = MakeTfsPath(path);
                 ServiceUndoPendingRequests(activityId, new string[] { serverItemPath });
                 activity.DeletedItems.Remove(path);
                 for (int j = activity.MergeList.Count - 1; j >= 0; j--)
@@ -1278,7 +1278,7 @@ namespace SvnBridge.SourceControl
                 }
 
                 ServiceSubmitPendingRequests(activityId, pendRequests);
-                string pathFile = Helper.CombinePath(rootPath, path);
+                string pathFile = MakeTfsPath(path);
                 sourceControlService.UploadFileFromBytes(serverUrl, credentials, activityId, fileData, pathFile);
 
                 if (addToMergeList)
@@ -1301,7 +1301,7 @@ namespace SvnBridge.SourceControl
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                string pathTargetFull = Helper.CombinePath(rootPath, copy.TargetPath);
+                string pathTargetFull = MakeTfsPath(copy.TargetPath);
                 ServiceUndoPendingRequests(
                                                     activityId,
                                                     new string[] { pathTargetFull });
@@ -1315,6 +1315,16 @@ namespace SvnBridge.SourceControl
 
                 ProcessCopyItem(activityId, copy, true);
             });
+        }
+
+        /// <summary>
+        /// Returns a full TFS path (combination of rootPath plus the item's sub path).
+        /// </summary>
+        /// <param name="itemPath">sub path of the item</param>
+        /// <returns>combined/full TFS path to item</returns>
+        private string MakeTfsPath(string itemPath)
+        {
+            return Helper.CombinePath(rootPath, itemPath);
         }
 
         private static string GetLocalPath(string activityId, string path)
@@ -1357,7 +1367,7 @@ namespace SvnBridge.SourceControl
 
                 if (copyIsRename)
                 {
-                    activity.MergeList.Add(new ActivityItem(Helper.CombinePath(rootPath, copyAction.Path), item.ItemType, ActivityItemAction.RenameDelete));
+                    activity.MergeList.Add(new ActivityItem(MakeTfsPath(copyAction.Path), item.ItemType, ActivityItemAction.RenameDelete));
                 }
 
                 if (!copyIsRename)
@@ -1373,7 +1383,7 @@ namespace SvnBridge.SourceControl
                                 {
                                     copyIsRename = true;
 
-                                    string pathDeletedFull = Helper.CombinePath(rootPath, activity.DeletedItems[i]);
+                                    string pathDeletedFull = MakeTfsPath(activity.DeletedItems[i]);
                                     ServiceUndoPendingRequests(
                                                                             activityId,
                                                                             new string[] { pathDeletedFull });
@@ -1404,7 +1414,7 @@ namespace SvnBridge.SourceControl
                             copyIsRename = true;
                             activity.PostCommitDeletedItems.Add(activity.DeletedItems[i]);
 
-                            string pathDeletedFull = Helper.CombinePath(rootPath, activity.DeletedItems[i]);
+                            string pathDeletedFull = MakeTfsPath(activity.DeletedItems[i]);
                             ServiceUndoPendingRequests(
                                                                     activityId,
                                                                     new string[] { pathDeletedFull });
@@ -1463,7 +1473,7 @@ namespace SvnBridge.SourceControl
                         ServiceSubmitPendingRequest(activityId, pendRequestPending);
                     }
                 }
-                string pathCopyTarget = Helper.CombinePath(rootPath, copyAction.TargetPath);
+                string pathCopyTarget = MakeTfsPath(copyAction.TargetPath);
                 if (copyAction.Rename)
                 {
                     activity.MergeList.Add(
@@ -1473,7 +1483,7 @@ namespace SvnBridge.SourceControl
                 {
                     activity.MergeList.Add(
                         new ActivityItem(pathCopyTarget, item.ItemType, ActivityItemAction.Branch,
-                            Helper.CombinePath(rootPath, copyAction.Path)));
+                            MakeTfsPath(copyAction.Path)));
                 }
             });
         }
@@ -1549,7 +1559,7 @@ namespace SvnBridge.SourceControl
 
                 ServiceSubmitPendingRequest(activityId, PendRequest.Delete(localPath));
 
-                activity.MergeList.Add(new ActivityItem(Helper.CombinePath(rootPath, path), item.ItemType, ActivityItemAction.Deleted));
+                activity.MergeList.Add(new ActivityItem(MakeTfsPath(path), item.ItemType, ActivityItemAction.Deleted));
 
             });
         }
@@ -1658,7 +1668,7 @@ namespace SvnBridge.SourceControl
         private ItemMetaData GetPendingItem(string activityId, string path)
         {
             ItemSpec spec = new ItemSpec();
-            spec.item = Helper.CombinePath(rootPath, path);
+            spec.item = MakeTfsPath(path);
             ExtendedItem[][] items =
                 sourceControlService.QueryItemsExtended(serverUrl,
                                                         credentials,
