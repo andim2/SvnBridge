@@ -1587,13 +1587,14 @@ namespace SvnBridge.SourceControl
 
         private bool WriteFile(string activityId, string path, byte[] fileData, bool reportUpdatedFile)
         {
+            bool isNewFile = true;
+
             bool replaced = false;
             if (IsDeleted(activityId, path))
             {
                 replaced = true;
                 RevertDelete(activityId, path);
             }
-            bool isNewFile = true;
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
