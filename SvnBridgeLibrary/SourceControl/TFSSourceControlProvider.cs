@@ -3106,8 +3106,9 @@ namespace SvnBridge.SourceControl
                     return "/" + Constants.PropFolder;
                 return path + "/" + Constants.PropFolder;
             }
-            if (path.LastIndexOf('/') != -1)
-                return path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder;
+            int indexLastSlash = path.LastIndexOf('/');
+            if (indexLastSlash != -1)
+                return path.Substring(0, indexLastSlash) + "/" + Constants.PropFolder;
             return Constants.PropFolder;
         }
 
@@ -3115,15 +3116,16 @@ namespace SvnBridge.SourceControl
         {
             if (itemType == ItemType.Folder)
             {
-                if (path.Equals("/"))
-                    return "/" + propFolderPlusSlash + Constants.FolderPropFile;
-                return path + "/" + propFolderPlusSlash + Constants.FolderPropFile;
+                string subPathToPropFileOfFolder = "/" + propFolderPlusSlash + Constants.FolderPropFile;
+
+                return (path.Equals("/")) ? subPathToPropFileOfFolder : path + subPathToPropFileOfFolder;
             }
-            if (path.LastIndexOf('/') != -1)
+            int indexLastSlash = path.LastIndexOf('/');
+            if (indexLastSlash != -1)
             {
                 return
-                    path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder +
-                    path.Substring(path.LastIndexOf('/'));
+                    path.Substring(0, indexLastSlash) + "/" + Constants.PropFolder +
+                    path.Substring(indexLastSlash);
             }
             return propFolderPlusSlash + path;
         }
