@@ -60,7 +60,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp2:baseline-relative-path>Foo/Bar.txt</lp2:baseline-relative-path>"));
@@ -71,7 +71,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(
@@ -94,7 +94,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:getcontenttype>text/plain</lp1:getcontenttype>"));
@@ -107,7 +107,7 @@ namespace UnitTests
             item.LastModifiedDate = dt;
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:creationdate>" + Helper.FormatDate(dt) + "</lp1:creationdate>"));
@@ -118,7 +118,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:creator-displayname>user_foo</lp1:creator-displayname>"));
@@ -129,7 +129,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp2:deadprop-count>0</lp2:deadprop-count>"));
@@ -140,7 +140,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:getetag>\"1234//Foo/Bar.txt\"</lp1:getetag>"));
@@ -153,7 +153,7 @@ namespace UnitTests
             item.LastModifiedDate = dt;
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(
@@ -165,7 +165,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<D:href>/!svn/bc/1234/Foo/Bar.txt</D:href>"));
@@ -188,7 +188,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<D:lockdiscovery/>"));
@@ -199,7 +199,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(
@@ -212,7 +212,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(
@@ -224,7 +224,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:resourcetype/>"));
@@ -235,7 +235,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains(
@@ -252,7 +252,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(
@@ -265,7 +265,7 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:version-name>1234</lp1:version-name>"));
