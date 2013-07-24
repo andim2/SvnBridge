@@ -1450,39 +1450,39 @@ namespace SvnBridge.SourceControl
         /// </summary>
         /// <param name="path">item path</param>
         /// <returns>true in case path seems to be a path used for storage of SVN properties, else false</returns>
-        private static bool IsSuspectedPropertyStuff(string name)
+        private static bool IsSuspectedPropertyStuff(string path)
         {
-            return (name.Contains(Constants.PropFolder));
+            return (path.Contains(Constants.PropFolder));
         }
 
-        public bool IsPropertyFile(string name)
+        public bool IsPropertyFile(string path)
         {
-            if (IsSuspectedPropertyStuff(name))
+            if (IsSuspectedPropertyStuff(path))
             { // found!? --> do precise checks.
-                if (name.StartsWith(propFolderPlusSlash) || name.Contains("/" + propFolderPlusSlash))
+                if (path.StartsWith(propFolderPlusSlash) || path.Contains("/" + propFolderPlusSlash))
                     return true;
             }
             return false;
         }
 
-        public bool IsPropertyFolder(string name)
+        public bool IsPropertyFolder(string path)
         {
-            if (IsSuspectedPropertyStuff(name))
+            if (IsSuspectedPropertyStuff(path))
             { // found!? --> do precise checks.
-                if (name == Constants.PropFolder || name.EndsWith("/" + Constants.PropFolder))
+                if (path == Constants.PropFolder || path.EndsWith("/" + Constants.PropFolder))
                     return true;
             }
             return false;
         }
 
-        public bool IsPropertyFolderElement(string name)
+        public bool IsPropertyFolderElement(string path)
         {
-            if (IsSuspectedPropertyStuff(name))
+            if (IsSuspectedPropertyStuff(path))
             {
                 return (
-                    (name.StartsWith(propFolderPlusSlash) ||
-                     name.EndsWith("/" + Constants.PropFolder) ||
-                     name.Contains("/" + propFolderPlusSlash))
+                    (path.StartsWith(propFolderPlusSlash) ||
+                     path.EndsWith("/" + Constants.PropFolder) ||
+                     path.Contains("/" + propFolderPlusSlash))
                 );
             }
             return false;
