@@ -247,13 +247,15 @@ namespace SvnBridge.Infrastructure
 
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
 		{
+			// Prefer implementing the order of conditional checks
+			// from fastest to slowest...
 			return HaveItemExistingAtClient(
                 updateReportRequest,
                 srcPath,
                 item.Name) &&
 			       // we need to check both name and id to ensure that the item was not renamed
-			       sourceControlProvider.ItemExists(item.Name, clientRevisionForItem) &&
-			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem);
+			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem) &&
+			       sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
 		}
 
 		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData item,
