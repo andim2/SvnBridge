@@ -1066,7 +1066,8 @@ namespace SvnBridge.SourceControl
 
         public bool IsPropertyFile(string name)
         {
-            if (name.StartsWith(Constants.PropFolder + "/") || name.Contains("/" + Constants.PropFolder + "/"))
+            const string propFolderPlusSlash = Constants.PropFolder + "/";
+            if (name.StartsWith(propFolderPlusSlash) || name.Contains("/" + propFolderPlusSlash))
                 return true;
             else
                 return false;
