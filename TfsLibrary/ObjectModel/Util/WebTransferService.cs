@@ -49,7 +49,7 @@ namespace CodePlex.TfsLibrary.ObjectModel
 				{
 					List<byte> results = new List<byte>();
 					// We can't trust response.ContentLength, we may get a gzip
-					// reply, in which case the content legth and the result are 
+					// reply, in which case the content length and the result are
 					// different
 					byte[] buffer = new byte[response.ContentLength];
 					int current = 0;

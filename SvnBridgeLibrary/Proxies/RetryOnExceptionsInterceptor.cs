@@ -35,7 +35,7 @@ namespace SvnBridge.Proxies
 				}
 
 				// if we are here we got an exception, we will assume this is a
-				// trasient situation and wait a bit, hopefully it will clear up
+				// transient situation and wait a bit, hopefully it will clear up
 				Thread.Sleep(100);
 			}
 			if (exception == null)

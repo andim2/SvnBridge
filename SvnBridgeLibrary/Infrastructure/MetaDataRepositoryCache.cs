@@ -145,7 +145,7 @@ namespace SvnBridge.Infrastructure
             string serverPath = GetServerPath(path);
 
             // optimizing access to properties by always getting the entire 
-            // properties folder the when accessing the folder props
+            // properties folder when accessing the folder props
             if (serverPath.EndsWith(Constants.FolderPropFilePath))
                 serverPath = GetParentName(serverPath);
 
@@ -234,7 +234,7 @@ namespace SvnBridge.Infrastructure
 
             persistentCache.Add(GetItemOneLevelCacheKey(revision, parentDirectory), null);
             // this lies to the cache system, making it think that the parent
-            // directory is cached, when in truth the parent directory doesn't even exists
+            // directory is cached, when in truth the parent directory doesn't even exist
             // this saves going to the server again for files in the same directory
             string parentCacheKey = CreateRevisionAndPathCacheKey(revision, serverPath);
             persistentCache.Set(parentCacheKey, true);

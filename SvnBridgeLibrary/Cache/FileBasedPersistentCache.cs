@@ -225,7 +225,7 @@ namespace SvnBridge.Cache
             // in the keys, the chances are not good for this, because we use 
             // cryptographically significant hashing for this, but we need to take this
             // into account
-            // Note: we need to make a case insensitive comparision, because we get 
+            // Note: we need to make a case insensitive comparison, because we get
             // different casing from the client
 
             return string.Equals(deserialized.Name, key, StringComparison.InvariantCultureIgnoreCase);
@@ -248,7 +248,7 @@ namespace SvnBridge.Cache
 
         private string GetFileNameFromKey(string key)
         {
-            // Note: we need to make a case insensitive comparision
+            // Note: we need to make a case insensitive comparison
             string filename = key.ToLowerInvariant();
             return Path.Combine(rootPath, FileNameHashing.HashIfNeeded(rootPath, filename));
         }

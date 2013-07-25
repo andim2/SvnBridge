@@ -247,7 +247,7 @@ namespace SvnBridge.Infrastructure
                 if (entry.path == null || name.StartsWith(entry.path, StringComparison.InvariantCultureIgnoreCase) == false)
                     continue;
 
-                // if the current entry is longer than the previous best match, than this
+                // if the current entry is longer than the previous best match, then this
                 // is a better match, because it is more deeply nested, so likely
                 // to be a better parent
                 if (bestMatch.path == null || bestMatch.path.Length < entry.path.Length)

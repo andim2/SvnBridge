@@ -207,7 +207,7 @@ namespace SvnBridge.SourceControl
 
         /// <summary>
         /// We are caching the value, to avoid expensive remote calls. 
-        /// This is safe to do because <see cref="TFSSourceControlProvider"/> is a trasient
+        /// This is safe to do because <see cref="TFSSourceControlProvider"/> is a transient
         /// type, and will only live for the current request.
         /// </summary>
         /// <returns></returns>
@@ -437,7 +437,8 @@ namespace SvnBridge.SourceControl
             }
             histories = ConvertChangesetsToSourceItemHistory(changes);
 
-            // TFS QueryHistory API won't return more then 256 items, so need to call multiple times if more
+            // TFS QueryHistory API won't return more than 256 items,
+            // so need to call multiple times if more requested
             if (maxCount > QUERY_LIMIT)
             {
                 int logItemsCount = histories.Count;
@@ -576,8 +577,8 @@ namespace SvnBridge.SourceControl
                     }
                     catch (TfsFailureException)
                     {
-                        // we just failed a commit, this tends to happen when we have a conflicts 
-                        // between previously partially commited changes and the current changes.
+                        // we just failed a commit, this tends to happen when we have a conflict
+                        // between previously partially committed changes and the current changes.
                         // We will wipe all the user's temporary workspaces and allow the user to 
                         // try again
                         ClearExistingTempWorkspaces(false);
@@ -644,9 +645,9 @@ namespace SvnBridge.SourceControl
                         }
                         catch (Exception e)
                         {
-                            // we can't really raise an error here, because
+                            // We can't really raise an error here, because
                             // we would fail the commit from the client side, while the changes
-                            // were already committed to the source control provider.
+                            // were already committed to the source control provider;
                             // since we consider associating with work items nice but not essential,
                             // we will log the error and ignore it.
                             logger.Error("Failed to associate work item with changeset", e);

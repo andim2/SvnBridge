@@ -48,7 +48,7 @@ namespace SvnBridge.Handlers
             if (requestPath.EndsWith("/!svn/ver/0/.svn", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Note: Mercurial Convert sends across this specified path that it knows
-                // doesn't actually exist. We detect it and return the WebDav 404 message
+                // doesn't actually exist. We detect it and return the WebDAV 404 message
                 // which it expects. A normal HTML 404 message does not suffice. Also note
                 // that IIS seems to be rewriting the 404 message, so using 400 still allows
                 // the conversion process to continue.
@@ -121,7 +121,7 @@ namespace SvnBridge.Handlers
             if (!this.isHeadOnly)
             {
                 byte[] itemData = sourceControlProvider.ReadFile(item);
-                if (itemData.Length > 0) // Write throw exception if zero bytes
+                if (itemData.Length > 0) // Write throws exception if zero bytes
                 {
                     response.OutputStream.Write(itemData, 0, itemData.Length);
                 }

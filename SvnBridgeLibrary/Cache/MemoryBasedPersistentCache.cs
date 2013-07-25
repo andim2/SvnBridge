@@ -18,7 +18,7 @@ namespace SvnBridge.Cache
     ///  Assert.Equals(cache.Get("foo"), 1);
     /// </example>
     /// This is not valid in most caching scenarios, becaus the cache is allowed to drop the values at any time.
-    /// Therefor, we use the two levls, the first level cache is per request, and is ensured to survive throughout
+    /// Therefore, we use the two levels, the first level cache is per request, and is ensured to survive throughout
     /// the current request.
     /// 
     /// Reads go first to the per request cache, and then to system cache, if it is not there.

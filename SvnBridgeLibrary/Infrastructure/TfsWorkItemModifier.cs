@@ -7,7 +7,7 @@ using SvnBridge.SourceControl;
 namespace SvnBridge.Infrastructure
 {
     /// <summary>
-    /// This implementation is probably not the best, but we had have two problems with it.
+    /// This implementation is probably not the best, but we had two problems with it.
     /// First, we can't take dependencies on the TFS API, we would need to redistribute it with us, and 
     /// that is problematic. The second is that the ClientService API is complex and undocumented, which 
     /// means that it is actually easier to use this approach than through the SOAP proxy.

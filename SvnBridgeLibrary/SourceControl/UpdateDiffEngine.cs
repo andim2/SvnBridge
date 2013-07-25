@@ -52,7 +52,7 @@ namespace SvnBridge.SourceControl
         public void Delete(SourceItemChange change)
         {
             // we ignore it here because this only happens when the related item
-            // is delete, and at any rate, this is a SvnBridge implementation detail
+            // is deleted, and at any rate, this is a SvnBridge implementation detail
             // which the client is not concerned about
             if (change.Item.RemoteName.StartsWith(Constants.PropFolder + "/") ||
                 change.Item.RemoteName.EndsWith("/" + Constants.PropFolder) ||
