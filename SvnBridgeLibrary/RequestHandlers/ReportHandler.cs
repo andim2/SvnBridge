@@ -542,9 +542,10 @@ namespace SvnBridge.Handlers
             }
             else
             {
+                int versionFrom = int.Parse(updatereport.Entries[0].Rev);
                 metadata = sourceControlProvider.GetChangedItems(
                     basePath,
-                    int.Parse(updatereport.Entries[0].Rev),
+                    versionFrom,
                     targetRevision,
                     updatereport);
             }
