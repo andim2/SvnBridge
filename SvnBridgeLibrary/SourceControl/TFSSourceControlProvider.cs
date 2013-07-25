@@ -889,9 +889,7 @@ namespace SvnBridge.SourceControl
                     continue;
                 if (skipExistingActivities && ActivityRepository.Exists(workspace.Name))
                     continue;
-                sourceControlService.DeleteWorkspace(serverUrl, credentials,
-                                                     workspace.Name);
-                ActivityRepository.Delete(workspace.Name);
+                DeleteActivity(workspace.Name);
             }
         }
 
