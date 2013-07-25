@@ -156,9 +156,8 @@ namespace SvnBridge.Infrastructure
           UpdateReportWriteItemAttributes(output, folder);
 				}
 
-				for (int i = 0; i < folder.Items.Count; i++)
+				foreach (ItemMetaData item in folder.Items)
 				{
-					ItemMetaData item = folder.Items[i];
 					if (item.ItemType == ItemType.Folder)
 					{
 						ProcessUpdateReportForDirectory(updateReportRequest, (FolderMetaData)item, output, false, folderWasDeleted);
