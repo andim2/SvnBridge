@@ -94,12 +94,18 @@ namespace SvnBridge.Infrastructure
                     }
                 }
             }
-            List<SourceItem> result2 = new List<SourceItem>();
-            foreach (SourceItem sourceItem in resultUniqueSorted.Values)
-            {
-                result2.Add(sourceItem);
-            }
-            return result2.ToArray();
+            //   Could avoid manual Add() iteration via *ctor copy* into a List object,
+            //   but better even avoid that useless temporary List object,
+            //   by filling fixed-preallocation array via .CopyTo():
+            //List<SourceItem> result2 = new List<SourceItem>(resultUniqueSorted.Values);
+            ////foreach (SourceItem sourceItem in resultUniqueSorted.Values)
+            ////{
+            ////    result2.Add(sourceItem);
+            ////}
+            //return result2.ToArray();
+            SourceItem[] result2 = new SourceItem[resultUniqueSorted.Count];
+            resultUniqueSorted.Values.CopyTo(result2, 0);
+            return result2;
         }
     }
 }
