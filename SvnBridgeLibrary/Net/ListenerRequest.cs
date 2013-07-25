@@ -161,7 +161,7 @@ namespace SvnBridge.Net
 			int previousByte = -1;
 			int nextByte = buffer.ReadByte();
 
-			while (!(previousByte == 13 && nextByte == 10))
+			while (!(previousByte == '\r' && nextByte == '\n'))
 			{
 				int byteRead = buffer.ReadByte();
 
