@@ -100,15 +100,16 @@ namespace SvnBridge.SourceControl
 
         private void PerformAddOrUpdate(SourceItemChange change, bool edit)
         {
-            if (sourceControlProvider.IsPropertyFolder(change.Item.RemoteName))
+            string remoteName = change.Item.RemoteName;
+
+            if (sourceControlProvider.IsPropertyFolder(remoteName))
             {
                 return;
             }
 
-            string remoteName = change.Item.RemoteName;
             bool propertyChange = false;
 
-            if (sourceControlProvider.IsPropertyFile(change.Item.RemoteName))
+            if (sourceControlProvider.IsPropertyFile(remoteName))
             {
                 propertyChange = true;
                 remoteName = GetRemoteNameOfPropertyChange(change);
