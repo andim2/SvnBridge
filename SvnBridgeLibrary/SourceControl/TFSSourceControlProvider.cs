@@ -99,6 +99,7 @@ namespace SvnBridge.SourceControl
         private readonly WebCache cache;
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
+        private const string repoLatestVersion = "Repository.Latest.Version";
 
         public TFSSourceControlProvider(
             string serverUrl,
@@ -294,12 +295,13 @@ namespace SvnBridge.SourceControl
         /// <returns></returns>
         public virtual int GetLatestVersion()
         {
-            const string latestVersion = "Repository.Latest.Version";
-            if (RequestCache.Items[latestVersion] == null)
+            var cacheItem = RequestCache.Items[repoLatestVersion];
+            if (cacheItem == null)
             {
-                RequestCache.Items[latestVersion] = sourceControlService.GetLatestChangeset(serverUrl, credentials);
+                cacheItem = sourceControlService.GetLatestChangeset(serverUrl, credentials);
+                RequestCache.Items[repoLatestVersion] = cacheItem;
             }
-            return (int)RequestCache.Items[latestVersion];
+            return (int)cacheItem;
         }
 
         public virtual LogItem GetLog(
