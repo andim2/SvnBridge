@@ -12,6 +12,8 @@ namespace SvnBridge.Infrastructure
     [Interceptor(typeof(TracingInterceptor))]
     public class MetaDataRepositoryNoCache : MetaDataRepositoryBase
     {
+        private readonly string serverDownloadUrl;
+
         public MetaDataRepositoryNoCache(
             TFSSourceControlService sourceControlService,
             string serverUrl,
@@ -23,6 +25,8 @@ namespace SvnBridge.Infrastructure
                 credentials,
                 rootPath)
         {
+            var downloadUrlExtension = serverUrl.Contains("/tfs/") ? "ashx" : "asmx";
+            this.serverDownloadUrl = serverUrl + "/VersionControl/v1.0/item." + downloadUrlExtension;
         }
 
         public override SourceItem[] QueryItems(int revision, int itemId)
@@ -85,8 +89,7 @@ namespace SvnBridge.Infrastructure
                     sourceItem.ItemType = item.type;
                     sourceItem.ItemId = item.itemid;
                     sourceItem.RemoteName = item.item;
-                    var downloadUrlExtension = serverUrl.Contains("/tfs/") ? "ashx" : "asmx"; 
-                    sourceItem.DownloadUrl = serverUrl + "/VersionControl/v1.0/item." + downloadUrlExtension + "?" + item.durl;
+                    sourceItem.DownloadUrl = serverDownloadUrl + "?" + item.durl;
 
                     if (!resultUniqueSorted.ContainsKey(sourceItem.RemoteName))
                     {
