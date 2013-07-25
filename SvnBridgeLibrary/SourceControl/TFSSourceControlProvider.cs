@@ -1593,7 +1593,7 @@ namespace SvnBridge.SourceControl
                 replaced = true;
                 RevertDelete(activityId, path);
             }
-            bool newFile = true;
+            bool isNewFile = true;
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
@@ -1631,7 +1631,7 @@ namespace SvnBridge.SourceControl
                 if (item != null)
                 {
                     pendRequests.Add(PendRequest.Edit(localPath));
-                    newFile = false;
+                    isNewFile = false;
                 }
                 else
                 {
@@ -1644,7 +1644,7 @@ namespace SvnBridge.SourceControl
                     {
                         UpdateLocalVersion(activityId, pendingItem, localPath);
                         pendRequests.Add(PendRequest.Edit(localPath));
-                        newFile = false;
+                        isNewFile = false;
                     }
                     foreach (CopyAction copy in activity.CopiedItems)
                     {
@@ -1662,7 +1662,8 @@ namespace SvnBridge.SourceControl
 
                 if (addToMergeList)
                 {
-                    if (!replaced && (!newFile || reportUpdatedFile))
+                    bool isUpdated = (!replaced && (!isNewFile || reportUpdatedFile));
+                    if (isUpdated)
                     {
                         activity.MergeList.Add(new ActivityItem(pathFile, ItemType.File, ActivityItemAction.Updated));
                     }
@@ -1673,7 +1674,7 @@ namespace SvnBridge.SourceControl
                 }
             });
 
-            return newFile;
+            return isNewFile;
         }
 
         private void UndoPendingRequests(string activityId, Activity activity, string path)
