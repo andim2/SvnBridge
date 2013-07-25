@@ -194,12 +194,6 @@ namespace SvnBridge.SourceControl
             ProcessCopyItem(activityId, copyAction, false);
         }
 
-        public virtual void DeleteActivity(string activityId)
-        {
-            sourceControlService.DeleteWorkspace(serverUrl, credentials, activityId);
-            ActivityRepository.Delete(activityId);
-        }
-
         public virtual bool DeleteItem(string activityId, string path)
         {
             if ((GetItems(LATEST_VERSION, path, Recursion.None, true) == null) && (GetPendingItem(activityId, path) == null))
@@ -878,6 +872,12 @@ namespace SvnBridge.SourceControl
             string localPath = GetLocalPath(activityId, "");
             sourceControlService.AddWorkspaceMapping(serverUrl, credentials, activityId, rootPath, localPath, 0);
             ActivityRepository.Create(activityId);
+        }
+
+        public virtual void DeleteActivity(string activityId)
+        {
+            sourceControlService.DeleteWorkspace(serverUrl, credentials, activityId);
+            ActivityRepository.Delete(activityId);
         }
 
         private void ClearExistingTempWorkspaces(bool skipExistingActivities)
