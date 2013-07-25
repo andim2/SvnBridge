@@ -2023,7 +2023,8 @@ namespace SvnBridge.SourceControl
             var result = new List<ItemMetaData>();
             for (var i = 0; i < renamedItems.Count; i++)
             {
-                var previousSourceItemId = (renamedItems[i] != null && renamedItems[i].FromItem != null) ? renamedItems[i].FromItem.ItemId : items[i].ItemId;
+                var renamedItem = renamedItems[i];
+                var previousSourceItemId = (renamedItem != null && renamedItem.FromItem != null) ? renamedItem.FromItem.ItemId : items[i].ItemId;
                 var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials,
                     new[] { previousSourceItemId },
                     previousRevision,
