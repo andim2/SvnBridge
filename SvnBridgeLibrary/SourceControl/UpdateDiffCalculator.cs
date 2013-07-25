@@ -156,7 +156,7 @@ namespace SvnBridge.SourceControl
         {
             bool updatingForwardInTime = sourceVersion <= targetVersion;
             int lastVersion = sourceVersion;
-            while (targetVersion != lastVersion)
+            while (lastVersion != targetVersion)
             {
                 int previousLoopLastVersion = lastVersion;
                 LogItem logItem = sourceControlProvider.GetLog(
