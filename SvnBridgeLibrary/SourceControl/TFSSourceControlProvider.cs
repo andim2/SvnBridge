@@ -1997,14 +1997,8 @@ namespace SvnBridge.SourceControl
 
                     properties.Properties.AddRange(propertiesToAdd.Values);
 
-                    if (item != null)
-                    {
-                        WriteFile(activityId, propertiesPath, Helper.SerializeXml(properties), true);
-                    }
-                    else
-                    {
-                        WriteFile(activityId, propertiesPath, Helper.SerializeXml(properties));
-                    }
+                    bool reportUpdatedFile = (null != item);
+                    WriteFile(activityId, propertiesPath, Helper.SerializeXml(properties), reportUpdatedFile);
                 }
             });
         }
