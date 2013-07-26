@@ -191,7 +191,7 @@ namespace SvnBridge.Utility
 			XmlSerializer serializer = new XmlSerializer(request.GetType());
 			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
 			serializer.Serialize(sw, request, ns);
-			return sw.GetStringBuilder().ToString();
+			return sw.ToString();
 		}
 
 		public static bool IsValidPort(string port)

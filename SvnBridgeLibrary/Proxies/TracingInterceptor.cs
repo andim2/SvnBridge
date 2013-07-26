@@ -46,7 +46,7 @@ namespace SvnBridge.Proxies
 				}
 				StringWriter sw = new StringWriter();
 				serializer.Serialize(sw, arg);
-				args.Add(sw.GetStringBuilder().ToString());
+				args.Add(sw.ToString());
 			}
 
 			logger.Trace("{0}({1});", invocation.Method.Name, string.Join(", ", args.ToArray()));
