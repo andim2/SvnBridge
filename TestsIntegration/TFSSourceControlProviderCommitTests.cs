@@ -10,6 +10,12 @@ namespace IntegrationTests
 {
 	public class TFSSourceControlProviderCommitTests : TFSSourceControlProviderTestsBase
 	{
+        [IntegrationTestFact]
+        public void Commit_blubb()
+        {
+            Assert.Equal(1, 0);
+        }
+
 		[IntegrationTestFact]
 		public void Commit_ConcurrentCommits()
 		{

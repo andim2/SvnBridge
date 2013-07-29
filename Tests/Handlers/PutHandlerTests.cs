@@ -117,5 +117,39 @@ namespace UnitTests
             Assert.IsAssignableFrom(typeof(InvalidOperationException), result);
             Assert.Equal("Checksum mismatch with base file", result.Message);
         }
+
+        [Fact(Skip="Temporary disable (does not work yet)")]
+        [Trait("TestName", "TEFCBCT")]
+        // Determines whether an update commit of an executable file
+        // (== svn:executable property set in the item's property file item)
+        // works properly without crashing and a correct result.
+        public void TestExecutableFilesCanBeCommittedTo()
+        {
+            ItemMetaData itemExec = new ItemMetaData();
+            itemExec.Name = "foo.sh";
+            ItemMetaData itemProp = new ItemMetaData();
+            itemProp.Name = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(itemExec.Name, itemExec.ItemType);
+            FolderMetaData folder = new FolderMetaData("project");
+            folder.ItemRevision = 5734;
+            folder.Author = "wiz";
+            folder.Items.Add(itemProp);
+            folder.Items.Add(itemExec);
+
+            stubs.Attach(provider.GetItemInActivity, (ItemMetaData)itemExec);
+            stubs.AttachReadFile(provider.ReadFile, new byte[] { });
+            request.Path = "http://localhost:8082//!svn/wrk/61652fe8-44cd-8d43-810f-c95deccc6db3/foo.sh";
+            //request.Input = "SVN\0";
+            request.Input = GetSvnDiffStringForSingleCharFileWrite();
+            // FIXME provide helper for empty-file-MD5
+            request.Headers["X-SVN-Base-Fulltext-MD5"] = "d41d8cd98f00b204e9800998ecf8427e";
+
+            //System.Diagnostics.Debugger.Launch();
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string expected_part = "FIXME CORRECT Resource //!svn/wrk/b50ca3a0-05d8-5b4d-8b51-11fce9cbc603/A !@#$%^&amp;()_-+={[}];',.~`/B !@#$%^&amp;()_-+={[}];',.~`/C !@#$%^&amp;()_-+={[}];',.~`..txt has been created.";
+
+            Assert.True(result.Contains(expected_part));
+        }
     }
 }

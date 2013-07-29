@@ -3724,7 +3724,7 @@ namespace SvnBridge.SourceControl
     /// and then *internally* figuring out
     /// the property-storage-dedicated items
     /// which correspond to specific SCM items.
-    internal sealed class WebDAVPropertyStorageAdaptor
+    public sealed class WebDAVPropertyStorageAdaptor
     {
         private const string propFolderPlusSlash = Constants.PropFolder + "/";
 
