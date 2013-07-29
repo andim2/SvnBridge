@@ -15,7 +15,7 @@ namespace SvnBridge.SourceControl
         private readonly TFSSourceControlProvider sourceControlProvider;
         private Dictionary<string, int> clientExistingFiles;
         private Dictionary<string, string> clientMissingFiles;
-        private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData,bool>();
+        private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
 
         public UpdateDiffCalculator(TFSSourceControlProvider sourceControlProvider)
@@ -342,5 +342,5 @@ namespace SvnBridge.SourceControl
         {
             return Path.GetFileName(file) == "..svnbridge";
         }
-   }
+    }
 }

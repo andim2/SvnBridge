@@ -303,7 +303,7 @@ namespace UnitTests
         [Fact]
         public void Handle_SvnWrkPropFind_CorrectlyInvokesSourceControlProvider()
         {
-            Results r1 = stubs.Attach((MyMocks.GetItemInActivity)provider.GetItemInActivity, null); ;
+            Results r1 = stubs.Attach((MyMocks.GetItemInActivity)provider.GetItemInActivity, null);
             request.Path = "http://localhost:8080//!svn/wrk/7a6c73b2-7e7c-2141-817d-9bd653873445/trunk/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60.txt";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/><resourcetype xmlns=\"DAV:\"/><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/><repository-uuid xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
             request.Headers["Depth"] = "0";

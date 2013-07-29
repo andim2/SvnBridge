@@ -199,7 +199,7 @@ namespace UnitTests
             StubHttpContext context = new StubHttpContext();
             StubHttpRequest request = new StubHttpRequest();
             context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            request.Url = new Uri("https://tfs01.codeplex.com");
             request.Headers = new NameValueCollection();
             request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("username:password"));
 
@@ -219,7 +219,7 @@ namespace UnitTests
             StubHttpResponse response = new StubHttpResponse();
             context.Request = request;
             context.Response = response;
-            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            request.Url = new Uri("https://tfs01.codeplex.com");
 
             dispatcher.Dispatch(context);
 
@@ -233,7 +233,7 @@ namespace UnitTests
             StubHttpContext context = new StubHttpContext();
             StubHttpRequest request = new StubHttpRequest();
             context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            request.Url = new Uri("https://tfs01.codeplex.com");
 
             dispatcher.Dispatch(context);
 
@@ -278,7 +278,7 @@ namespace UnitTests
             StubHttpContext context = new StubHttpContext();
             StubHttpRequest request = new StubHttpRequest();
             context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            request.Url = new Uri("https://tfs01.codeplex.com");
             dispatcher.Handler.Handle_Throw = new IOException();
 
             Exception result = Record.Exception(delegate { dispatcher.Dispatch(context); });
@@ -293,7 +293,7 @@ namespace UnitTests
             StubHttpContext context = new StubHttpContext();
             StubHttpRequest request = new StubHttpRequest();
             context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com"); ;
+            request.Url = new Uri("https://tfs01.codeplex.com");
 
             dispatcher.Handler.Handle_Throw = new HttpException("An error occurred while communicating with the remote host.");
             Exception result1 = Record.Exception(delegate { dispatcher.Dispatch(context); });

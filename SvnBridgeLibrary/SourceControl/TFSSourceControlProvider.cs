@@ -433,7 +433,7 @@ namespace SvnBridge.SourceControl
                     return new LogItem(null, serverPath, histories.ToArray());
                 }
                 else
-                   throw;
+                    throw;
             }
             histories = ConvertChangesetsToSourceItemHistory(changes);
 

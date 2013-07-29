@@ -263,7 +263,7 @@ namespace SvnBridge.Infrastructure
             int lastIndexOfSlash = name.LastIndexOf('/');
             if (lastIndexOfSlash == -1)
                 return name;
-            string parentPath  = name.Substring(0, lastIndexOfSlash);
+            string parentPath = name.Substring(0, lastIndexOfSlash);
             if (parentPath == "$")
                 return Constants.ServerRootPath;
             return parentPath ;

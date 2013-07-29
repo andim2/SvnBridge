@@ -497,7 +497,7 @@ namespace SvnBridge.Handlers
                                      "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
                                      Helper.EncodeB(change.Item.RemoteName) + "</S:added-path>\n");
                     }
-                    else if (change.ChangeType  == ChangeType.Merge)
+                    else if (change.ChangeType == ChangeType.Merge)
                     {
                         // Ignore merge entries that are not an add, edit, delete, or rename
                     }
