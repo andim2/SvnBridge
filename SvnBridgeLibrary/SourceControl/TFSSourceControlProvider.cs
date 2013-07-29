@@ -922,8 +922,9 @@ namespace SvnBridge.SourceControl
                         if (item.ItemType == ItemType.File)
                         {
                             string folderName = GetFolderName(item.Name);
-                            folders[folderName.ToLower()] = new FolderMetaData();
-                            folders[folderName.ToLower()].Items.Add(item);
+                            string folderNameLower = folderName.ToLower();
+                            folders[folderNameLower] = new FolderMetaData();
+                            folders[folderNameLower].Items.Add(item);
                         }
                     }
                     else
