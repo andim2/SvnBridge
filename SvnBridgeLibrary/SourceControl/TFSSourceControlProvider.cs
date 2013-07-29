@@ -32,6 +32,7 @@ namespace SvnBridge.SourceControl
 
         private readonly string rootPath;
         private readonly string serverUrl;
+        private readonly int maxLengthFromRootPath;
         private readonly ICredentials credentials;
         private readonly TFSSourceControlService sourceControlService;
         private readonly IWorkItemModifier workItemModifier;
@@ -63,6 +64,12 @@ namespace SvnBridge.SourceControl
             {
                 rootPath += projectName + "/";
             }
+            // Hmm, what is the actual reason for the magic 259 value??
+            // Probably it's due to Win32 MAX_PATH (260) "minus 1 something" (most likely trailing \0).
+            // Since there's no MAX_PATH constant in C#, we'll just keep it open-coded.
+            // If the MAX_PATH limitation turns out to be too painful, then perhaps the UNC path convention
+            // ("\\?\" prefix, 32k chars limit) might actually be usable here.
+            this.maxLengthFromRootPath = 259 - rootPath.Length;
             if (Configuration.CacheEnabled)
             {
                 this.metaDataRepository = new MetaDataRepositoryCache(
@@ -852,20 +859,20 @@ namespace SvnBridge.SourceControl
             }
             else if (recursion == Recursion.None)
             {
-                if (propertiesForFile.Length + rootPath.Length <= 259)
+                if (propertiesForFile.Length <= maxLengthFromRootPath)
                     itemPaths.Add(propertiesForFile);
 
-                if (propertiesForFolder.Length + rootPath.Length <= 259)
+                if (propertiesForFolder.Length <= maxLengthFromRootPath)
                     itemPaths.Add(propertiesForFolder);
 
                 items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
             }
             else if (recursion == Recursion.OneLevel)
             {
-                if (propertiesForFile.Length + rootPath.Length <= 259)
+                if (propertiesForFile.Length <= maxLengthFromRootPath)
                     itemPaths.Add(propertiesForFile);
 
-                if (propertiesForFolderItems.Length + rootPath.Length <= 259)
+                if (propertiesForFolderItems.Length <= maxLengthFromRootPath)
                     itemPaths.Add(propertiesForFolderItems);
 
                 items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
@@ -877,7 +884,7 @@ namespace SvnBridge.SourceControl
                         if (item.ItemType == ItemType.Folder && !IsPropertyFolder(item.RemoteName))
                         {
                             propertiesForFolder = GetPropertiesFileName(item.RemoteName, ItemType.Folder);
-                            if (propertiesForFolder.Length + rootPath.Length <= 259)
+                            if (propertiesForFolder.Length <= maxLengthFromRootPath)
                                 propertiesForSubFolders.Add(propertiesForFolder);
                         }
                     }
