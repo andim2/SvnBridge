@@ -13,6 +13,7 @@ namespace SvnBridge.Infrastructure
 	{
 		private readonly RequestHandlerBase handler;
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private static char[] path_separators = new char[] { '/', '\\' };
 
         public UpdateReportService(RequestHandlerBase handler, TFSSourceControlProvider sourceControlProvider)
 		{
@@ -205,7 +206,7 @@ namespace SvnBridge.Infrastructure
 
 		private static string GetFileName(string path)
 		{
-			int slashIndex = path.LastIndexOfAny(new char[] { '/', '\\' });
+			int slashIndex = path.LastIndexOfAny(path_separators);
 			return path.Substring(slashIndex + 1);
 		}
 
