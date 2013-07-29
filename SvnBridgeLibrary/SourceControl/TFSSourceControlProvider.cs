@@ -2991,7 +2991,18 @@ namespace SvnBridge.SourceControl
             return itemForItemProperties;
         }
 
-        private ItemProperties ReadPropertiesForItem(string path, ItemType itemType, int version)
+        /// <summary>
+        /// Given a *data* item location, grabs the set of DAV properties
+        /// that are stored somewhere else for that item.
+        /// This is currently implemented by figuring out
+        /// the corresponding internal *storage* item of its DAV properties,
+        /// and then deserializing the properties from that storage-purposed file item.
+        /// </summary>
+        /// <param name="path">Location of data item</param>
+        /// <param name="itemType">Type of data item (folder, file, ...)</param>
+        /// <param name="version">Requested version of the data item</param>
+        /// <returns>ItemProperties object providing all WebDAV properties that are set for this data item.</returns>
+        private ItemProperties ReadDAVPropertiesForItem(string path, ItemType itemType, int version)
         {
             ItemProperties properties = null;
 
@@ -3015,7 +3026,7 @@ namespace SvnBridge.SourceControl
 
         public ItemProperties ReadPropertiesForItem(ItemMetaData item)
         {
-            return ReadPropertiesForItem(item.Name, item.ItemType, item.ItemRevision);
+            return ReadDAVPropertiesForItem(item.Name, item.ItemType, item.ItemRevision);
         }
 
         private void UpdateProperties(string activityId)
@@ -3141,7 +3152,7 @@ namespace SvnBridge.SourceControl
                 itemType = ItemType.Folder;
             }
 
-            ItemProperties properties = ReadPropertiesForItem(path, itemType, version);
+            ItemProperties properties = ReadDAVPropertiesForItem(path, itemType, version);
             if (properties == null)
             {
                 properties = new ItemProperties();
