@@ -991,7 +991,7 @@ namespace SvnBridge.SourceControl
 
             foreach (Changeset changeset in changesets)
             {
-                SourceItemHistory sourceItemHistory = ConstructSourceItemHistoryFromChangeset(
+                SourceItemHistory historyOfSVNCommit = ConstructSourceItemHistoryFromChangeset(
                     changeset);
                 foreach (Change change in changeset.Changes)
                 {
@@ -1021,7 +1021,7 @@ namespace SvnBridge.SourceControl
                             SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
                             ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
 
-                            sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
+                            historyOfSVNCommit.Changes.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
                         }
                     }
                     else // change of a standard source control item
@@ -1031,10 +1031,10 @@ namespace SvnBridge.SourceControl
                         if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
                             (changeType == (ChangeType.Add | ChangeType.Encoding)))
                             changeType = ChangeType.Add;
-                        sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType));
+                        historyOfSVNCommit.Changes.Add(new SourceItemChange(sourceItem, changeType));
                     }
                 }
-                history.Add(sourceItemHistory);
+                history.Add(historyOfSVNCommit);
             }
 
             return history;
