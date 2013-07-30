@@ -2051,42 +2051,33 @@ namespace SvnBridge.SourceControl
             return WriteFile(activityId, path, fileData, false);
         }
 
-        /// <remarks>
-        /// Hmm... this helper is a bit dirty... but it helps.
-        /// Should be reworked into a class which assembles an itemPaths member
-        /// via various helper methods that return property file names.
-        /// </remarks>
-        private void CollectItemPaths(
+        /// <summary>
+        /// Collects the list of item paths to be queried on TFS -
+        /// a combination of the location of the actual data item
+        /// and the locations of its accompanying property storage items.
+        /// </summary>
+        /// <param name="path">Location of the plain standard data item to be queried</param>
+        /// <param name="recursion">Indicates the requested recursion type (None, OneLevel)</param>
+        /// <returns>List of locations of relevant items to be queried</returns>
+        private IEnumerable<string> CollectItemPaths(
             string path,
-            ref List<string> itemPaths,
             Recursion recursion)
         {
+            List<string> itemPaths = new List<string>();
+
             itemPaths.Add(path);
 
-            // shortcut
-            if ((recursion != Recursion.None) && (recursion != Recursion.OneLevel))
-                return;
+            IEnumerable<string> propItemPaths = WebDAVPropertyStorageAdaptor.CollectPropertyItemLocationsToBeQueried(
+                path,
+                recursion);
 
-            string propertiesForFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.File);
-            string propertiesForFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.Folder);
-            string propertiesForFolderItems = path + "/" + Constants.PropFolder;
-
-            if (recursion == Recursion.None)
+            foreach(string propItemPath in propItemPaths)
             {
-                if (propertiesForFile.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFile);
-
-                if (propertiesForFolder.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFolder);
+                if (propItemPath.Length <= maxLengthFromRootPath)
+                    itemPaths.Add(propItemPath);
             }
-            else if (recursion == Recursion.OneLevel)
-            {
-                if (propertiesForFile.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFile);
 
-                if (propertiesForFolderItems.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFolderItems);
-            }
+            return itemPaths;
         }
 
         private ItemMetaData GetItems(int version, string path, Recursion recursion, bool returnPropertyFiles)
@@ -2142,10 +2133,8 @@ namespace SvnBridge.SourceControl
 
         private SourceItem[] GetTFSSourceItems(int version, string path, Recursion recursion)
         {
-            List<string> itemPathsToBeQueried = new List<string>();
-            CollectItemPaths(
+            IEnumerable<string> itemPathsToBeQueried = CollectItemPaths(
                 path,
-                ref itemPathsToBeQueried,
                 recursion);
 
             SourceItem[] sourceItems = metaDataRepository.QueryItems(version, itemPathsToBeQueried.ToArray(), recursion);
@@ -3715,7 +3704,6 @@ namespace SvnBridge.SourceControl
     {
         // FIXME: this member ought to be made private, with suitably slim helpers offered to users,
         // but for now I will not do that (in order to avoid bugs from excessive changes).
-        // And all TFSSourceControlProvider uses of Constants.PropFolder ought to be moved here, too...
         public const string propFolderPlusSlash = Constants.PropFolder + "/";
 
         private readonly TFSSourceControlProvider sourceControlProvider;
@@ -3845,6 +3833,39 @@ namespace SvnBridge.SourceControl
                 );
             }
             return false;
+        }
+
+        /// <summary>
+        /// Given a certain recursion operation,
+        /// returns the list of locations of items where we manage our property storage.
+        /// </summary>
+        /// <param name="recursion">Indicates the requested recursion type (None, OneLevel)</param>
+        /// <returns>List of locations of relevant items for property storage</returns>
+        public static IEnumerable<string> CollectPropertyItemLocationsToBeQueried(
+            string path,
+            Recursion recursion)
+        {
+            List<string> propItemPaths = new List<string>();
+
+            // Implementation here intentionally (at least currently)
+            // coded to be an efficient no-op for the non-None/non-OneLevel cases...
+
+            if (recursion == Recursion.None)
+            {
+                string propertiesForFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.File);
+                string propertiesForFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.Folder);
+                propItemPaths.Add(propertiesForFile);
+                propItemPaths.Add(propertiesForFolder);
+            }
+            else if (recursion == Recursion.OneLevel)
+            {
+                string propertiesForFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.File);
+                string propertiesForFolderItems = path + "/" + Constants.PropFolder;
+                propItemPaths.Add(propertiesForFile);
+                propItemPaths.Add(propertiesForFolderItems);
+            }
+
+            return propItemPaths;
         }
     }
 }
