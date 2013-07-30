@@ -244,6 +244,7 @@ namespace SvnBridge.SourceControl
         // but rather be provided by a corresponding *interface* or base class.
         public const int LATEST_VERSION = -1;
         private readonly DebugRandomActivator debugRandomActivator;
+        private WebDAVPropertyStorageAdaptor propsSerializer;
 
         public TFSSourceControlProvider(
             TFSSourceControlService sourceControlService,
@@ -298,6 +299,18 @@ namespace SvnBridge.SourceControl
 
             this.fileRepository = fileRepository;
             this.debugRandomActivator = new DebugRandomActivator();
+        }
+
+        private WebDAVPropertyStorageAdaptor WebDAVPropsSerializer
+        {
+            get
+            {
+                if (propsSerializer == null)
+                {
+                    propsSerializer = new WebDAVPropertyStorageAdaptor(this);
+                }
+                return propsSerializer;
+            }
         }
 
         /// <summary>
@@ -1629,7 +1642,7 @@ namespace SvnBridge.SourceControl
                 {
                     string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
                     itemPropertyRevision[itemPath] = item.Revision;
-                    properties[itemPath] = Helper.DeserializeXml<ItemProperties>(ReadFile(item));
+                    properties[itemPath] = WebDAVPropsSerializer.PropertiesRead(item);
                 }
                 else if ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles)
                 {
@@ -2079,7 +2092,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private bool WriteFile(string activityId, string path, byte[] fileData, bool reportUpdatedFile)
+        public bool WriteFile(string activityId, string path, byte[] fileData, bool reportUpdatedFile)
         {
             bool isNewFile = true;
 
@@ -2423,7 +2436,7 @@ namespace SvnBridge.SourceControl
 
                 if (item != null)
                 {
-                    properties = Helper.DeserializeXml<ItemProperties>(ReadFile(item));
+                    properties = WebDAVPropsSerializer.PropertiesRead(item);
                 }
             }
             return properties;
@@ -2463,7 +2476,7 @@ namespace SvnBridge.SourceControl
                     properties.Properties.AddRange(propertiesToAdd.Values);
 
                     bool reportUpdatedFile = (null != item);
-                    WriteFile(activityId, propertiesPath, Helper.SerializeXml(properties), reportUpdatedFile);
+                    WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, properties, reportUpdatedFile);
                 }
             });
         }
@@ -3023,17 +3036,67 @@ namespace SvnBridge.SourceControl
     }
 
     /// <summary>
+    /// Since I "hate" XML (c.f.
+    /// https://en.wikiquote.org/wiki/Linus_Torvalds
+    ///   "XML is crap. Really. There are no excuses. XML is nasty to
+    ///    parse for humans, and it's a disaster to parse even for computers.
+    ///    There's just no reason for that horrible crap to exist.")
+    /// , I'm completely willing to spend extra effort
+    /// to properly abstract the WebDAV properties'
+    /// persistence/serialization/storage format away.
+    /// While the property storage format is written in stone
+    /// (many existing items containing this format)
+    /// and thus quite likely should NEVER be changed
+    /// at any point in future,
+    /// the fact is that if we ever happen to still need to do it,
+    /// then yes we scan.
+    /// </summary>
+    internal interface IWebDAVPropertySerializeFormatProvider
+    {
+        byte[] Serialize(ItemProperties newItemProperties);
+        ItemProperties Deserialize(byte[] content);
+    }
+
+    internal class WebDAVPropertySerializeFormatProviderXML : IWebDAVPropertySerializeFormatProvider
+    {
+        public virtual byte[] Serialize(ItemProperties newItemProperties)
+        {
+            return Helper.SerializeXml(newItemProperties);
+        }
+
+        public virtual ItemProperties Deserialize(byte[] content)
+        {
+            return Helper.DeserializeXml<ItemProperties>(content);
+        }
+    }
+
+    /// <summary>
     /// Encapsulates internal knowledge about the locations
     /// where storage of WebDAV/SVN-specific properties happens.
     /// Perfect encapsulation would result in simply being able to swap this implementation for another one
     /// and have a completely differently implemented storage mechanism for WebDAV properties.
     /// </summary>
+    /// XXX layer violation: this class ought to be doing properties reading/writing
+    /// by getting passed the *SCM item* paths only
+    /// (i.e. the items that ought to have their DAV properties updated)
+    /// and then *internally* figuring out
+    /// the property-storage-dedicated items
+    /// which correspond to specific SCM items.
     internal sealed class WebDAVPropertyStorageAdaptor
     {
         // FIXME: this member ought to be made private, with suitably slim helpers offered to users,
         // but for now I will not do that (in order to avoid bugs from excessive changes).
         // And all TFSSourceControlProvider uses of Constants.PropFolder ought to be moved here, too...
         public const string propFolderPlusSlash = Constants.PropFolder + "/";
+
+        private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly IWebDAVPropertySerializeFormatProvider formatProvider;
+
+        public WebDAVPropertyStorageAdaptor(TFSSourceControlProvider sourceControlProvider)
+        {
+            this.sourceControlProvider = sourceControlProvider;
+            this.formatProvider = new WebDAVPropertySerializeFormatProviderXML();
+        }
 
         public static string GetPropertiesFolderName(string path, ItemType itemType)
         {
@@ -3063,6 +3126,19 @@ namespace SvnBridge.SourceControl
                     path.Substring(path.LastIndexOf('/'));
             }
             return propFolderPlusSlash + path;
+        }
+
+        public ItemProperties PropertiesRead(ItemMetaData itemForItemProperties)
+        {
+            var itemContent = sourceControlProvider.ReadFile(itemForItemProperties);
+            ItemProperties properties = formatProvider.Deserialize(itemContent);
+            return properties;
+        }
+
+        public void PropertiesWrite(string activityId, string propertiesPath, ItemProperties newItemProperties, bool reportUpdatedFile)
+        {
+            var itemContent = formatProvider.Serialize(newItemProperties);
+            sourceControlProvider.WriteFile(activityId, propertiesPath, itemContent, reportUpdatedFile);
         }
 
         public static string GetItemFileNameFromPropertiesFileName(string path)
