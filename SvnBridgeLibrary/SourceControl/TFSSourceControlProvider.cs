@@ -870,8 +870,9 @@ namespace SvnBridge.SourceControl
                         {
                             ItemType itemType = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
                             SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
+                            ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
 
-                            sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Edit));
+                            sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
                         }
                     }
                     else // change of a standard source control item
