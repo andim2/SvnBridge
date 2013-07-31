@@ -33,6 +33,12 @@ namespace SvnBridge.PathParsing
 
         public override string GetLocalPath(IHttpRequest request, string url)
         {
+            // If a relative url has been provided, make it an absolute URL so we can still
+            // get the same unescaped path from it.
+            if (url.StartsWith("/")) {
+                url = "http://FakeHost" + url;
+            }
+
             Uri urlAsUri = new Uri(url);
             string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
             path = "/" + path;
