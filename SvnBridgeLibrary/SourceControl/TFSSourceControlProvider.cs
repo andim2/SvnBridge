@@ -278,6 +278,17 @@ namespace SvnBridge.SourceControl
         /// <param name="newItem">The item to be inserted</param>
         public void Insert(ItemMetaData newItem)
         {
+            // TODO: should probably start operations with a path that's
+            // the common parent of root item vs. new item,
+            // since that one will become the new root item.
+
+            // NOTE: we'll do operations relatively openly in one big loop rather than sub methods
+            // since handling always needs to be done from the view of the parent item
+            // (we may need to update list linking), as provided by the previous loop iteration.
+
+            ItemMetaData rootItem = QueryRootItem();
+            string rootPath = (null != rootItem) ? rootItem.Name : "";
+
             // Figure out whether there's an existing item which might be parent
             // of the new item:
             bool haveRoot = (null != rootItem);
@@ -303,8 +314,7 @@ namespace SvnBridge.SourceControl
                 FolderMetaData folder = new FolderMetaData();
                 folder.Name = folderName;
                 InsertFolder(folder);
-                ItemHelpers.FolderOps_AddItem(folder, newItem);
-                SubmitAsRootItem(newItem);
+                AddItemToFolder(folder, newItem);
             }
 
             {
@@ -321,6 +331,11 @@ namespace SvnBridge.SourceControl
             {
                 rootItem = item;
             }
+        }
+
+        private static void AddItemToFolder(FolderMetaData folder, ItemMetaData item)
+        {
+            ItemHelpers.FolderOps_AddItem(folder, item);
         }
 
         private void InsertFolder(FolderMetaData folder)
@@ -369,6 +384,14 @@ namespace SvnBridge.SourceControl
             string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
 
             FolderMetaData folder = TryGetFolder(folderNameMangled);
+            return folder;
+        }
+
+
+
+        private FolderMetaData GetExistingContainerFolderForPath(string path)
+        {
+            FolderMetaData folder = TryGetFolder(path);
             if (null == folder)
             {
                 // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
@@ -384,7 +407,7 @@ namespace SvnBridge.SourceControl
                 bool acceptingCaseInsensitiveResults = !wantCaseSensitiveMatch;
 
                 folder = (acceptingCaseInsensitiveResults) ?
-                    FindMatchingExistingFolderCandidate_CaseInsensitive(folders, folderNameMangled) : null;
+                    FindMatchingExistingFolderCandidate_CaseInsensitive(folders, path) : null;
             }
             return folder;
         }
