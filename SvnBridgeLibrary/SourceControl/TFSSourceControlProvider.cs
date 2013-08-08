@@ -444,14 +444,18 @@ namespace SvnBridge.SourceControl
             ItemMetaData oldRootItem = QueryRootItem();
             string pathToOldRootItem = (null != oldRootItem) ? oldRootItem.Name : null;
 
+            string pathToNewRootItem;
+
             bool newItemIsFolder = (ItemType.Folder == newItem.ItemType);
-
-            string pathToNewFolder = newItemIsFolder ? newItem.Name : FilesysHelpers.GetFolderPathPart(newItem.Name);
-
-            // It is not relevant that the root item might be non-folder (i.e., file),
-            // since in that case we'd always end up with a proper result of a
-            // suitable new parent folder...
-            string pathToNewRootItem = FilesysHelpers.CalculateCommonParentFolderPath(pathToOldRootItem, pathToNewFolder);
+            if (null == oldRootItem)
+            {
+                pathToNewRootItem = newItem.Name; // either folder *or* item!
+            }
+            else
+            {
+                string pathToNewFolder = newItemIsFolder ? newItem.Name : FilesysHelpers.GetFolderPathPart(newItem.Name);
+                pathToNewRootItem = FilesysHelpers.CalculateCommonParentFolderPath(pathToOldRootItem, pathToNewFolder);
+            }
 
             // === STEP 2: UPDATE ROOT ITEM IF NEEDED ===
 
