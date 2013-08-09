@@ -136,11 +136,12 @@ namespace SvnBridge.SourceControl
             while (lastVersion != targetVersion)
             {
                 int previousLoopLastVersion = lastVersion;
+                int versionFrom = Math.Min(lastVersion, targetVersion) + 1;
+                int versionTo = Math.Max(lastVersion, targetVersion);
                 LogItem logItem = sourceControlProvider.GetLog(
                     changePath,
                     changeVersion,
-                    Math.Min(lastVersion, targetVersion) + 1,
-                    Math.Max(lastVersion, targetVersion),
+                    versionFrom, versionTo,
                     Recursion.Full,
                     256);
 
