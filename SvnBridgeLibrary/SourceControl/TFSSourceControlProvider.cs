@@ -2535,14 +2535,9 @@ namespace SvnBridge.SourceControl
                 if (addToMergeList)
                 {
                     bool isUpdated = (!replaced && (!isNewFile || reportUpdatedFile));
-                    if (isUpdated)
-                    {
-                        activity.MergeList.Add(new ActivityItem(pathFile, ItemType.File, ActivityItemAction.Updated));
-                    }
-                    else
-                    {
-                        activity.MergeList.Add(new ActivityItem(pathFile, ItemType.File, ActivityItemAction.New));
-                    }
+                    ActivityItemAction item_action = isUpdated ? ActivityItemAction.Updated : ActivityItemAction.New;
+
+                    activity.MergeList.Add(new ActivityItem(pathFile, ItemType.File, item_action));
                 }
             });
 
