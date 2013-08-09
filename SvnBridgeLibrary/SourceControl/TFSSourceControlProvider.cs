@@ -2498,8 +2498,6 @@ namespace SvnBridge.SourceControl
                 ServiceUpdateLocalVersions(activityId, updates);
 
                 List<PendRequest> pendRequests = new List<PendRequest>();
-
-                bool addToMergeList = true;
                 if (itemExisting_HEAD != null)
                 {
                     pendRequests.Add(PendRequest.Edit(localPath));
@@ -2518,6 +2516,20 @@ namespace SvnBridge.SourceControl
                         pendRequests.Add(PendRequest.Edit(localPath));
                         isNewFile = false;
                     }
+                }
+                ServiceSubmitPendingRequests(activityId, pendRequests);
+
+                string pathFile = MakeTfsPath(path);
+                sourceControlService.UploadFileFromBytes(serverUrl, credentials, activityId, fileData, pathFile);
+
+                bool addToMergeList;
+                if (null != itemExisting_HEAD)
+                {
+                    addToMergeList = true;
+                }
+                else
+                {
+                    addToMergeList = true;
                     foreach (CopyAction copy in activity.CopiedItems)
                     {
                         if (copy.TargetPath.Equals(path))
@@ -2527,10 +2539,6 @@ namespace SvnBridge.SourceControl
                         }
                     }
                 }
-
-                ServiceSubmitPendingRequests(activityId, pendRequests);
-                string pathFile = MakeTfsPath(path);
-                sourceControlService.UploadFileFromBytes(serverUrl, credentials, activityId, fileData, pathFile);
 
                 if (addToMergeList)
                 {
