@@ -261,40 +261,11 @@ namespace SvnBridge.SourceControl
                 if (sourceControlProvider.IsPropertyFile(remoteName))
                 {
                     propertyChange = true;
-                    remoteName = GetRemoteNameOfPropertyChange(remoteName);
+                    remoteName = WebDAVPropertyStorageAdaptor.GetRemoteNameOfPropertyChange(remoteName);
                 }
             }
 
             ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit, updatingForwardInTime);
-        }
-
-        private static string GetRemoteNameOfPropertyChange(string remoteName)
-        {
-            string propFolderPlusSlash = Constants.PropFolder + "/";
-            string propFolderSlashPrefix = "/" + propFolderPlusSlash;
-            if (remoteName.Contains(propFolderSlashPrefix))
-            {
-                if (remoteName.EndsWith(propFolderSlashPrefix + Constants.FolderPropFile))
-                {
-                    remoteName = remoteName.Substring(0, remoteName.Length - (propFolderSlashPrefix + Constants.FolderPropFile).Length);
-                }
-                else
-                {
-                    remoteName = remoteName.Replace(propFolderSlashPrefix, "/");
-                }
-            }
-            else if (remoteName.StartsWith(propFolderPlusSlash))
-            {
-                if (remoteName.Equals(propFolderPlusSlash + Constants.FolderPropFile))
-                {
-                    remoteName = "";
-                }
-                else
-                {
-                    remoteName = remoteName.Substring(propFolderPlusSlash.Length);
-                }
-            }
-            return remoteName;
         }
 
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)

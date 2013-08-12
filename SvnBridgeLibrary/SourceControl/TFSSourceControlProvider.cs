@@ -3780,6 +3780,35 @@ namespace SvnBridge.SourceControl
             return itemPath;
         }
 
+        public static string GetRemoteNameOfPropertyChange(string remoteName)
+        {
+            string propFolderPlusSlash = Constants.PropFolder + "/";
+            string propFolderSlashPrefix = "/" + propFolderPlusSlash;
+            if (remoteName.Contains(propFolderSlashPrefix))
+            {
+                if (remoteName.EndsWith(propFolderSlashPrefix + Constants.FolderPropFile))
+                {
+                    remoteName = remoteName.Substring(0, remoteName.Length - (propFolderSlashPrefix + Constants.FolderPropFile).Length);
+                }
+                else
+                {
+                    remoteName = remoteName.Replace(propFolderSlashPrefix, "/");
+                }
+            }
+            else if (remoteName.StartsWith(propFolderPlusSlash))
+            {
+                if (remoteName.Equals(propFolderPlusSlash + Constants.FolderPropFile))
+                {
+                    remoteName = "";
+                }
+                else
+                {
+                    remoteName = remoteName.Substring(propFolderPlusSlash.Length);
+                }
+            }
+            return remoteName;
+        }
+
         /// <summary>
         /// Hotpath performance tweak helper [user code first calls this fast unspecific check,
         /// then iff(!) found (rarely) does more specific ones, whether property file/folder...]
