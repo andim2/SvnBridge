@@ -1505,7 +1505,7 @@ namespace SvnBridge.SourceControl
                             false, 0);
                 }
                 AssociateWorkItemsWithChangeSet(activity.Comment, changesetId);
-                mergeResponse = GenerateMergeResponse(activityId, changesetId);
+                mergeResponse = MergeResponse_Generate(activityId, changesetId);
             });
 
             return mergeResponse;
@@ -2076,7 +2076,7 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        private MergeActivityResponse GenerateMergeResponse(string activityId, int changesetId)
+        private MergeActivityResponse MergeResponse_Generate(string activityId, int changesetId)
         {
             MergeActivityResponse mergeResponse = new MergeActivityResponse(changesetId, DateTime.Now, SCMHelpers.UnknownAuthorMarker);
             List<string> baseFolders = new List<string>();
@@ -2116,7 +2116,7 @@ namespace SvnBridge.SourceControl
                                 mergeResponse.Items.Add(responseItem);
                             }
 
-                            AddBaseFolderIfRequired(activityId, newItem, baseFolders, mergeResponse);
+                            MergeResponse_AddBaseFolderIfRequired(activityId, newItem, baseFolders, mergeResponse);
                         }
                     }
                 }
@@ -2124,7 +2124,7 @@ namespace SvnBridge.SourceControl
             return mergeResponse;
         }
 
-        private void AddBaseFolderIfRequired(string activityId, ActivityItem item, ICollection<string> baseFolders, MergeActivityResponse mergeResponse)
+        private void MergeResponse_AddBaseFolderIfRequired(string activityId, ActivityItem item, ICollection<string> baseFolders, MergeActivityResponse mergeResponse)
         {
             string folderName = FilesysHelpers.GetFolderPathPart(item.Path);
             if (((item.Action == ActivityItemAction.New) || (item.Action == ActivityItemAction.Deleted) ||
