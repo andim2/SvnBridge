@@ -1477,6 +1477,72 @@ namespace SvnBridge.SourceControl
 
         }
 
+        private int Service_Commit(
+            string activityId,
+            string comment,
+            List<string> commitServerList,
+            bool doWipeWorkspaceOnFailure)
+        {
+            try
+            {
+                // DEBUG_SITE: useful breakpoint location, pre-Commit()
+                Helper.DebugUsefulBreakpointLocation();
+                // (and you should also follow the docs / debug hints
+                // at our Pending Changes helpers).
+                // Or enable bool for safe commit testing
+                // without actually completing any transactions
+                // (probably especially useful for stress testing,
+                // via prohibitively large transaction sizes).
+                // Or perhaps even have that bool provided by a policy setting in .config?
+                // OTOH that's probably not worth it, since you could almost just as well
+                // simply make SvnBridge use a TFS user that does not have repo write perms.
+                bool preventRepoModifications = false;
+                if (preventRepoModifications)
+                {
+                    // Throw an obviously worded exception
+                    // which makes it all the way through to the user's error window:
+                    throw new InvalidOperationException("Source code configured to prevent repository modifications, by avoiding commits!");
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Do identical handling as below,
+                // but keep both paths specific each
+                // to only those exception types that they're supposed to intercept!
+                if (doWipeWorkspaceOnFailure)
+                {
+                    ClearExistingTempWorkspaces(false);
+                }
+
+                throw;
+            }
+
+            int changesetId;
+            try
+            {
+                changesetId =
+                    sourceControlService.Commit(serverUrl, credentials,
+                        activityId,
+                        comment,
+                        commitServerList,
+                        false, 0);
+            }
+            catch (TfsFailureException)
+            {
+                if (doWipeWorkspaceOnFailure)
+                {
+                    // we just failed a commit, this tends to happen when we have a conflict
+                    // between previously partially committed changes and the current changes.
+                    // We will wipe all the user's temporary workspaces and allow the user to
+                    // try again
+                    ClearExistingTempWorkspaces(false);
+                }
+
+                throw;
+            }
+            return changesetId;
+        }
+
         /// <summary>
         /// The main public interface handler for WebDAV MERGE request.
         /// Commits the recorded transaction contents on the server.
@@ -1517,25 +1583,12 @@ namespace SvnBridge.SourceControl
                 int changesetId;
                 if (commitServerList.Count > 0)
                 {
-                    try
-                    {
-                        changesetId =
-                            sourceControlService.Commit(serverUrl, credentials,
+                    changesetId =
+                        Service_Commit(
                                 activityId,
                                 activity.Comment,
                                 commitServerList,
-                                false, 0);
-                    }
-                    catch (TfsFailureException)
-                    {
-                        // we just failed a commit, this tends to happen when we have a conflict
-                        // between previously partially committed changes and the current changes.
-                        // We will wipe all the user's temporary workspaces and allow the user to 
-                        // try again
-                        ClearExistingTempWorkspaces(false);
-
-                        throw;
-                    }
+                                true);
                 }
                 else
                 {
@@ -1551,11 +1604,11 @@ namespace SvnBridge.SourceControl
                         commitServerList.Add(MakeTfsPath(path));
                     }
                     changesetId =
-                        sourceControlService.Commit(serverUrl, credentials,
+                        Service_Commit(
                             activityId,
                             activity.Comment,
                             commitServerList,
-                            false, 0);
+                            false); // Hmm, really false?
                 }
                 AssociateWorkItemsWithChangeSet(activity.Comment, changesetId);
                 mergeResponse = new MergeActivityResponse(changesetId, DateTime.Now, SCMHelpers.UnknownAuthorMarker);
