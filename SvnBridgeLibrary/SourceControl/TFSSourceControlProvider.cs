@@ -438,6 +438,13 @@ namespace SvnBridge.SourceControl
                 Dictionary<string, ItemProperties> dictPropertiesOfItems = new Dictionary<string, ItemProperties>(items.Length);
                 Dictionary<string, int> dictPropertiesRevisionOfItems = new Dictionary<string, int>(items.Length);
                 WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
+
+                //if (items.Length > 1)
+                //{
+                //    // DEBUG_SITE:
+                //    System.Diagnostics.Debugger.Launch();
+                //    Helper.DebugUsefulBreakpointLocation();
+                //}
                 foreach (ItemMetaData item in items)
                 {
                     bool isPropertyFile = WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Name);
