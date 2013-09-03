@@ -543,7 +543,6 @@ namespace SvnBridge.SourceControl
         {
             string pathRoot = folderFrom.Name;
             string pathSub = FilesysHelpers.GetSubPath(pathRoot, itemTo.Name);
-            bool finalItemIsFolder = (ItemType.Folder == itemTo.ItemType);
             // NOTE: we'll do operations relatively openly in one big loop rather than sub methods
             // since handling always needs to be done from the view of the parent item
             // (we may need to update list linking), as provided by the previous loop iteration.
@@ -571,12 +570,9 @@ namespace SvnBridge.SourceControl
                             ItemHelpers.FolderOps_RemoveItem(folder, item);
                         }
 
-                        // ...and fetch the updated one (forward *or* backward change) for the currently processed version:
-                        bool isFolder = (!isLastPathElem) || finalItemIsFolder;
-                        item = (isFolder) ?
-                               ProvideFolderTypeItemForPath(itemPath)
+                        item = (!isLastPathElem) ?
+                               ItemHelpers.WrapFolderAsStubFolder(ProvideFolderTypeItemForPath(itemPath))
                              :
-                               // item is not folder, ergo it can be the final non-folder (file) item only
                                itemTo
                              ;
 
@@ -584,10 +580,6 @@ namespace SvnBridge.SourceControl
                         {
                             bool edit = false; // FIXME correct value!?
                             item = new MissingItemMetaData(itemPath, _targetVersion, edit);
-                        }
-                        if (!isLastPathElem)
-                        {
-                            item = ItemHelpers.WrapFolderAsStubFolder((FolderMetaData)item);
                         }
                         ItemHelpers.FolderOps_AddItem(folder, item);
 
