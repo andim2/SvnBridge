@@ -519,20 +519,6 @@ namespace SvnBridge.SourceControl
             return sourceControlProvider.GetItemsWithoutProperties(_targetVersion, itemName, Recursion.None);
         }
 
-        private FolderMetaData QueryAsStubFolder(string itemName)
-        {
-            // Due to our prior handling,
-            // we expect the item at that location to exist, and to be a folder.
-            FolderMetaData folder = (FolderMetaData)QueryItem(itemName);
-            // And since we weakly *queried* the folder item here
-            // (rather than e.g. receiving an explicit folder to queue),
-            // we'll have to mark it as stub folder
-            // (for interim item collection purposes, as the parent folder)
-            // until the time eventually may come
-            // that someone *actually* happens to submit this folder item for real:
-            return ItemHelpers.WrapFolderAsStubFolder(folder);
-        }
-
         /// <summary>
         /// Completes the "path to an item",
         /// by adding/linking as many interim folders as needed, up to the actual final item.
@@ -640,9 +626,22 @@ namespace SvnBridge.SourceControl
             bool haveItemFolderExisting = (null != itemFolderExisting);
             item = (haveItemFolderExisting) ?
                 itemFolderExisting :
-                QueryAsStubFolder(itemPath);
+                QueryFolder(itemPath);
 
             return item;
+        }
+
+        private FolderMetaData QueryFolder(string itemPath)
+        {
+            FolderMetaData folder = null;
+
+            ItemMetaData itemNew = QueryItem(itemPath);
+            if (null != itemNew)
+            {
+                folder = itemNew as FolderMetaData;
+            }
+
+            return folder;
         }
 
         private FolderMetaData GetExistingContainerFolderForPath(string path)
