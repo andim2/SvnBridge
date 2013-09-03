@@ -388,6 +388,14 @@ namespace SvnBridge.Handlers
             }
         }
 
+        /// <summary>
+        /// SVN "Version Controlled Resource".
+        /// </summary>
+        /// <param name="sourceControlProvider"></param>
+        /// <param name="requestPath">Full SVN request path</param>
+        /// <param name="label">Some label</param>
+        /// <param name="data">Property data to be dumped</param>
+        /// <param name="outputStream">Dump sink</param>
         private void WriteVccResponse(TFSSourceControlProvider sourceControlProvider,
                                       string requestPath,
                                       string label,
@@ -405,6 +413,12 @@ namespace SvnBridge.Handlers
             }
         }
 
+        /// <summary>
+        /// SVN "Baseline resource" ("bln").
+        /// </summary>
+        /// <param name="requestPath">Full SVN request path</param>
+        /// <param name="data">Property data to be dumped</param>
+        /// <param name="outputStream">Dump sink</param>
         private void WriteBlnResponse(string requestPath,
                                       PropData data,
                                       Stream outputStream)
@@ -421,6 +435,14 @@ namespace SvnBridge.Handlers
             }
         }
 
+        /// <summary>
+        /// SVN "Baseline collection resource" ("bc").
+        /// </summary>
+        /// <param name="sourceControlProvider">Provider</param>
+        /// <param name="requestPath">Full SVN request path</param>
+        /// <param name="depthHeader">WebDAV PROPFIND hierarchy depth specification</param>
+        /// <param name="data">Property data to be dumped</param>
+        /// <param name="outputStream">Dump sink</param>
         private void WriteBcResponse(TFSSourceControlProvider sourceControlProvider,
                                      string requestPath,
                                      string depthHeader,
@@ -514,6 +536,14 @@ namespace SvnBridge.Handlers
             }
         }
 
+        /// <summary>
+        /// SVN "Working resource" ("wrk").
+        /// </summary>
+        /// <param name="sourceControlProvider">Provider</param>
+        /// <param name="requestPath">Full SVN request path</param>
+        /// <param name="depthHeader">WebDAV PROPFIND hierarchy depth specification</param>
+        /// <param name="data">Property data to be dumped</param>
+        /// <param name="outputStream">Dump sink</param>
         private void WriteWrkResponse(TFSSourceControlProvider sourceControlProvider,
                                        string requestPath,
                                        string depthHeader,
@@ -558,6 +588,14 @@ namespace SvnBridge.Handlers
             }
         }
 
+        // TODO: rather than having a WriteProperties() directly within this class,
+        // with a *very dirty* INode-abstraction-violating isFolder param,
+        // one should have a nice derived class hierarchy with WebDAVNodeGenerator naming
+        // (which should be based on something like a WebDAVGeneratorBase),
+        // in combination with a per-INode-type factory method within this class
+        // which constructs the proper node generator that's needed for the specific node type.
+        // And then one would also be able to get rid of awkwardly keeping the provider object near generator stage
+        // (a stream generator should be making use of nothing but static protocol data).
         private void WriteProperties(INode node, List<XmlElement> properties, TextWriter output)
         {
             WriteProperties(node, properties, output, false);
