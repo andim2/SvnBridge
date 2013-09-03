@@ -18,7 +18,22 @@ namespace SvnBridge.Handlers
 
         public GetHandler(bool headOnly)
         {
+            // For now decided to keep the member bool / ctor param solution
+            // to discern between SVN GET and HEAD requests,
+            // as provided by workitem #15338 -
+            // however if it turns out that there are more differences between
+            // GET and HEAD, then it probably is more efficient to
+            // rename class into GetHandlerBase and implement derived
+            // GetHandler / HeadHandler classes with deviating method behaviour.
             this.isHeadOnly = headOnly;
+        }
+
+        /// <summary>
+        /// Legacy ctor, to retain external interface compatibility.
+        /// </summary>
+        public GetHandler()
+        {
+            this.isHeadOnly = false;
         }
 
 		protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
