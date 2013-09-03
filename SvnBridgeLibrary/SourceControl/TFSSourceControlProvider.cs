@@ -774,6 +774,11 @@ namespace SvnBridge.SourceControl
         public virtual bool ItemExists(string path, int version)
         {
             bool itemExists = false;
+
+            // Decide to do strip-slash at the very top, since otherwise it would be
+            // done *both* by GetItems() internally (its inner copy of the variable)
+            // *and* below, by ItemMetaData implementation.
+            SVNPathStripLeadingSlash(ref path);
             ItemMetaData item = GetItems(version, path, Recursion.None, true);
             if (item != null)
             {
@@ -781,7 +786,6 @@ namespace SvnBridge.SourceControl
                 bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
                 if (needCheckCaseSensitiveItemMatch)
                 {
-                    SVNPathStripLeadingSlash(ref path);
                     itemExists = false;
                     bool haveCorrectlyCasedItem = item.Name.Equals(path);
                     if (haveCorrectlyCasedItem)
