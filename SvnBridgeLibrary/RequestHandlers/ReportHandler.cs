@@ -504,13 +504,14 @@ namespace SvnBridge.Handlers
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);
+            int maxCount = (null != logreport.Limit) ? int.Parse(logreport.Limit) : 1000000;
             // SVNBRIDGE_WARNING_REF_RECURSION
             LogItem logItem = sourceControlProvider.GetLog(
                 serverPath,
                 Math.Min(start, end),
                 Math.Max(start, end),
                 Recursion.Full,
-                int.Parse(logreport.Limit ?? "1000000"),
+                maxCount,
                 (start < end));
 
             // Testing of svn log -v -r BEGIN:END vs. non-[-v]
