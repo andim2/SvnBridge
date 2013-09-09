@@ -1934,13 +1934,44 @@ namespace SvnBridge.SourceControl
 
         public virtual bool ItemExists(string path, int version)
         {
+            // FIXME imprecise interface, gradually correct use
+            // (e.g. by using more specifically named methods such as SVNItemExists() below).
+            // Explanation: since this is a public interface method,
+            // it would have been expected to be used by SVN-side users *only*,
+            // in which case there *are* no (non-SVN) property storage implementation items to be returned!
+            // (only *internal* Item existence checks would possibly need to query property storage,
+            // but since those sometimes call into *this* ItemExists() variant
+            // we currently need to have it return prop storage items, too...).
+            // Not to mention that some users use this method
+            // to verify item permission access,
+            // i.e. property storage areas *are* relevant
+            // (as they need to be accessible), too...
+            bool returnPropertyFiles = true;
+            return ItemExists(path, version, returnPropertyFiles);
+        }
+
+        /// <summary>
+        /// Does item existence check for SVN-side purposes,
+        /// i.e. in cases where we definitely want to avoid
+        /// having (potentially problematic) handling of
+        /// SVN-unrelated property storage item locations included.
+        /// </summary>
+        /// <param name="path">Path to SVN item</param>
+        /// <param name="version">Version of SVN item</param>
+        /// <returns>true if item exists, else false</returns>
+        public virtual bool SVNItemExists(string path, int version)
+        {
+            return ItemExists(path, version, false);
+        }
+
+        private bool ItemExists(string path, int version, bool returnPropertyFiles)
+        {
             bool itemExists = false;
 
             // Decide to do strip-slash at the very top, since otherwise it would be
             // done *both* by GetItems() internally (its inner copy of the variable)
             // *and* below, by ItemMetaData implementation.
             SVNPathStripLeadingSlash(ref path);
-            bool returnPropertyFiles = true;
             ItemMetaData item = GetItems(version, path, Recursion.None, returnPropertyFiles);
             if (item != null)
             {
