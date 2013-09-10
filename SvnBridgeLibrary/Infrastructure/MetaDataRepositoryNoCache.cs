@@ -61,7 +61,7 @@ namespace SvnBridge.Infrastructure
                 itemSpecs.ToArray(),
                 0);
 
-            SortedList<string, SourceItem> result = new SortedList<string, SourceItem>();
+            SortedList<string, SourceItem> resultUniqueSorted = new SortedList<string, SourceItem>();
             foreach (ItemSet itemSet in itemSets)
             {
                 foreach (Item item in itemSet.Items)
@@ -75,14 +75,14 @@ namespace SvnBridge.Infrastructure
                     var downloadUrlExtension = serverUrl.Contains("/tfs/") ? "ashx" : "asmx"; 
                     sourceItem.DownloadUrl = serverUrl + "/VersionControl/v1.0/item." + downloadUrlExtension + "?" + item.durl;
 
-                    if (!result.ContainsKey(sourceItem.RemoteName))
+                    if (!resultUniqueSorted.ContainsKey(sourceItem.RemoteName))
                     {
-                        result.Add(sourceItem.RemoteName, sourceItem);
+                        resultUniqueSorted.Add(sourceItem.RemoteName, sourceItem);
                     }
                 }
             }
             List<SourceItem> result2 = new List<SourceItem>();
-            foreach (SourceItem sourceItem in result.Values)
+            foreach (SourceItem sourceItem in resultUniqueSorted.Values)
             {
                 result2.Add(sourceItem);
             }
