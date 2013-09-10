@@ -729,10 +729,16 @@ namespace SvnBridge.SourceControl
             return clientStateTracker;
         }
 
-        private bool ShouldBeIgnored(string file)
+        private static bool ShouldBeIgnored(string file)
         {
-            //return Path.GetFileName(file).Equals(Constants.PropFolder);
-            return sourceControlProvider.IsPropertyFolder(file);
+            // This check can be completely disabled
+            // since currently(!?) the history fetched from the provider
+            // already is pre-processed to not mention any useless (thus unwanted)
+            // *base container folders* for property storage
+            // any more anyway...
+            ////return Path.GetFileName(file).Equals(Constants.PropFolder);
+            //return sourceControlProvider.IsPropertyFolder(file);
+            return false;
         }
     }
 }
