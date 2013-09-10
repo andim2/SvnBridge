@@ -100,29 +100,36 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private static FolderMetaData GetFolderInfo(TFSSourceControlProvider sourceControlProvider,
+        private static bool GetFolderInfo(TFSSourceControlProvider sourceControlProvider,
                                                     string depthHeader,
                                                     string itemPath,
                                                     int? version,
-                                                    bool loadPropertiesFromFile)
+                                                    bool loadPropertiesFromFile,
+                                                    out FolderMetaData folderInfo)
         {
-            FolderMetaData folderInfo = null;
+            bool foundItem = false;
+
+            folderInfo = null;
 
             Recursion recursion = ConvertDepthHeaderToRecursion(depthHeader);
             var versionToFetch = version.HasValue ? version.Value : TFSSourceControlProvider.LATEST_VERSION;
             if (recursion == Recursion.OneLevel)
             {
-                folderInfo = (FolderMetaData)GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+                ItemMetaData item =
+                    GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+                foundItem = (null != item);
+                folderInfo = (FolderMetaData)item;
             }
             else
             {
                 folderInfo = new FolderMetaData();
                 ItemMetaData item =
                     GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+                foundItem = (null != item);
                 ItemHelpers.FolderOps_AddItem(folderInfo, item);
             }
 
-            return folderInfo;
+            return foundItem;
         }
 
         private static ItemMetaData GetItemsForProps(TFSSourceControlProvider sourceControlProvider,
@@ -470,7 +477,8 @@ namespace SvnBridge.Handlers
                 setTrunkAsName = true;
             }
 
-            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depthHeader, itemPath, version, false);
+            FolderMetaData folderInfo;
+            GetFolderInfo(sourceControlProvider, depthHeader, itemPath, version, false, out folderInfo);
             if (setTrunkAsName)
                 folderInfo.Name = "trunk";
 
@@ -525,7 +533,8 @@ namespace SvnBridge.Handlers
                                                 requestPath);
             }
 
-            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depthHeader, itemPath, null, true);
+            FolderMetaData folderInfo;
+            GetFolderInfo(sourceControlProvider, depthHeader, itemPath, null, true, out folderInfo);
 
             using (StreamWriter output = CreateStreamWriter(outputStream))
             {
