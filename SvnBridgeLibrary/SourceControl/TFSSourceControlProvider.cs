@@ -2187,7 +2187,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        public virtual ItemMetaData[] GetPreviousVersionOfItems(SourceItem[] items, int changeset)
+        public virtual ItemMetaData[] GetPreviousVersionOfItems(SourceItem[] items, int changeset_Newer)
         {
             ItemMetaData[] result;
 
@@ -2196,9 +2196,9 @@ namespace SvnBridge.SourceControl
             //   figure out the corresponding maximally-authoritative representation (numeric IDs) of these items
             // - do a QueryItems() with these IDs, on the *previous* changeset
 
-            BranchItem[] renamedItems = GetRenamedItems(items, changeset);
+            BranchItem[] renamedItems = GetRenamedItems(items, changeset_Newer);
 
-            var previousRevision = changeset - 1;
+            var previousRevision = changeset_Newer - 1;
 
             if (renamedItems.All(item => item == null || item.FromItem == null))
             {
