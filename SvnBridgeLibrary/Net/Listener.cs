@@ -207,10 +207,5 @@ namespace SvnBridge.Net
         {
             ListenError(this, new ListenErrorEventArgs(ex));
         }
-
-        public static void RaiseErrorOccured(Exception e)
-        {
-            
-        }
     }
 }
