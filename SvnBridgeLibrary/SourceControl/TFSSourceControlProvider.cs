@@ -543,17 +543,18 @@ namespace SvnBridge.SourceControl
                 else
                     throw;
             }
-            histories = ConvertChangesetsToSourceItemHistory(changesets);
+            List<Changeset> changesetsTotal = new List<Changeset>();
+
+            changesetsTotal.AddRange(changesets);
 
             // TFS QueryHistory API won't return more than 256 items,
             // so need to call multiple times if more requested
             if (maxCount > QUERY_LIMIT)
             {
-                int logItemsCount = histories.Count;
-                List<SourceItemHistory> temp = histories;
+                int logItemsCount = changesets.Count();
                 while (logItemsCount == QUERY_LIMIT)
                 {
-                    int earliestVersionFound = temp[QUERY_LIMIT - 1].ChangeSetID - 1;
+                    int earliestVersionFound = changesets[QUERY_LIMIT - 1].cset - 1;
                     if (earliestVersionFound == versionFrom)
                         break;
 
@@ -565,11 +566,13 @@ namespace SvnBridge.SourceControl
                         maxCount,
                         true, false, false,
                         sortAscending);
-                    temp = ConvertChangesetsToSourceItemHistory(changesets);
-                    histories.AddRange(temp);
-                    logItemsCount = temp.Count;
+                    changesetsTotal.AddRange(changesets);
+                    logItemsCount = changesets.Count();
                 }
             }
+
+            histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray());
+
             return new LogItem(null, serverPath, histories.ToArray());
         }
 
