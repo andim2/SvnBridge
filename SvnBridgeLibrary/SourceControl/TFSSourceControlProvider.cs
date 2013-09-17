@@ -421,11 +421,11 @@ namespace SvnBridge.SourceControl
             return logItem;
         }
 
-        private List<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changes)
+        private List<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changesets)
         {
             List<SourceItemHistory> history = new List<SourceItemHistory>();
 
-            foreach (Changeset changeset in changes)
+            foreach (Changeset changeset in changesets)
             {
                 SourceItemHistory sourceItemHistory = ConstructSourceItemHistoryFromChangeset(
                     changeset);
@@ -494,11 +494,11 @@ namespace SvnBridge.SourceControl
             const int QUERY_LIMIT = 256;
 
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
-            Changeset[] changes;
+            Changeset[] changesets;
             List<SourceItemHistory> histories;
             try
             {
-                changes = sourceControlService.QueryHistory(serverUrl, credentials,
+                changesets = sourceControlService.QueryHistory(serverUrl, credentials,
                     null, null,
                     itemSpec, itemVersion,
                     null,
@@ -543,7 +543,7 @@ namespace SvnBridge.SourceControl
                 else
                     throw;
             }
-            histories = ConvertChangesetsToSourceItemHistory(changes);
+            histories = ConvertChangesetsToSourceItemHistory(changesets);
 
             // TFS QueryHistory API won't return more than 256 items,
             // so need to call multiple times if more requested
@@ -557,7 +557,7 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
-                    changes = sourceControlService.QueryHistory(serverUrl, credentials,
+                    changesets = sourceControlService.QueryHistory(serverUrl, credentials,
                         null, null,
                         itemSpec, itemVersion,
                         null,
@@ -565,7 +565,7 @@ namespace SvnBridge.SourceControl
                         maxCount,
                         true, false, false,
                         sortAscending);
-                    temp = ConvertChangesetsToSourceItemHistory(changes);
+                    temp = ConvertChangesetsToSourceItemHistory(changesets);
                     histories.AddRange(temp);
                     logItemsCount = temp.Count;
                 }
@@ -819,7 +819,7 @@ namespace SvnBridge.SourceControl
             try
             {
                 ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full);
-                Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials,
+                Changeset[] changesets = sourceControlService.QueryHistory(serverUrl, credentials,
                     null, null,
                     itemSpec, VersionSpec.Latest,
                     null,
@@ -828,10 +828,10 @@ namespace SvnBridge.SourceControl
                     true, false, false, false);
 
                 // If no results then date is before project existed
-                if (changes.Length == 0)
+                if (changesets.Length == 0)
                     return 0;
 
-                return changes[0].cset;
+                return changesets[0].cset;
             }
             catch (Exception e)
             {
