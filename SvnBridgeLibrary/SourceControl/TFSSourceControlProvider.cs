@@ -550,8 +550,8 @@ namespace SvnBridge.SourceControl
             const int TFS_QUERY_LIMIT = 256;
             if (maxCount > TFS_QUERY_LIMIT)
             {
-                int logItemsCount = changesets.Count();
-                while (logItemsCount == TFS_QUERY_LIMIT)
+                int logItemsCount_ThisRun = changesets.Count();
+                while (logItemsCount_ThisRun == TFS_QUERY_LIMIT)
                 {
                     int earliestVersionFound = changesets[changesets.Length - 1].cset - 1;
                     if (earliestVersionFound == versionFrom)
@@ -566,7 +566,7 @@ namespace SvnBridge.SourceControl
                         true, false, false,
                         sortAscending);
                     changesetsTotal.AddRange(changesets);
-                    logItemsCount = changesets.Count();
+                    logItemsCount_ThisRun = changesets.Count();
                 }
             }
 
