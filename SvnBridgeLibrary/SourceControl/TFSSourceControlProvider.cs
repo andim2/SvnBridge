@@ -2136,9 +2136,27 @@ namespace SvnBridge.SourceControl
                             }
                         }
                     }
+
+                    // FIXME! Case sensitivity handling at this wrongly-layered place
+                    // actually should NOT be required nowadays,
+                    // since inner layers do seem to handle things correctly.
+                    // Thus, add a check to verify that, and if that check never triggers,
+                    // then special-casing case sensitivity here can be removed.
+                    if (!itemExists)
+                    {
+                        throw new ItemCaseMismatchException(item);
+                    }
                 }
             }
             return itemExists;
+        }
+
+        public sealed class ItemCaseMismatchException : Exception
+        {
+            public ItemCaseMismatchException(ItemMetaData item)
+                : base("Huh, item (" + item + ") returned and then found to be a case sensitivity mismatch despite inner layers already supposed to have filtered such items!?")
+            {
+            }
         }
 
         public virtual bool ItemExists(int itemId, int version)
