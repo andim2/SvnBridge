@@ -1424,6 +1424,7 @@ namespace SvnBridge.SourceControl
             string localBasePath = localPath.Substring(0, localPath.LastIndexOf('\\'));
             UpdateLocalVersion(activityId, item, localBasePath);
 
+            string serverPath = MakeTfsPath(path);
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 // This pend-req submission, as opposed to all others,
@@ -1431,7 +1432,7 @@ namespace SvnBridge.SourceControl
                 // thus probably risking AB-BA deadlock in case of network issues.
                 ServiceSubmitPendingRequest(activityId, PendRequest.AddFolder(localPath));
                 activity.MergeList.Add(
-                    new ActivityItem(MakeTfsPath(path), ItemType.Folder, ActivityItemAction.New));
+                    new ActivityItem(serverPath, ItemType.Folder, ActivityItemAction.New));
                 activity.Collections.Add(path);
             });
 
