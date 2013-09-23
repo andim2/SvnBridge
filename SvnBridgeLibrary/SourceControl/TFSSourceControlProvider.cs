@@ -444,7 +444,7 @@ namespace SvnBridge.SourceControl
                     bool wantReadPropertyData = (isPropertyFile && !returnPropertyFiles);
                     if (wantReadPropertyData)
                     {
-                        string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
+                        string itemPath = WebDAVPropertyStorageAdaptor.GetPathOfDataItemFromPathOfPropStorageItem(item.Name);
                         dictPropertiesRevisionOfItems[itemPath] = item.Revision;
                         dictPropertiesOfItems[itemPath] = propsSerializer.PropertiesRead(item);
                     }
@@ -1267,7 +1267,7 @@ namespace SvnBridge.SourceControl
                 bool isChangeOfAnSVNProperty = WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item);
                 if (isChangeOfAnSVNProperty)
                 {
-                    string item = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(change.Item.item);
+                    string item = WebDAVPropertyStorageAdaptor.GetPathOfDataItemFromPathOfPropStorageItem(change.Item.item);
                     bool itemFileIncludedInChanges = false;
                     foreach (Change itemChange in changeset.Changes)
                     {
@@ -3792,7 +3792,7 @@ namespace SvnBridge.SourceControl
             return isPropertyStorageItem;
         }
 
-        public static string GetItemFileNameFromPropertiesFileName(string path)
+        public static string GetPathOfDataItemFromPathOfPropStorageItem(string path)
         {
             string itemPath = path;
             if (itemPath.StartsWith(propFolderPlusSlash))
