@@ -6,7 +6,7 @@ using SvnBridge.Handlers;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
+using SvnBridge.Utility; // DebugRandomActivator, Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {
@@ -105,6 +105,7 @@ namespace SvnBridge.Infrastructure
         private readonly RequestHandlerBase handler;
         private readonly FolderMetaData root;
         private readonly bool requestedTxDelta;
+        private readonly DebugRandomActivator debugRandomActivator;
 
         public UpdateReportGenerator(
             StreamWriter output,
@@ -123,6 +124,7 @@ namespace SvnBridge.Infrastructure
             this.loader = loader;
             this.root = root;
             this.requestedTxDelta = HaveRequestTxDelta(updateReportRequest);
+            this.debugRandomActivator = new DebugRandomActivator();
         }
 
         public void Generate()
@@ -355,8 +357,84 @@ namespace SvnBridge.Infrastructure
             // For details, see the comment at credentials handling.
 
             // we need to check both name and id to ensure that the item was not renamed
-            return sourceControlProvider.ItemExists(item.Id, clientRevisionForItem) &&
-                   sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
+            // [this comment might have been made due to TFS2008 ID-based QueryItems() NOT
+            // bailing out on a deleted item whereas path-based QueryItems() does return NULL.
+            // See comments in inner layers]
+
+            // Old implementation did up to *two* Exists() checks with all their associated
+            // web service request overhead - however this should not be necessary,
+            // since one should be able to gather list of items and then compare both name and id
+            // for those items. Note that this quite likely also means that the old query method
+            // was NOT *atomic*, i.e. it could happen that both
+            // "item id existed" check succeeded
+            // and "required name existed" check succeeded
+            // since *another*(!!) item with the required name happens to exist,
+            // i.e. a status that would completely flunk the "ensure that item was not renamed" requirement.
+
+            // Implement the new check method as an *additional* method,
+            // with old vs. new result randomly compared and an exception thrown
+            // in case a result mismatch happened to occur.
+            bool wantNewQuery = true;
+            bool wantOldQuery = false;
+
+            if (!wantOldQuery)
+            {
+                int doVerificationPercentage = 5;
+                wantOldQuery = debugRandomActivator.YieldTrueOnPercentageOfCalls(doVerificationPercentage);
+            }
+
+            bool isProperItem_NewQuery = false;
+            bool isProperItem_OldQuery = false;
+
+            if (wantNewQuery)
+            {
+                // FIXME: not sure whether we need property storage item results here.
+                // However it might be that this is the only way that
+                // property-only changes can be signalled,
+                // and that ItemExists() does or does not return such items...
+                isProperItem_NewQuery = sourceControlProvider.ItemExists(item.Id, item.Name, clientRevisionForItem);
+            }
+            if (wantOldQuery)
+            {
+                bool existsItem_id = sourceControlProvider.ItemExists(item.Id, clientRevisionForItem);
+                if (existsItem_id)
+                {
+                    bool existsItem_name = sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
+                    isProperItem_OldQuery = existsItem_name;
+                }
+            }
+
+            bool isComparisonPossible = (wantNewQuery && wantOldQuery);
+            if (isComparisonPossible)
+            {
+                bool isMatch = (isProperItem_NewQuery == isProperItem_OldQuery);
+                if (!(isMatch))
+                {
+                    ReportErrorQueryResultMismatch(
+                        item,
+                        clientRevisionForItem,
+                        isProperItem_NewQuery,
+                        isProperItem_OldQuery);
+                }
+            }
+
+            bool exists = wantNewQuery ? isProperItem_NewQuery : isProperItem_OldQuery;
+
+            return exists;
+        }
+
+        private static bool ReportErrorQueryResultMismatch(ItemMetaData item, int clientRevisionForItem, bool result_NewQuery, bool result_OldQuery)
+        {
+            // If this error happens, then you should determine
+            // why the server's changeset content (item id, item name) caused these results.
+            throw new InvalidOperationException(
+                String.Format("MISMATCH of new vs. old algorithm, for item with id {0} and name {1}, at {2}: {3} vs. {4}!",
+                    item.Id,
+                    item.Name,
+                    clientRevisionForItem,
+                    result_NewQuery,
+                    result_OldQuery)
+            );
         }
 
 		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData item,
