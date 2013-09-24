@@ -507,9 +507,10 @@ namespace SvnBridge.SourceControl
             int maxCount,
             bool sortAscending)
         {
+            List<SourceItemHistory> histories;
+
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
             Changeset[] changesets;
-            List<SourceItemHistory> histories;
             try
             {
                 changesets = Service_QueryHistory(
