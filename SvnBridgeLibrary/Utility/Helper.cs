@@ -401,9 +401,10 @@ namespace SvnBridge.Utility
             MD5 md5 = MD5.Create();
             int num;
             byte[] buffer = new byte[0x1000];
+            int bufLen = buffer.Length;
             do
             {
-                num = data.Read(buffer, 0, buffer.Length);
+                num = data.Read(buffer, 0, bufLen);
                 if (num > 0)
                 {
                     md5.TransformBlock(buffer, 0, num, null, 0);
@@ -456,7 +457,8 @@ namespace SvnBridge.Utility
 				return value;
 			}
 
-			for (int i = 0; i < decoded.Length; i++)
+            int decodedLen = decoded.Length;
+			for (int i = 0; i < decodedLen; i++)
 			{
 				if (capitalize && !(decoded[i].Equals("&")))
 				{

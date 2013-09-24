@@ -33,9 +33,10 @@ namespace SvnBridge.Utility
                 foreach (SvnDiffWindow diff in diffs)
                 {
                     byte[] newData = SvnDiffEngine.ApplySvnDiff(diff, sourceData, sourceDataStartIndex);
-                    sourceDataStartIndex += newData.Length;
-                    Array.Resize(ref fileData, fileData.Length + newData.Length);
-                    Array.Copy(newData, 0, fileData, fileData.Length - newData.Length, newData.Length);
+                    int newDataLen = newData.Length;
+                    sourceDataStartIndex += newDataLen;
+                    Array.Resize(ref fileData, fileData.Length + newDataLen);
+                    Array.Copy(newData, 0, fileData, fileData.Length - newDataLen, newDataLen);
                 }
             }
             return fileData;
@@ -61,9 +62,10 @@ namespace SvnBridge.Utility
             {
                 SvnDiffEngine.WriteSvnDiffSignature(svnDiffWriter);
                 int index = 0;
+                int dataLen = data.Length;
                 for (; ; )
                 {
-                    int length = data.Length - index;
+                    int length = dataLen - index;
                     bool haveFurtherData = (0 < length);
                     if (!(haveFurtherData))
                     {
