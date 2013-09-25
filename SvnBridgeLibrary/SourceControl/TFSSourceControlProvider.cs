@@ -1508,8 +1508,7 @@ namespace SvnBridge.SourceControl
                 {
                     var itemsBranched = branchedItems.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray();
 
-                    ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
-                    branchChangeset.cs = history.ChangeSetID;
+                    ChangesetVersionSpec branchChangeset = VersionSpec.FromChangeset(history.ChangeSetID);
                     BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, itemsBranched, branchChangeset);
 
                     // NOTE performance/efficiency/scaling issue:
