@@ -9,7 +9,7 @@ namespace SvnBridge.Infrastructure
     /// We work around that problem by escaping the colon to __COLON__ and unescaping it when we write back
     /// to the client.
     /// </summary>
-    public class BrokenXml
+    public static class BrokenXml
     {
         static readonly Regex findDuplicateNamespacesInTagStart = new Regex(@"<\s*([\w\d]+):([\w\d]+):([\w\d]+)\s*>", RegexOptions.Compiled);
 		static readonly Regex findDuplicateNamespacesInTag = new Regex(@"<\s*([\w\d]+):([\w\d]+):([\w\d]+)\s*/>", RegexOptions.Compiled);
