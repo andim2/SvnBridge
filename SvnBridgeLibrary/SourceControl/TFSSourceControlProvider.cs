@@ -496,13 +496,10 @@ namespace SvnBridge.SourceControl
             List<SourceItemHistory> histories;
             try
             {
-                changesets = sourceControlService.QueryHistory(serverUrl, credentials,
-                    null, null,
+                changesets = Service_QueryHistory(
                     itemSpec, itemVersion,
-                    null,
                     VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo),
                     maxCount,
-                    true, false, false,
                     sortAscending);
             }
             catch (SoapException ex)
@@ -557,13 +554,10 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
-                    changesets = sourceControlService.QueryHistory(serverUrl, credentials,
-                        null, null,
+                    changesets = Service_QueryHistory(
                         itemSpec, itemVersion,
-                        null,
                         VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound),
                         maxCount,
-                        true, false, false,
                         sortAscending);
                     changesetsTotal.AddRange(changesets);
                     logItemsCount_ThisRun = changesets.Count();
@@ -573,6 +567,26 @@ namespace SvnBridge.SourceControl
             histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray());
 
             return new LogItem(null, serverPath, histories.ToArray());
+        }
+
+        private Changeset[] Service_QueryHistory(
+            ItemSpec itemSpec, VersionSpec itemVersion,
+            VersionSpec versionSpecFrom, VersionSpec versionSpecTo,
+            int maxCount,
+            bool sortAscending)
+        {
+            Changeset[] changesets;
+
+            changesets = sourceControlService.QueryHistory(serverUrl, credentials,
+                null, null,
+                itemSpec, itemVersion,
+                null,
+                versionSpecFrom, versionSpecTo,
+                maxCount,
+                true, false, false,
+                sortAscending);
+
+            return changesets;
         }
 
         public virtual bool IsDirectory(int version, string path)
@@ -821,13 +835,11 @@ namespace SvnBridge.SourceControl
             try
             {
                 ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full);
-                Changeset[] changesets = sourceControlService.QueryHistory(serverUrl, credentials,
-                    null, null,
+                Changeset[] changesets = Service_QueryHistory(
                     itemSpec, VersionSpec.Latest,
-                    null,
                     VersionSpec.First, VersionSpec.FromDate(date),
                     1,
-                    true, false, false, false);
+                    false);
 
                 // If no results then date is before project existed
                 if (changesets.Length == 0)
