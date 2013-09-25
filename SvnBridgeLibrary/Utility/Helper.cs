@@ -201,10 +201,12 @@ namespace SvnBridge.Utility
 
 		public static T DeserializeXml<T>(Stream requestStream)
 		{
-			using (XmlReader reader = XmlReader.Create(requestStream, InitializeNewXmlReaderSettings()))
-			{
-				return DeserializeXml<T>(reader);
-			}
+            // This XmlReader impl, as opposed to all others,
+            // had a "using" statement, however I really don't think that this is needed here,
+            // since there shouldn't be any unmanaged resources involved
+            // and it's configured to NOT close the underlying stream anyway (InitializeNewXmlReaderSettings()).
+			XmlReader reader = XmlReader.Create(requestStream, InitializeNewXmlReaderSettings());
+			return DeserializeXml<T>(reader);
 		}
 
 		public static byte[] SerializeXml<T>(T request)
