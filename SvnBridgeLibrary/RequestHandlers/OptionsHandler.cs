@@ -25,15 +25,22 @@ namespace SvnBridge.Handlers
             response.AppendHeader("Allow", "OPTIONS,GET,HEAD,POST,DELETE,TRACE,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,CHECKOUT");
             sourceControlProvider.ItemExists(Helper.Decode(requestPath)); // Verify permissions to access
 
-            OptionsData data = null;
             if (request.InputStream.Length != 0)
             {
                 using (XmlReader reader = XmlReader.Create(request.InputStream, Helper.InitializeNewXmlReaderSettings()))
                 {
                     reader.MoveToContent();
-                    data = Helper.DeserializeXml<OptionsData>(reader);
+                    OptionsData data = Helper.DeserializeXml<OptionsData>(reader);
+
+                    if (data != null)
+                    {
+                        SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
+                        using (StreamWriter output = CreateStreamWriter(response.OutputStream))
+                        {
+                            Options(data, requestPath, output);
+                        }
+                    }
                 }
-                SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
             }
             else
             {
@@ -42,21 +49,13 @@ namespace SvnBridge.Handlers
                 else
                     SetResponseSettings(response, "text/plain", Encoding.UTF8, 200);
             }
-
-            if (data != null)
-            {
-                Options(sourceControlProvider, requestPath, response.OutputStream);
-            }
         }
 
-        private void Options(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream outputStream)
+        private void Options(OptionsData data, string requestPath, StreamWriter output)
         {
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
-                output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-                output.Write("<D:options-response xmlns:D=\"DAV:\">\n");
-                output.Write("<D:activity-collection-set><D:href>" + GetLocalPath( "/!svn/act/")+ "</D:href></D:activity-collection-set></D:options-response>\n");
-            }
+            output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+            output.Write("<D:options-response xmlns:D=\"DAV:\">\n");
+            output.Write("<D:activity-collection-set><D:href>" + GetLocalPath( "/!svn/act/") + "</D:href></D:activity-collection-set></D:options-response>\n");
         }
     }
 }
