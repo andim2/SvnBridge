@@ -11,6 +11,7 @@ namespace SvnBridge.Cache
     {
         // http://stackoverflow.com/questions/8092448/should-i-use-httpruntime-cache
         private readonly System.Web.Caching.Cache cache = HttpRuntime.Cache;
+        private readonly TimeSpan slidingExpiration = TimeSpan.FromHours(2);
 
         public virtual CachedResult Get(string key)
         {
@@ -23,7 +24,7 @@ namespace SvnBridge.Cache
                 new CachedResult(obj), 
                 null, 
                 System.Web.Caching.Cache.NoAbsoluteExpiration,
-                TimeSpan.FromHours(2), 
+                slidingExpiration,
                 CacheItemPriority.Default, 
                 null);
         }
