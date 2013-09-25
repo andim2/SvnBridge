@@ -114,15 +114,16 @@ namespace SvnBridge.Handlers
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "update-report")
                     {
-                        data = Helper.DeserializeXml<UpdateReportData>(reader);
+                        UpdateReportData data_UpdateReport = Helper.DeserializeXml<UpdateReportData>(reader);
+                        data = data_UpdateReport;
                         int targetRevision;
-                        FolderMetaData update = GetMetadataForUpdate(request, (UpdateReportData)data, sourceControlProvider, out targetRevision);
-                        if (update != null)
+                        FolderMetaData update = GetMetadataForUpdate(request, data_UpdateReport, sourceControlProvider, out targetRevision);
+                        if (null != update)
                         {
                             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                             using (var output = CreateStreamWriter(response.OutputStream))
                             {
-                                UpdateReport(sourceControlProvider, (UpdateReportData)data, output, update, targetRevision);
+                                UpdateReport(sourceControlProvider, data_UpdateReport, output, update, targetRevision);
                             }
                         }
                         else
@@ -138,37 +139,41 @@ namespace SvnBridge.Handlers
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "log-report")
                     {
-                        data = Helper.DeserializeXml<LogReportData>(reader);
+                        LogReportData data_LogReport = Helper.DeserializeXml<LogReportData>(reader);
+                        data = data_LogReport;
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.BufferOutput = false;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
-                            LogReport(sourceControlProvider, (LogReportData)data, requestPath, output);
+                            LogReport(sourceControlProvider, data_LogReport, requestPath, output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "get-locations")
                     {
-                        data = Helper.DeserializeXml<GetLocationsReportData>(reader);
+                        GetLocationsReportData data_GetLocationsReport = Helper.DeserializeXml<GetLocationsReportData>(reader);
+                        data = data_GetLocationsReport;
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
-                            GetLocationsReport(sourceControlProvider, (GetLocationsReportData)data, requestPath, output);
+                            GetLocationsReport(sourceControlProvider, data_GetLocationsReport, requestPath, output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "dated-rev-report")
                     {
-                        data = Helper.DeserializeXml<DatedRevReportData>(reader);
+                        DatedRevReportData data_DatedRevReport = Helper.DeserializeXml<DatedRevReportData>(reader);
+                        data = data_DatedRevReport;
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
-                            GetDatedRevReport(sourceControlProvider, (DatedRevReportData)data, output);
+                            GetDatedRevReport(sourceControlProvider, data_DatedRevReport, output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "file-revs-report")
                     {
-                        data = Helper.DeserializeXml<FileRevsReportData>(reader);
+                        FileRevsReportData data_FileRevsReport = Helper.DeserializeXml<FileRevsReportData>(reader);
+                        data = data_FileRevsReport;
                         string serverPath = GetServerSidePath(requestPath);
-                        SendBlameResponse(request, response, sourceControlProvider, serverPath, (FileRevsReportData)data);
+                        SendBlameResponse(request, response, sourceControlProvider, serverPath, data_FileRevsReport);
                         return;
                     }
                     else
