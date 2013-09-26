@@ -58,7 +58,7 @@ namespace UnitTests
 
             loader.Cancel();
 
-            Thread.Sleep(1000);
+            Thread.Sleep(1100); // slightly longer than current longest manual delay of worker thread
 
             Assert.Equal(ThreadState.Stopped, loadingThread.ThreadState);
         }
