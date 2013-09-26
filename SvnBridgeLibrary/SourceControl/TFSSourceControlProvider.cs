@@ -521,7 +521,8 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        LogItem result = GetLogItem(log.History[0].Changes[0].Item.RemoteName, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue, sortAscending);
+                        string itemFirstPath = log.History[0].Changes[0].Item.RemoteName; // debug helper
+                        LogItem result = GetLogItem(itemFirstPath, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue, sortAscending);
                         histories = new List<SourceItemHistory>(result.History);
                     }
 
