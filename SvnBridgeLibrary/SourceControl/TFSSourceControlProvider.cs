@@ -2483,11 +2483,12 @@ namespace SvnBridge.SourceControl
                             string path = copy.TargetPath + copyAction.Path.Substring(copy.Path.Length);
                             for (int i = activity.DeletedItems.Count - 1; i >= 0; i--)
                             {
-                                if (activity.DeletedItems[i] == path)
+                                string activityDeletedItem_Current = activity.DeletedItems[i];
+                                if (activityDeletedItem_Current == path)
                                 {
                                     copyIsRename = true;
 
-                                    string pathDeletedFull = MakeTfsPath(activity.DeletedItems[i]);
+                                    string pathDeletedFull = MakeTfsPath(activityDeletedItem_Current);
                                     UndoPendingRequests(activityId, activity, pathDeletedFull);
 
                                     activity.DeletedItems.RemoveAt(i);
@@ -2504,12 +2505,13 @@ namespace SvnBridge.SourceControl
                 {
                     for (int i = activity.DeletedItems.Count - 1; i >= 0; i--)
                     {
-                        if (copyAction.Path.StartsWith(activity.DeletedItems[i] + "/"))
+                        string activityDeletedItem_Current = activity.DeletedItems[i];
+                        if (copyAction.Path.StartsWith(activityDeletedItem_Current + "/"))
                         {
                             copyIsRename = true;
-                            activity.PostCommitDeletedItems.Add(activity.DeletedItems[i]);
+                            activity.PostCommitDeletedItems.Add(activityDeletedItem_Current);
 
-                            string pathDeletedFull = MakeTfsPath(activity.DeletedItems[i]);
+                            string pathDeletedFull = MakeTfsPath(activityDeletedItem_Current);
                             UndoPendingRequests(activityId, activity, pathDeletedFull);
 
                             activity.DeletedItems.RemoveAt(i);
