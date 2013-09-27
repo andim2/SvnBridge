@@ -668,7 +668,8 @@ namespace SvnBridge.SourceControl
                     // but I'm unsure: I wonder whether
                     // having rename actions/items processed in strict incrementing order
                     // is actually *required* (since they might be inter-dependent).
-                    for (var i = 0; i < renamedItems.Count; i++)
+                    var numRenamedItems = renamedItems.Count;
+                    for (var i = 0; i < numRenamedItems; i++)
                     {
                         if (oldItems[i] != null)
                             oldItemsById[renamedItems[i].ItemId] = oldItems[i];
