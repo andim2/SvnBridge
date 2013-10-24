@@ -26,8 +26,9 @@ namespace SvnBridge.SourceControl
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]
     public class TFSSourceControlProvider : MarshalByRefObject
     {
-        private static readonly Regex associatedWorkItems =
-            new Regex(@"Work ?Items?: (.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex s_associatedWorkItems = new Regex(@"(?:(?:(?:fixe?|close|resolve)(?:s|d)?)|(?:Work ?Items?))(?: |:|: )(#?\d+(?:, ?#?\d+)*)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
+        private const char c_workItemChar = '#';
 
         private readonly string rootPath;
         private readonly string serverUrl;
@@ -615,31 +616,41 @@ namespace SvnBridge.SourceControl
 
         public virtual void AssociateWorkItemsWithChangeSet(string comment, int changesetId)
         {
-            MatchCollection matches = associatedWorkItems.Matches(comment ?? "");
+            MatchCollection matches = s_associatedWorkItems.Matches(comment ?? string.Empty);
             foreach (Match match in matches)
             {
                 Group group = match.Groups[1];
                 string[] workItemIds = group.Value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string workItemId in workItemIds)
+                for (int i = 0; i < workItemIds.Length; i++)
                 {
-                    int id;
-                    if (int.TryParse(workItemId, out id) == false)
+                    string workItemId = workItemIds[i].Trim();
+
+                    if (!string.IsNullOrEmpty(workItemId))
                     {
-                        continue;
-                    }
-                    try
-                    {
-                        workItemModifier.Associate(id, changesetId);
-                        workItemModifier.SetWorkItemFixed(id, changesetId);
-                    }
-                    catch (Exception e)
-                    {
-                        // we can't really raise an error here, because 
-                        // we would fail the commit from the client side, while the changes
-                        // were already committed to the source control provider.
-                        // since we consider associating with work items nice but not essential,
-                        // we will log the error and ignore it.
-                        logger.Error("Failed to associate work item with changeset", e);
+                        if (workItemId[0] == c_workItemChar)
+                        {
+                            workItemId = workItemId.Remove(0, 1);
+                        }
+
+                        int id;
+                        if (int.TryParse(workItemId, out id) == false)
+                        {
+                            continue;
+                        }
+                        try
+                        {
+                            workItemModifier.Associate(id, changesetId);
+                            workItemModifier.SetWorkItemFixed(id, changesetId);
+                        }
+                        catch (Exception e)
+                        {
+                            // we can't really raise an error here, because
+                            // we would fail the commit from the client side, while the changes
+                            // were already committed to the source control provider.
+                            // since we consider associating with work items nice but not essential,
+                            // we will log the error and ignore it.
+                            logger.Error("Failed to associate work item with changeset", e);
+                        }
                     }
                 }
             }
