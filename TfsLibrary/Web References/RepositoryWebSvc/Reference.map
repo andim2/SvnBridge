@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DiscoveryClientResultsFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Results>
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.ContractReference" url="http://tfs.yourserver.com:8080/tfs/_tfs_resources/VersionControl/v1.0/Repository.asmx?wsdl" filename="Repository.wsdl" />
+    <DiscoveryClientResult referenceType="System.Web.Services.Discovery.DiscoveryDocumentReference" url="http://tfs.yourserver.com:8080/tfs/_tfs_resources/VersionControl/v1.0/Repository.asmx?disco" filename="Repository.disco" />
+  </Results>
+</DiscoveryClientResultsFile>

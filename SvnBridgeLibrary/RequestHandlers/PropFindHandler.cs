@@ -29,6 +29,9 @@ namespace SvnBridge.Handlers
                 string depthHeader = request.Headers["Depth"];
                 string labelHeader = request.Headers["Label"];
 
+                if (String.IsNullOrEmpty(depthHeader))
+                    depthHeader = "0";
+
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
                 if (request.Headers["Label"] != null)
@@ -98,23 +101,13 @@ namespace SvnBridge.Handlers
                                                     int? version,
                                                     bool loadPropertiesFromFile)
         {
-            if (depth == "0")
-            {
-                FolderMetaData folderInfo = new FolderMetaData();
-                ItemMetaData item =
-                    GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, Recursion.None, loadPropertiesFromFile);
-                folderInfo.Items.Add(item);
-                return folderInfo;
-            }
-            else if (depth == "1")
-            {
-                return
-                    (FolderMetaData)GetItems(sourceControlProvider, version.Value, path, Recursion.OneLevel, loadPropertiesFromFile);
-            }
-            else
-            {
-                throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
-            }
+            if (depth == "1")
+                return (FolderMetaData)GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, Recursion.OneLevel, loadPropertiesFromFile);
+
+            FolderMetaData folderInfo = new FolderMetaData();
+            ItemMetaData item = GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, depth == "0" ? Recursion.None : Recursion.Full, loadPropertiesFromFile);
+            folderInfo.Items.Add(item);
+            return folderInfo;
         }
 
         private static ItemMetaData GetItems(TFSSourceControlProvider sourceControlProvider,
@@ -343,12 +336,15 @@ namespace SvnBridge.Handlers
             if (setTrunkAsName)
                 folderInfo.Name = "trunk";
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            //using (StreamWriter writer = new StreamWriter(outputStream))
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+
+            //using (StreamWriter writer = new StreamWriter(ms))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
                 WriteMultiStatusStart(writer, data.Properties);
-
 
                 if (depthHeader == "1")
                 {
@@ -366,6 +362,24 @@ namespace SvnBridge.Handlers
 
                 writer.Write("</D:multistatus>\n");
             }
+
+            string propdesc = "";
+            foreach (XmlElement prop in data.Properties)
+            {
+                propdesc += prop.LocalName + ":";
+            }
+            ReportHandler.WriteLog(path + ":" + propdesc);
+
+            writer.Flush();
+            ms.Seek(0, SeekOrigin.Begin);
+            var bytes = ms.ToArray();
+            writer.Dispose();
+
+            FileStream file = new FileStream("F:\\svnbridge\\Logs\\" + DateTime.Now.ToString("HH_mm_ss_ffff") + ".txt", FileMode.Create, System.IO.FileAccess.Write);
+            file.Write(bytes, 0, bytes.Length);
+            file.Close();
+
+            outputStream.Write(bytes, 0, bytes.Length);
         }
 
         private void WritePathResponse(TFSSourceControlProvider sourceControlProvider,

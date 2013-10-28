@@ -13,6 +13,7 @@ namespace SvnBridge
         {
             ServicePointManager.DefaultConnectionLimit = 5000;
             TfsUtil.OnSetupWebRequest = WebRequestSetup.OnWebRequest;
+
             Container.Register(typeof(IRegistrationService), typeof(RegistrationService));
             Container.Register(typeof(IWebTransferService), typeof(WebTransferService));
             Container.Register(typeof(IRegistrationWebSvcFactory), typeof(RegistrationWebSvcFactory));

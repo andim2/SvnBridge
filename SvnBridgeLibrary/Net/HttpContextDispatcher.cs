@@ -52,9 +52,7 @@ namespace SvnBridge.Net
                 case "report":
                     return new ReportHandler();
                 case "get":
-                    return new GetHandler(false);
-                case "head":
-                    return new GetHandler(true);
+                    return new GetHandler();
                 default:
                     return null;
             }

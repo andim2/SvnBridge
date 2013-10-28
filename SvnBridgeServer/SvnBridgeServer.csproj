@@ -52,10 +52,6 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CodePlex.TfsLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\CodePlex.TfsLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -76,6 +72,10 @@
     <ProjectReference Include="..\SvnBridgeLibrary\SvnBridge.Library.csproj">
       <Project>{95E4E16B-0975-4705-B3A0-83700DE483C2}</Project>
       <Name>SvnBridge.Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TfsLibrary\TfsLibrary.csproj">
+      <Project>{cbcd3eef-6492-4089-937b-8068e2b81a7d}</Project>
+      <Name>TfsLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
