@@ -28,7 +28,7 @@ namespace SvnBridge.Infrastructure
             this.credentials = credentials;
         }
 
-		public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
+        public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
 		{
 			return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision);
 		}
