@@ -54,7 +54,7 @@ namespace SvnBridge.PathParsing
                 foreach (string server in servers)
                 {
                     ICredentials credentialsForServer = CredentialsHelper.GetCredentialsForServer(server, credentials);
-                    SourceItem[] items = sourceControlService.QueryItems(server, credentialsForServer, Constants.ServerRootPath + projectName, RecursionType.None, VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false, 0);
+                    SourceItem[] items = sourceControlService.QueryItems(server, credentialsForServer, Constants.ServerRootPath + projectName, RecursionType.None, VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder);
 
                     if (items != null && items.Length > 0)
                     {

@@ -1,0 +1,56 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<UsingTask AssemblyFile="References\xunit.runner.msbuild.dll" TaskName="Xunit.Runner.MSBuild.xunit"/>
+
+	<!-- Settings -->
+
+	<PropertyGroup>
+		<BuildType>Debug</BuildType>
+		<Revision>$(build_number)</Revision>
+	</PropertyGroup>
+
+	<!-- CruiseControl targets -->
+
+	<Target Name="Cruise" DependsOnTargets="Clean;Test;Zip" />
+
+	<!-- Meta-targets -->
+
+	<Target Name="Test" DependsOnTargets="UnitTest;ProtocolTest;IntegrationTest;EndToEndTest" />
+
+	<Target Name="Zip" DependsOnTargets="Merge">
+		<Exec Command="$(ToolsPath)\zip.exe -9 -q -j $(ZipStoragePath)\SvnBridge-build-$(Revision).zip Merge\SvnBridge.exe Merge\SvnBridgeServer.dll"/>
+	</Target>
+
+	<Target Name="Merge" DependsOnTargets="Build">
+		<MakeDir Directories="Merge"/>
+		<Exec Command="&quot;$(ProgramFiles)\Microsoft\ILMerge\ilmerge.exe&quot; /out:Merge\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.exe SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
+		<Exec Command="&quot;$(ProgramFiles)\Microsoft\ILMerge\ilmerge.exe&quot; /out:Merge\SvnBridgeServer.dll SvnBridgeServer\bin\$(BuildType)\SvnBridgeServer.dll SvnBridge\bin\$(BuildType)\SvnBridge.Library.dll SvnBridge\bin\$(BuildType)\CodePlex.TfsLibrary.dll"/>
+	</Target>
+
+	<!-- Individiual targets -->
+
+	<Target Name="Clean">
+		<MSBuild Projects="SvnBridge-Build.sln" Targets="Clean" Properties="Configuration=$(BuildType)"/>
+	</Target>
+
+	<Target Name="Build">
+		<MSBuild Projects="SvnBridge-Build.sln" Targets="Build" Properties="Configuration=$(BuildType)"/>
+	</Target>
+
+	<Target Name="UnitTest" DependsOnTargets="Build">
+		<xunit Assembly="Tests\bin\$(BuildType)\Tests.dll" Xml="TestsUnit.results.xml"/>
+	</Target>
+
+	<Target Name="ProtocolTest" DependsOnTargets="Build">
+		<xunit Assembly="TestsProtocol\bin\$(BuildType)\TestsProtocol.dll" Xml="TestsProtocol.results.xml"/>
+	</Target>
+
+	<Target Name="EndToEndTest" DependsOnTargets="Build">
+		<xunit Assembly="TestsEndToEnd\bin\$(BuildType)\TestsEndToEnd.dll" Xml="TestsEndToEnd.results.xml"/>
+	</Target>
+	
+	<Target Name="IntegrationTest" DependsOnTargets="Build">
+		<xunit Assembly="TestsIntegration\bin\$(BuildType)\TestsIntegration.dll" Xml="TestsIntegration.results.xml"/>
+	</Target>
+
+</Project>

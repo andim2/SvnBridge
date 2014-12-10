@@ -20,15 +20,6 @@ namespace SvnBridge.Handlers
     {
         protected AsyncItemLoader loader;
 
-        public static void WriteLog(string logMessage)
-        {
-            using (StreamWriter w = File.AppendText("F:\\svnbridge\\Logs\\david.txt"))
-            {
-                w.WriteLine("{0}", logMessage);
-                w.WriteLine("-------------------------------");
-            }
-        }
-
         protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
@@ -462,7 +453,12 @@ namespace SvnBridge.Handlers
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);
-            LogItem logItem = sourceControlProvider.GetLog(serverPath, Math.Min(start, end), Math.Max(start, end), Recursion.Full, int.Parse(logreport.Limit ?? "1000000"), (start < end));
+            LogItem logItem = sourceControlProvider.GetLog(serverPath, Math.Min(start, end), Math.Max(start, end), Recursion.Full, int.Parse(logreport.Limit ?? "1000000"));
+
+            if (start < end)
+            {
+                Array.Reverse(logItem.History);
+            }
 
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");

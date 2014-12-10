@@ -28,9 +28,9 @@ namespace SvnBridge.Infrastructure
             this.credentials = credentials;
         }
 
-        public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
+		public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
 		{
-			return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision, 0);
+			return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision);
 		}
 
         public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
@@ -57,7 +57,7 @@ namespace SvnBridge.Infrastructure
                 }
                 itemSpecs.Add(itemspec);
             }
-            ItemSet[] items = sourceControlService.QueryItems(serverUrl, credentials, VersionSpec.FromChangeset(revision), itemSpecs.ToArray(), 0);
+            ItemSet[] items = sourceControlService.QueryItems(serverUrl, credentials, VersionSpec.FromChangeset(revision), itemSpecs.ToArray());
 
             SortedList<string, SourceItem> result = new SortedList<string, SourceItem>();
             foreach (ItemSet itemset in items)

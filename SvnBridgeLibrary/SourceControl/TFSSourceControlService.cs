@@ -25,11 +25,11 @@ namespace SvnBridge.SourceControl
 			this.logger = logger;
 		}
 
-        public override WorkspaceInfo[] GetWorkspaces(string tfsUrl, ICredentials credentials, WorkspaceComputers computers, int permissionsFilter)
+        public override WorkspaceInfo[] GetWorkspaces(string tfsUrl, ICredentials credentials, WorkspaceComputers computers)
         {
             try
             {
-                return base.GetWorkspaces(tfsUrl, credentials, computers, permissionsFilter);
+                return base.GetWorkspaces(tfsUrl, credentials, computers);
             }
             catch (Exception e)
             {
@@ -40,15 +40,13 @@ namespace SvnBridge.SourceControl
             }
         }
 
-		public ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType, int options)
+		public ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType)
 		{
             return WrapWebException<ExtendedItem[][]>(delegate
             {
-                using (Repository webSvc = CreateProxy(tfsUrl, credentials))
-                {
-                    string username = TfsUtil.GetUsername(credentials, tfsUrl);
-                    return webSvc.QueryItemsExtended(workspaceName, username, items, deletedState, itemType, options);
-                }
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                string username = TfsUtil.GetUsername(credentials, tfsUrl);
+                return webSvc.QueryItemsExtended(workspaceName, username, items, deletedState, itemType);
             });
 		}
 
@@ -56,71 +54,70 @@ namespace SvnBridge.SourceControl
 		{
             return WrapWebException<BranchRelative[][]>(delegate
             {
-                using (Repository webSvc = CreateProxy(tfsUrl, credentials))
-                {
-                    string username = TfsUtil.GetUsername(credentials, tfsUrl);
-                    return webSvc.QueryBranches(workspaceName, username, items, version);
-                }
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                string username = TfsUtil.GetUsername(credentials, tfsUrl);
+                return webSvc.QueryBranches(workspaceName, username, items, version);
             });
 		}
 
-		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemIds, int changeSet, int options)
+		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemIds, int changeSet)
 		{
             return WrapWebException<SourceItem>(delegate
             {
-                SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemIds }, changeSet, options);
+                SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemIds }, changeSet);
                 if (items.Length == 0)
                     return null;
                 return items[0];
             });
 		}
 
-        public virtual ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items, int options)
+        public virtual ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items)
         {
             return WrapWebException(delegate
             {
-                using (Repository webSvc = CreateProxy(tfsUrl, credentials))
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                ItemSet[] result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                if (result[0].Items.Length == 0)
                 {
-                    ItemSet[] result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
-                    if (result[0].Items.Length == 0)
+                    // Check if no items returned due to no permissions.
+                    var invalidPath = false;
+
+                    NetworkCredential readAllCredentials = CredentialCache.DefaultNetworkCredentials;
+                    if (!string.IsNullOrEmpty(Configuration.ReadAllUserName))
                     {
-                        // Check if no items returned due to no permissions.
-                        var invalidPath = false;
-
-                        NetworkCredential readAllCredentials = CredentialCache.DefaultNetworkCredentials;
-                        if (!string.IsNullOrEmpty(Configuration.ReadAllUserName))
-                        {
-                            readAllCredentials = new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain);
-                        }
-                        try
-                        {
-                            Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
-                            ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
-                            if (readAllResult[0].Items.Length == 0)
-                                invalidPath = true;
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
-                        }
-
-                        if (!invalidPath)
-                            throw new NetworkAccessDeniedException();
+                        readAllCredentials = new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain);
                     }
-                    return result;
+                    try
+                    {
+                        Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
+                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true);
+                        if (readAllResult[0].Items.Length == 0)
+                            invalidPath = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
+                    }
+
+                    if (!invalidPath)
+                        throw new NetworkAccessDeniedException();
                 }
+                return result;
             });
         }
 
-        public Changeset[] QueryHistory(string tfsUrl, ICredentials credentials, string workspaceName, string workspaceOwner, ItemSpec itemSpec, VersionSpec versionItem, string user, VersionSpec versionFrom, VersionSpec versionTo, int maxCount, bool includeFiles, bool generateDownloadUrls, bool slotMode, bool sortAscending)
+        public Changeset[] QueryHistory(string tfsUrl, ICredentials credentials, string workspaceName, string workspaceOwner, ItemSpec itemSpec, VersionSpec versionItem, string user, VersionSpec versionFrom, VersionSpec versionTo, int maxCount, bool includeFiles, bool generateDownloadUrls, bool slotMode)
         {
             return WrapWebException<Changeset[]>(delegate
             {
-                using (Repository webSvc = CreateProxy(tfsUrl, credentials))
-                {
-                    return webSvc.QueryHistory(workspaceName, workspaceOwner, itemSpec, versionItem, user, versionFrom, versionTo, maxCount, includeFiles, generateDownloadUrls, slotMode, sortAscending);
-                }
+                Repository webSvc = CreateProxy(tfsUrl, credentials);
+                return webSvc.QueryHistory(workspaceName, workspaceOwner, itemSpec, versionItem, user, versionFrom, versionTo, maxCount, includeFiles, generateDownloadUrls, slotMode);
             });
+        }
+
+        private Repository CreateProxy(string tfsUrl, ICredentials credentials)
+        {
+            return (Repository)webSvcFactory.Create(tfsUrl, credentials);
         }
 
         private delegate T WrapWebExceptionDelegate<T>();

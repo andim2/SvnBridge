@@ -96,7 +96,7 @@ namespace SvnBridge.Utility
 				WebRequest request = WebRequest.Create(url + "/Services/v1.0/Registration.asmx");
 				request.Credentials = CredentialCache.DefaultNetworkCredentials;
 				request.Proxy = CreateProxy(proxyInformation);
-				request.Timeout = 60000;
+				request.Timeout = 20000;
 
 				using (WebResponse response = request.GetResponse())
 				{
