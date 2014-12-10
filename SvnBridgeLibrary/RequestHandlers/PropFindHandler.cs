@@ -342,7 +342,6 @@ namespace SvnBridge.Handlers
 
                 WriteMultiStatusStart(writer, data.Properties);
 
-
                 if (depthHeader == "1")
                 {
                     INode node = new BcFileNode(version, folderInfo, sourceControlProvider);
