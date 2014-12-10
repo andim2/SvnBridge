@@ -453,12 +453,7 @@ namespace SvnBridge.Handlers
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);
-            LogItem logItem = sourceControlProvider.GetLog(serverPath, Math.Min(start, end), Math.Max(start, end), Recursion.Full, int.Parse(logreport.Limit ?? "1000000"));
-
-            if (start < end)
-            {
-                Array.Reverse(logItem.History);
-            }
+            LogItem logItem = sourceControlProvider.GetLog(serverPath, Math.Min(start, end), Math.Max(start, end), Recursion.Full, int.Parse(logreport.Limit ?? "1000000"), (start < end));
 
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");

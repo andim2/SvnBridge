@@ -50,7 +50,7 @@ namespace SvnBridge.Infrastructure
 
         public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
     	{
-    		return sourceControlService.QueryItems(serverUrl, credentials, new int[] {itemId}, revision);
+    		return sourceControlService.QueryItems(serverUrl, credentials, new int[] {itemId}, revision, 0);
     	}
 
     	public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
@@ -64,7 +64,7 @@ namespace SvnBridge.Infrastructure
                 {
                     SourceItem[] items = sourceControlService.QueryItems(serverUrl, credentials, serverPath, RecursionType.None,
                                                                          VersionSpec.FromChangeset(revision), DeletedState.NonDeleted,
-                                                                         ItemType.Any);
+                                                                         ItemType.Any, false, 0);
 
                     list = new List<SourceItem>(items);
                     return;
@@ -198,7 +198,9 @@ namespace SvnBridge.Infrastructure
                                                                  RecursionType.Full,
                                                                  VersionSpec.FromChangeset(revision),
                                                                  DeletedState.NonDeleted,
-                                                                 ItemType.Any);
+                                                                 ItemType.Any,
+                                                                 false,
+                                                                 0);
 
             if (items.Length == 1 && items[0].ItemType == ItemType.File)
             {
@@ -210,7 +212,9 @@ namespace SvnBridge.Infrastructure
                                                         RecursionType.Full,
                                                         VersionSpec.FromChangeset(revision),
                                                         DeletedState.NonDeleted,
-                                                        ItemType.Any);
+                                                        ItemType.Any,
+                                                        false,
+                                                        0);
             }
             return items;
         }

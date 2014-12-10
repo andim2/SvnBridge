@@ -221,12 +221,12 @@ namespace SvnBridge.SourceControl
             return (int)RequestCache.Items[latestVersion];
         }
 
-        public virtual LogItem GetLog(string path, int versionFrom, int versionTo, Recursion recursion, int maxCount)
+        public virtual LogItem GetLog(string path, int versionFrom, int versionTo, Recursion recursion, int maxCount, bool sortAscending = false)
         {
-            return GetLog(path, -1, versionFrom, versionTo, recursion, maxCount);
+            return GetLog(path, -1, versionFrom, versionTo, recursion, maxCount, sortAscending);
         }
 
-        public virtual LogItem GetLog(string path, int itemVersion, int versionFrom, int versionTo, Recursion recursion, int maxCount)
+        public virtual LogItem GetLog(string path, int itemVersion, int versionFrom, int versionTo, Recursion recursion, int maxCount, bool sortAscending = false)
         {
             if (path.StartsWith("/"))
             {
@@ -397,7 +397,7 @@ namespace SvnBridge.SourceControl
             List<SourceItemHistory> histories;
             try
             {
-                changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false);
+                changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false, false);
             }
             catch (SoapException ex)
             {
@@ -448,7 +448,7 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
-                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false);
+                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false, false);
                     temp = ConvertChangesetsToSourceItemHistory(changes);
                     histories.AddRange(temp);
                     logItemsCount = temp.Count;
@@ -488,13 +488,13 @@ namespace SvnBridge.SourceControl
 
             sourceControlService.CreateWorkspace(serverUrl, credentials, activityId, Constants.WorkspaceComment);
             string localPath = GetLocalPath(activityId, "");
-            sourceControlService.AddWorkspaceMapping(serverUrl, credentials, activityId, rootPath, localPath);
+            sourceControlService.AddWorkspaceMapping(serverUrl, credentials, activityId, rootPath, localPath, 0);
             ActivityRepository.Create(activityId);
         }
 
         private void ClearExistingTempWorkspaces(bool skipExistingActivities)
         {
-            WorkspaceInfo[] workspaces = sourceControlService.GetWorkspaces(serverUrl, credentials, WorkspaceComputers.ThisComputer);
+            WorkspaceInfo[] workspaces = sourceControlService.GetWorkspaces(serverUrl, credentials, WorkspaceComputers.ThisComputer, 0);
             foreach (WorkspaceInfo workspace in workspaces)
             {
                 if (workspace.Comment != Constants.WorkspaceComment)
@@ -534,7 +534,7 @@ namespace SvnBridge.SourceControl
 
             List<PendRequest> pendRequests = new List<PendRequest>();
             pendRequests.Add(PendRequest.AddFolder(localPath));
-            sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+            sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 activity.MergeList.Add(
@@ -574,7 +574,7 @@ namespace SvnBridge.SourceControl
                 {
                     try
                     {
-                        changesetId = sourceControlService.Commit(serverUrl, credentials, activityId, activity.Comment, commitServerList);
+                        changesetId = sourceControlService.Commit(serverUrl, credentials, activityId, activity.Comment, commitServerList, false, 0);
                     }
                     catch (TfsFailureException)
                     {
@@ -605,7 +605,9 @@ namespace SvnBridge.SourceControl
                                                     credentials,
                                                     activityId,
                                                     activity.Comment,
-                                                    commitServerList);
+                                                    commitServerList,
+                                                    false,
+                                                    0);
                 }
                 AssociateWorkItemsWithChangeSet(activity.Comment, changesetId);
                 response = GenerateMergeResponse(activityId, changesetId);
@@ -683,7 +685,7 @@ namespace SvnBridge.SourceControl
             try
             {
                 ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full);
-                Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.First, VersionSpec.FromDate(date), 1, true, false, false);
+                Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.First, VersionSpec.FromDate(date), 1, true, false, false, false);
 
                 // If no results then date is before project existed
                 if (changes.Length == 0)
@@ -1117,7 +1119,7 @@ namespace SvnBridge.SourceControl
                     }
                 }
 
-                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
                 sourceControlService.UploadFileFromBytes(serverUrl, credentials, activityId, fileData, Helper.CombinePath(rootPath, path));
 
                 if (addToMergeList)
@@ -1290,13 +1292,13 @@ namespace SvnBridge.SourceControl
                 {
                     List<PendRequest> pendRequests = new List<PendRequest>();
                     pendRequests.Add(pendRequest);
-                    sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                    sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
                     UpdateLocalVersion(activityId, item, localTargetPath);
                     if (pendRequestPending != null)
                     {
                         pendRequests = new List<PendRequest>();
                         pendRequests.Add(pendRequestPending);
-                        sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                        sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
                     }
                 }
                 if (copyAction.Rename)
@@ -1384,7 +1386,7 @@ namespace SvnBridge.SourceControl
 
                 List<PendRequest> pendRequests = new List<PendRequest>();
                 pendRequests.Add(PendRequest.Delete(localPath));
-                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests);
+                sourceControlService.PendChanges(serverUrl, credentials, activityId, pendRequests, 0, 0);
 
                 activity.MergeList.Add(new ActivityItem(Helper.CombinePath(rootPath, path), item.ItemType, ActivityItemAction.Deleted));
 
@@ -1502,7 +1504,8 @@ namespace SvnBridge.SourceControl
                                                         activityId,
                                                         new ItemSpec[1] { spec },
                                                         DeletedState.NonDeleted,
-                                                        ItemType.Any);
+                                                        ItemType.Any,
+                                                        0);
             if (items[0].Length == 0)
                 return null;
             ItemMetaData pendingItem = new ItemMetaData();
@@ -1563,7 +1566,7 @@ namespace SvnBridge.SourceControl
             if (renamedItems.All(item => item == null || item.FromItem == null))
             {
                 // fallback for TFS08 and earlier
-                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, items.Select(item => item.ItemId).ToArray(), previousRevision);
+                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, items.Select(item => item.ItemId).ToArray(), previousRevision, 0);
                 return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
             }
 
@@ -1571,7 +1574,7 @@ namespace SvnBridge.SourceControl
             for (var i = 0; i < renamedItems.Count; i++)
             {
                 var previousSourceItemId = (renamedItems[i] != null && renamedItems[i].FromItem != null) ? renamedItems[i].FromItem.ItemId : items[i].ItemId;
-                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, new[] { previousSourceItemId }, previousRevision);
+                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, new[] { previousSourceItemId }, previousRevision, 0);
                 result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
             return result.ToArray();
