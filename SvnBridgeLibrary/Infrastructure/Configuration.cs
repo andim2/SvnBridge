@@ -33,7 +33,7 @@ namespace SvnBridge.Infrastructure
             ReadAllUserPassword,
             CodePlexAnonUserDomain,
             CodePlexAnonUserName,
-            CodePlexAnonUserPassword
+            CodePlexAnonUserPassword,
         }
         private static readonly string userConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\SvnBridge\3.0");
 
