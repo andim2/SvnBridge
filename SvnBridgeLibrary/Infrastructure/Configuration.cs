@@ -24,6 +24,7 @@ namespace SvnBridge.Infrastructure
             ProxyUsername,
             TfsPort,
             TfsUrl,
+            TfsTimeout,
             TfsProxyUrl,
             TraceEnabled,
             UseCodePlexServers,
@@ -107,6 +108,11 @@ namespace SvnBridge.Infrastructure
         public static string TfsUrl
         {
             get { return ReadConfig<string>(ConfigSettings.TfsUrl, null); }
+        }
+
+        public static int TfsTimeout
+        {
+            get { return ReadConfig<int>(ConfigSettings.TfsTimeout, 900000); }
         }
 
         public static bool TraceEnabled
@@ -216,6 +222,7 @@ namespace SvnBridge.Infrastructure
             if (name == ConfigSettings.TfsUrl.ToString().ToLower()) return TfsUrl;
             if (name == ConfigSettings.DomainIncludesProjectName.ToString().ToLower()) return DomainIncludesProjectName;
             if (name == ConfigSettings.UseCodePlexServers.ToString().ToLower()) return UseCodePlexServers;
+            if (name == ConfigSettings.TfsTimeout.ToString().ToLower()) return TfsTimeout;
             return null;
         }
 
