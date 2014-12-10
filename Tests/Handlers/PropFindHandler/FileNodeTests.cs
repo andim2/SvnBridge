@@ -21,7 +21,7 @@ namespace UnitTests
             item.Name = "A !@#$%^&()_-+={[}];',~`..txt";
             FileNode node = new FileNode(item, null);
 
-            string result = node.GetProperty(new GetHandler(false), xml.CreateElement("baseline-relative-path"));
+            string result = node.GetProperty(new GetHandler(), xml.CreateElement("baseline-relative-path"));
 
             Assert.Equal(
                 "<lp2:baseline-relative-path>A !@#$%^&amp;()_-+={[}];',~`..txt</lp2:baseline-relative-path>", result);
@@ -38,7 +38,7 @@ namespace UnitTests
             item.Name = "A !@#$%^&()_-+={[}];',~`..txt";
             FileNode node = new FileNode(item, null);
 
-            GetHandler handler = new GetHandler(false);
+        	GetHandler handler = new GetHandler();
 			handler.Initialize(context, new PathParserSingleServerWithProjectInPath(tfsUrl));
             handler.SetSourceControlProvider(sourceControlProvider);
         	string result = node.GetProperty(handler, xml.CreateElement("checked-in"));
@@ -59,7 +59,7 @@ namespace UnitTests
             item.Name = "Test.txt";
             FileNode node = new FileNode(item, null);
 
-            GetHandler handler = new GetHandler(false);
+            GetHandler handler = new GetHandler();
             handler.Initialize(context, new PathParserSingleServerWithProjectInPath(tfsUrl));
             handler.SetSourceControlProvider(sourceControlProvider);
             string result = node.GetProperty(handler, xml.CreateElement("checked-in"));

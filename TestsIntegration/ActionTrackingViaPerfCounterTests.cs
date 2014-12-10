@@ -19,7 +19,7 @@ namespace IntegrationTests
             if (ActionTrackingViaPerfCounter.Enabled == false)
                 return;
             long numberOfGets = actionTracking.GetStatistics()["Get"];
-            actionTracking.Request(new GetHandler(false));
+            actionTracking.Request(new GetHandler());
             Assert.True(numberOfGets < actionTracking.GetStatistics()["Get"]);
         }
 

@@ -14,13 +14,6 @@ namespace SvnBridge.Handlers
 {
 	public class GetHandler : RequestHandlerBase
 	{
-        private bool isHeadOnly = false;
-
-        public GetHandler(bool headOnly)
-        {
-            this.isHeadOnly = headOnly;
-        }
-
 		protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
 		{
 			IHttpRequest request = context.Request;
@@ -102,14 +95,10 @@ namespace SvnBridge.Handlers
             response.AppendHeader("Last-Modified", Helper.FormatDateB(item.LastModifiedDate));
             response.AppendHeader("ETag", "\"" + item.ItemRevision + "//" + Helper.EncodeB(item.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
-
-            if (!this.isHeadOnly)
+            byte[] itemData = sourceControlProvider.ReadFile(item);
+            if (itemData.Length > 0) // Write throw exception if zero bytes
             {
-                byte[] itemData = sourceControlProvider.ReadFile(item);
-                if (itemData.Length > 0) // Write throw exception if zero bytes
-                {
-                    response.OutputStream.Write(itemData, 0, itemData.Length);
-                }
+                response.OutputStream.Write(itemData, 0, itemData.Length);
             }
         }
 
