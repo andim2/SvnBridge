@@ -29,6 +29,9 @@ namespace SvnBridge.Handlers
                 string depthHeader = request.Headers["Depth"];
                 string labelHeader = request.Headers["Label"];
 
+                if (String.IsNullOrEmpty(depthHeader))
+                    depthHeader = "0";
+
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
                 if (request.Headers["Label"] != null)
@@ -98,23 +101,13 @@ namespace SvnBridge.Handlers
                                                     int? version,
                                                     bool loadPropertiesFromFile)
         {
-            if (depth == "0")
-            {
-                FolderMetaData folderInfo = new FolderMetaData();
-                ItemMetaData item =
-                    GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, Recursion.None, loadPropertiesFromFile);
-                folderInfo.Items.Add(item);
-                return folderInfo;
-            }
-            else if (depth == "1")
-            {
-                return
-                    (FolderMetaData)GetItems(sourceControlProvider, version.Value, path, Recursion.OneLevel, loadPropertiesFromFile);
-            }
-            else
-            {
-                throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
-            }
+            if (depth == "1")
+                return (FolderMetaData)GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, Recursion.OneLevel, loadPropertiesFromFile);
+
+            FolderMetaData folderInfo = new FolderMetaData();
+            ItemMetaData item = GetItems(sourceControlProvider, version.HasValue ? version.Value : -1, path, depth == "0" ? Recursion.None : Recursion.Full, loadPropertiesFromFile);
+            folderInfo.Items.Add(item);
+            return folderInfo;
         }
 
         private static ItemMetaData GetItems(TFSSourceControlProvider sourceControlProvider,
