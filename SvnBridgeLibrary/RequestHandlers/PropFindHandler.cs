@@ -336,7 +336,11 @@ namespace SvnBridge.Handlers
             if (setTrunkAsName)
                 folderInfo.Name = "trunk";
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            //using (StreamWriter writer = new StreamWriter(outputStream))
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+
+            //using (StreamWriter writer = new StreamWriter(ms))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
@@ -358,6 +362,24 @@ namespace SvnBridge.Handlers
 
                 writer.Write("</D:multistatus>\n");
             }
+
+            string propdesc = "";
+            foreach (XmlElement prop in data.Properties)
+            {
+                propdesc += prop.LocalName + ":";
+            }
+            ReportHandler.WriteLog(path + ":" + propdesc);
+
+            writer.Flush();
+            ms.Seek(0, SeekOrigin.Begin);
+            var bytes = ms.ToArray();
+            writer.Dispose();
+
+            FileStream file = new FileStream("F:\\svnbridge\\Logs\\" + DateTime.Now.ToString("HH_mm_ss_ffff") + ".txt", FileMode.Create, System.IO.FileAccess.Write);
+            file.Write(bytes, 0, bytes.Length);
+            file.Close();
+
+            outputStream.Write(bytes, 0, bytes.Length);
         }
 
         private void WritePathResponse(TFSSourceControlProvider sourceControlProvider,

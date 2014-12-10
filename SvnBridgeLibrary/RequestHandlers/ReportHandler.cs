@@ -20,6 +20,15 @@ namespace SvnBridge.Handlers
     {
         protected AsyncItemLoader loader;
 
+        public static void WriteLog(string logMessage)
+        {
+            using (StreamWriter w = File.AppendText("F:\\svnbridge\\Logs\\david.txt"))
+            {
+                w.WriteLine("{0}", logMessage);
+                w.WriteLine("-------------------------------");
+            }
+        }
+
         protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
