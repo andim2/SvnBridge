@@ -1,0 +1,396 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CBCD3EEF-6492-4089-937B-8068E2B81A7D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CodePlex.TfsLibrary</RootNamespace>
+    <AssemblyName>CodePlex.TfsLibrary</AssemblyName>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Constants.cs" />
+    <Compile Include="Diff\AddElement.cs" />
+    <Compile Include="Diff\DeleteElement.cs" />
+    <Compile Include="Diff\DiffEngine.cs" />
+    <Compile Include="Diff\IPatchEngine.cs" />
+    <Compile Include="Diff\MergeEngine.cs" />
+    <Compile Include="Diff\PatchEngine.cs" />
+    <Compile Include="Diff\PatchSchema.cs">
+      <DependentUpon>PatchSchema.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Diff\UniversalDiff.cs" />
+    <Compile Include="Diff\UpdateElement.cs" />
+    <Compile Include="Engine\TfsEngineAdd.cs" />
+    <Compile Include="Engine\TfsEngineCheckout.cs" />
+    <Compile Include="Engine\TfsEngineCommit.cs" />
+    <Compile Include="Engine\TfsEngineCredentials.cs" />
+    <Compile Include="Engine\TfsEngineDelete.cs" />
+    <Compile Include="Engine\TfsEngineDiff.cs" />
+    <Compile Include="Engine\TfsEngineList.cs" />
+    <Compile Include="Engine\TfsEngineLog.cs" />
+    <Compile Include="Engine\TfsEngineQueryItems.cs" />
+    <Compile Include="Engine\TfsEngineResolve.cs" />
+    <Compile Include="Engine\TfsEngineRevert.cs" />
+    <Compile Include="Engine\TfsEngineSetupWorkspace.cs" />
+    <Compile Include="Engine\TfsEngineStatus.cs" />
+    <Compile Include="Engine\TfsEngineSyncup.cs" />
+    <Compile Include="Engine\TfsEngineUpdate.cs" />
+    <Compile Include="Exceptions\InvalidTfsDirectoryStructureException.cs" />
+    <Compile Include="IAppConfig.cs" />
+    <Compile Include="ObjectModel\DataObjects\AddSourceItemCallback.cs" />
+    <Compile Include="ObjectModel\DataObjects\BranchItem.cs" />
+    <Compile Include="ObjectModel\DataObjects\EventArgs.cs" />
+    <Compile Include="ObjectModel\DataObjects\DiffCallback.cs" />
+    <Compile Include="ObjectModel\DataObjects\SourceItemChange.cs" />
+    <Compile Include="ObjectModel\DataObjects\SyncupAction.cs" />
+    <Compile Include="ObjectModel\DataObjects\SyncupCallback.cs" />
+    <Compile Include="ObjectModel\DataObjects\UpdateAction.cs" />
+    <Compile Include="ObjectModel\DataObjects\UpdateCallback.cs" />
+    <Compile Include="Engine\IgnoreList.cs" />
+    <Compile Include="Engine\IgnoreListSchema.cs">
+      <DependentUpon>IgnoreListSchema.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Engine\IIgnoreList.cs" />
+    <Compile Include="Engine\State\TfsFolderInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Engine\State\TfsState.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Engine\State\TfsStateEntry.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Engine\State\TfsStateEntryList.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Engine\State\TfsStateException.cs" />
+    <Compile Include="Engine\TfsWorkspace.cs" />
+    <Compile Include="Engine\TfsWorkspaceManager.cs" />
+    <Compile Include="Exceptions\InconsistentTfsStateException.cs" />
+    <Compile Include="Exceptions\MergeConflictException.cs" />
+    <Compile Include="ObjectModel\DataObjects\LogCallback.cs" />
+    <Compile Include="ObjectModel\DataObjects\LogItem.cs" />
+    <Compile Include="ObjectModel\DataObjects\SourceItemHistory.cs" />
+    <Compile Include="ObjectModel\DataObjects\SourceItemResult.cs" />
+    <Compile Include="ObjectModel\DataObjects\WorkspaceComputers.cs" />
+    <Compile Include="ObjectModel\DataObjects\WorkspaceInfo.cs" />
+    <Compile Include="ObjectModel\Util\DownloadBytesAsyncResult.cs" />
+    <Compile Include="ObjectModel\Util\DownloadBytesReadState.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Utility\CompressionType.cs" />
+    <Compile Include="Utility\CompressionUtil.cs" />
+    <Compile Include="Utility\INamedEntry.cs" />
+    <Compile Include="Utility\Pair.cs" />
+    <Compile Include="Utility\XmlSerializedDictionary.cs" />
+    <Compile Include="Utility\CredentialsCacheEntries.cs" />
+    <Compile Include="Utility\CredentialsCacheEntry.cs" />
+    <Compile Include="Utility\XmlSerializationRoot.cs" />
+    <Compile Include="Engine\TfsEngine.cs" />
+    <Compile Include="Engine\ITfsEngine.cs" />
+    <Compile Include="ObjectModel\DataObjects\LocalUpdate.cs" />
+    <Compile Include="ObjectModel\DataObjects\PendRequest.cs" />
+    <Compile Include="ObjectModel\DataObjects\PendRequestType.cs" />
+    <Compile Include="ObjectModel\DataObjects\SourceItem.cs" />
+    <Compile Include="ObjectModel\DataObjects\SourceItemCallback.cs" />
+    <Compile Include="ObjectModel\DataObjects\SourceItemStatus.cs" />
+    <Compile Include="ObjectModel\Services\IRegistrationService.cs" />
+    <Compile Include="ObjectModel\Services\ISourceControlService.cs" />
+    <Compile Include="ObjectModel\Services\RegistrationService.cs" />
+    <Compile Include="ObjectModel\Services\SourceControlService.cs" />
+    <Compile Include="ObjectModel\Util\IWebTransferService.cs" />
+    <Compile Include="ObjectModel\Util\TfsUtil.cs" />
+    <Compile Include="ObjectModel\Util\WebTransferFormData.cs" />
+    <Compile Include="ObjectModel\Util\WebTransferService.cs" />
+    <Compile Include="Utility\CredentialsCache.cs" />
+    <Compile Include="Utility\ICredentialsCache.cs" />
+    <Compile Include="Web References\RegistrationWebSvc\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.map</DependentUpon>
+    </Compile>
+    <Compile Include="WebServices\RepositoryWebSvc\Failure.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\GetOperation.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\GetRequest.cs" />
+    <Compile Include="WebServices\RegistrationWebSvc\IRegistrationWebSvc.cs" />
+    <Compile Include="WebServices\RegistrationWebSvc\IRegistrationWebSvcFactory.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\IRepositoryWebSvc.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\IRepositoryWebSvcFactory.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\Item.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\LocalVersionUpdate.cs" />
+    <Compile Include="WebServices\RegistrationWebSvc\Registration.cs">
+    </Compile>
+    <Compile Include="WebServices\RegistrationWebSvc\RegistrationWebSvcFactory.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\Repository.cs">
+    </Compile>
+    <Compile Include="WebServices\RepositoryWebSvc\RepositoryWebSvcFactory.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\VersionSpec.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\WorkingFolder.cs" />
+    <Compile Include="WebServices\RepositoryWebSvc\Workspace.cs" />
+    <Compile Include="Exceptions\ConflictedCommitException.cs" />
+    <Compile Include="Exceptions\NetworkAccessDeniedException.cs" />
+    <Compile Include="Exceptions\TfsFailureException.cs" />
+    <Compile Include="Utility\FileSystem.cs" />
+    <Compile Include="Utility\IFileSystem.cs" />
+    <Compile Include="Guard.cs" />
+    <Compile Include="Utility\EncryptionUtil.cs" />
+    <Compile Include="Utility\FileUtil.cs" />
+    <Compile Include="Utility\ReflectionUtil.cs" />
+    <Compile Include="Web References\RepositoryWebSvc\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.map</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferences Include="Web References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferenceUrl Include="http://tfs.yourserver.com:8080/tfs/DefaultCollection/Services/v1.0/Registration.asmx">
+      <UrlBehavior>Dynamic</UrlBehavior>
+      <RelPath>Web References\RegistrationWebSvc\</RelPath>
+      <UpdateFromURL>http://tfs.yourserver.com:8080/tfs/DefaultCollection/Services/v1.0/Registration.asmx</UpdateFromURL>
+      <ServiceLocationURL>
+      </ServiceLocationURL>
+      <CachedDynamicPropName>
+      </CachedDynamicPropName>
+      <CachedAppSettingsObjectName>Settings</CachedAppSettingsObjectName>
+      <CachedSettingsPropName>TfsObjectModel_RegistrationWebSvc_Registration</CachedSettingsPropName>
+    </WebReferenceUrl>
+    <WebReferenceUrl Include="http://tfs.yourserver.com:8080/tfs/DefaultCollection/VersionControl/v1.0/Repository.asmx">
+      <UrlBehavior>Dynamic</UrlBehavior>
+      <RelPath>Web References\RepositoryWebSvc\</RelPath>
+      <UpdateFromURL>http://tfs.yourserver.com:8080/tfs/DefaultCollection/VersionControl/v1.0/Repository.asmx</UpdateFromURL>
+      <ServiceLocationURL>
+      </ServiceLocationURL>
+      <CachedDynamicPropName>
+      </CachedDynamicPropName>
+      <CachedAppSettingsObjectName>Settings</CachedAppSettingsObjectName>
+      <CachedSettingsPropName>TfsObjectModel_RepositoryWebSvc_Repository</CachedSettingsPropName>
+    </WebReferenceUrl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Web References\RegistrationWebSvc\FrameworkRegistrationEntry.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RegistrationWebSvc\Reference.map">
+      <Generator>MSDiscoCodeGenerator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <None Include="Web References\RegistrationWebSvc\Registration.disco" />
+    <None Include="Web References\RegistrationWebSvc\Registration.wsdl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Engine\IgnoreListSchema.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Engine\IgnoreListSchema.xsx">
+      <DependentUpon>IgnoreListSchema.xsd</DependentUpon>
+    </None>
+    <None Include="Diff\PatchSchema.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Diff\PatchSchema.xsx">
+      <DependentUpon>PatchSchema.xsd</DependentUpon>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Annotation1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\BranchRelative1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Change.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Changeset1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\ChangesetMerge1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\ChangesetMergeDetails.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\CheckinNoteFieldDefinition1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\CheckinResult1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Conflict1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\ExtendedItem1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Failure1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\FileType1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\GetOperation1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\GlobalSecurity1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Item1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\ItemSecurity1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\ItemSet1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\LabelResult1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\LocalVersion.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\MergeCandidate1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\PendingChange1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\PendingSet1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\PermissionChange1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Reference.map">
+      <Generator>MSDiscoCodeGenerator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\repository.disco" />
+    <None Include="Web References\RepositoryWebSvc\repository.wsdl" />
+    <None Include="Web References\RepositoryWebSvc\RepositoryProperties1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\SecurityChange1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Shelveset1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\VersionControlLabel1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+    <None Include="Web References\RepositoryWebSvc\Workspace1.datasource">
+      <DependentUpon>Reference.map</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
