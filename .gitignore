@@ -5,6 +5,3 @@
 *.user
 *.suo
 *.sln.cache
-Error.log
-Info.log
-TestsUnit.results.xml
