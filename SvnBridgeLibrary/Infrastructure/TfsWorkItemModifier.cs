@@ -26,11 +26,43 @@ namespace SvnBridge.Infrastructure
         private readonly string username;
 
 
+        /// <summary>
+        /// Preferred ctor variant (explicitly supplies a username identifier
+        /// as possibly gathered via precise server session information
+        /// rather than trying to dirtily infer it from credentials object).
+        /// All params (especially "sessionUsername") may be gathered *implicitly*
+        /// via construction-time Container resolving.
+        /// For detailed comments about username requirement,
+        /// see setup side.
+        /// </summary>
+        public TfsWorkItemModifier(string serverUrl, ICredentials credentials, string sessionUserName)
+        {
+            this.serverUrl = serverUrl;
+            this.credentials = CredentialsHelper.GetCredentialsForServer(serverUrl, credentials);
+            this.username = sessionUserName;
+        }
+
+        /// <summary>
+        /// Deprecated ctor variant (does not explicitly supply a username identifier -
+        /// thus need to resort to dirtily-grab-username-from-credentials fallback,
+        /// which will be impossible with properly secure non-plaintext-type credentials).
+        /// </summary>
         public TfsWorkItemModifier(string serverUrl, ICredentials credentials)
         {
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(serverUrl, credentials);
-            this.username = this.credentials.GetCredential(new Uri(serverUrl), "basic").UserName;
+            // HACK: when no auth credentials were provided, we obviously might end up with null credentials,
+            // so avoid gathering username from there (this object currently gets implicitly container-constructed,
+            // so we are currently forced to not having its construction fail,
+            // despite it then most likely not being usable).
+            this.username = TryGrabUsername();
+        }
+
+        private string TryGrabUsername()
+        {
+            //string unknownuser = "anonymous";
+            string unknownuser = "CouldNotDetermineUser";
+            return (null != this.credentials) ? this.credentials.GetCredential(new Uri(serverUrl), "basic").UserName : unknownuser;
         }
 
         static TfsWorkItemModifier()

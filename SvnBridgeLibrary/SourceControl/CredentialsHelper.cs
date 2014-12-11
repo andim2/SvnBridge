@@ -7,8 +7,23 @@ namespace SvnBridge.SourceControl
 {
     public static class CredentialsHelper
     {
-        public static NetworkCredential DefaultCredentials = Helper.GetUnsafeNetworkCredential();
         public static NetworkCredential NullCredentials;
+        // IMPORTANT SECURITY NOTE!! I believe that whatever we do,
+        // we should *never* adopt DefaultNetworkCredentials ("current security context" credentials)
+        // since a network server (such as SvnBridge) session
+        // quite certainly is running in a security context
+        // that's *different*
+        // from the security context of the foreign-side client (SVN),
+        // i.e. it might have implicit elevated privileges that the client user
+        // (which might even be completely unable to supply any valid credentials!)
+        // does not have.
+        // IOW, make damn sure to do all processing
+        // using only those credentials
+        // which are/were always fully gathered (requested!!) from the SVN user side
+        // rather than "implicit" credentials knowledge
+        // of the usually-foreign SvnBridge session environment.
+        //public static NetworkCredential DefaultCredentials = Helper.GetUnsafeNetworkCredential();
+        public static NetworkCredential DefaultCredentials = NullCredentials;
 
         public static ICredentials GetCredentialsForServer(string tfsUrl, ICredentials credentials)
         {
@@ -37,7 +52,7 @@ namespace SvnBridge.SourceControl
                     }
                 }
                 else
-                    credentials = DefaultCredentials;
+                    credentials = NullCredentials;
             }
             return credentials;
         }

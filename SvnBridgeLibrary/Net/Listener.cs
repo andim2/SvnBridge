@@ -71,6 +71,9 @@ namespace SvnBridge.Net
             // on ethernet network interface etc.).
             // Convenient search keywords: interface bind ip port firewall localhost external
             // Note: THIS SETTING MIGHT OBVIOUSLY CONSTITUTE A SECURITY ISSUE!
+            // (and this is especially the case since a NetworkCredential as used by SvnBridge
+            // sometimes might be one of the current possibly more privileged security context
+            // rather than an authentication-enforcing foreign user-side one!)
             // We currently don't offer
             // (and given that this setting is a security issue we likely shouldn't)
             // a setting at the Settings GUI presenter (yet?).

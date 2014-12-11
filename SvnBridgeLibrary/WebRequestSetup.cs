@@ -24,6 +24,9 @@ namespace SvnBridge
 			if (httpWebRequest != null)
 			{
                 httpWebRequest.UnsafeAuthenticatedConnectionSharing = false;
+                // [This .PreAuthenticate optimization flag is relevant only
+                // for non-persistent-connection case i.e. non-HTTP-Keep-Alive]
+                //httpWebRequest.PreAuthenticate = true;
 			}
 		}
 	}

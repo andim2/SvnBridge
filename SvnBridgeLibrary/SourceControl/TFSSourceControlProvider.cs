@@ -1044,8 +1044,11 @@ namespace SvnBridge.SourceControl
         {
             try
             {
+                string username = GetUsername();
                 workItemModifier.Associate(workItemId, changesetId);
                 workItemModifier.SetWorkItemFixed(workItemId, changesetId);
+                DefaultLogger logger = Container.Resolve<DefaultLogger>();
+                logger.Error("Associated changeset (would have used username " + username + " if that was implemented (FIXME)", null);
             }
             catch (Exception e)
             {
@@ -1068,6 +1071,15 @@ namespace SvnBridge.SourceControl
                 //   http://svnbridge.codeplex.com/workitem/12411?ProjectName=svnbridge
                 logger.Error("Failed to associate work item with changeset", e);
             }
+        }
+
+        /// <summary>
+        /// Abstraction helper - somehow knows how to gather the user name
+        /// which happens to be associated with the current session.
+        /// </summary>
+        private string GetUsername()
+        {
+            return TfsUtil.GetUsername(credentials, serverUrl);
         }
 
         public virtual byte[] ReadFile(ItemMetaData item)

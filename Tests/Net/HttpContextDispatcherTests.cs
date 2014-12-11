@@ -14,6 +14,7 @@ using System.IO;
 using System.Web;
 using SvnBridge.Net;
 using SvnBridge;
+using CodePlex.TfsLibrary; // NetworkAccessDeniedException
 
 namespace UnitTests
 {
@@ -240,7 +241,7 @@ namespace UnitTests
             Assert.Null(dispatcher.Handler.Handle_credentials);
         }
 
-        [Fact]
+        [Fact(Skip = "Digest likely cannot be supported truly, and we should NOT return possibly session-foreign unchecked/unvalidated DefaultCredentials")]
         public void Dispatch_DigestAuthorizationHeader_ReturnDefaultCredentials()
         {
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
@@ -254,6 +255,22 @@ namespace UnitTests
             dispatcher.Dispatch(context);
 
             Assert.Same(CredentialCache.DefaultCredentials, dispatcher.Handler.Handle_credentials);
+        }
+
+        public void Dispatch_DigestAuthorizationHeader_ThrowsException()
+        {
+            TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            context.Request = request;
+            request.Headers["Authorization"] = "Digest ...";
+            request.Url = new Uri("http://tfsserver");
+            dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
+
+            Exception exception = Record.Exception(delegate { dispatcher.Dispatch(context); });
+
+            Assert.NotNull(exception);
+            Assert.IsType(typeof(NetworkAccessDeniedException), exception);
         }
 
         [Fact]
