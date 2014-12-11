@@ -14,7 +14,7 @@ namespace UnitTests
 {
     public class GetHandlerTests : HandlerTestsBase
     {
-        protected GetHandler handler = new GetHandler();
+        protected GetHandler handler = new GetHandler(false);
 
         [Fact]
         public void Handle_ReturnsCorrectResponse()
