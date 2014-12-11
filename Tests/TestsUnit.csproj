@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A374829E-4BE3-4DF5-9CCF-6EE9794D34A7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UnitTests</RootNamespace>
+    <AssemblyName>Tests</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AttachFramework, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\AttachFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="CodePlex.TfsLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\CodePlex.TfsLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\References\Moq.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="xunit, Version=1.0.0.1105, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\xunit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ContainerTests.cs" />
+    <Compile Include="BrokenXmlTests.cs" />
+    <Compile Include="Handlers\CheckoutHandlerTests.cs" />
+    <Compile Include="Handlers\CopyHandlerTests.cs" />
+    <Compile Include="Handlers\DeleteHandlerTests.cs" />
+    <Compile Include="Handlers\GetHandlerTests.cs" />
+    <Compile Include="Handlers\MergeHandlerTests.cs" />
+    <Compile Include="Handlers\MkActivityHandlerTests.cs" />
+    <Compile Include="Handlers\MkColHandlerTests.cs" />
+    <Compile Include="Handlers\OptionsHandlerTests.cs" />
+    <Compile Include="Handlers\PropFindHandlerAllPropForFolderTests.cs" />
+    <Compile Include="Handlers\PropFindHandlerAllPropForItemTests.cs" />
+    <Compile Include="Handlers\PropFindHandlerTests.cs" />
+    <Compile Include="Handlers\PropFindHandler\FileNodeTests.cs" />
+    <Compile Include="Handlers\PropPatchHandlerTests.cs" />
+    <Compile Include="Handlers\PutHandlerTests.cs" />
+    <Compile Include="Handlers\ReportHandlerGetLocationsReportTests.cs" />
+    <Compile Include="Handlers\ReportHandlerLogReportTests.cs" />
+    <Compile Include="Handlers\ReportHandlerTests.cs" />
+    <Compile Include="Handlers\ReportHandlerUpdateReportTests.cs" />
+    <Compile Include="Infrastructure\AsyncitemLoaderTests.cs" />
+    <Compile Include="Infrastructure\HandlerTestsBase.cs" />
+    <Compile Include="Infrastructure\ReadWriteMemoryStream.cs" />
+    <Compile Include="Infrastructure\TestHelper.cs" />
+    <Compile Include="Net\HttpContextDispatcherTests.cs" />
+    <Compile Include="Net\HttpRequestTests.cs" />
+    <Compile Include="Net\ListenerTests.cs" />
+    <Compile Include="PathParsing\PathParserProjectInDomainTest.cs" />
+    <Compile Include="PathParsing\RequestBasePathParserTest.cs" />
+    <Compile Include="PathParsing\PathParserSingleServerWithProjectInPathTest.cs" />
+    <Compile Include="Presenters\SettingsViewPresenterTests.cs" />
+    <Compile Include="Infrastructure\MyMocks.cs" />
+    <Compile Include="Proxies\ProxyFactoryTest.cs" />
+    <Compile Include="Proxies\RetryOnSocketExceptionTest.cs" />
+    <Compile Include="SourceControl\TFSSourceControlProviderTest.cs" />
+    <Compile Include="SourceControl\TFSSourceControlServiceTest.cs" />
+    <Compile Include="SourceControl\UpdateDiffEngineTests.cs" />
+    <Compile Include="Stubs\StubErrorsView.cs" />
+    <Compile Include="Stubs\StubInvocation.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Infrastructure\ProtocolTestsBase.cs" />
+    <Compile Include="Stubs\StubHttpContext.cs" />
+    <Compile Include="Stubs\StubHttpRequest.cs" />
+    <Compile Include="Stubs\StubHttpResponse.cs" />
+    <Compile Include="Stubs\StubListener.cs" />
+    <Compile Include="Stubs\StubListenerView.cs" />
+    <Compile Include="Presenters\ListenerViewPresenterTests.cs" />
+    <Compile Include="Stubs\StubSettingsView.cs" />
+    <Compile Include="Stubs\StubTFSSourceControlService.cs" />
+    <Compile Include="Utility\BinaryReaderEOFTests.cs" />
+    <Compile Include="Utility\SvnDiffEngineTests.cs" />
+    <Compile Include="Utility\HelperTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SvnBridgeLibrary\SvnBridge.Library.csproj">
+      <Project>{95E4E16B-0975-4705-B3A0-83700DE483C2}</Project>
+      <Name>SvnBridge.Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SvnBridge\SvnBridge.csproj">
+      <Project>{22D15920-C064-457D-889B-F7A2E16F3E05}</Project>
+      <Name>SvnBridge</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
