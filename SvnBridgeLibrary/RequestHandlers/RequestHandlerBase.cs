@@ -102,6 +102,32 @@ namespace SvnBridge.Handlers
 			return PathParser.GetLocalPath(httpContext.Request, path);
 		}
 
+        protected static Recursion ConvertDepthHeaderToRecursion(string depth)
+        {
+            Recursion recursion = Recursion.None;
+
+            if (depth.Equals("0"))
+            {
+                recursion = Recursion.None;
+            }
+            else
+            if (depth.Equals("1"))
+            {
+                recursion = Recursion.OneLevel;
+            }
+            else
+            if (depth.Equals("infinity"))
+            {
+                recursion = Recursion.Full;
+            }
+            else
+            {
+                throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
+            }
+
+            return recursion;
+        }
+
         protected void WriteFileNotFoundResponse(IHttpRequest request, IHttpResponse response)
         {
             response.StatusCode = (int)HttpStatusCode.NotFound;
