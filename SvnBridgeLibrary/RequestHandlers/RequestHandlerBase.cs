@@ -329,27 +329,27 @@ namespace SvnBridge.Handlers
             throw new InvalidOperationException("Invalid/unsupported SVN request path type " + path);
         }
 
-        protected static Recursion ConvertDepthHeaderToRecursion(string depth)
+        protected static Recursion ConvertDepthHeaderToRecursion(string depthHeader)
         {
             Recursion recursion = Recursion.None;
 
-            if (depth.Equals("0"))
+            if (depthHeader.Equals("0"))
             {
                 recursion = Recursion.None;
             }
             else
-            if (depth.Equals("1"))
+            if (depthHeader.Equals("1"))
             {
                 recursion = Recursion.OneLevel;
             }
             else
-            if (depth.Equals("infinity"))
+            if (depthHeader.Equals("infinity"))
             {
                 recursion = Recursion.Full;
             }
             else
             {
-                ReportUnsupportedDepthHeaderValue(depth);
+                ReportUnsupportedDepthHeaderValue(depthHeader);
             }
 
             return recursion;

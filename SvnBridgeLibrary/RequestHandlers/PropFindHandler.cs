@@ -101,12 +101,12 @@ namespace SvnBridge.Handlers
         }
 
         private static FolderMetaData GetFolderInfo(TFSSourceControlProvider sourceControlProvider,
-                                                    string depth,
+                                                    string depthHeader,
                                                     string itemPath,
                                                     int? version,
                                                     bool loadPropertiesFromFile)
         {
-            Recursion recursion = ConvertDepthHeaderToRecursion(depth);
+            Recursion recursion = ConvertDepthHeaderToRecursion(depthHeader);
             var versionToFetch = version.HasValue ? version.Value : TFSSourceControlProvider.LATEST_VERSION;
             if (recursion == Recursion.OneLevel)
                 return (FolderMetaData)GetItems(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
@@ -475,7 +475,7 @@ namespace SvnBridge.Handlers
 
         private void WritePathResponse(TFSSourceControlProvider sourceControlProvider,
                                        string requestPath,
-                                       string depth,
+                                       string depthHeader,
                                        PropData data,
                                        Stream outputStream)
         {
@@ -487,7 +487,7 @@ namespace SvnBridge.Handlers
                                                 requestPath);
             }
 
-            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depth, itemPath, null, true);
+            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depthHeader, itemPath, null, true);
 
             using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
@@ -508,14 +508,14 @@ namespace SvnBridge.Handlers
 
         private void WriteWrkResponse(TFSSourceControlProvider sourceControlProvider,
                                        string requestPath,
-                                       string depth,
+                                       string depthHeader,
                                        PropData data,
                                        Stream outputStream)
         {
             string activityId = requestPath.Split('/')[3];
-            if (!(depth.Equals("0")))
+            if (!(depthHeader.Equals("0")))
             {
-                ReportUnsupportedDepthHeaderValue(depth);
+                ReportUnsupportedDepthHeaderValue(depthHeader);
             }
             string itemPathUndecoded = requestPath.Substring(11 + activityId.Length);
             string itemPath = Helper.Decode(itemPathUndecoded);
