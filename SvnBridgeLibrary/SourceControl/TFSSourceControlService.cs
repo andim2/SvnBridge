@@ -140,6 +140,25 @@ namespace SvnBridge.SourceControl
                         true,
                         options);
                 }
+
+                // Make damn sure to keep second web service object instantiated below
+                // instantiated within a cleanly separated _different_ scope
+                // (i.e., original web service object above reliably Dispose()d),
+                // to try to avoid (try hard to reduce likelihood of)
+                // a "socket reuse" error exception:
+                //
+                // "A first chance exception of type 'System.Net.Sockets.SocketException' occurred in System.dll
+                // Additional information: Only one usage of each socket address (protocol/network address/port) is normally permitted"
+                //
+                // However, a major cause of this problem AFAICS is that both current request handler and background worker thread
+                // do TFS info requests, causing frequent use of ports.
+                // Note that this problem can cause failing connection request to TFS which ripples through to SvnBridge client side
+                // and makes client side sit up and take notice (read: FAIL!).
+                // For a potential solution to this problem (TODO), see specific port range mechanism described at
+                // "Only one usage of each socket address (protocol/network address/port) is normally permitted"
+                //    http://blogs.msdn.com/b/dgorti/archive/2005/09/18/470766.aspx
+                // ServicePointManager.ReusePort might be related to this, too.
+
                 if (result[0].Items.Length == 0)
                 {
                     // Check if no items returned due to no permissions.
