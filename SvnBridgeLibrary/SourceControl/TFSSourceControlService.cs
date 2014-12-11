@@ -152,18 +152,20 @@ namespace SvnBridge.SourceControl
                     }
                     try
                     {
-                        Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
-                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(
-                            null,
-                            null,
-                            items,
-                            version,
-                            DeletedState.NonDeleted,
-                            ItemType.Any,
-                            true,
-                            options);
-                        if (readAllResult[0].Items.Length == 0)
-                            invalidPath = true;
+                        using (Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials))
+                        {
+                            ItemSet[] readAllResult = readAllWebSvc.QueryItems(
+                                null,
+                                null,
+                                items,
+                                version,
+                                DeletedState.NonDeleted,
+                                ItemType.Any,
+                                true,
+                                options);
+                            if (readAllResult[0].Items.Length == 0)
+                                invalidPath = true;
+                        }
                     }
                     catch (Exception ex)
                     {
