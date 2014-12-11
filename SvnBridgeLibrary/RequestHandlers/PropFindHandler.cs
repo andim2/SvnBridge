@@ -322,23 +322,31 @@ namespace SvnBridge.Handlers
 
         private void DoHandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
         {
-            if (requestPath == Constants.SvnVccPath)
+            bool requestHandled = false;
+            if (requestPath.StartsWith("/!svn/"))
             {
-                WriteVccResponse(sourceControlProvider, requestPath, labelHeader, data, outputStream);
+                if (requestPath == Constants.SvnVccPath)
+                {
+                    WriteVccResponse(sourceControlProvider, requestPath, labelHeader, data, outputStream);
+                    requestHandled = true;
+                }
+                else if (requestPath.StartsWith("/!svn/bln/"))
+                {
+                    WriteBlnResponse(requestPath, data, outputStream);
+                    requestHandled = true;
+                }
+                else if (requestPath.StartsWith("/!svn/bc/"))
+                {
+                    WriteBcResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
+                    requestHandled = true;
+                }
+                else if (requestPath.StartsWith("/!svn/wrk/"))
+                {
+                    WriteWrkResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
+                    requestHandled = true;
+                }
             }
-            else if (requestPath.StartsWith("/!svn/bln/"))
-            {
-                WriteBlnResponse(requestPath, data, outputStream);
-            }
-            else if (requestPath.StartsWith("/!svn/bc/"))
-            {
-                WriteBcResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
-            }
-            else if (requestPath.StartsWith("/!svn/wrk/"))
-            {
-                WriteWrkResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
-            }
-            else
+            if (!requestHandled)
             {
                 WritePathResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
             }
