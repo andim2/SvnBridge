@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO; // Path.Combine()
 using System.Net;
 using System.Text;
 using System.Web;
@@ -17,6 +17,8 @@ namespace SvnBridge.Handlers
 {
     public class PropFindHandler : RequestHandlerBase
     {
+        private static bool _doLogFile = false;
+
         protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
@@ -260,6 +262,49 @@ namespace SvnBridge.Handlers
 
         private void HandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
         {
+            if (_doLogFile)
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, ms);
+
+                    // Initiate write to network *prior* to hitting file (perf opt!!)
+                    CopyMemoryStream(ms, outputStream);
+
+                    string pathLogFile = Path.Combine(LogBasePath, DateTime.Now.ToString("HH_mm_ss_ffff") + ".txt");
+                    using (FileStream file = new FileStream(pathLogFile, FileMode.Create, System.IO.FileAccess.Write))
+                    {
+                        CopyMemoryStream(ms, file);
+                    }
+                }
+            }
+            else
+            {
+                DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, outputStream);
+            }
+        }
+
+        private static void CopyMemoryStream(MemoryStream inputStream, Stream outputStream)
+        {
+            var positionBackup = inputStream.Position;
+            try
+            {
+                CopyMemoryStreamDo(inputStream, outputStream);
+            }
+            finally
+            {
+                inputStream.Position = positionBackup;
+            }
+        }
+
+        private static void CopyMemoryStreamDo(MemoryStream inputStream, Stream outputStream)
+        {
+            inputStream.Seek(0, SeekOrigin.Begin);
+            inputStream.WriteTo(outputStream);
+        }
+
+        private void DoHandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
+        {
             if (requestPath == Constants.SvnVccPath)
             {
                 WriteVccResponse(sourceControlProvider, requestPath, labelHeader, data, outputStream);
@@ -357,6 +402,16 @@ namespace SvnBridge.Handlers
                 }
 
                 writer.Write("</D:multistatus>\n");
+            }
+
+            if (_doLogFile)
+            {
+                string propdesc = "";
+                foreach (XmlElement prop in data.Properties)
+                {
+                    propdesc += prop.LocalName + ":";
+                }
+                WriteLog(path + ":" + propdesc);
             }
         }
 
