@@ -1536,10 +1536,10 @@ namespace SvnBridge.SourceControl
                 throw new FolderAlreadyExistsException();
             }
 
-            ItemMetaData item = DetermineOutermostExistingBaseDirectoryItem(path, false);
+            ItemMetaData itemExistingBase = DetermineOutermostExistingBaseDirectoryItem(path, false);
             string localPath = GetLocalPath(activityId, path);
             string localBasePath = localPath.Substring(0, localPath.LastIndexOf('\\'));
-            UpdateLocalVersion(activityId, item, localBasePath);
+            UpdateLocalVersion(activityId, itemExistingBase, localBasePath);
 
             string serverPath = MakeTfsPath(path);
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -2481,18 +2481,18 @@ namespace SvnBridge.SourceControl
 
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                ItemMetaData item = DetermineOutermostExistingBaseDirectoryItem(path, true);
+                ItemMetaData folderExistingBase_HEAD = DetermineOutermostExistingBaseDirectoryItem(path, true);
                 string localPath = GetLocalPath(activityId, path);
                 string localBasePath = localPath.Substring(0, localPath.LastIndexOf('\\'));
                 List<LocalUpdate> updates = new List<LocalUpdate>();
-                updates.Add(LocalUpdate.FromLocal(item.Id,
+                updates.Add(LocalUpdate.FromLocal(folderExistingBase_HEAD.Id,
                                                   localBasePath,
-                                                  item.Revision));
+                                                  folderExistingBase_HEAD.Revision));
 
-                item = GetItems(LATEST_VERSION, path.Substring(1), Recursion.None, true);
-                if (item != null)
+                ItemMetaData itemExisting_HEAD = GetItems(LATEST_VERSION, path.Substring(1), Recursion.None, true);
+                if (itemExisting_HEAD != null)
                 {
-                    updates.Add(LocalUpdate.FromLocal(item.Id, localPath, item.Revision));
+                    updates.Add(LocalUpdate.FromLocal(itemExisting_HEAD.Id, localPath, itemExisting_HEAD.Revision));
                 }
 
                 ServiceUpdateLocalVersions(activityId, updates);
@@ -2500,7 +2500,7 @@ namespace SvnBridge.SourceControl
                 List<PendRequest> pendRequests = new List<PendRequest>();
 
                 bool addToMergeList = true;
-                if (item != null)
+                if (itemExisting_HEAD != null)
                 {
                     pendRequests.Add(PendRequest.Edit(localPath));
                     isNewFile = false;
