@@ -18,17 +18,34 @@ namespace SvnBridge.SourceControl
 	{
         private readonly DefaultLogger logger;
 
-        public TFSSourceControlService(IRegistrationService registrationService, IRepositoryWebSvcFactory webSvcFactory, IWebTransferService webTransferService, IFileSystem fileSystem, DefaultLogger logger)
-			: base(registrationService, webSvcFactory, webTransferService, fileSystem)
+        public TFSSourceControlService(
+            IRegistrationService registrationService,
+            IRepositoryWebSvcFactory webSvcFactory,
+            IWebTransferService webTransferService,
+            IFileSystem fileSystem,
+            DefaultLogger logger)
+			: base(
+                registrationService,
+                webSvcFactory,
+                webTransferService,
+                fileSystem)
 		{
 			this.logger = logger;
 		}
 
-        public override WorkspaceInfo[] GetWorkspaces(string tfsUrl, ICredentials credentials, WorkspaceComputers computers, int permissionsFilter)
+        public override WorkspaceInfo[] GetWorkspaces(
+            string tfsUrl,
+            ICredentials credentials,
+            WorkspaceComputers computers,
+            int permissionsFilter)
         {
             try
             {
-                return base.GetWorkspaces(tfsUrl, credentials, computers, permissionsFilter);
+                return base.GetWorkspaces(
+                    tfsUrl,
+                    credentials,
+                    computers,
+                    permissionsFilter);
             }
             catch (Exception e)
             {
@@ -39,49 +56,94 @@ namespace SvnBridge.SourceControl
             }
         }
 
-		public ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType, int options)
+		public ExtendedItem[][] QueryItemsExtended(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            DeletedState deletedState,
+            ItemType itemType,
+            int options)
 		{
             return WrapWebException<ExtendedItem[][]>(delegate
             {
                 using (Repository webSvc = CreateProxy(tfsUrl, credentials))
                 {
                     string username = TfsUtil.GetUsername(credentials, tfsUrl);
-                    return webSvc.QueryItemsExtended(workspaceName, username, items, deletedState, itemType, options);
+                    return webSvc.QueryItemsExtended(
+                        workspaceName,
+                        username,
+                        items,
+                        deletedState,
+                        itemType,
+                        options);
                 }
             });
 		}
 
-		public BranchRelative[][] QueryBranches(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, VersionSpec version)
+		public BranchRelative[][] QueryBranches(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            VersionSpec version)
 		{
             return WrapWebException<BranchRelative[][]>(delegate
             {
                 using (Repository webSvc = CreateProxy(tfsUrl, credentials))
                 {
                     string username = TfsUtil.GetUsername(credentials, tfsUrl);
-                    return webSvc.QueryBranches(workspaceName, username, items, version);
+                    return webSvc.QueryBranches(
+                        workspaceName,
+                        username,
+                        items,
+                        version);
                 }
             });
 		}
 
-		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemId, int changeSet, int options)
+		public SourceItem QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            int itemId,
+            int changeSet,
+            int options)
 		{
             return WrapWebException<SourceItem>(delegate
             {
-                SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemId }, changeSet, options);
+                SourceItem[] items = QueryItems(
+                    tfsUrl,
+                    credentials,
+                    new int[] { itemId },
+                    changeSet,
+                    options);
                 if (items.Length == 0)
                     return null;
                 return items[0];
             });
 		}
 
-        public virtual ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items, int options)
+        public virtual ItemSet[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            VersionSpec version,
+            ItemSpec[] items,
+            int options)
         {
             return WrapWebException(delegate
             {
                 ItemSet[] result = null;
                 using (Repository webSvc = CreateProxy(tfsUrl, credentials))
                 {
-                    result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
+                    result = webSvc.QueryItems(
+                        null,
+                        null,
+                        items,
+                        version,
+                        DeletedState.NonDeleted,
+                        ItemType.Any,
+                        true,
+                        options);
                 }
                 if (result[0].Items.Length == 0)
                 {
@@ -96,7 +158,15 @@ namespace SvnBridge.SourceControl
                     try
                     {
                         Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
-                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
+                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(
+                            null,
+                            null,
+                            items,
+                            version,
+                            DeletedState.NonDeleted,
+                            ItemType.Any,
+                            true,
+                            options);
                         if (readAllResult[0].Items.Length == 0)
                             invalidPath = true;
                     }
@@ -112,13 +182,39 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        public Changeset[] QueryHistory(string tfsUrl, ICredentials credentials, string workspaceName, string workspaceOwner, ItemSpec itemSpec, VersionSpec versionItem, string user, VersionSpec versionFrom, VersionSpec versionTo, int maxCount, bool includeFiles, bool generateDownloadUrls, bool slotMode, bool sortAscending)
+        public Changeset[] QueryHistory(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string workspaceOwner,
+            ItemSpec itemSpec,
+            VersionSpec versionItem,
+            string user,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
+            bool sortAscending)
         {
             return WrapWebException<Changeset[]>(delegate
             {
                 using (Repository webSvc = CreateProxy(tfsUrl, credentials))
                 {
-                    return webSvc.QueryHistory(workspaceName, workspaceOwner, itemSpec, versionItem, user, versionFrom, versionTo, maxCount, includeFiles, generateDownloadUrls, slotMode, sortAscending);
+                    return webSvc.QueryHistory(
+                        workspaceName,
+                        workspaceOwner,
+                        itemSpec,
+                        versionItem,
+                        user,
+                        versionFrom,
+                        versionTo,
+                        maxCount,
+                        includeFiles,
+                        generateDownloadUrls,
+                        slotMode,
+                        sortAscending);
                 }
             });
         }

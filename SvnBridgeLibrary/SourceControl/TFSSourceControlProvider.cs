@@ -40,7 +40,15 @@ namespace SvnBridge.SourceControl
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
 
-        public TFSSourceControlProvider(string serverUrl, string projectName, ICredentials credentials, TFSSourceControlService sourceControlService, IWorkItemModifier workItemModifier, DefaultLogger logger, WebCache cache, FileRepository fileRepository)
+        public TFSSourceControlProvider(
+            string serverUrl,
+            string projectName,
+            ICredentials credentials,
+            TFSSourceControlService sourceControlService,
+            IWorkItemModifier workItemModifier,
+            DefaultLogger logger,
+            WebCache cache,
+            FileRepository fileRepository)
         {
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(this.serverUrl, credentials);
@@ -57,11 +65,20 @@ namespace SvnBridge.SourceControl
             }
             if (Configuration.CacheEnabled)
             {
-                this.metaDataRepository = new MetaDataRepositoryCache(this.sourceControlService, this.credentials, Container.Resolve<MemoryBasedPersistentCache>(), this.serverUrl, this.rootPath);
+                this.metaDataRepository = new MetaDataRepositoryCache(
+                    this.sourceControlService,
+                    this.credentials,
+                    Container.Resolve<MemoryBasedPersistentCache>(),
+                    this.serverUrl,
+                    this.rootPath);
             }
             else
             {
-                this.metaDataRepository = new MetaDataRepositoryNoCache(this.sourceControlService, this.credentials, this.serverUrl, this.rootPath);
+                this.metaDataRepository = new MetaDataRepositoryNoCache(
+                    this.sourceControlService,
+                    this.credentials,
+                    this.serverUrl,
+                    this.rootPath);
             }
         }
 
@@ -130,7 +147,11 @@ namespace SvnBridge.SourceControl
             return true;
         }
 
-        public virtual FolderMetaData GetChangedItems(string path, int versionFrom, int versionTo, UpdateReportData reportData)
+        public virtual FolderMetaData GetChangedItems(
+            string path,
+            int versionFrom,
+            int versionTo,
+            UpdateReportData reportData)
         {
             if (path.StartsWith("/"))
             {
@@ -221,12 +242,32 @@ namespace SvnBridge.SourceControl
             return (int)RequestCache.Items[latestVersion];
         }
 
-        public virtual LogItem GetLog(string path, int versionFrom, int versionTo, Recursion recursion, int maxCount, bool sortAscending = false)
+        public virtual LogItem GetLog(
+            string path,
+            int versionFrom,
+            int versionTo,
+            Recursion recursion,
+            int maxCount,
+            bool sortAscending = false)
         {
-            return GetLog(path, -1, versionFrom, versionTo, recursion, maxCount, sortAscending);
+            return GetLog(
+                path,
+                -1,
+                versionFrom,
+                versionTo,
+                recursion,
+                maxCount,
+                sortAscending);
         }
 
-        public virtual LogItem GetLog(string path, int itemVersion, int versionFrom, int versionTo, Recursion recursion, int maxCount, bool sortAscending = false)
+        public virtual LogItem GetLog(
+            string path,
+            int itemVersion,
+            int versionFrom,
+            int versionTo,
+            Recursion recursion,
+            int maxCount,
+            bool sortAscending = false)
         {
             if (path.StartsWith("/"))
             {
@@ -397,7 +438,14 @@ namespace SvnBridge.SourceControl
             List<SourceItemHistory> histories;
             try
             {
-                changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false, sortAscending);
+                changes = sourceControlService.QueryHistory(serverUrl, credentials,
+                    null, null,
+                    itemSpec, itemVersion,
+                    null,
+                    VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo),
+                    maxCount,
+                    true, false, false,
+                    sortAscending);
             }
             catch (SoapException ex)
             {
@@ -449,7 +497,14 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
-                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false, sortAscending);
+                    changes = sourceControlService.QueryHistory(serverUrl, credentials,
+                        null, null,
+                        itemSpec, itemVersion,
+                        null,
+                        VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound),
+                        maxCount,
+                        true, false, false,
+                        sortAscending);
                     temp = ConvertChangesetsToSourceItemHistory(changes);
                     histories.AddRange(temp);
                     logItemsCount = temp.Count;
@@ -573,7 +628,12 @@ namespace SvnBridge.SourceControl
                 {
                     try
                     {
-                        changesetId = sourceControlService.Commit(serverUrl, credentials, activityId, activity.Comment, commitServerList, false, 0);
+                        changesetId =
+                            sourceControlService.Commit(serverUrl, credentials,
+                                activityId,
+                                activity.Comment,
+                                commitServerList,
+                                false, 0);
                     }
                     catch (TfsFailureException)
                     {
@@ -600,13 +660,11 @@ namespace SvnBridge.SourceControl
                         commitServerList.Add(Helper.CombinePath(rootPath, path));
                     }
                     changesetId =
-                        sourceControlService.Commit(serverUrl,
-                                                    credentials,
-                                                    activityId,
-                                                    activity.Comment,
-                                                    commitServerList,
-                                                    false,
-                                                    0);
+                        sourceControlService.Commit(serverUrl, credentials,
+                            activityId,
+                            activity.Comment,
+                            commitServerList,
+                            false, 0);
                 }
                 AssociateWorkItemsWithChangeSet(activity.Comment, changesetId);
                 response = GenerateMergeResponse(activityId, changesetId);
@@ -684,7 +742,13 @@ namespace SvnBridge.SourceControl
             try
             {
                 ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full);
-                Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, VersionSpec.Latest, null, VersionSpec.First, VersionSpec.FromDate(date), 1, true, false, false, false);
+                Changeset[] changes = sourceControlService.QueryHistory(serverUrl, credentials,
+                    null, null,
+                    itemSpec, VersionSpec.Latest,
+                    null,
+                    VersionSpec.First, VersionSpec.FromDate(date),
+                    1,
+                    true, false, false, false);
 
                 // If no results then date is before project existed
                 if (changes.Length == 0)
@@ -882,7 +946,13 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    LogItem log = GetLog(item.Name, version, 1, version, Recursion.Full, 1);
+                    LogItem log = GetLog(
+                        item.Name,
+                        version,
+                        1,
+                        version,
+                        Recursion.Full,
+                        1);
                     if (log.History.Length != 0)
                     {
                         item.SubItemRevision = log.History[0].ChangeSetID;
@@ -1566,7 +1636,10 @@ namespace SvnBridge.SourceControl
             if (renamedItems.All(item => item == null || item.FromItem == null))
             {
                 // fallback for TFS08 and earlier
-                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, items.Select(item => item.ItemId).ToArray(), previousRevision, 0);
+                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials,
+                    items.Select(item => item.ItemId).ToArray(),
+                    previousRevision,
+                    0);
                 return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
             }
 
@@ -1574,7 +1647,10 @@ namespace SvnBridge.SourceControl
             for (var i = 0; i < renamedItems.Count; i++)
             {
                 var previousSourceItemId = (renamedItems[i] != null && renamedItems[i].FromItem != null) ? renamedItems[i].FromItem.ItemId : items[i].ItemId;
-                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials, new[] { previousSourceItemId }, previousRevision, 0);
+                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials,
+                    new[] { previousSourceItemId },
+                    previousRevision,
+                    0);
                 result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
             return result.ToArray();
@@ -1587,7 +1663,12 @@ namespace SvnBridge.SourceControl
 
         public virtual int GetEarliestVersion(string path)
         {
-            LogItem log = GetLog(path, 1, GetLatestVersion(), Recursion.None, int.MaxValue);
+            LogItem log = GetLog(
+                path,
+                1,
+                GetLatestVersion(),
+                Recursion.None,
+                int.MaxValue);
             return log.History[log.History.Length - 1].ChangeSetID;
         }
 

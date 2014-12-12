@@ -20,7 +20,11 @@ namespace SvnBridge.Infrastructure
         private readonly string rootPath;
         private readonly ICredentials credentials;
 
-        public MetaDataRepositoryNoCache(TFSSourceControlService sourceControlService, ICredentials credentials, string serverUrl, string rootPath)
+        public MetaDataRepositoryNoCache(
+            TFSSourceControlService sourceControlService,
+            ICredentials credentials,
+            string serverUrl,
+            string rootPath)
         {
             this.sourceControlService = sourceControlService;
             this.serverUrl = serverUrl;
@@ -30,7 +34,10 @@ namespace SvnBridge.Infrastructure
 
         public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
         {
-            return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision, 0);
+            return sourceControlService.QueryItems(serverUrl, credentials,
+                new int[] { itemId },
+                revision,
+                0);
         }
 
         public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
@@ -57,7 +64,10 @@ namespace SvnBridge.Infrastructure
                 }
                 itemSpecs.Add(itemspec);
             }
-            ItemSet[] items = sourceControlService.QueryItems(serverUrl, credentials, VersionSpec.FromChangeset(revision), itemSpecs.ToArray(), 0);
+            ItemSet[] items = sourceControlService.QueryItems(serverUrl, credentials,
+                VersionSpec.FromChangeset(revision),
+                itemSpecs.ToArray(),
+                0);
 
             SortedList<string, SourceItem> result = new SortedList<string, SourceItem>();
             foreach (ItemSet itemset in items)

@@ -183,9 +183,12 @@ namespace SvnBridge.Handlers
             data.Entries = new List<EntryData>();
             var item = new EntryData();
             string localPath = PathParser.GetLocalPath(request);
-            LogItem log = sourceControlProvider.GetLog(localPath, 0,
-                                                       sourceControlProvider.GetLatestVersion(),
-                                                       Recursion.None, 1);
+            LogItem log = sourceControlProvider.GetLog(
+                localPath,
+                0,
+                sourceControlProvider.GetLatestVersion(),
+                Recursion.None,
+                1);
             if (log.History.Length == 0)
             {
                 WriteFileNotFoundResponse(request, response);
@@ -423,10 +426,11 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                metadata = sourceControlProvider.GetChangedItems(basePath,
-                                                          int.Parse(updatereport.Entries[0].Rev),
-                                                          targetRevision,
-                                                          updatereport);
+                metadata = sourceControlProvider.GetChangedItems(
+                    basePath,
+                    int.Parse(updatereport.Entries[0].Rev),
+                    targetRevision,
+                    updatereport);
             }
             if (metadata != null)
             {
@@ -453,7 +457,13 @@ namespace SvnBridge.Handlers
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);
-            LogItem logItem = sourceControlProvider.GetLog(serverPath, Math.Min(start, end), Math.Max(start, end), Recursion.Full, int.Parse(logreport.Limit ?? "1000000"), (start < end));
+            LogItem logItem = sourceControlProvider.GetLog(
+                serverPath,
+                Math.Min(start, end),
+                Math.Max(start, end),
+                Recursion.Full,
+                int.Parse(logreport.Limit ?? "1000000"),
+                (start < end));
 
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");

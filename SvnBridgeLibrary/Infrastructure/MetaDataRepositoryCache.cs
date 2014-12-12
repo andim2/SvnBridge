@@ -50,7 +50,10 @@ namespace SvnBridge.Infrastructure
 
         public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
         {
-            return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision, 0);
+            return sourceControlService.QueryItems(serverUrl, credentials,
+                new int[] { itemId },
+                revision,
+                0);
         }
 
         public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
@@ -62,9 +65,14 @@ namespace SvnBridge.Infrastructure
 
                 if (serverPath == Constants.ServerRootPath && recursion == Recursion.None)
                 {
-                    SourceItem[] items = sourceControlService.QueryItems(serverUrl, credentials, serverPath, RecursionType.None,
-                                                                         VersionSpec.FromChangeset(revision), DeletedState.NonDeleted,
-                                                                         ItemType.Any, false, 0);
+                    SourceItem[] items =
+                        sourceControlService.QueryItems(serverUrl, credentials,
+                            serverPath,
+                            RecursionType.None,
+                            VersionSpec.FromChangeset(revision),
+                            DeletedState.NonDeleted,
+                            ItemType.Any,
+                            false, 0);
 
                     list = new List<SourceItem>(items);
                     return;
@@ -195,13 +203,14 @@ namespace SvnBridge.Infrastructure
         private SourceItem[] QueryItemsInternal(int revision, ref string serverPath)
         {
             VersionSpec versionSpec = VersionSpec.FromChangeset(revision);
-            SourceItem[] items = sourceControlService.QueryItems(serverUrl, credentials, serverPath,
-                                                                 RecursionType.Full,
-                                                                 versionSpec,
-                                                                 DeletedState.NonDeleted,
-                                                                 ItemType.Any,
-                                                                 false,
-                                                                 0);
+            SourceItem[] items =
+                sourceControlService.QueryItems(serverUrl, credentials,
+                    serverPath,
+                    RecursionType.Full,
+                    versionSpec,
+                    DeletedState.NonDeleted,
+                    ItemType.Any,
+                    false, 0);
 
             if (items.Length == 1 && items[0].ItemType == ItemType.File)
             {
@@ -209,13 +218,14 @@ namespace SvnBridge.Infrastructure
                 // because that will change the '/' to '\'
                 serverPath = serverPath.Substring(0, serverPath.LastIndexOf('/'));
 
-                items = sourceControlService.QueryItems(serverUrl, credentials, serverPath,
-                                                        RecursionType.Full,
-                                                        versionSpec,
-                                                        DeletedState.NonDeleted,
-                                                        ItemType.Any,
-                                                        false,
-                                                        0);
+                items =
+                sourceControlService.QueryItems(serverUrl, credentials,
+                    serverPath,
+                    RecursionType.Full,
+                    versionSpec,
+                    DeletedState.NonDeleted,
+                    ItemType.Any,
+                    false, 0);
             }
             return items;
         }

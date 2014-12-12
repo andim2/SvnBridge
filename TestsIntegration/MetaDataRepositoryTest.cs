@@ -28,8 +28,12 @@ namespace IntegrationTests
 			credentials = GetCredentials();
 			sourceControlService = Container.Resolve<TFSSourceControlService>();
 
-			repository = new MetaDataRepositoryCache(sourceControlService, credentials,
-                                                Container.Resolve<MemoryBasedPersistentCache>(), ServerUrl, Constants.ServerRootPath + PROJECT_NAME);
+			repository = new MetaDataRepositoryCache(
+          sourceControlService,
+          credentials,
+          Container.Resolve<MemoryBasedPersistentCache>(),
+          ServerUrl,
+          Constants.ServerRootPath + PROJECT_NAME);
 		}
 
 	    [Fact]
