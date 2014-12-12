@@ -228,6 +228,7 @@ namespace SvnBridge.SourceControl
             if (reportData.UpdateTarget != null)
             {
                 string targetPath = "/" + Helper.CombinePath(path, reportData.UpdateTarget);
+                // [cannot easily use List.RemoveAll() here]
                 foreach (ItemMetaData item in new List<ItemMetaData>(root.Items))
                 {
                     if (!item.IsSamePath(targetPath))
@@ -1130,14 +1131,17 @@ namespace SvnBridge.SourceControl
                 string serverItemPath = MakeTfsPath(path);
                 ServiceUndoPendingRequests(activityId, new string[] { serverItemPath });
                 activity.DeletedItems.Remove(path);
-                for (int j = activity.MergeList.Count - 1; j >= 0; j--)
-                {
-                    if (activity.MergeList[j].Action == ActivityItemAction.Deleted
-                        && activity.MergeList[j].Path == serverItemPath)
-                    {
-                        activity.MergeList.RemoveAt(j);
-                    }
-                }
+                //for (int j = activity.MergeList.Count - 1; j >= 0; j--)
+                //{
+                //    if (activity.MergeList[j].Action == ActivityItemAction.Deleted
+                //        && activity.MergeList[j].Path == serverItemPath)
+                //    {
+                //        activity.MergeList.RemoveAt(j);
+                //    }
+                //}
+                activity.MergeList.RemoveAll(
+                  elem => (elem.Action == ActivityItemAction.Deleted) && (elem.Path == serverItemPath)
+                );
             });
         }
 
@@ -1314,13 +1318,14 @@ namespace SvnBridge.SourceControl
         {
             ServiceUndoPendingRequests(activityId,
                                        new string[] { path });
-            for (int i = activity.MergeList.Count - 1; i >= 0; i--)
-            {
-                if (activity.MergeList[i].Path == path)
-                {
-                    activity.MergeList.RemoveAt(i);
-                }
-            }
+            //for (int i = activity.MergeList.Count - 1; i >= 0; i--)
+            //{
+            //    if (activity.MergeList[i].Path == path)
+            //    {
+            //        activity.MergeList.RemoveAt(i);
+            //    }
+            //}
+            activity.MergeList.RemoveAll(elem => (elem.Path == path));
         }
 
         private void ConvertCopyToRename(string activityId, CopyAction copy)
