@@ -79,36 +79,37 @@ namespace SvnBridge.SourceControl
         {
             return WrapWebException(delegate
             {
+                ItemSet[] result = null;
                 using (Repository webSvc = CreateProxy(tfsUrl, credentials))
                 {
-                    ItemSet[] result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
-                    if (result[0].Items.Length == 0)
-                    {
-                        // Check if no items returned due to no permissions.
-                        var invalidPath = false;
-
-                        NetworkCredential readAllCredentials = CredentialCache.DefaultNetworkCredentials;
-                        if (!string.IsNullOrEmpty(Configuration.ReadAllUserName))
-                        {
-                            readAllCredentials = new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain);
-                        }
-                        try
-                        {
-                            Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
-                            ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
-                            if (readAllResult[0].Items.Length == 0)
-                                invalidPath = true;
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
-                        }
-
-                        if (!invalidPath)
-                            throw new NetworkAccessDeniedException();
-                    }
-                    return result;
+                    result = webSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
                 }
+                if (result[0].Items.Length == 0)
+                {
+                    // Check if no items returned due to no permissions.
+                    var invalidPath = false;
+
+                    NetworkCredential readAllCredentials = CredentialCache.DefaultNetworkCredentials;
+                    if (!string.IsNullOrEmpty(Configuration.ReadAllUserName))
+                    {
+                        readAllCredentials = new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain);
+                    }
+                    try
+                    {
+                        Repository readAllWebSvc = CreateProxy(tfsUrl, readAllCredentials);
+                        ItemSet[] readAllResult = readAllWebSvc.QueryItems(null, null, items, version, DeletedState.NonDeleted, ItemType.Any, true, options);
+                        if (readAllResult[0].Items.Length == 0)
+                            invalidPath = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
+                    }
+
+                    if (!invalidPath)
+                        throw new NetworkAccessDeniedException();
+                }
+                return result;
             });
         }
 
