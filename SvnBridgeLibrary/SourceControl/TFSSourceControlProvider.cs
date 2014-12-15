@@ -533,12 +533,14 @@ namespace SvnBridge.SourceControl
             List<SourceItemHistory> histories;
 
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
+            VersionSpec versionSpecFrom = VersionSpec.FromChangeset(versionFrom);
+            VersionSpec versionSpecTo = VersionSpec.FromChangeset(versionTo);
             Changeset[] changesets;
             try
             {
                 changesets = Service_QueryHistory(
                     itemSpec, itemVersion,
-                    VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo),
+                    versionSpecFrom, versionSpecTo,
                     maxCount,
                     sortAscending);
             }
@@ -627,9 +629,11 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
+                    versionSpecTo = VersionSpec.FromChangeset(earliestVersionFound);
+
                     changesets = Service_QueryHistory(
                         itemSpec, itemVersion,
-                        VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound),
+                        versionSpecFrom, versionSpecTo,
                         maxCount,
                         sortAscending);
                     changesetsTotal.AddRange(changesets);
