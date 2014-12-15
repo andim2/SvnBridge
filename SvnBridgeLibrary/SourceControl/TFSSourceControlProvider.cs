@@ -535,13 +535,16 @@ namespace SvnBridge.SourceControl
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
             VersionSpec versionSpecFrom = VersionSpec.FromChangeset(versionFrom);
             VersionSpec versionSpecTo = VersionSpec.FromChangeset(versionTo);
+            // Since we'll potentially have multi-query,
+            // maintain a helper to track how many additional items we're allowed to add:
+            int maxCount_Allowed = maxCount;
             Changeset[] changesets;
             try
             {
                 changesets = Service_QueryHistory(
                     itemSpec, itemVersion,
                     versionSpecFrom, versionSpecTo,
-                    maxCount,
+                    maxCount_Allowed,
                     sortAscending);
             }
             catch (SoapException ex)
@@ -610,7 +613,7 @@ namespace SvnBridge.SourceControl
             // make sure to always keep this correction handling code
             // situated within inner TFS-side handling layers!!
             const int TFS_QUERY_LIMIT = 256;
-            bool didHitPossiblyPrematureLimit = ((logItemsCount_ThisRun == TFS_QUERY_LIMIT) && (maxCount > TFS_QUERY_LIMIT));
+            bool didHitPossiblyPrematureLimit = ((logItemsCount_ThisRun == TFS_QUERY_LIMIT) && (maxCount_Allowed > TFS_QUERY_LIMIT));
             if (didHitPossiblyPrematureLimit)
             {
                 for (; ; )
@@ -629,12 +632,14 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
+                    maxCount_Allowed -= logItemsCount_ThisRun;
+
                     versionSpecTo = VersionSpec.FromChangeset(earliestVersionFound);
 
                     changesets = Service_QueryHistory(
                         itemSpec, itemVersion,
                         versionSpecFrom, versionSpecTo,
-                        maxCount,
+                        maxCount_Allowed,
                         sortAscending);
                     changesetsTotal.AddRange(changesets);
                     logItemsCount_ThisRun = changesets.Length;
