@@ -120,13 +120,20 @@ namespace SvnBridge.Infrastructure
         {
             get
             {
+                string userName = null;
                 const string strCurrentUserName = "CurrentUserName";
-                if (RequestCache.Items[strCurrentUserName] == null)
+                var cacheResult = RequestCache.Items[strCurrentUserName];
+                if (cacheResult == null)
                 {
                     NetworkCredential credential = credentials.GetCredential(new Uri(serverUrl), "Basic");
-                    RequestCache.Items[strCurrentUserName] = credential.UserName + "@" + credential.Domain;
+                    userName = credential.UserName + "@" + credential.Domain;
+                    RequestCache.Items[strCurrentUserName] = userName;
                 }
-                return (string)RequestCache.Items[strCurrentUserName];
+                else
+                {
+                    userName = (string)cacheResult;
+                }
+                return userName;
             }
         }
 
