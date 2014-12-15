@@ -587,59 +587,61 @@ namespace SvnBridge.Handlers
             Dictionary<int, bool> dictToBeRemoved = new Dictionary<int, bool>();
             foreach (SourceItemChange change in changesOrig)
             {
-                if (change.Item.ItemType == ItemType.Folder)
+                if (!(change.Item.ItemType == ItemType.Folder))
                 {
-                    // Hmm, perhaps Undelete should be handled here as well?
-                    // (perhaps it also reincarnates an entire folder
-                    // without having to list any sub entries?)
-                    if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
+                    continue;
+                }
+
+                // Hmm, perhaps Undelete should be handled here as well?
+                // (perhaps it also reincarnates an entire folder
+                // without having to list any sub entries?)
+                if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
+                {
+                    SourceItem itemFolder = change.Item;
+                    string folderRemoteName = itemFolder.RemoteName;
+                    // Remove all within-folder deletion-type changes,
+                    // since they're redundant on SVN protocol:
+                    foreach (SourceItemChange changeVictim in changesOrig)
                     {
-                        SourceItem itemFolder = change.Item;
-                        string folderRemoteName = itemFolder.RemoteName;
-                        // Remove all within-folder deletion-type changes,
-                        // since they're redundant on SVN protocol:
-                        foreach (SourceItemChange changeVictim in changesOrig)
+                        if (!((changeVictim.ChangeType & ChangeType.Delete) == ChangeType.Delete))
                         {
-                            if (!((changeVictim.ChangeType & ChangeType.Delete) == ChangeType.Delete))
+                            continue;
+                        }
+                        SourceItem itemVictim = changeVictim.Item;
+                        if (IsBelowBaseFolder(folderRemoteName, itemVictim.RemoteName))
+                        {
+                            // Make sure we skip removing ourselves...
+                            if (itemFolder != itemVictim)
                             {
-                                continue;
-                            }
-                            SourceItem itemVictim = changeVictim.Item;
-                            if (IsBelowBaseFolder(folderRemoteName, itemVictim.RemoteName))
-                            {
-                                // Make sure we skip removing ourselves...
-                                if (itemFolder != itemVictim)
-                                {
-                                    // Add() would throw exception when pre-existing...
-                                    dictToBeRemoved[changeVictim.GetHashCode()] = true;
-                                }
+                                // Add() would throw exception when pre-existing...
+                                dictToBeRemoved[changeVictim.GetHashCode()] = true;
                             }
                         }
                     }
-                    else
-                    if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
+                }
+                else
+                if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
+                {
+                    RenamedSourceItem itemFolder = (RenamedSourceItem)change.Item;
+                    string folderOriginalRemoteName = itemFolder.OriginalRemoteName;
+                    string folderRemoteName = itemFolder.RemoteName;
+                    foreach (SourceItemChange changeVictim in changesOrig)
                     {
-                        RenamedSourceItem itemFolder = (RenamedSourceItem)change.Item;
-                        string folderOriginalRemoteName = itemFolder.OriginalRemoteName;
-                        string folderRemoteName = itemFolder.RemoteName;
-                        foreach (SourceItemChange changeVictim in changesOrig)
+                        if (!((changeVictim.ChangeType & ChangeType.Rename) == ChangeType.Rename))
                         {
-                            if (!((changeVictim.ChangeType & ChangeType.Rename) == ChangeType.Rename))
+                            continue;
+                        }
+                        RenamedSourceItem itemVictim = (RenamedSourceItem)changeVictim.Item;
+                        if (
+                               (IsBelowBaseFolder(folderOriginalRemoteName, itemVictim.OriginalRemoteName))
+                            && (IsBelowBaseFolder(folderRemoteName, itemVictim.RemoteName))
+                        )
+                        {
+                            // Make sure we skip removing ourselves...
+                            if (itemFolder != itemVictim)
                             {
-                                continue;
-                            }
-                            RenamedSourceItem itemVictim = (RenamedSourceItem)changeVictim.Item;
-                            if (
-                                   (IsBelowBaseFolder(folderOriginalRemoteName, itemVictim.OriginalRemoteName))
-                                && (IsBelowBaseFolder(folderRemoteName, itemVictim.RemoteName))
-                            )
-                            {
-                                // Make sure we skip removing ourselves...
-                                if (itemFolder != itemVictim)
-                                {
-                                    // Add() would throw exception when pre-existing...
-                                    dictToBeRemoved[changeVictim.GetHashCode()] = true;
-                                }
+                                // Add() would throw exception when pre-existing...
+                                dictToBeRemoved[changeVictim.GetHashCode()] = true;
                             }
                         }
                     }
