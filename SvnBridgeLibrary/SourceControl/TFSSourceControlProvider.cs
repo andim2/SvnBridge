@@ -2189,6 +2189,8 @@ namespace SvnBridge.SourceControl
 
         public virtual ItemMetaData[] GetPreviousVersionOfItems(SourceItem[] items, int changeset)
         {
+            ItemMetaData[] result;
+
             // Processing steps:
             // - given the this-changeset source items,
             //   figure out the corresponding maximally-authoritative representation (numeric IDs) of these items
@@ -2208,7 +2210,7 @@ namespace SvnBridge.SourceControl
                 return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
             }
 
-            var result = new List<ItemMetaData>();
+            var previousItems = new List<ItemMetaData>();
             for (var i = 0; i < renamedItems.Length; i++)
             {
                 var renamedItem = renamedItems[i];
@@ -2218,9 +2220,11 @@ namespace SvnBridge.SourceControl
                     previousSourceItemId);
                 // Yes, do actively append this slot even if no result
                 // (caller requires index-consistent behaviour of input vs. result storage)
-                result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
+                previousItems.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
-            return result.ToArray();
+            result = previousItems.ToArray();
+
+            return result;
         }
 
         private BranchItem[] GetRenamedItems(SourceItem[] items, int changeset)
