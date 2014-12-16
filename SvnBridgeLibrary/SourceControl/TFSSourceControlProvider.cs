@@ -1297,21 +1297,25 @@ namespace SvnBridge.SourceControl
             return newFile;
         }
 
+        private void UndoPendingRequests(string activityId, Activity activity, string path)
+        {
+            ServiceUndoPendingRequests(activityId,
+                                       new string[] { path });
+            for (int i = activity.MergeList.Count - 1; i >= 0; i--)
+            {
+                if (activity.MergeList[i].Path == path)
+                {
+                    activity.MergeList.RemoveAt(i);
+                }
+            }
+        }
+
         private void ConvertCopyToRename(string activityId, CopyAction copy)
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 string pathTargetFull = MakeTfsPath(copy.TargetPath);
-                ServiceUndoPendingRequests(
-                                                    activityId,
-                                                    new string[] { pathTargetFull });
-                for (int i = activity.MergeList.Count - 1; i >= 0; i--)
-                {
-                    if (activity.MergeList[i].Path == pathTargetFull)
-                    {
-                        activity.MergeList.RemoveAt(i);
-                    }
-                }
+                UndoPendingRequests(activityId, activity, pathTargetFull);
 
                 ProcessCopyItem(activityId, copy, true);
             });
@@ -1384,16 +1388,7 @@ namespace SvnBridge.SourceControl
                                     copyIsRename = true;
 
                                     string pathDeletedFull = MakeTfsPath(activity.DeletedItems[i]);
-                                    ServiceUndoPendingRequests(
-                                                                            activityId,
-                                                                            new string[] { pathDeletedFull });
-                                    for (int j = activity.MergeList.Count - 1; j >= 0; j--)
-                                    {
-                                        if (activity.MergeList[j].Path == pathDeletedFull)
-                                        {
-                                            activity.MergeList.RemoveAt(j);
-                                        }
-                                    }
+                                    UndoPendingRequests(activityId, activity, pathDeletedFull);
 
                                     activity.DeletedItems.RemoveAt(i);
 
@@ -1415,16 +1410,7 @@ namespace SvnBridge.SourceControl
                             activity.PostCommitDeletedItems.Add(activity.DeletedItems[i]);
 
                             string pathDeletedFull = MakeTfsPath(activity.DeletedItems[i]);
-                            ServiceUndoPendingRequests(
-                                                                    activityId,
-                                                                    new string[] { pathDeletedFull });
-                            for (int j = activity.MergeList.Count - 1; j >= 0; j--)
-                            {
-                                if (activity.MergeList[j].Path == pathDeletedFull)
-                                {
-                                    activity.MergeList.RemoveAt(j);
-                                }
-                            }
+                            UndoPendingRequests(activityId, activity, pathDeletedFull);
 
                             activity.DeletedItems.RemoveAt(i);
                         }
