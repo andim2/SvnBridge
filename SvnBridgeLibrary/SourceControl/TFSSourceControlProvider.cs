@@ -2496,23 +2496,26 @@ namespace SvnBridge.SourceControl
             {
                 string localPath = GetLocalPath(activityId, path);
 
-                ItemMetaData item = GetItems(LATEST_VERSION, path, Recursion.None, true);
-                if (item == null)
+                ItemMetaData itemVictim = GetItems(LATEST_VERSION, path, Recursion.None, true);
+                if (itemVictim == null)
                 {
-                    item = GetPendingItem(activityId, path);
+                    itemVictim = GetPendingItem(activityId, path);
                 }
 
-                UpdateLocalVersion(activityId, item, localPath);
+                UpdateLocalVersion(activityId, itemVictim, localPath);
 
-                if (item.ItemType != ItemType.Folder)
+                // FIXME: is that actually correct!?
+                // AFAICT folders do potentially have properties, too...
+                bool itemMightHavePropertiesFile = (itemVictim.ItemType != ItemType.Folder);
+                if (itemMightHavePropertiesFile)
                 {
-                    string propertiesFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, item.ItemType);
+                    string propertiesFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemVictim.ItemType);
                     DeleteItem(activityId, propertiesFile);
                 }
 
                 ServiceSubmitPendingRequest(activityId, PendRequest.Delete(localPath));
 
-                activity.MergeList.Add(new ActivityItem(MakeTfsPath(path), item.ItemType, ActivityItemAction.Deleted));
+                activity.MergeList.Add(new ActivityItem(MakeTfsPath(path), itemVictim.ItemType, ActivityItemAction.Deleted));
 
             });
         }
