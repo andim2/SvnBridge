@@ -1262,6 +1262,8 @@ namespace SvnBridge.SourceControl
             // Ideally we should offer a clean interface here
             // which ensures case-sensitive matching when needed.
 
+            ItemMetaData firstItem = null;
+
             SVNPathStripLeadingSlash(ref path);
 
             if (version == 0 && path == "")
@@ -1307,7 +1309,6 @@ namespace SvnBridge.SourceControl
             Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
             Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
             Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
-            ItemMetaData firstItem = null;
             foreach (SourceItem sourceItem in items)
             {
                 ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
@@ -1371,6 +1372,7 @@ namespace SvnBridge.SourceControl
             {
                 UpdateFolderRevisions(firstItem, version, recursion);
             }
+
             return firstItem;
         }
 
