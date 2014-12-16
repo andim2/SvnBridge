@@ -4,6 +4,7 @@ using SvnBridge.SourceControl;
 
 // XXX: using:s for MetaDataRepositoryBase only (see below)
 using System.Net; // ICredentials
+using CodePlex.TfsLibrary.RepositoryWebSvc; // ItemSpec, RecursionType
 using SvnBridge.Interfaces; // IMetaDataRepository
 using SvnBridge.Proxies; // TracingInterceptor
 
@@ -80,6 +81,23 @@ namespace SvnBridge.Infrastructure
                 new int[] { itemId },
                 revision,
                 0);
+        }
+
+        protected SourceItem[] Service_QueryItems(
+            string path,
+            RecursionType recursion,
+            VersionSpec versionSpecFrom,
+            DeletedState deletedState,
+            ItemType itemType)
+        {
+            return
+            sourceControlService.QueryItems(serverUrl, credentials,
+                path,
+                recursion,
+                versionSpecFrom,
+                deletedState,
+                itemType,
+                false, 0);
         }
     }
 }

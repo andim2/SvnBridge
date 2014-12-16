@@ -70,13 +70,12 @@ namespace SvnBridge.Infrastructure
                 if (serverPath == Constants.ServerRootPath && recursion == Recursion.None)
                 {
                     SourceItem[] items =
-                        sourceControlService.QueryItems(serverUrl, credentials,
+                        Service_QueryItems(
                             serverPath,
                             RecursionType.None,
                             VersionSpec.FromChangeset(revision),
                             DeletedState.NonDeleted,
-                            ItemType.Any,
-                            false, 0);
+                            ItemType.Any);
 
                     list = new List<SourceItem>(items);
                     return;
@@ -191,13 +190,12 @@ namespace SvnBridge.Infrastructure
         {
             VersionSpec versionSpec = VersionSpec.FromChangeset(revision);
             SourceItem[] items =
-                sourceControlService.QueryItems(serverUrl, credentials,
+                Service_QueryItems(
                     serverPath,
                     RecursionType.Full, // SVNBRIDGE_WARNING_REF_RECURSION
                     versionSpec,
                     DeletedState.NonDeleted,
-                    ItemType.Any,
-                    false, 0);
+                    ItemType.Any);
 
             if (items.Length == 1 && items[0].ItemType == ItemType.File)
             {
@@ -206,13 +204,12 @@ namespace SvnBridge.Infrastructure
                 serverPath = serverPath.Substring(0, serverPath.LastIndexOf('/'));
 
                 items =
-                sourceControlService.QueryItems(serverUrl, credentials,
+                Service_QueryItems(
                     serverPath,
                     RecursionType.Full, // SVNBRIDGE_WARNING_REF_RECURSION
                     versionSpec,
                     DeletedState.NonDeleted,
-                    ItemType.Any,
-                    false, 0);
+                    ItemType.Any);
             }
             return items;
         }
