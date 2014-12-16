@@ -2158,8 +2158,9 @@ namespace SvnBridge.SourceControl
             if (renamedItems.All(item => item == null || item.FromItem == null))
             {
                 // fallback for TFS08 and earlier
+                var previousSourceItemIds = items.Select(item => item.ItemId).ToArray();
                 var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials,
-                    items.Select(item => item.ItemId).ToArray(),
+                    previousSourceItemIds,
                     previousRevision,
                     0);
                 return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
