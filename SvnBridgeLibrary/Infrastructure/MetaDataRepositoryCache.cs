@@ -55,6 +55,8 @@ namespace SvnBridge.Infrastructure
 
         public override SourceItem[] QueryItems(int revision, string path, Recursion recursion)
         {
+            SourceItem[] sourceItems = null;
+
             List<SourceItem> list = null;
             persistentCache.UnitOfWork(delegate
             {
@@ -84,7 +86,9 @@ namespace SvnBridge.Infrastructure
                     return x.RemoteName.CompareTo(y.RemoteName);
                 });
             });
-            return list.ToArray();
+            sourceItems = list.ToArray();
+
+            return sourceItems;
         }
 
         private string GetItemsListCacheKey(Recursion recursion, int revision, string path)
