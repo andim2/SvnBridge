@@ -14,6 +14,9 @@ namespace SvnBridge.PathParsing
 
     protected const string c_strHTTP = "http://";
     protected const string c_strHTTPS = "https://";
+    protected const string c_strPort8080 = ":8080";
+    protected const string c_strPort8443 = ":8443";
+    protected const string c_strTfs = "/tfs";
 
 
 		public string GetActivityId(string href)

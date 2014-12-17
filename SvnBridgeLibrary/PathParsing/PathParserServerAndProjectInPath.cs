@@ -18,11 +18,13 @@ namespace SvnBridge.PathParsing
 		{
 			string url = GetUrlFromRequest(request.Url);
 
+        string strTfsBase = c_strTfs;
+
         string strTest;
-        strTest = c_strHTTPS + url + ":8443/tfs";
+        strTest = c_strHTTPS + url + c_strPort8443 + strTfsBase;
             if (urlValidator.IsValidTfsServerUrl(strTest))
                 return strTest;
-        strTest = c_strHTTP + url + ":8080/tfs";
+        strTest = c_strHTTP + url + c_strPort8080 + strTfsBase;
             if (urlValidator.IsValidTfsServerUrl(strTest))
                 return strTest;
         strTest = c_strHTTPS + url;
@@ -31,10 +33,10 @@ namespace SvnBridge.PathParsing
         strTest = c_strHTTP + url;
             if (urlValidator.IsValidTfsServerUrl(strTest))
                 return strTest;
-        strTest = c_strHTTP + url + ":8080";
+        strTest = c_strHTTP + url + c_strPort8080;
             if (urlValidator.IsValidTfsServerUrl(strTest))
                 return strTest;
-        strTest = c_strHTTPS + url + ":8443";
+        strTest = c_strHTTPS + url + c_strPort8443;
             if (urlValidator.IsValidTfsServerUrl(strTest))
                 return strTest;
             return c_strHTTP + url;
@@ -101,7 +103,7 @@ namespace SvnBridge.PathParsing
 				path = '/' + path;
 			if (path.EndsWith("/") == false)
 				path = path + '/';
-            if (path.Contains("/tfs"))
+            if (path.Contains(c_strTfs))
                 path += "$/";
 			return path;
 		}
