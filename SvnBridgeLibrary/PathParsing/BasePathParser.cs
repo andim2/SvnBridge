@@ -12,6 +12,10 @@ namespace SvnBridge.PathParsing
 		public abstract string GetApplicationPath(IHttpRequest request);
 		public abstract string GetPathFromDestination(string href);
 
+    protected const string c_strHTTP = "http://";
+    protected const string c_strHTTPS = "https://";
+
+
 		public string GetActivityId(string href)
 		{
 			int activityIdStart = href.LastIndexOf('/') + 1;
