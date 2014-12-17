@@ -16,6 +16,19 @@ namespace SvnBridge.PathParsing
 
 		public override string GetServerUrl(IHttpRequest request, ICredentials credentials)
 		{
+			return GetBaseUrlOfTFSService(request, credentials);
+		}
+
+    /// <summary>
+    /// Figures out the base URL where a TFS service can be reached
+    /// (i.e. below which a particular sub page
+    /// [e.g. Services/v1.0/Registration.asmx]
+    /// is provided).
+    /// Will iterate through several https/http URLs
+    /// with certain corresponding port numbers.
+    /// </summary>
+    private string GetBaseUrlOfTFSService(IHttpRequest request, ICredentials credentials)
+    {
 			string url = GetUrlFromRequest(request.Url);
 
         string strTfsBase = c_strTfs;
