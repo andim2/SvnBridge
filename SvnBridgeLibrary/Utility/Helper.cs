@@ -591,6 +591,59 @@ namespace SvnBridge.Utility
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Helper to work around strongly suspected deficiencies
+    /// in API Uri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped):
+    /// it does NOT "SafeUnescape" *may*-be-encoded (but not *must*-be-encoded!!!) chars such as '$',
+    /// which is a real PITA.
+    /// </summary>
+    /// <param name="uriComponent">URI component</param>
+    /// <param name="charsToPercentEncode">the list of chars to be PE:d (or all if null)</param>
+    /// <param name="charsToNotPercentEncode">the list of chars to NOT be PE:d</param>
+    /// <returns></returns>
+    public static string PercentEncodeConditional(string uriPayload, string charsToPercentEncode, string charsToNotPercentEncode)
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (char c in uriPayload)
+        {
+            bool needPercentEncodeThisChar = false;
+
+            string strC = c.ToString();
+            bool isPercentEncodeLimitedToSubset = (charsToPercentEncode != null);
+            if (isPercentEncodeLimitedToSubset)
+            {
+                if (charsToPercentEncode.Contains(strC))
+                {
+                    needPercentEncodeThisChar = true;
+                }
+            }
+            else
+            {
+                needPercentEncodeThisChar = true;
+            }
+            if (needPercentEncodeThisChar)
+            {
+                if (charsToNotPercentEncode != null)
+                {
+                    if (charsToNotPercentEncode.Contains(strC))
+                    {
+                        needPercentEncodeThisChar = false;
+                    }
+                }
+            }
+            if (needPercentEncodeThisChar)
+            {
+                sb.Append(HttpUtility.UrlEncode(strC));
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        return sb.ToString();
+    }
+
 		public static string FormatDate(DateTime date)
 		{
 			string result = date.ToUniversalTime().ToString("o");
