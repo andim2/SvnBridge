@@ -2257,7 +2257,12 @@ namespace SvnBridge.SourceControl
         /// <returns>Item ID</returns>
         static int GetItemIdOfRenamedItem(BranchItem renamedItem, SourceItem sourceItem)
         {
-            return (renamedItem != null && renamedItem.FromItem != null) ? renamedItem.FromItem.ItemId : sourceItem.ItemId;
+            // I believe that the previous use of .FromItem was wrong: we need to use .ToItem
+            // since we want to do a query with the *current* item ID, on the *previous* changeset.
+            // Otherwise we will not get the correct path (would return foreign-TeamProject path
+            // rather than the now-renamed one that had previously been branched into our TeamProject).
+            // FIXME: *previous*SourceItemId thus most likely is now a misnomer.
+            return (renamedItem != null && renamedItem.ToItem != null) ? renamedItem.ToItem.ItemId : sourceItem.ItemId;
         }
 
         private static ItemSpec CreateItemSpec(string item, RecursionType recurse)
