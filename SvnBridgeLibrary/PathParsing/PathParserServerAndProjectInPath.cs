@@ -52,11 +52,11 @@ namespace SvnBridge.PathParsing
                     requestUrl.AbsoluteUri + "). Not valid when using the RequestBasePathParser");
             }
 
-		    int serverDelim = path.IndexOf("/$");
-            if (serverDelim == -1)
-			    serverDelim = path.IndexOf('/');
+		    int serverDelimIndex = path.IndexOf("/$");
+            if (serverDelimIndex == -1)
+			    serverDelimIndex = path.IndexOf('/');
             
-            return serverDelim == -1 ? path : path.Substring(0, serverDelim);
+            return serverDelimIndex == -1 ? path : path.Substring(0, serverDelimIndex);
 		}
 
 		public override string GetLocalPath(IHttpRequest request)
