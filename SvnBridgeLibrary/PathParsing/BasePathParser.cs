@@ -62,6 +62,27 @@ namespace SvnBridge.PathParsing
                     }
 		}
 
+    /// <summary>
+    /// Simple two-element string splitter.
+    /// Provided to avoid having to use a more expensive (array allocations) String.Split().
+    /// </summary>
+    protected static int SplitString(string str, string delim, out string strFirst, out string strSecond)
+    {
+        int delimIndex = str.IndexOf(delim);
+        bool foundDelim = (-1 != delimIndex);
+        if (foundDelim)
+        {
+            strFirst = str.Substring(0, delimIndex);
+            strSecond = str.Substring(delimIndex + delim.Length);
+        }
+        else
+        {
+            strFirst = str;
+            strSecond = "";
+        }
+        return delimIndex;
+    }
+
 	    public string ToApplicationPath(IHttpRequest request, string href)
 		{
 			string applicationPath = GetApplicationPath(request);

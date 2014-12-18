@@ -52,11 +52,17 @@ namespace SvnBridge.PathParsing
                     requestUrl.AbsoluteUri + "). Not valid when using the RequestBasePathParser");
             }
 
-		    int serverDelimIndex = path.IndexOf("/$");
-            if (serverDelimIndex == -1)
-			    serverDelimIndex = path.IndexOf('/');
-            
-            return serverDelimIndex == -1 ? path : path.Substring(0, serverDelimIndex);
+        string authorityPlusTfsServiceBasePath;
+        string tfsTeamProjPath;
+        string delimTfsTeamProjPart = "/$";
+        int serverDelimIndex = SplitString(path, delimTfsTeamProjPart, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
+        bool foundDelim = (-1 != serverDelimIndex);
+        if (!foundDelim)
+        {
+            string delimRawPath = "/";
+            SplitString(path, delimRawPath, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
+        }
+        return authorityPlusTfsServiceBasePath;
 		}
 
 		public override string GetLocalPath(IHttpRequest request)
@@ -82,8 +88,15 @@ namespace SvnBridge.PathParsing
 			string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
 			string urlFromRequest = GetUrlFromRequest(urlAsUri);
 			string localPath = path.Substring(urlFromRequest.Length);
-            if (localPath.StartsWith("/$"))
-                localPath = localPath.Length > 2 ? localPath.Substring(2) : string.Empty;
+      string delimTfsTeamProjPart = "/$";
+      string dummy;
+      string tfsTeamProjPath;
+      int delimIndex = SplitString(localPath, delimTfsTeamProjPart, out dummy, out tfsTeamProjPath);
+      bool foundDelim = (-1 != delimIndex);
+      if (foundDelim)
+      {
+          localPath = tfsTeamProjPath;
+      }
 			if (!localPath.StartsWith("/"))
 				localPath = "/" + localPath;
 
