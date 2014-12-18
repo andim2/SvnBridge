@@ -2257,12 +2257,36 @@ namespace SvnBridge.SourceControl
         /// <returns>Item ID</returns>
         static int GetItemIdOfRenamedItem(BranchItem renamedItem, SourceItem sourceItem)
         {
+            // [[
             // I believe that the previous use of .FromItem was wrong: we need to use .ToItem
             // since we want to do a query with the *current* item ID, on the *previous* changeset.
             // Otherwise we will not get the correct path (would return foreign-TeamProject path
             // rather than the now-renamed one that had previously been branched into our TeamProject).
             // FIXME: *previous*SourceItemId thus most likely is now a misnomer.
-            return (renamedItem != null && renamedItem.ToItem != null) ? renamedItem.ToItem.ItemId : sourceItem.ItemId;
+            // ]]
+            // NOPE, this change caused an issue around changeset 1356 in our main repo -
+            // That file *was* merely renamed (not branched!), with its itemId thus changed to a new one.
+            // This meant that when grabbing .ToItem.ItemId,
+            // that *new* item ID then was not available at the *older* revision -->
+            // null item result!!
+            // (TODO: add further descriptions of evidence cases here).
+            // Thus I'm afraid we'll have to revisit things
+            // (in fact keep it as .FromItem, and add support code
+            // to in the branching case then somehow derive the proper name).
+            // And in fact renamedItem gets gathered
+            // via a complex evaluation from a QueryBranches() call,
+            // so perhaps that previous handling simply was wrong!?
+            // (or not clever enough?)
+            // UPDATE: yup, I have a hunch
+            // that one may need to discern between
+            // renames of items (criteria for detecting renames likely is
+            //                   that .FromItem and .ToItem have *same* changeset value)
+            // and
+            // branches (/copies) (.ToItem will have new changeset value
+            //                     which adopted a branch / copy of .FromItem - at its last changeset)
+            // , so it's this difference between renames and branches
+            // which probably plays a role here...
+            return (renamedItem != null && renamedItem.FromItem != null) ? renamedItem.FromItem.ItemId : sourceItem.ItemId;
         }
 
         private static ItemSpec CreateItemSpec(string item, RecursionType recurse)
