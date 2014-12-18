@@ -90,5 +90,13 @@ namespace SvnBridge.PathParsing
 				return applicationPath.Substring(0, applicationPath.Length - 1) + href;
 			return applicationPath + href;
 		}
+
+    protected static string TFSTeamProjectRootPrefixMagic
+    {
+        get
+        {
+            return Constants.ServerRootPath;
+        }
+    }
 	}
 }
