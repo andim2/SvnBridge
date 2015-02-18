@@ -2211,13 +2211,22 @@ namespace SvnBridge.SourceControl
             for (var i = 0; i < renamedItems.Count; i++)
             {
                 var renamedItem = renamedItems[i];
-                var previousSourceItemId = (renamedItem != null && renamedItem.FromItem != null) ? renamedItem.FromItem.ItemId : items[i].ItemId;
+                var previousSourceItemId = GetItemIdOfRenamedItem(renamedItem, items[i]);
                 var previousSourceItems = metaDataRepository.QueryItems(
                     previousRevision,
                     previousSourceItemId);
                 result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
             return result.ToArray();
+        }
+
+        /// <summary>
+        /// Returns the ID of the item (the one *prior* to a rename/branching operation).
+        /// </summary>
+        /// <returns>Item ID</returns>
+        static int GetItemIdOfRenamedItem(BranchItem renamedItem, SourceItem sourceItem)
+        {
+            return (renamedItem != null && renamedItem.FromItem != null) ? renamedItem.FromItem.ItemId : sourceItem.ItemId;
         }
 
         private static ItemSpec CreateItemSpec(string item, RecursionType recurse)
