@@ -1733,13 +1733,13 @@ namespace SvnBridge.SourceControl
 
         public virtual int GetVersionForDate(DateTime date)
         {
-            date = date.ToUniversalTime();
+            VersionSpec versionSpecAtDate = ConvertToVersionSpec(date);
             try
             {
                 ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full); // SVNBRIDGE_WARNING_REF_RECURSION
                 Changeset[] changesets = Service_QueryHistory(
                     itemSpec, VersionSpec.Latest,
-                    VersionSpec.First, VersionSpec.FromDate(date),
+                    VersionSpec.First, versionSpecAtDate,
                     1,
                     false);
 
@@ -1756,6 +1756,17 @@ namespace SvnBridge.SourceControl
 
                 throw;
             }
+        }
+
+        private static VersionSpec ConvertToVersionSpec(DateTime date)
+        {
+            // FIXME: is UTC normalization really required here??
+            // We simply convert a DateTime into a VersionSpec,
+            // thus TFS ought to be able to query the correct changeset anyway,
+            // irrespective of whether our date input is UTC or not...
+            DateTime dateUTC = date.ToUniversalTime();
+            VersionSpec versionAtDate = VersionSpec.FromDate(dateUTC);
+            return versionAtDate;
         }
 
         public virtual void SetActivityComment(string activityId, string comment)
