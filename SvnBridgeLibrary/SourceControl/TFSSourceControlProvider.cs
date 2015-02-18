@@ -1811,10 +1811,11 @@ namespace SvnBridge.SourceControl
 
         public virtual int GetVersionForDate(DateTime date)
         {
+            ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full); // SVNBRIDGE_WARNING_REF_RECURSION
             VersionSpec versionSpecAtDate = ConvertToVersionSpec(date);
+            // Keep handling in exception scope minimalistic to the operation which we may need to intercept:
             try
             {
-                ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full); // SVNBRIDGE_WARNING_REF_RECURSION
                 Changeset[] changesets = Service_QueryHistory(
                     itemSpec, VersionSpec.Latest,
                     VersionSpec.First, versionSpecAtDate,
