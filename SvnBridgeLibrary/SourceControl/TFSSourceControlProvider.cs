@@ -1673,6 +1673,64 @@ namespace SvnBridge.SourceControl
             FilesysHelpers.StripRootSlash(ref path);
         }
 
+        /// <summary>
+        /// Helper to determine the most recent change somewhere within the directory tree of this (possibly folder) item.
+        /// Implemented in minimal-interface manner (the only thing that is of interest is whether it was successful,
+        /// and then changeset ID and commit time - SourceItemHistory is NOT used anywhere near the caller
+        /// thus shouldn't be leaked outside).
+        /// </summary>
+        /// This signature will NOT use ref-based parameters
+        /// - to ease debugging, via combination of indicating success
+        ///   and indicating result values to be assigned
+        /// -  ref would be less clean
+        /// <param name="itemName">item to be queried</param>
+        /// <param name="version">version to do the query for</param>
+        /// <param name="changeChangeSetID">Changeset ID of most recent change</param>
+        /// <param name="changeCommitDateTime">Changeset commit date of most recent change</param>
+        /// <returns>true when successfully queried, else false</returns>
+        private bool DetermineMostRecentChangesetInTree(
+            string itemName,
+            int version,
+            out int changeChangeSetID,
+            out DateTime changeCommitDateTime)
+        {
+            SourceItemHistory logQueryAll_Newest_history = null;
+            int itemVersion = version; // debugging helper
+            int versionTo = version;
+            bool wantQueryFull = true;
+            if (wantQueryFull)
+            {
+                int versionFrom = 1;
+                // SVNBRIDGE_WARNING_REF_RECURSION - additional comments:
+                // the reason for specifying .Full here probably is to get a full history,
+                // which ensures that the first entry (due to sort order)
+                // does provide the *newest* Change(set) anywhere below that item.
+                LogItem logQueryAll_Newest = GetLog(
+                    itemName,
+                    itemVersion,
+                    versionFrom,
+                    versionTo,
+                    Recursion.Full,
+                    1);
+                if (0 != logQueryAll_Newest.History.Length)
+                    logQueryAll_Newest_history = logQueryAll_Newest.History[0];
+            }
+
+            SourceItemHistory logQueryResult_Newest_history = logQueryAll_Newest_history;
+            if (null != logQueryResult_Newest_history)
+            {
+                changeChangeSetID = logQueryResult_Newest_history.ChangeSetID;
+                changeCommitDateTime = logQueryResult_Newest_history.CommitDateTime;
+                return true;
+            }
+            else
+            {
+                changeChangeSetID = -1;
+                changeCommitDateTime = DateTime.MinValue;
+                return false;
+            }
+        }
+
         private void UpdateFolderRevisions(ItemMetaData item, int version, Recursion recursion)
         {
             if (item != null && item.ItemType == ItemType.Folder)
@@ -1704,21 +1762,17 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    // SVNBRIDGE_WARNING_REF_RECURSION - additional comments:
-                    // the reason for specifying .Full here probably is to get a full history,
-                    // which ensures that the first entry (due to sort order)
-                    // does provide the *newest* Change(set) anywhere below that item.
-                    LogItem log = GetLog(
+                    int changeChangeSetID;
+                    DateTime changeCommitDateTime;
+                    bool determinedMostRecentChangeset = DetermineMostRecentChangesetInTree(
                         item.Name,
                         version,
-                        1,
-                        version,
-                        Recursion.Full,
-                        1);
-                    if (log.History.Length != 0)
+                        out changeChangeSetID,
+                        out changeCommitDateTime);
+                    if (determinedMostRecentChangeset)
                     {
-                        item.SubItemRevision = log.History[0].ChangeSetID;
-                        item.LastModifiedDate = log.History[0].CommitDateTime;
+                        item.SubItemRevision = changeChangeSetID;
+                        item.LastModifiedDate = changeCommitDateTime;
                     }
                 }
             }
