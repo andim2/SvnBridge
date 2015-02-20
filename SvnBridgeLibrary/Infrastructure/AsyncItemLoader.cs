@@ -99,7 +99,7 @@ namespace SvnBridge.Infrastructure
         }
 
         /// <remarks>
-        /// A timeout of 1 hour ought to be more than enough
+        /// A timeout of 4 hours ought to be more than enough
         /// to expect a client
         /// (which simply is waiting for us to produce things,
         /// as opposed to us having to go through *hugely* complex
@@ -116,7 +116,7 @@ namespace SvnBridge.Infrastructure
         /// </remarks>
         private static long TimeoutAwaitAnyConsumptionActivity
         {
-            get { return 3600; }
+            get { return 3600*4; }
         }
 
         /// <summary>
