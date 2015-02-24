@@ -72,6 +72,7 @@ namespace SvnBridge.SourceControl
         {
             DataLoaded = false; // IMPORTANT MARKER - CLEAR FIRST!
             Base64DiffData = null;
+            Md5Hash = null;
         }
 
         public virtual int Revision
