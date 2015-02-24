@@ -2,7 +2,6 @@
 using SvnBridge.SourceControl;
 using System.Net;
 using CodePlex.TfsLibrary.ObjectModel;
-using SvnBridge.Utility; // SvnDiffParser, Helper
 
 namespace SvnBridge.Infrastructure
 {
@@ -42,9 +41,7 @@ namespace SvnBridge.Infrastructure
         public virtual void ReadFileAsync(ItemMetaData item, Guid repositoryUuid)
         {
             byte[] data = GetFile(item, repositoryUuid);
-            item.Base64DiffData = SvnDiffParser.GetBase64SvnDiffData(data);
-            item.Md5Hash = Helper.GetMd5Checksum(data);
-            item.DataLoaded = true;
+            item.ContentDataAdopt(data);
         }
 
         private static string GetDownloadUrl(string downloadUrl, Guid repositoryUuid)

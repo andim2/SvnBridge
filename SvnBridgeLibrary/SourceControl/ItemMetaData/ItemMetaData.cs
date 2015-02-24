@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure; // Configuration
+using SvnBridge.Utility; // SvnDiffParser, Helper
 
 namespace SvnBridge.SourceControl
 {
@@ -36,6 +37,41 @@ namespace SvnBridge.SourceControl
         public virtual ItemType ItemType
         {
             get { return ItemType.File; }
+        }
+
+        /// <summary>
+        /// Adopts item data loaded from SCM,
+        /// by calculating internal members.
+        /// </summary>
+        public virtual void ContentDataAdopt(byte[] dataIn)
+        {
+            Base64DiffData = SvnDiffParser.GetBase64SvnDiffData(dataIn);
+            Md5Hash = Helper.GetMd5Checksum(dataIn);
+            DataLoaded = true; // IMPORTANT MARKER - SET LAST!
+        }
+
+        /// <summary>
+        /// Clean helper to ensure proper "bracketing"
+        /// of data "fetching and releasing" ("robbing") ops.
+        /// </summary>
+        public virtual string ContentDataRobAsBase64(out string md5Hash)
+        {
+            var base64DiffData = Base64DiffData;
+            md5Hash = Md5Hash;
+
+            ContentDataRelease();
+
+            return base64DiffData;
+        }
+
+        /// <summary>
+        /// Releases data memory from item's reach
+        /// (reduces GC memory management pressure).
+        /// </summary>
+        private void ContentDataRelease()
+        {
+            DataLoaded = false; // IMPORTANT MARKER - CLEAR FIRST!
+            Base64DiffData = null;
         }
 
         public virtual int Revision

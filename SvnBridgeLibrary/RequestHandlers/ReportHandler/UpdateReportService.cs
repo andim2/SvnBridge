@@ -77,13 +77,7 @@ namespace SvnBridge.Infrastructure
                 ReportErrorItemDataRetrievalTimeout();
             }
 
-            item_Base64DiffData = item.Base64DiffData;
-            // Immediately release data memory from item's reach
-            // (reduce GC memory management pressure)
-            item.DataLoaded = false;
-            item.Base64DiffData = null;
-
-            item_Md5Hash = item.Md5Hash;
+            item_Base64DiffData = item.ContentDataRobAsBase64(out item_Md5Hash);
         }
 
         private static void ReportErrorItemDataRetrievalTimeout()

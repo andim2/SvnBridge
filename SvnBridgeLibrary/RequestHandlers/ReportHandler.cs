@@ -337,11 +337,8 @@ namespace SvnBridge.Handlers
                         throw new TimeoutException("Timeout while waiting for file retrieval");
                     }
 
-                    var base64DiffData = item.Base64DiffData;
-                    // Immediately release data memory from item's reach
-                    // (reduce GC memory management pressure)
-                    item.DataLoaded = false;
-                    item.Base64DiffData = null;
+                    string md5Hash;
+                    var base64DiffData = item.ContentDataRobAsBase64(out md5Hash);
 
                     output.Write("<S:apply-textdelta>");
                     // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
@@ -350,7 +347,7 @@ namespace SvnBridge.Handlers
                         base64DiffData);
                     output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                     output.Write("</S:apply-textdelta>\n");
-                    output.Write("<S:close-file checksum=\"{0}\"/>\n", item.Md5Hash);
+                    output.Write("<S:close-file checksum=\"{0}\"/>\n", md5Hash);
                 }
             }
             output.Write("<S:close-directory/>\n");
