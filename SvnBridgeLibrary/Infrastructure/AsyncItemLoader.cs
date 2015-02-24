@@ -61,15 +61,6 @@ namespace SvnBridge.Infrastructure
         {
             foreach (ItemMetaData item in folder.Items)
             {
-                // Before reading further data, verify total pending size:
-
-                bool haveUnusedItemLoadBufferCapacity = WaitForUnusedItemLoadBufferCapacity();
-
-                if (!(haveUnusedItemLoadBufferCapacity))
-                {
-                    break;
-                }
-
                 CheckCancel();
 
                 if (item.ItemType == ItemType.Folder)
@@ -78,6 +69,19 @@ namespace SvnBridge.Infrastructure
                 }
                 else if (!(item is DeleteMetaData))
                 {
+                    // Before reading further data, verify total pending size:
+
+                    // Do the below-size-limit check within the scope and right before
+                    // the single place which actually is going to read more data.
+                    bool haveUnusedItemLoadBufferCapacity = WaitForUnusedItemLoadBufferCapacity();
+
+                    if (!(haveUnusedItemLoadBufferCapacity))
+                    {
+                        break;
+                    }
+
+                    CheckCancel();
+
                     sourceControlProvider.ReadFileAsync(item);
                     NotifyConsumer_ItemProcessingEnded(item);
                 }
