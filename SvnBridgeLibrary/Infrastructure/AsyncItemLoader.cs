@@ -55,6 +55,10 @@ namespace SvnBridge.Infrastructure
             {
                 // Nothing to be done other than cleanly bailing out
             }
+            finally
+            {
+                WaitFinished();
+            }
         }
 
         public virtual void Cancel()
@@ -75,6 +79,11 @@ namespace SvnBridge.Infrastructure
                 Helper.DebugUsefulBreakpointLocation();
                 throw new AsyncItemLoaderExceptionCancel();
             }
+        }
+
+        private void WaitFinished()
+        {
+            // DUMMY (blocking/serialized ops)
         }
 
         private void ReadItemsInFolder(FolderMetaData folder)
