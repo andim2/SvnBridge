@@ -25,7 +25,7 @@ namespace SvnBridge.SourceControl
 				foreach (KeyValuePair<string, DateTime> pair in new Dictionary<string, DateTime>(activitiesTimeStamps))
 				{
 					//It is not likely that a commit would last more than 24 hours
-					if((DateTime.Now-pair.Value).TotalHours > 24)
+					if((DateTime.UtcNow-pair.Value).TotalHours > 24)
 						Delete(pair.Key);
 				}
 			}
@@ -41,7 +41,7 @@ namespace SvnBridge.SourceControl
 			try
 			{
 				activities[activityId] = new Activity();
-				activitiesTimeStamps[activityId] = DateTime.Now;
+				activitiesTimeStamps[activityId] = DateTime.UtcNow;
 			}
 			finally
 			{
