@@ -227,24 +227,16 @@ namespace SvnBridge.Utility
             return diffs.ToArray();
         }
 
-        public static void WriteSvnDiffSignature(Stream stream)
+        public static void WriteSvnDiffSignature(BinaryWriter writer)
         {
-            // NO "using" here (would do unwanted Close() of *external* stream)
-            BinaryWriter writer = new BinaryWriter(stream);
-
             byte[] signature = new byte[] { (byte)'S', (byte)'V', (byte)'N' };
             byte version = 0;
             writer.Write(signature);
             writer.Write(version);
-
-            writer.Flush();
         }
 
-        public static void WriteSvnDiff(SvnDiff svnDiff, Stream stream)
+        public static void WriteSvnDiff(SvnDiff svnDiff, BinaryWriter writer)
         {
-            // NO "using" here (would do unwanted Close() of *external* stream)
-            BinaryWriter writer = new BinaryWriter(stream);
-
             if (svnDiff != null)
             {
                 int bytesWritten;
@@ -256,8 +248,9 @@ namespace SvnBridge.Utility
 
                 writer.Write(svnDiff.InstructionSectionBytes);
                 writer.Write(svnDiff.DataSectionBytes);
+
+                writer.Flush(); // Likely very important in case of huge-data memory pressure (frees internally amassed buffer data?)
             }
-            writer.Flush();
         }
 
         private static SvnDiffInstruction ReadInstruction(BinaryReaderSvnDiff reader)

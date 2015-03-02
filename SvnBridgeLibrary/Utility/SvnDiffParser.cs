@@ -49,9 +49,17 @@ namespace SvnBridge.Utility
             // But due to severe LOH issues our focus lies on equal alloc sizes
             // (_always_ doing equally-sized (Non-)LOH blocks)
             // thus we do prefer paying a potential stream resizing (doubling) penalty.
+
+            // BinaryWriter using/IDispose specifics:
+            // https://social.msdn.microsoft.com/Forums/en-US/81bb7197-60a1-4f2b-a6d8-1501a369b527/binarywriter-and-stream?forum=csharpgeneral
             using (MemoryStream svnDiffStream = new MemoryStream(diff_chunk_size_max))
+            // Side note (warning): "using" of a BinaryWriter
+            // will have caused
+            // not only a Flush, but actually a Close() of underlying stream
+            // once beyond disposal!
+            using (BinaryWriter svnDiffWriter = new BinaryWriter(svnDiffStream))
             {
-                SvnDiffEngine.WriteSvnDiffSignature(svnDiffStream);
+                SvnDiffEngine.WriteSvnDiffSignature(svnDiffWriter);
                 int index = 0;
                 while (index < data.Length)
                 {
@@ -60,7 +68,7 @@ namespace SvnBridge.Utility
                         length = diff_chunk_size_max;
 
                     SvnDiff svnDiff = SvnDiffEngine.CreateReplaceDiff(data, index, length);
-                    SvnDiffEngine.WriteSvnDiff(svnDiff, svnDiffStream);
+                    SvnDiffEngine.WriteSvnDiff(svnDiff, svnDiffWriter);
 
                     index += length;
                 }
