@@ -56,6 +56,7 @@ namespace SvnBridge.Infrastructure
         {
             bool isWaitSuccess = false;
 
+            CheckCancel();
             // No need to have Monitor.IsEntered() check here
             // (.Wait throws SynchronizationLockException if not locked).
             // IMPORTANT NOTE (for those who don't know it):
@@ -534,6 +535,12 @@ namespace SvnBridge.Infrastructure
             crawlerEvent.Set();
         }
 
+        /// <summary>
+        /// To be called wherever a cancel request
+        /// may (need to) be properly/timely served.
+        /// Invocation should ideally be tending towards *inner* layers
+        // (i.e., right before/after an expensive/long-standing calculation/wait).
+        /// </summary>
         private void CheckCancel()
         {
             monitoredComm.CheckCancel();
@@ -565,10 +572,10 @@ namespace SvnBridge.Infrastructure
 
         private void ReadItemsInFolder(FolderMetaData folder)
         {
+            CheckCancel();
+
             foreach (ItemMetaData item in folder.Items)
             {
-                CheckCancel();
-
                 if (item.ItemType == ItemType.Folder)
                 {
                     ReadItemsInFolder((FolderMetaData) item);
