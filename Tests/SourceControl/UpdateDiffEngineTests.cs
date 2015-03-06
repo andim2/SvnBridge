@@ -273,6 +273,62 @@ namespace UnitTests
             AssertItem(root.Items[0], "project/file.txt", 1);
         }
 
+        [Fact]
+        [Trait("TestName", "RFDRTCE")]
+        public void RenameFileDoRochadeThenCheckExists()
+        {
+            //System.Diagnostics.Debugger.Launch();
+            string pathBarOld = "project/BarOld.txt";
+            string pathBar = "project/Bar.txt";
+            int idItemBar = 20;
+            string pathBarNew = "project/BarNew.txt";
+            int idItemBarNew = 40;
+            stub.Attach(sourceControlProvider.GetItems, Return.DelegateResult(delegate(object[] parameters)
+            {
+                int version = (int)parameters[0];
+                string path = (string)parameters[1];
+                //var recursion = parameters[2];
+
+                switch (version)
+                {
+                    case 1:
+                        if (pathBarOld == path)
+                        {
+                            ItemMetaData item = CreateItem(path, version);
+                            item.Id = idItemBar;
+                            return item;
+                        }
+                        else
+                        if (pathBar == path)
+                        {
+                            ItemMetaData item = CreateItem(path, version);
+                            item.Id = idItemBarNew;
+                            return item;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                throw new InvalidOperationException();
+            }));
+
+            engine.Rename(CreateChangeRename(ChangeType.Edit | ChangeType.Rename, pathBar,      0, pathBarOld,  1, ItemType.File), true);
+            engine.Rename(CreateChangeRename(ChangeType.Edit | ChangeType.Rename, pathBarNew,   0, pathBar,     1, ItemType.File), true);
+
+            AssertFolder(root, "project", 0, 4);
+            var items = root.Items;
+            var elemItemVictim = items[0];
+            var elemItemVictimRenamed = items[1];
+            var elemItemVictimNew = items[2];
+            var elemItemVictimRenamedNew = items[3];
+            AssertDeleteItem(elemItemVictim, pathBar);
+            AssertItem(elemItemVictimRenamed, pathBarOld, 1);
+            Assert.Equal(elemItemVictimRenamed.Id, idItemBar);
+            AssertDeleteItem(elemItemVictimNew, pathBarNew);
+            AssertItem(elemItemVictimRenamedNew, pathBar, 1);
+            Assert.Equal(elemItemVictimRenamedNew.Id, idItemBarNew);
+        }
+
         private void AssertFolder(object folder, string name, int changeset, int itemCount)
         {
             Assert.IsType<FolderMetaData>(folder);
@@ -319,6 +375,18 @@ namespace UnitTests
             sourceItem.RemoteChangesetId = changeset;
             sourceItem.ItemType = itemType;
             SourceItemChange change = new SourceItemChange(sourceItem, changeType);
+            return change;
+        }
+
+        [DebuggerStepThrough]
+        private SourceItemChange CreateChangeRename(ChangeType changeType, string originalRemoteName, int originalRevision, string remoteName, int changeset, ItemType itemType)
+        {
+            SourceItem sourceItemRenamed = new SourceItem();
+            sourceItemRenamed.RemoteName = remoteName;
+            sourceItemRenamed.RemoteChangesetId = changeset;
+            sourceItemRenamed.ItemType = itemType;
+            RenamedSourceItem renamedSourceItem = new RenamedSourceItem(sourceItemRenamed, originalRemoteName, originalRevision);
+            SourceItemChange change = new SourceItemChange(renamedSourceItem, changeType);
             return change;
         }
 

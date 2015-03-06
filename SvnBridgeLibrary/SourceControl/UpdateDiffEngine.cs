@@ -297,8 +297,8 @@ namespace SvnBridge.SourceControl
                               folder.Items.Add(item);
                           }
                         }
-                        // [section below was a temporary patch which should not be needed any more now that our processing is much better]
-#if false
+//                        // [section below was a temporary patch which should not be needed any more now that our processing is much better]
+//#if false
                         // ...or _renames_ the (pseudo-deleted) item!
                         // (OBEY VERY SPECIAL CASE: _similar-name_ rename (EXISTING ITEM LOOKUP SUCCESSFUL ABOVE!!), i.e. filename-case-only change)
                         else if (IsRenameOperation(change))
@@ -313,7 +313,7 @@ namespace SvnBridge.SourceControl
                           item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
                           folder.Items.Add(item);
                         }
-#endif
+//#endif
                     }
                     if (lastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                     {
