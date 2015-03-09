@@ -1378,6 +1378,16 @@ namespace SvnBridge.SourceControl
                 recursion);
 
             SourceItem[] sourceItems = metaDataRepository.QueryItems(version, itemPathsToBeQueried.ToArray(), recursion);
+
+            firstItem = PopulateItemProperties(sourceItems, version, recursion, returnPropertyFiles);
+
+            return firstItem;
+       }
+
+       private ItemMetaData PopulateItemProperties(SourceItem[] sourceItems, int version, Recursion recursion, bool returnPropertyFiles)
+       {
+            ItemMetaData firstItem = null;
+
             if (recursion == Recursion.OneLevel)
             {
                 if (sourceItems.Length > 0 && sourceItems[0].ItemType == ItemType.Folder)
