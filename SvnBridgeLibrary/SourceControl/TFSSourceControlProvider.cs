@@ -1407,13 +1407,14 @@ namespace SvnBridge.SourceControl
             foreach (SourceItem sourceItem in items)
             {
                 ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
-                if (IsPropertyFile(item.Name) && !returnPropertyFiles)
+                bool isPropertyFile = IsPropertyFile(item.Name);
+                if (isPropertyFile && !returnPropertyFiles)
                 {
                     string itemPath = GetItemFileNameFromPropertiesFileName(item.Name);
                     itemPropertyRevision[itemPath] = item.Revision;
                     properties[itemPath] = Helper.DeserializeXml<ItemProperties>(ReadFile(item));
                 }
-                else if ((!IsPropertyFile(item.Name) && !IsPropertyFolder(item.Name)) || returnPropertyFiles)
+                else if ((!isPropertyFile && !IsPropertyFolder(item.Name)) || returnPropertyFiles)
                 {
                     // FIXME: this optimistic handling relies on a folder-type item always being listed
                     // prior to its file-type content, which may sometimes not be the case.
