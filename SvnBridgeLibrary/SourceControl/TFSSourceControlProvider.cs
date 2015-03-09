@@ -1491,8 +1491,9 @@ namespace SvnBridge.SourceControl
                         {
                             string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
                             string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
-                            folders[folderNameMangled] = new FolderMetaData();
-                            folders[folderNameMangled].Items.Add(item);
+                            FolderMetaData folder = new FolderMetaData();
+                            folder.Items.Add(item);
+                            folders[folderNameMangled] = folder;
                         }
                     }
                     else
