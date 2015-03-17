@@ -68,13 +68,18 @@ namespace SvnBridge.Net
                 }
                 else
                 {
-                    byte[] buffer = streamBuffer.ToArray();
-                    stream.Write(buffer, 0, buffer.Length);
+                    ForwardStreamBuffer();
                 }
 
                 stream.Flush();
                 flushed = true;
             }
+        }
+
+        private void ForwardStreamBuffer()
+        {
+             byte[] buffer = streamBuffer.ToArray();
+             stream.Write(buffer, 0, buffer.Length);
         }
 
         public override int Read(byte[] buffer,
