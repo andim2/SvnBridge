@@ -144,9 +144,7 @@ namespace SvnBridge.SourceControl
         private static string GetProjectRoot(string path)
         {
             string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
-                return "";
-            return parts[0];
+            return (parts.Length > 0) ? parts[0] : "";
         }
 
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)

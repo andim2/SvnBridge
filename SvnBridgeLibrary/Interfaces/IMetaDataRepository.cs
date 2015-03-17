@@ -54,10 +54,11 @@ namespace SvnBridge.Infrastructure
             if (serverPath.EndsWith("/"))
                 serverPath = serverPath.Substring(0, serverPath.Length - 1);
 
-            if (path.StartsWith("/") == false)
-                serverPath = serverPath + '/' + path;
-            else
-                serverPath = serverPath + path;
+            serverPath += (path.StartsWith("/") == false) ?
+                '/' + path
+              :
+                path
+            ;
 
             if (serverPath.EndsWith("/") && serverPath != "$/")
                 serverPath = serverPath.Substring(0, serverPath.Length - 1);
