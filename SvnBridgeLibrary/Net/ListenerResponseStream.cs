@@ -15,6 +15,14 @@ namespace SvnBridge.Net
     /// depending on response.SendChunked.
     /// And _then_ one could implement it in a way to form a new chunk per each Flush().
     /// Perhaps similar to what Acme.Serve.servlet.http.ChunkedOutputStream does.
+    ///
+    /// Important explanations:
+    /// In chunked mode, actively doing any flushing handling is ok,
+    /// whereas in non-chunked mode we *cannot* start writing partial data
+    /// (i.e. MemoryStream needs to keep collecting until the very end)
+    /// since the Content-Length: header is a *fixed* value
+    /// and thus can be written at the very end of content creation only
+    /// (when final Length is known).
     /// </summary>
     public class ListenerResponseStream : Stream
     {
@@ -71,27 +79,40 @@ namespace SvnBridge.Net
         /// NOTE: this method could (and did!) get called _multiple_ times,
         /// thus it should better be made
         /// to not have single-invocation-only constraints.
+        ///
+        /// Since non-chunked operation may write a full content body *once* only,
+        /// it would likely be a better idea to move writeout from Flush()
+        /// (someone might call Flush() multiple times, and the first one would happen with
+        /// partial data only!!) to the final Close().
+        /// UNFORTUNATELY in some cases (Listener.cs FlushConnection())
+        /// Close() will not be called on shutdown (why!?!?),
+        /// thus we have to resort to sending the buffer here for now.
         /// </remarks>
         public override void Flush()
         {
             if (!flushed)
             {
-                WriteHeaderIfNotAlreadyWritten();
-                if (!response.SendChunked)
+                if (response.SendChunked)
                 {
-                    ForwardStreamBuffer();
+                    // currently we don't do much for chunked mode here,
+                    // other than ensuring proper header writeout.
+                    WriteHeaderIfNotAlreadyWritten();
+                }
+                else
+                {
+                    PushNonChunkedBuffer();
                 }
 
                 flushed = true;
             }
-            // Better invoke the member's Flush() unconditionally /
-            // *outside* of our semi-dirty Flush() override handling above!
-            stream.Flush();
+            // No need to Flush() the underlying stream member (network stream) here
+            // (since its write handling should implicitly know already when to flush),
+            // especially since that might end up actively blocking here.
         }
 
         public override void Close()
         {
-            Flush(); // may write header!
+            Flush(); // may write header! (written *FIRST*!)
 
             if (response.SendChunked)
             {
@@ -100,7 +121,14 @@ namespace SvnBridge.Net
                 Flush(); // ...and a second flush!
             }
             // FIXME: hmm... should we Close() our wrapped Stream member here, too!?
+            // Most likely not... (some subsequent output handling might take place).
             base.Close();
+        }
+
+        private void PushNonChunkedBuffer()
+        {
+            WriteHeaderIfNotAlreadyWritten();
+            ForwardStreamBuffer();
         }
 
         private void ForwardStreamBuffer()
@@ -109,6 +137,12 @@ namespace SvnBridge.Net
             //stream.Write(buffer, 0, buffer.Length);
             //stream.Write(streamBuffer.GetBuffer() /* *non-copy* of full internal container length */, 0, (int)streamBuffer.Length);
             streamBuffer.WriteTo(stream);
+            // At this point in time, streamBuffer is terre brulee
+            // (non-chunked mode, i.e. *fixed* Content-Length:,
+            // thus since we already indicated length
+            // [of only the content part *currently* residing in stream!]
+            // in the header right before,
+            // it's over-and-out). Thus:
             // Make sure to re-create (cleanly/fully discard all old content,
             // by discarding old object!):
             streamBuffer = CreateMemoryStream();
@@ -136,16 +170,6 @@ namespace SvnBridge.Net
                                    int offset,
                                    int count)
         {
-            // BUG: best to avoid maintaining dirty buggy *manual* state
-            // within a supposedly-thin wrapper class!!
-            // (nobody ever used to reset that member!!)
-            // And it's not really reliable in general:
-            // Any stream-modifying base method other than Write()
-            // could cause a Flush() to be newly required
-            // (i.e. our manual bool state would need to be reset!),
-            // and we wouldn't detect it...
-            flushed = false; // Write() modifies buffer --> RESET OUR DIRTY STATE HELPER!
-
             if (response.SendChunked)
             {
                 WriteHeaderIfNotAlreadyWritten();
@@ -159,6 +183,7 @@ namespace SvnBridge.Net
             else
             {
                 streamBuffer.Write(buffer, offset, count);
+                // No streamBuffer.Flush() here!! (keep collecting all data until content-complete!)
             }
         }
 
