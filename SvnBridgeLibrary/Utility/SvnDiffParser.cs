@@ -65,8 +65,12 @@ namespace SvnBridge.Utility
                     index += length;
                 }
 
-                byte[] diff = svnDiffStream.ToArray();
-                return Convert.ToBase64String(diff);
+                // Prefer passing direct GetBuffer()
+                // to the array/offset/length variant of ToBase64String()
+                // rather than passing a ToArray() _copy_ to ToBase64String(array).
+                // See also
+                // http://www.hightechtalks.com/dotnet-framework-winforms-controls/serializing-image-base64-string-best-222259.html
+                return Convert.ToBase64String(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length);
             }
         }
 
