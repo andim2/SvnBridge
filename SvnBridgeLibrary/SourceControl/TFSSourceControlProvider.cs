@@ -99,6 +99,7 @@ namespace SvnBridge.SourceControl
         private readonly WebCache cache;
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
+        private readonly string serverRepoUuidCacheKey;
         private const string repoLatestVersion = "Repository.Latest.Version";
 
         public TFSSourceControlProvider(
@@ -118,6 +119,7 @@ namespace SvnBridge.SourceControl
             this.logger = logger;
             this.cache = cache;
             this.fileRepository = fileRepository;
+            this.serverRepoUuidCacheKey = "GetRepositoryUuid_" + serverUrl;
 
             rootPath = Constants.ServerRootPath;
             if (!string.IsNullOrEmpty(projectName))
@@ -992,12 +994,11 @@ namespace SvnBridge.SourceControl
 
         public virtual Guid GetRepositoryUuid()
         {
-            string cacheKey = "GetRepositoryUuid_" + serverUrl;
-            CachedResult result = cache.Get(cacheKey);
+            CachedResult result = cache.Get(serverRepoUuidCacheKey);
             if (result != null)
                 return (Guid)result.Value;
             Guid id = sourceControlService.GetRepositoryId(serverUrl, credentials);
-            cache.Set(cacheKey, id);
+            cache.Set(serverRepoUuidCacheKey, id);
             return id;
         }
 
