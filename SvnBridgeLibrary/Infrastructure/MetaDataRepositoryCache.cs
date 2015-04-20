@@ -122,11 +122,6 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-        private string GetItemNoRecursionCacheKey(int revision, string path)
-        {
-            return "No recursion of: " + GetItemCacheKey(revision, path);
-        }
-
         private string CurrentUserName
         {
             get
@@ -279,6 +274,11 @@ namespace SvnBridge.Infrastructure
         private string GetItemOneLevelCacheKey(int revision, string parentDirectory)
         {
             return "One Level of " + GetItemCacheKey(revision, parentDirectory);
+        }
+
+        private string GetItemNoRecursionCacheKey(int revision, string path)
+        {
+            return "No recursion of: " + GetItemCacheKey(revision, path);
         }
 
         private string GetItemCacheKey(int revision, string path)
