@@ -194,9 +194,10 @@ namespace SvnBridge.Infrastructure
 
         private SourceItem[] QueryItemsInternal(int revision, ref string serverPath)
         {
+            VersionSpec versionSpec = VersionSpec.FromChangeset(revision);
             SourceItem[] items = sourceControlService.QueryItems(serverUrl, credentials, serverPath,
                                                                  RecursionType.Full,
-                                                                 VersionSpec.FromChangeset(revision),
+                                                                 versionSpec,
                                                                  DeletedState.NonDeleted,
                                                                  ItemType.Any,
                                                                  false,
@@ -210,7 +211,7 @@ namespace SvnBridge.Infrastructure
 
                 items = sourceControlService.QueryItems(serverUrl, credentials, serverPath,
                                                         RecursionType.Full,
-                                                        VersionSpec.FromChangeset(revision),
+                                                        versionSpec,
                                                         DeletedState.NonDeleted,
                                                         ItemType.Any,
                                                         false,
