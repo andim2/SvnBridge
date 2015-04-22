@@ -616,7 +616,7 @@ namespace SvnBridge.SourceControl
         {
             if (0 == itemId)
                 throw new ArgumentException("item id cannot be zero", "itemId");
-            var items = metaDataRepository.QueryItems(version, itemId, Recursion.None);
+            var items = metaDataRepository.QueryItems(version, itemId);
             return (items.Length != 0);
         }
 
