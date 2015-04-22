@@ -76,9 +76,9 @@ namespace SvnBridge.Infrastructure
 
                 EnsureRevisionIsCached(revision, path);
 
-                string cacheKey = GetItemsListCacheKey(recursion, revision, serverPath);
+                string itemCacheKey = GetItemsListCacheKey(recursion, revision, serverPath);
 
-                list = persistentCache.GetList<SourceItem>(cacheKey);
+                list = persistentCache.GetList<SourceItem>(itemCacheKey);
                 list.Sort(delegate(SourceItem x, SourceItem y)
                 {
                     return x.RemoteName.CompareTo(y.RemoteName);
@@ -224,8 +224,8 @@ namespace SvnBridge.Infrastructure
             // this lies to the cache system, making it think that the parent
             // directory is cached, when in truth the parent directory doesn't even exist
             // this saves going to the server again for files in the same directory
-            string parentCacheKey = CreateRevisionAndPathCacheKey(revision, serverPath);
-            persistentCache.Set(parentCacheKey, true);
+            string cacheKey = CreateRevisionAndPathCacheKey(revision, serverPath);
+            persistentCache.Set(cacheKey, true);
         }
 
         private string GetItemFullPathCacheKey(int revision, string parentDirectory)
