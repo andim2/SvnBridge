@@ -79,7 +79,6 @@ namespace SvnBridge.Cache
         {
             cache.Set(key, obj);
             RequestCache.Items[key] = obj;
-
         }
 
         public virtual void UnitOfWork(Action action)

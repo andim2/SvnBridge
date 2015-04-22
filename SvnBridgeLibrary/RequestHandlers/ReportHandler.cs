@@ -518,6 +518,7 @@ namespace SvnBridge.Handlers
                         throw new InvalidOperationException("Unrecognized change type " + change.ChangeType);
                     }
                 }
+
                 output.Write("</S:log-item>\n");
             }
             output.Write("</S:log-report>\n");

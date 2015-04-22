@@ -38,6 +38,7 @@ namespace SvnBridge.Handlers
                     "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host + " Port " +
                     request.Url.Port + "</address>\n" +
                     "</body></html>\n";
+
                 WriteToResponse(response, responseContent);
             }
             catch (ConflictException ex)
@@ -55,6 +56,7 @@ namespace SvnBridge.Handlers
                     "The version resource does not correspond to the resource within the transaction.  Either the requested version resource is out of date (needs to be updated), or the requested version resource is newer than the transaction root (restart the commit).\n" +
                     "</m:human-readable>\n" +
                     "</D:error>\n";
+
                 WriteToResponse(response, responseContent);
             }
             catch

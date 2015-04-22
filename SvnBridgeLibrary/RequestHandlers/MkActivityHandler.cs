@@ -19,7 +19,6 @@ namespace SvnBridge.Handlers
             sourceControlProvider.MakeActivity(activityId);
 
             SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
-
             response.AppendHeader("Cache-Control", "no-cache");
             response.AppendHeader("Location", "http://" + request.Headers["Host"] + path);
             response.AppendHeader("X-Pad", "avoid browser bug");

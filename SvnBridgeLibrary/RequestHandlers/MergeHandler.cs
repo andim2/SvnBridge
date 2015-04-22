@@ -82,11 +82,11 @@ namespace SvnBridge.Handlers
 				}
 
 				output.Write("<D:checked-in><D:href>");
-				
+
 				output.Write(GetLocalPath("/!svn/ver/" +
-							 mergeResponse.Version +
-							 Helper.Encode(item.Path, true)));
-							 
+							mergeResponse.Version +
+							Helper.Encode(item.Path, true)));
+
 				output.Write("</D:href></D:checked-in>\n");
 
 				output.Write("</D:prop>\n");
@@ -94,6 +94,7 @@ namespace SvnBridge.Handlers
 				output.Write("</D:propstat>\n");
 				output.Write("</D:response>\n");
 			}
+
 			output.Write("</D:updated-set>\n");
 			output.Write("</D:merge-response>\n");
 		}

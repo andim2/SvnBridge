@@ -163,7 +163,8 @@ namespace SvnBridge.SourceControl
                     changeVersion,
                     Math.Min(lastVersion, targetVersion) + 1,
                     Math.Max(lastVersion, targetVersion),
-                    Recursion.Full, 256);
+                    Recursion.Full,
+                    256);
 
                 foreach (SourceItemHistory history in Helper.SortHistories(updatingForwardInTime, logItem.History))
                 {
@@ -179,8 +180,10 @@ namespace SvnBridge.SourceControl
                     {
                         UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
                         SourceItemChange change = history.Changes[i];
+
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
+
                         if (IsAddOperation(change, updatingForwardInTime))
                         {
                             engine.Add(change);

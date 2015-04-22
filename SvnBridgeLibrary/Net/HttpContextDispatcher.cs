@@ -227,7 +227,6 @@ namespace SvnBridge.Net
                              "</body></html>\n";
 
             byte[] buffer = Encoding.UTF8.GetBytes(content);
-
             response.OutputStream.Write(buffer, 0, buffer.Length);
         }
 

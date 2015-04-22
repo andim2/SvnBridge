@@ -204,7 +204,6 @@ namespace SvnBridge.Infrastructure
 				   sourceControlProvider.ItemExists(folder.Name, clientRevisionForItem);
 		}
 
-
 		private static string GetFileName(string path)
 		{
 			int slashIndex = path.LastIndexOfAny(new char[] { '/', '\\' });

@@ -202,7 +202,6 @@ namespace SvnBridge.SourceControl
 
         public virtual ItemMetaData GetItemInActivity(string activityId, string path)
         {
-
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 foreach (CopyAction copy in activity.CopiedItems)
@@ -335,6 +334,7 @@ namespace SvnBridge.SourceControl
 
                     foreach (var rename in renamesWithNoPreviousVersion)
                         history.Changes.Remove(rename);
+
                     history.Changes.RemoveAll(item => item.ChangeType == ChangeType.None);
                     history.Changes.RemoveAll(item => item.ChangeType == ChangeType.Delete &&
                                               oldItems.Any(oldItem => oldItem != null && oldItem.Id == item.Item.ItemId));
@@ -426,6 +426,7 @@ namespace SvnBridge.SourceControl
                 }
                 history.Add(sourceItemHistory);
             }
+
             return history;
         }
 
@@ -1210,7 +1211,6 @@ namespace SvnBridge.SourceControl
 
         private void ConvertCopyToRename(string activityId, CopyAction copy)
         {
-
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 string pathTargetFull = Helper.CombinePath(rootPath, copy.TargetPath);
@@ -1284,6 +1284,7 @@ namespace SvnBridge.SourceControl
                                 if (activity.DeletedItems[i] == path)
                                 {
                                     copyIsRename = true;
+
                                     string pathDeletedFull = Helper.CombinePath(rootPath, activity.DeletedItems[i]);
                                     ServiceUndoPendingRequests(
                                                                             activityId,
@@ -1297,6 +1298,7 @@ namespace SvnBridge.SourceControl
                                     }
 
                                     activity.DeletedItems.RemoveAt(i);
+
                                     localPath = GetLocalPath(activityId, path);
                                     ItemMetaData pendingItem = GetPendingItem(activityId, path);
                                     UpdateLocalVersion(activityId, pendingItem, localPath);
@@ -1313,6 +1315,7 @@ namespace SvnBridge.SourceControl
                         {
                             copyIsRename = true;
                             activity.PostCommitDeletedItems.Add(activity.DeletedItems[i]);
+
                             string pathDeletedFull = Helper.CombinePath(rootPath, activity.DeletedItems[i]);
                             ServiceUndoPendingRequests(
                                                                     activityId,
@@ -1588,7 +1591,6 @@ namespace SvnBridge.SourceControl
             pendingItem.ItemRevision = items[0][0].latest;
             return pendingItem;
         }
-
 
         private void SetItemProperties(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
         {

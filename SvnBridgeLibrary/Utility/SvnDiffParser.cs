@@ -44,6 +44,7 @@ namespace SvnBridge.Utility
 
                     index += length;
                 }
+
                 byte[] diff = svnDiffStream.ToArray();
                 return Convert.ToBase64String(diff);
             }

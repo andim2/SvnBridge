@@ -172,7 +172,6 @@ namespace SvnBridge.Infrastructure
 
                 foreach (SourceItem item in items)
                 {
-
                     string itemCacheKey = GetItemCacheKey(revision, item.RemoteName);
 
                     persistentCache.Set(itemCacheKey, item);
@@ -189,7 +188,6 @@ namespace SvnBridge.Infrastructure
                         persistentCache.Add(GetItemFullPathCacheKey(revision, parentDirectory), itemCacheKey);
                         parentDirectory = GetParentName(parentDirectory);
                     } while (parentDirectory != Constants.ServerRootPath && string.IsNullOrEmpty(parentDirectory) == false);
-
                 }
 
                 if (items.Length == 0)
@@ -197,7 +195,6 @@ namespace SvnBridge.Infrastructure
 
                 persistentCache.Set(cacheKey, true);
             });
-
         }
 
         private SourceItem[] QueryItemsInternal(int revision, ref string serverPath)

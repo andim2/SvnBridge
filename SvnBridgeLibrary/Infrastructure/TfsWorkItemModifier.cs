@@ -41,7 +41,6 @@ namespace SvnBridge.Infrastructure
                 associateWorkItemWithChangeSetMessage = new StreamReader(stream).ReadToEnd();
             }
 
-			
             using (Stream stream = typeof(TfsWorkItemModifier).Assembly.GetManifestResourceStream(
                 "SvnBridge.Infrastructure.Messages.GetWorkItemInformationMessage.xml"))
             {
