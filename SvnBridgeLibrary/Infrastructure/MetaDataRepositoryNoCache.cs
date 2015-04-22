@@ -82,6 +82,9 @@ namespace SvnBridge.Infrastructure
                             continue; // skip mismatching result
                     }
 
+                    if (resultUniqueSorted.ContainsKey(item.item))
+                        continue; // skip existing element
+
                     SourceItem sourceItem = new SourceItem();
                     sourceItem.RemoteChangesetId = item.cs;
                     sourceItem.RemoteDate = item.date.ToUniversalTime();
@@ -90,10 +93,7 @@ namespace SvnBridge.Infrastructure
                     sourceItem.RemoteName = item.item;
                     sourceItem.DownloadUrl = serverDownloadUrlForParms + item.durl;
 
-                    if (!resultUniqueSorted.ContainsKey(sourceItem.RemoteName))
-                    {
-                        resultUniqueSorted.Add(sourceItem.RemoteName, sourceItem);
-                    }
+                    resultUniqueSorted.Add(sourceItem.RemoteName, sourceItem);
                 }
             }
             //   Could avoid manual Add() iteration via *ctor copy* into a List object,
