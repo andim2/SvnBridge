@@ -254,8 +254,9 @@ namespace SvnBridge.Infrastructure
 
             bool parentDirDoesNotExist =
                 QueryItems(revision, parentDirectory, Recursion.None).Length == 0;
+            bool parentDirDoesExist = (!parentDirDoesNotExist);
 
-            if (!parentDirDoesNotExist)
+            if (parentDirDoesExist)
                 return;
 
             persistentCache.Add(GetItemOneLevelCacheKey(revision, parentDirectory), null);
