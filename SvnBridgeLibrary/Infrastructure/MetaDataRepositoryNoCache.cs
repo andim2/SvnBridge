@@ -67,6 +67,7 @@ namespace SvnBridge.Infrastructure
                 0);
 
             SortedList<string, SourceItem> resultUniqueSorted = new SortedList<string, SourceItem>();
+            string serverDownloadUrlForParms = serverDownloadUrl + "?";
             foreach (ItemSet itemSet in itemSets)
             {
                 foreach (Item item in itemSet.Items)
@@ -89,7 +90,7 @@ namespace SvnBridge.Infrastructure
                     sourceItem.ItemType = item.type;
                     sourceItem.ItemId = item.itemid;
                     sourceItem.RemoteName = item.item;
-                    sourceItem.DownloadUrl = serverDownloadUrl + "?" + item.durl;
+                    sourceItem.DownloadUrl = serverDownloadUrlForParms + item.durl;
 
                     if (!resultUniqueSorted.ContainsKey(sourceItem.RemoteName))
                     {
