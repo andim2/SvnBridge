@@ -10,8 +10,8 @@ using CodePlex.TfsLibrary.RepositoryWebSvc;
 
 namespace SvnBridge.PathParsing
 {
-	public class PathParserProjectInDomain : PathParserSingleServerWithProjectInPath
-	{
+    public class PathParserProjectInDomain : PathParserSingleServerWithProjectInPath
+    {
         private static Dictionary<string, ProjectLocationInformation> projectLocations = new Dictionary<string, ProjectLocationInformation>();
 
         private readonly TFSSourceControlService sourceControlService;
@@ -22,7 +22,7 @@ namespace SvnBridge.PathParsing
         }
 
         public PathParserProjectInDomain(string servers, TFSSourceControlService sourceControlService)
-	    {
+        {
             foreach (string singleServerUrl in servers.Split(','))
             {
                 Uri ignored;
@@ -40,10 +40,10 @@ namespace SvnBridge.PathParsing
         }
 
         public override string GetProjectName(IHttpRequest request)
-		{
+        {
             string projectName = request.Headers["Host"].Split('.')[0];
             return projectLocations[projectName.ToLower()].RemoteProjectName;
-		}
+        }
 
         private ProjectLocationInformation GetProjectLocation(ICredentials credentials, string projectName)
         {

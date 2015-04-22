@@ -130,7 +130,7 @@ namespace SvnBridge.Net
 
         private void Process(TcpClient tcpClient)
         {
-        	IHttpContext connection = new ListenerContext(tcpClient.GetStream(), logger);
+            IHttpContext connection = new ListenerContext(tcpClient.GetStream(), logger);
             try
             {
                 DateTime start = DateTime.Now;

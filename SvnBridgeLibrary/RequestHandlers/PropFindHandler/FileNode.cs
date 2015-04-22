@@ -134,13 +134,13 @@ namespace SvnBridge.Nodes
 
         private string GetCheckedIn(RequestHandlerBase handler)
         {
-        	string href = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
-        	return
+            string href = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
+            return
                 "<lp1:checked-in><D:href>" + Helper.UrlEncodeIfNeccesary(href) +
                 "</D:href></lp1:checked-in>";
         }
 
-    	private string GetCreatorDisplayName()
+        private string GetCreatorDisplayName()
         {
             return "<lp1:creator-displayname>" + item.Author + "</lp1:creator-displayname>";
         }

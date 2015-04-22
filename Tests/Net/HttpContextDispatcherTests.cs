@@ -202,9 +202,9 @@ namespace UnitTests
             request.Url = new Uri("https://tfs01.codeplex.com"); ;
             request.Headers = new NameValueCollection();
             request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("username:password"));
-            
+
             dispatcher.Dispatch(context);
-            
+
             Assert.Equal(@"username_cp", dispatcher.Handler.Handle_credentials.UserName);
             Assert.Equal(@"snd", dispatcher.Handler.Handle_credentials.Domain);
         }

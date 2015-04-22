@@ -28,10 +28,10 @@ namespace SvnBridge.Infrastructure
             this.credentials = credentials;
         }
 
-		public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
-		{
-			return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision, 0);
-		}
+        public SourceItem[] QueryItems(int revision, int itemId, Recursion recursion)
+        {
+            return sourceControlService.QueryItems(serverUrl, credentials, new int[] { itemId }, revision, 0);
+        }
 
         public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
         {

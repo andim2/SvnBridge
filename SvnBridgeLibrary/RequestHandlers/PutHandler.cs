@@ -66,7 +66,7 @@ namespace SvnBridge.Handlers
             byte[] fileData = SvnDiffParser.ApplySvnDiffsFromStream(inputStream, sourceData);
             if (fileData.Length > 0)
             {
-				if (ChecksumMismatch(resultHash, fileData))
+                if (ChecksumMismatch(resultHash, fileData))
                 {
                     throw new Exception("Checksum mismatch with new file");
                 }
@@ -74,13 +74,13 @@ namespace SvnBridge.Handlers
             return sourceControlProvider.WriteFile(activityId, serverPath, fileData);
         }
 
-    	private static bool ChecksumMismatch(string hash, byte[] data)
-    	{
-			// git will not pass the relevant checksum, so we need to ignore 
-			// this
-			if(hash==null)
-				return false;
-    		return Helper.GetMd5Checksum(data) != hash;
-    	}
+        private static bool ChecksumMismatch(string hash, byte[] data)
+        {
+            // git will not pass the relevant checksum, so we need to ignore
+            // this
+            if(hash==null)
+                return false;
+            return Helper.GetMd5Checksum(data) != hash;
+        }
     }
 }

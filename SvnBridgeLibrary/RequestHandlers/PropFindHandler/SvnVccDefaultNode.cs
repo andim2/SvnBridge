@@ -28,7 +28,7 @@ namespace SvnBridge.Nodes
         {
             if (label == null)
             {
-            	return handler.GetLocalPath(path);
+                return handler.GetLocalPath(path);
             }
             else
             {

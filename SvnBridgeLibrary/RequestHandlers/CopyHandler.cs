@@ -20,7 +20,7 @@ namespace SvnBridge.Handlers
             string path = GetPath(request);
             path = path.Substring(path.IndexOf('/', 9));
 
-			string destination = PathParser.GetPathFromDestination(Helper.DecodeC(request.Headers["Destination"]));
+            string destination = PathParser.GetPathFromDestination(Helper.DecodeC(request.Headers["Destination"]));
             string targetPath = destination.Substring(destination.IndexOf('/', 12));
             sourceControlProvider.CopyItem(activityId, path, targetPath);
 

@@ -116,10 +116,10 @@ namespace SvnBridge.Infrastructure
                         {
                             args.Add(RequestCache.Items[info.Name]);
                         }
-                    	else
-                    	{
-                    		args.Add(ResolveType(info.ParameterType));
-                    	}
+                        else
+                        {
+                            args.Add(ResolveType(info.ParameterType));
+                        }
                     }
                     catch (Exception e)
                     {

@@ -40,7 +40,7 @@ namespace SvnBridge.Nodes
                 href += "/";
             }
 
-        	return handler.GetLocalPath(Helper.Encode(href));
+            return handler.GetLocalPath(Helper.Encode(href));
         }
 
         public string GetProperty(RequestHandlerBase handler, XmlElement property)
