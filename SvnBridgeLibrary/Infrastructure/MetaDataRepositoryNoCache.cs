@@ -29,10 +29,9 @@ namespace SvnBridge.Infrastructure
 
         public override SourceItem[] QueryItems(int revision, int itemId)
         {
-            return sourceControlService.QueryItems(serverUrl, credentials,
-                new int[] { itemId },
+            return Service_QueryItems(
                 revision,
-                0);
+                itemId);
         }
 
         public override SourceItem[] QueryItems(int revision, string path, Recursion recursion)

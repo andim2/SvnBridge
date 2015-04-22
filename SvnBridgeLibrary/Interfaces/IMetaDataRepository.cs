@@ -71,5 +71,15 @@ namespace SvnBridge.Infrastructure
         public abstract SourceItem[] QueryItems(int revision, int itemId);
         public abstract SourceItem[] QueryItems(int revision, string path, Recursion recursion);
         public abstract SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion);
+
+        protected SourceItem[] Service_QueryItems(
+            int revision,
+            int itemId)
+        {
+            return sourceControlService.QueryItems(serverUrl, credentials,
+                new int[] { itemId },
+                revision,
+                0);
+        }
     }
 }
