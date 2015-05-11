@@ -162,35 +162,7 @@ namespace SvnBridge.SourceControl
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
 
-                        if (IsAddOperation(change, updatingForwardInTime))
-                        {
-                            engine.Add(change);
-                        }
-                        else if (IsDeleteOperation(change, updatingForwardInTime))
-                        {
-                            engine.Delete(change);
-                        }
-                        else if (IsEditOperation(change))
-                        {
-                            // We may have edit & rename operations
-                            if (IsRenameOperation(change))
-                            {
-                                engine.Rename(change, updatingForwardInTime);
-                            }
-                            if (updatingForwardInTime == false)
-                            {
-                                change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
-                            }
-                            engine.Edit(change);
-                        }
-                        else if (IsRenameOperation(change))
-                        {
-                            engine.Rename(change, updatingForwardInTime);
-                        }
-                        else
-                        {
-                            throw new NotSupportedException("Unsupported change type " + change.ChangeType);
-                        }
+                        ApplyChangeOps(engine, change, updatingForwardInTime);
                     }
                 }
                 // No change was made, break out
@@ -198,6 +170,47 @@ namespace SvnBridge.SourceControl
                 {
                     break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Temporary(?) helper. It probably should be refactored to become a method of UpdateDiffEngine instead.
+        /// Well, no: that would mean having to move all Is*Operation() helpers into the engine as well,
+        /// which is a bad idea. Hmm, OTOH all uses of such helpers are exclusively for engine processing,
+        /// plus the engine has some identical (duplicated) helpers as well.........
+        /// Since engine impl *is* dependent on TfsLibrary-side SourceItemChange knowledge,
+        /// perhaps this *is* the proper thing to do after all.
+        /// </summary>
+        private void ApplyChangeOps(UpdateDiffEngine engine, SourceItemChange change, bool updatingForwardInTime)
+        {
+            if (IsAddOperation(change, updatingForwardInTime))
+            {
+                engine.Add(change);
+            }
+            else if (IsDeleteOperation(change, updatingForwardInTime))
+            {
+                engine.Delete(change);
+            }
+            else if (IsEditOperation(change))
+            {
+                // We may have edit & rename operations
+                if (IsRenameOperation(change))
+                {
+                    engine.Rename(change, updatingForwardInTime);
+                }
+                if (updatingForwardInTime == false)
+                {
+                    change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
+                }
+                engine.Edit(change);
+            }
+            else if (IsRenameOperation(change))
+            {
+                engine.Rename(change, updatingForwardInTime);
+            }
+            else
+            {
+                throw new NotSupportedException("Unsupported change type " + change.ChangeType);
             }
         }
 
