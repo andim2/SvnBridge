@@ -440,7 +440,9 @@ namespace SvnBridge.SourceControl
             }
 
             string itemName = _checkoutRootPath;
-            string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemName;
+            // deactivated [well... that turned out to be the SAME value!! Perhaps it was either deprecated or future handling...]:
+            //string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemName;
+            string remoteNameStart = itemName;
 
             string[] nameParts = remoteName.Substring(remoteNameStart.Length)
                 .Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
