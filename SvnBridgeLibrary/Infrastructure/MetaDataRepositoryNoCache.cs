@@ -83,7 +83,8 @@ namespace SvnBridge.Infrastructure
                     sourceItem.ItemType = item.type;
                     sourceItem.ItemId = item.itemid;
                     sourceItem.RemoteName = item.item;
-                    sourceItem.DownloadUrl = serverDownloadUrlForParms + item.durl;
+                    // Folders obviously may have URL set to null - if so, skip concat.
+                    sourceItem.DownloadUrl = String.IsNullOrEmpty(item.durl) ? null : serverDownloadUrlForParms + item.durl;
 
                     resultUniqueSorted.Add(sourceItem.RemoteName, sourceItem);
                 }
