@@ -197,14 +197,14 @@ namespace SvnBridge.Nodes
             // "Re: svn commit: rev 2637 - trunk/subversion/mod_dav_svn"
             //   http://svn.haxx.se/dev/archive-2002-07/1363.shtml
             return
-                "<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate.ToUniversalTime()) +
+                "<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate) +
                 "</lp1:creationdate>";
         }
 
         private string GetLastModified()
         {
             return
-                "<lp1:getlastmodified>" + Helper.FormatDate(item.LastModifiedDate.ToUniversalTime()) +
+                "<lp1:getlastmodified>" + Helper.FormatDate(item.LastModifiedDate) +
                 "</lp1:getlastmodified>";
         }
 

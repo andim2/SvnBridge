@@ -77,12 +77,11 @@ namespace SvnBridge.Infrastructure
                     if (resultUniqueSorted.ContainsKey(item.item))
                         continue; // skip existing element
 
-                    SourceItem sourceItem = new SourceItem();
-                    sourceItem.RemoteChangesetId = item.cs;
-                    sourceItem.RemoteDate = item.date.ToUniversalTime();
-                    sourceItem.ItemType = item.type;
-                    sourceItem.ItemId = item.itemid;
-                    sourceItem.RemoteName = item.item;
+                    // Now using standard SourceItem.FromRemoteItem() helper
+                    // plus the few additional locally needed modifications
+                    // rather than open-coding things - it's much more precise / faster
+                    // than not doing it.
+                    SourceItem sourceItem = SourceItem.FromRemoteItem(item);
                     // Folders obviously may have URL set to null - if so, skip concat.
                     sourceItem.DownloadUrl = String.IsNullOrEmpty(item.durl) ? null : serverDownloadUrlForParms + item.durl;
 

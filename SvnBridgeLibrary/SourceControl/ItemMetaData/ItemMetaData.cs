@@ -19,6 +19,15 @@ namespace SvnBridge.SourceControl
         public string DownloadUrl /* = null */;
         public int Id;
         public int ItemRevision;
+        // This DateTime member may NOT always be set to UTC kind!
+        // Since for any DateTime use itself it's never known whether it's UTC or not,
+        // we'll *keep* this member unspecified as well -
+        // IOW make sure to *always* use .ToUniversalTime()
+        // (and using .UtcNow wherever you might be tempted to use .Now)
+        // *whenever* doing DateTime comparisons or assignment towards clearly-UTC destinations!
+        // Plus, it has MUCH faster/better performance.
+        // http://blogs.msdn.com/b/kirillosenkov/archive/2012/01/10/datetime-utcnow-is-generally-preferable-to-datetime-now.aspx
+        // http://stackoverflow.com/a/6930542
         public DateTime LastModifiedDate;
         public string Name;
         public Dictionary<string, string> Properties = new Dictionary<string, string>();

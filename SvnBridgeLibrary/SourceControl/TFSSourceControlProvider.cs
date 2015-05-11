@@ -2756,6 +2756,12 @@ namespace SvnBridge.SourceControl
 
         private void UpdateFolderRevisions(ItemMetaData item, int version, Recursion recursion)
         {
+            // Make sure to do all DateTime comparisons with
+            // affected values already drawn into (== normalized to) UTC space!!
+            // (which should always be done that way in data model layer handling,
+            // as opposed to non-UTC-based [since human-based]
+            // presentation layer stuff)
+
             if (item != null && item.ItemType == ItemType.Folder)
             {
                 FolderMetaData folder = (FolderMetaData)item;
@@ -2766,22 +2772,23 @@ namespace SvnBridge.SourceControl
                 if (recursion == Recursion.Full)
                 {
                     int maxChangeset = int.MinValue;
-                    DateTime maxLastModified = DateTime.MinValue;
+                    DateTime maxLastModifiedUTC = DateTime.MinValue /* .ToUniversalTime(); MSDN: "The value of this constant is equivalent to 00:00:00.0000000 UTC" */;
 
                     foreach (ItemMetaData folderItem in folder.Items)
                     {
                         if (maxChangeset < folderItem.Revision)
                             maxChangeset = folderItem.Revision;
 
-                        if (maxLastModified < folderItem.LastModifiedDate)
-                            maxLastModified = folderItem.LastModifiedDate;
+                        DateTime folderLastModifiedUTC = folderItem.LastModifiedDate.ToUniversalTime();
+                        if (maxLastModifiedUTC < folderLastModifiedUTC)
+                            maxLastModifiedUTC = folderLastModifiedUTC;
                     }
                     // Hmm... is this syntax mismatch (ItemRevision vs. SubItemRevision) intended here?
                     if (item.ItemRevision < maxChangeset)
                         item.SubItemRevision = maxChangeset;
 
-                    if (item.LastModifiedDate < maxLastModified)
-                        item.LastModifiedDate = maxLastModified;
+                    if (item.LastModifiedDate.ToUniversalTime() < maxLastModifiedUTC)
+                        item.LastModifiedDate = maxLastModifiedUTC;
                 }
                 else
                 {
