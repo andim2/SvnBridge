@@ -52,8 +52,9 @@ namespace SvnBridge.Handlers
             }
             else if (path.StartsWith("/!svn/wrk/"))
             {
-                string activityId = path.Substring(10, path.IndexOf('/', 10) - 10);
-                string filePath = path.Substring(path.IndexOf('/', 10));
+                const int startIndex = 10;
+                string activityId = path.Substring(startIndex, path.IndexOf('/', startIndex) - startIndex);
+                string filePath = path.Substring(path.IndexOf('/', startIndex));
                 return sourceControlProvider.DeleteItem(activityId, Helper.Decode(filePath));
             }
             return true;

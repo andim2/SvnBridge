@@ -56,8 +56,9 @@ namespace SvnBridge.Handlers
 
             // FIXME: should be using BasePathParser (GetActivityId() or some such)
             // rather than doing this dirt-ugly open-coded something:
-            string activityId = path.Substring(11, path.IndexOf('/', 11) - 11);
-            string serverPath = Helper.Decode(path.Substring(11 + activityId.Length));
+            const int startIndex = 11;
+            string activityId = path.Substring(startIndex, path.IndexOf('/', startIndex) - startIndex);
+            string serverPath = Helper.Decode(path.Substring(startIndex + activityId.Length));
             byte[] sourceData = new byte[0];
             if (baseHash != null)
             {
