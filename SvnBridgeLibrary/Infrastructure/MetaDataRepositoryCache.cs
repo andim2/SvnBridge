@@ -49,10 +49,11 @@ namespace SvnBridge.Infrastructure
             foreach (string path in paths)
             {
                 var sourceItems = QueryItems(revision, path, recursion);
-                foreach (SourceItem item in sourceItems)
-                {
-                    items.Add(item);
-                }
+                //foreach (SourceItem item in sourceItems)
+                //{
+                //    items.Add(item);
+                //}
+                items.AddRange(sourceItems);
             }
 
             return items.ToArray();
