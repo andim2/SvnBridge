@@ -147,6 +147,20 @@ namespace SvnBridge.Infrastructure
             string cacheKey = CreateRevisionAndPathCacheKey(revision, serverPath);
             persistentCache.UnitOfWork(delegate
             {
+                PersistentCache_delegate_CacheRevisionIfNeeded(
+                    persistentCache,
+                    cacheKey,
+                    revision,
+                    serverPath);
+            });
+        }
+
+        private void PersistentCache_delegate_CacheRevisionIfNeeded(
+            MemoryBasedPersistentCache persistentCache,
+            string cacheKey,
+            int revision,
+            string serverPath)
+        {
                 // Once we are safely within the protected lock area here,
                 // we have to make a second test,
                 // to ensure that another thread
@@ -166,7 +180,6 @@ namespace SvnBridge.Infrastructure
                 }
 
                 persistentCache.Set(cacheKey, true);
-            });
         }
 
         private SourceItem[] QueryItemsInternal(int revision, ref string serverPath)
