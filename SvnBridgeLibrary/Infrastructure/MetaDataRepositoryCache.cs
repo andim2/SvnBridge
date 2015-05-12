@@ -152,28 +152,14 @@ namespace SvnBridge.Infrastructure
 
                 SourceItem[] items = QueryItemsInternal(revision, ref serverPath);
 
-                foreach (SourceItem item in items)
+                if (items.Length != 0)
                 {
-                    string itemCacheKey = GetItemCacheKey(revision, item.RemoteName);
-
-                    persistentCache.Set(itemCacheKey, item);
-
-                    persistentCache.Add(GetItemNoRecursionCacheKey(revision, item.RemoteName), itemCacheKey);
-                    persistentCache.Add(GetItemOneLevelCacheKey(revision, item.RemoteName), itemCacheKey);
-                    persistentCache.Add(GetItemFullPathCacheKey(revision, item.RemoteName), itemCacheKey);
-
-                    string parentDirectory = GetParentName(item.RemoteName);
-                    persistentCache.Add(GetItemOneLevelCacheKey(revision, parentDirectory), itemCacheKey);
-
-                    do
-                    {
-                        persistentCache.Add(GetItemFullPathCacheKey(revision, parentDirectory), itemCacheKey);
-                        parentDirectory = GetParentName(parentDirectory);
-                    } while (parentDirectory != Constants.ServerRootPath && string.IsNullOrEmpty(parentDirectory) == false);
+                    AddSubItemsToCache(revision, serverPath, items);
                 }
-
-                if (items.Length == 0)
+                else
+                {
                     AddMissingItemToCache(revision, serverPath);
+                }
 
                 persistentCache.Set(cacheKey, true);
             });
@@ -205,6 +191,29 @@ namespace SvnBridge.Infrastructure
                     ItemType.Any);
             }
             return items;
+        }
+
+        private void AddSubItemsToCache(int revision, string serverPath, SourceItem[] items)
+        {
+            foreach (SourceItem item in items)
+            {
+                string itemCacheKey = GetItemCacheKey(revision, item.RemoteName);
+
+                persistentCache.Set(itemCacheKey, item);
+
+                persistentCache.Add(GetItemNoRecursionCacheKey(revision, item.RemoteName), itemCacheKey);
+                persistentCache.Add(GetItemOneLevelCacheKey(revision, item.RemoteName), itemCacheKey);
+                persistentCache.Add(GetItemFullPathCacheKey(revision, item.RemoteName), itemCacheKey);
+
+                string parentDirectory = GetParentName(item.RemoteName);
+                persistentCache.Add(GetItemOneLevelCacheKey(revision, parentDirectory), itemCacheKey);
+
+                do
+                {
+                    persistentCache.Add(GetItemFullPathCacheKey(revision, parentDirectory), itemCacheKey);
+                    parentDirectory = GetParentName(parentDirectory);
+                } while (parentDirectory != Constants.ServerRootPath && string.IsNullOrEmpty(parentDirectory) == false);
+            }
         }
 
         private void AddMissingItemToCache(int revision, string serverPath)
