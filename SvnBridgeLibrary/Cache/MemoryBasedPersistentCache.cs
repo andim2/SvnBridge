@@ -10,7 +10,7 @@ namespace SvnBridge.Cache
     public delegate void Action();
     
     /// <summary>
-    /// This class uses two levels of caching in order to ensure persistance.
+    /// This class uses two levels of caching in order to ensure persistence.
     /// The first is the per request items, and the second is the global cache.
     /// The reason for that is that we _must_ ensure that the following code always works:
     /// <example>

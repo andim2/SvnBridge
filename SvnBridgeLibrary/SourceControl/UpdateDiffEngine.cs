@@ -200,7 +200,7 @@ namespace SvnBridge.SourceControl
                         if (item == null)
                         {
                             // TFS will report renames even for deleted items, 
-                            // since TFS reported that this was renamed, but it doesn't exists
+                            // since TFS reported that this was renamed, but it doesn't exist
                             // in this revision, we know it is a case of renaming a deleted file.
                             // We can safely ignore this and any of its children.
                             if (IsRenameOperation(change))
