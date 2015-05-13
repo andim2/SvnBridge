@@ -37,7 +37,7 @@ namespace SvnBridge.Utility
                         break;
 
                     case SvnDiffInstructionOpCode.CopyFromTarget:
-                        // Cannot use Array.Copy because Offset + Length may be greater then starting targetIndex
+                        // Cannot use Array.Copy because Offset + Length may be greater than starting targetIndex
                         for (int i = 0; i < (int) instruction.Length; i++)
                         {
                             buffer[targetIndex] = buffer[(int) instruction.Offset + i];

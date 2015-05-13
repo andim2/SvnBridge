@@ -21,8 +21,8 @@ namespace SvnBridge.Cache
     /// Therefor, we use the two levls, the first level cache is per request, and is ensured to survive throughout
     /// the current request.
     /// 
-    /// Reads goes first to the per request cache, and then to system cache, if it is not there.
-    /// Writes goes to both of them.
+    /// Reads go first to the per request cache, and then to system cache, if it is not there.
+    /// Writes go to both of them.
     /// </summary>
     public class MemoryBasedPersistentCache
     {
