@@ -314,7 +314,10 @@ namespace SvnBridge.SourceControl
                             item = itemFetched;
                         }
 
-                        item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
+                        if (null == item)
+                        {
+                            item = new MissingItemMetaData(itemPath, targetVersion, false);
+                        }
                         ItemHelpers.FolderOps_AddItem(folder, item);
                     }
 
