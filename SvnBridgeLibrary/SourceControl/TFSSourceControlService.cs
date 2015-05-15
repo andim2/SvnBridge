@@ -167,7 +167,7 @@ namespace SvnBridge.SourceControl
                     }
                     catch (Exception ex)
                     {
-                        logger.Error("Error connecting with read all account " + Configuration.ReadAllUserName, ex);
+                        logger.Error("Error connecting with read all account \"" + Configuration.ReadAllUserName + "\"", ex);
                     }
 
                     if (!invalidPath)
