@@ -450,6 +450,21 @@ namespace SvnBridge.SourceControl
             if (null == oldRootItem)
             {
                 pathToNewRootItem = newItem.Name; // either folder *or* item!
+
+                bool newItemIsFile = !newItemIsFolder;
+                if (newItemIsFile)
+                {
+                    // HACK: previous code added a container folder
+                    // in case of a file-only root item
+                    // (but it carefully did NOT register that folder item as the root item then!)
+                    // So, keep doing the (almost) same thing...
+                    FolderMetaData baseFolderForFileRootItem = new FolderMetaData();
+                    baseFolderForFileRootItem.Name = FilesysHelpers.GetFolderPathPart(newItem.Name);
+                    ItemHelpers.FolderOps_AddItem(baseFolderForFileRootItem, newItem);
+                    // and register it as a *stub* folder!
+                    // (previous code - likely erroneously - used a real folder)
+                    InsertFolderInMap(ItemHelpers.WrapFolderAsStubFolder(baseFolderForFileRootItem));
+                }
             }
             else
             {
