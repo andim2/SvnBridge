@@ -15,7 +15,7 @@ namespace SvnBridge.Net
         protected ListenerResponse response;
         protected Stream stream;
         protected int maxKeepAliveConnections;
-        protected MemoryStream streamBuffer = new MemoryStream();
+        protected MemoryStream streamBuffer;
 
         public ListenerResponseStream(ListenerRequest request,
                                       ListenerResponse response,
