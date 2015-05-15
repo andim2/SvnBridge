@@ -28,8 +28,8 @@ namespace SvnBridge.Net
     {
         protected bool flushed /* = false */;
         protected bool headerWritten /* = false */;
-        protected ListenerResponse response;
-        protected Stream stream;
+        protected readonly ListenerResponse response;
+        protected readonly Stream stream;
         protected MemoryStream streamBuffer;
         protected static readonly byte[] chunkFooterChunk = Encoding.UTF8.GetBytes("\r\n");
         protected static readonly byte[] chunkFooterFinalZeroChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");

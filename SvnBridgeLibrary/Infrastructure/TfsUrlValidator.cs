@@ -7,7 +7,7 @@ namespace SvnBridge.Infrastructure
 {
     public class TfsUrlValidator
     {
-		private WebCache cache;
+		private readonly WebCache cache;
 
 		public TfsUrlValidator(WebCache cache)
 		{

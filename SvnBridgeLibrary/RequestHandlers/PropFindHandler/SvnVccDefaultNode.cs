@@ -6,9 +6,9 @@ namespace SvnBridge.Nodes
     // Node: <server>/!svn/vcc/default
     public sealed class SvnVccDefaultNode : NodeBase
     {
-        private string label;
-        private string path;
-        private TFSSourceControlProvider sourceControlProvider;
+        private readonly string label;
+        private readonly string path;
+        private readonly TFSSourceControlProvider sourceControlProvider;
 
         public SvnVccDefaultNode(TFSSourceControlProvider sourceControlProvider,
                                  string path,
