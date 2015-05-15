@@ -105,17 +105,17 @@ namespace SvnBridge.SourceControl
             {
                 this.metaDataRepository = new MetaDataRepositoryCache(
                     this.sourceControlService,
-                    this.credentials,
-                    Container.Resolve<MemoryBasedPersistentCache>(),
                     this.serverUrl,
-                    this.rootPath);
+                    this.credentials,
+                    this.rootPath,
+                    Container.Resolve<MemoryBasedPersistentCache>());
             }
             else
             {
                 this.metaDataRepository = new MetaDataRepositoryNoCache(
                     this.sourceControlService,
-                    this.credentials,
                     this.serverUrl,
+                    this.credentials,
                     this.rootPath);
             }
         }

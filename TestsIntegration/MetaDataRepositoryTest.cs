@@ -30,10 +30,10 @@ namespace IntegrationTests
 
 			repository = new MetaDataRepositoryCache(
           sourceControlService,
-          credentials,
-          Container.Resolve<MemoryBasedPersistentCache>(),
           ServerUrl,
-          Constants.ServerRootPath + PROJECT_NAME);
+          credentials,
+          Constants.ServerRootPath + PROJECT_NAME,
+          Container.Resolve<MemoryBasedPersistentCache>());
 		}
 
 	    [Fact]

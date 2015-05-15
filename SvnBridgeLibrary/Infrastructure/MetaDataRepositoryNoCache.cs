@@ -14,19 +14,19 @@ namespace SvnBridge.Infrastructure
     {
         private readonly TFSSourceControlService sourceControlService;
         private readonly string serverUrl;
-        private readonly string rootPath;
         private readonly ICredentials credentials;
+        private readonly string rootPath;
 
         public MetaDataRepositoryNoCache(
             TFSSourceControlService sourceControlService,
-            ICredentials credentials,
             string serverUrl,
+            ICredentials credentials,
             string rootPath)
         {
             this.sourceControlService = sourceControlService;
             this.serverUrl = serverUrl;
-            this.rootPath = rootPath;
             this.credentials = credentials;
+            this.rootPath = rootPath;
         }
 
         public SourceItem[] QueryItems(int revision, int itemId)

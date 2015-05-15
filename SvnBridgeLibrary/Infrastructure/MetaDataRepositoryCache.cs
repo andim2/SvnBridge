@@ -14,23 +14,23 @@ namespace SvnBridge.Infrastructure
     [Interceptor(typeof(TracingInterceptor))]
     public class MetaDataRepositoryCache : IMetaDataRepository
     {
-        private readonly string serverUrl;
-        private readonly string rootPath;
-        private readonly ICredentials credentials;
-        private readonly MemoryBasedPersistentCache persistentCache;
         private readonly TFSSourceControlService sourceControlService;
+        private readonly string serverUrl;
+        private readonly ICredentials credentials;
+        private readonly string rootPath;
+        private readonly MemoryBasedPersistentCache persistentCache;
 
         public MetaDataRepositoryCache(
             TFSSourceControlService sourceControlService,
-            ICredentials credentials,
-            MemoryBasedPersistentCache persistentCache,
             string serverUrl,
-            string rootPath)
+            ICredentials credentials,
+            string rootPath,
+            MemoryBasedPersistentCache persistentCache)
         {
             this.sourceControlService = sourceControlService;
             this.serverUrl = serverUrl;
-            this.rootPath = rootPath;
             this.credentials = credentials;
+            this.rootPath = rootPath;
             this.persistentCache = persistentCache;
         }
 
