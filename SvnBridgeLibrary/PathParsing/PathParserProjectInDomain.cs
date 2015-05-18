@@ -25,7 +25,7 @@ namespace SvnBridge.PathParsing
             {
                 Uri ignored;
                 if (Uri.TryCreate(singleServerUrl, UriKind.Absolute, out ignored) == false)
-                    throw new InvalidOperationException("The url '" + servers + "' is not a valid url");
+                    throw new InvalidOperationException("The url '" + singleServerUrl + "' is not a valid url");
             }
             this.server = servers;
             this.sourceControlService = sourceControlService;
