@@ -247,6 +247,8 @@ namespace SvnBridge.SourceControl
         /// </summary>
         private static FolderMetaData FindMatchingExistingFolderCandidate_CaseInsensitive(Dictionary<string, FolderMetaData> dict, string folderName)
         {
+            FolderMetaData folderResult = null;
+
             // To achieve a case-insensitive comparison, we
             // unfortunately need to manually *iterate* over all hash entries:
             foreach (var pair in dict)
@@ -262,9 +264,13 @@ namespace SvnBridge.SourceControl
                 // independent of whether .wantCaseSensitiveMatch is set
                 // (this is a desperate last-ditch attempt, thus we explicitly do want insensitive).
                 if (ItemMetaData.IsSamePathCaseInsensitive(folderName, pair.Key))
-                    return pair.Value;
+                {
+                    folderResult = pair.Value;
+                    break;
+                }
             }
-            return null;
+
+            return folderResult;
         }
 
         private void SetItemProperties(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
