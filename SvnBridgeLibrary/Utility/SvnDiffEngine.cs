@@ -221,11 +221,13 @@ namespace SvnBridge.Utility
             byte version = reader.ReadByte();
 
             // See Subversion files notes/svndiff and svndiff.c.
-            if (signature[0] != 'S' || signature[1] != 'V' || signature[2] != 'N')
+            bool isValidSignature = (signature[0] == 'S' && signature[1] == 'V' && signature[2] == 'N');
+            if (!(isValidSignature))
             {
                 throw new InvalidOperationException("The signature is invalid.");
             }
-            if (version != 0)
+            bool isSupportedVersion = (version == 0);
+            if (!(isSupportedVersion))
             {
                 throw new NotSupportedException("Unsupported SVN diff version");
             }
