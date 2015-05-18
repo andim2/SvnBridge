@@ -311,7 +311,7 @@ namespace SvnBridge.Infrastructure
         private static T ReadConfig<T>(ConfigSettings setting, T defaultValue)
         {
             string name = setting.ToString();
-            if (userConfig.ContainsKey(name.ToString()))
+            if (userConfig.ContainsKey(name))
                 return (T)Convert.ChangeType(userConfig[name], typeof(T));
 
             if (ConfigurationManager.AppSettings[name] != null)
