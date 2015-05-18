@@ -85,7 +85,9 @@ namespace SvnBridge.SourceControl
 			{
 				Activity activity;
 				if(activities.TryGetValue(activityId, out activity)==false)
+				{
 					throw new InvalidOperationException("Could not find activity id: " + activityId);
+				}
 				lock(activity)
 				{
 					action(activity);

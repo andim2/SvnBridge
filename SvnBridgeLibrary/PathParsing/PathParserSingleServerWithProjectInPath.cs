@@ -26,7 +26,9 @@ namespace SvnBridge.PathParsing
     {
         Uri ignored;
         if (Uri.TryCreate(server, UriKind.Absolute, out ignored) == false)
+        {
             throw new InvalidOperationException("The url '" + server + "' is not a valid url");
+        }
     }
 
 		public override string GetLocalPath(IHttpRequest request)
