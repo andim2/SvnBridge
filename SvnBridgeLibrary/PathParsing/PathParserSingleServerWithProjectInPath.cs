@@ -24,10 +24,21 @@ namespace SvnBridge.PathParsing
 
     protected static void ValidateServerUri(string server)
     {
-        Uri ignored;
-        if (Uri.TryCreate(server, UriKind.Absolute, out ignored) == false)
+        // SVNBRIDGE_DOC_REF_EXCEPTIONS: For locations where failure
+        // is expected to be exceptional rather than the norm,
+        // prefer using a more efficient
+        // (due to cleanly failure path separated exception-only handling
+        // rather than doing superfluous extra checks in normal code path)
+        // action / exception / rethrow combo
+        // rather than pre-invoking "uselessly checking" APIs such as
+        // .TryGetValue() / Uri.TryCreate() / .ContainsKey().
+        try
         {
-            throw new InvalidOperationException("The url '" + server + "' is not a valid url");
+            Uri ignored = new Uri(server, UriKind.Absolute);
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException("The url '" + server + "' is not a valid url", e);
         }
     }
 

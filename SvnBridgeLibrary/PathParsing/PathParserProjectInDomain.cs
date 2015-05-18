@@ -59,10 +59,16 @@ namespace SvnBridge.PathParsing
                         // Hmm... to break; or not to break;?
                     }
                 }
-                if (!projectLocations.ContainsKey(projectName))
-                    throw new InvalidOperationException("Could not find project '" + projectName + "' in: " + this.server);
             }
-            return projectLocations[projectName];
+            // SVNBRIDGE_DOC_REF_EXCEPTIONS (we can expect to find an entry...).
+            try
+            {
+                return projectLocations[projectName];
+            }
+            catch
+            {
+                throw new InvalidOperationException("Could not find project '" + projectName + "' in: " + this.server);
+            }
         }
     }
 }
