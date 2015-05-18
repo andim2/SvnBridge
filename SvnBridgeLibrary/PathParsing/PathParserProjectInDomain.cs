@@ -52,7 +52,9 @@ namespace SvnBridge.PathParsing
                     ICredentials credentialsForServer = CredentialsHelper.GetCredentialsForServer(server, credentials);
                     SourceItem[] items = sourceControlService.QueryItems(server, credentialsForServer, Constants.ServerRootPath + projectName, RecursionType.None, VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false, 0);
 
-                    if (items != null && items.Length > 0)
+                    bool haveFoundItem = (items != null && items.Length > 0);
+                    bool isProjectFoundOnThisServer = (haveFoundItem);
+                    if (isProjectFoundOnThisServer)
                     {
                         string remoteProjectName = items[0].RemoteName.Substring(Constants.ServerRootPath.Length);
                         projectLocations[projectName] = new ProjectLocationInformation(remoteProjectName, server);
