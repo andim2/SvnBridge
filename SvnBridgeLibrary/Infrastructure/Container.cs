@@ -138,8 +138,10 @@ namespace SvnBridge.Infrastructure
 
         private List<Type> GetInterceptorTypes(Type impl)
         {
-            List<Type> interceptorTypes = new List<Type>();
+            List<Type> interceptorTypes;
             object[] attributes = impl.GetCustomAttributes(typeof(InterceptorAttribute), true);
+            var interceptorTypesInitialCapacity = attributes.Length;
+            interceptorTypes = new List<Type>(interceptorTypesInitialCapacity);
             foreach (object attribute in attributes)
             {
                 Type interceptorType = ((InterceptorAttribute)attribute).Interceptor;

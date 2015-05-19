@@ -39,8 +39,9 @@ namespace SvnBridge.Infrastructure.Statistics
 
         private static List<Type> GatherAllCounters()
         {
-            var handlers = new List<Type>();
-            foreach (Type type in typeof(ActionTrackingViaPerfCounter).Assembly.GetTypes())
+            var types = typeof(ActionTrackingViaPerfCounter).Assembly.GetTypes();
+            var handlers = new List<Type>(types.Length + 1);
+            foreach (Type type in types)
             {
                 if (typeof(RequestHandlerBase).IsAssignableFrom(type) == false
                     || type.IsAbstract)
@@ -101,7 +102,7 @@ namespace SvnBridge.Infrastructure.Statistics
 
         public virtual IDictionary<string, long> GetStatistics()
         {
-            Dictionary<string, long> stats = new Dictionary<string, long>();
+            Dictionary<string, long> stats = new Dictionary<string, long>(performanceCounters.Values.Count);
             foreach (var counter in performanceCounters.Values)
             {
                 stats[counter.CounterName] = counter.RawValue;

@@ -381,7 +381,7 @@ namespace SvnBridge.Utility
 
         private static string GetMd5ChecksumString(byte[] hash)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(hash.Length * HexByteStringLength);
             foreach (byte b in hash)
             {
                 sb.Append(b.ToString("x2").ToLower());
@@ -521,7 +521,7 @@ namespace SvnBridge.Utility
                         // Hmm... why can't we use the venerable
                         // Uri.EscapeDataString() method instead?
                         // Surely would be much faster, too...
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder(href_utf8.Length * PercentEnhancedHexByteStringLength);
 			foreach (char c in href_utf8)
 			{
         // I don't know WHAT THE H*LL this function does:
@@ -584,7 +584,7 @@ namespace SvnBridge.Utility
     /// </remarks>
     private static string EncodeURIComponent_NonASCII(string href_utf8)
     {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder(href_utf8.Length * PercentEnhancedHexByteStringLength);
 			foreach (char c in href_utf8)
 			{
 				bool isInASCIIRange = (CharIsInASCIIRange(c));
@@ -623,7 +623,7 @@ namespace SvnBridge.Utility
 
     private static string DecodeURIComponent_NonASCII(string href_utf8)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(href_utf8.Length);
         int href_utf8Len = href_utf8.Length;
         for (int index = 0; index < href_utf8Len; /* specially conditionally incremented below */)
         {
@@ -669,7 +669,7 @@ namespace SvnBridge.Utility
     /// <returns></returns>
     public static string PercentEncodeConditional(string uriPayload, string charsToPercentEncode, string charsToNotPercentEncode)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(uriPayload.Length * PercentEnhancedHexByteStringLength);
         foreach (char c in uriPayload)
         {
             bool needPercentEncodeThisChar = false;
@@ -709,6 +709,16 @@ namespace SvnBridge.Utility
 
         return sb.ToString();
     }
+
+        private static int HexByteStringLength
+        {
+            get { return 2; }
+        }
+
+        private static int PercentEnhancedHexByteStringLength
+        {
+            get { return 3; }
+        }
 
 		public static string FormatDate(DateTime date)
 		{

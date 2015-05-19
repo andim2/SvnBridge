@@ -878,7 +878,7 @@ namespace SvnBridge.SourceControl
                     // that there are "old items",
                     // but also with _copy_ (branch) or even other changes.
                     ItemMetaData[] oldItems = GetPreviousVersionOfItems(renamedItems.ToArray(), history.ChangeSetID);
-                    var oldItemsById = new Dictionary<int, ItemMetaData>();
+                    var oldItemsById = new Dictionary<int, ItemMetaData>(oldItems.Length);
                     // [remember that renamedItems and oldItems containers have a same-index compatibility requirement]
 
                     // I pondered changing this loop into the (faster) decrementing type,
@@ -2335,7 +2335,7 @@ namespace SvnBridge.SourceControl
 
         private void UpdateLocalVersion(string activityId, int itemId, int itemRevision, string localPath)
         {
-            List<LocalUpdate> updates = new List<LocalUpdate>();
+            List<LocalUpdate> updates = new List<LocalUpdate>(1);
             updates.Add(LocalUpdate.FromLocal(itemId, localPath, itemRevision));
             ServiceUpdateLocalVersions(activityId, updates);
         }
@@ -2783,7 +2783,7 @@ namespace SvnBridge.SourceControl
             // thus it's prone to socket exhaustion exceptions and terrible performance.
             if (wantMultiRequestMode)
             {
-                List<SourceItem> resultMulti_List = new List<SourceItem>();
+                List<SourceItem> resultMulti_List = new List<SourceItem>(numRenamedItems);
                 for (var i = 0; i < numRenamedItems; i++)
                 {
                     var renamedItem = renamedItems[i];
@@ -2863,7 +2863,7 @@ namespace SvnBridge.SourceControl
             SourceItem[] result;
 
             var numRenamedItems = renamedItems.Length;
-            List<SourceItem> resultBatched_List = new List<SourceItem>();
+            List<SourceItem> resultBatched_List = new List<SourceItem>(numRenamedItems);
             // the number of rename reports which we'll request per web service request
             // We'll choose a sufficiently but not overly large number (avoid server DoS).
             // Perhaps we should increase that number (to minimize network requests:
@@ -2879,7 +2879,7 @@ namespace SvnBridge.SourceControl
                 {
                     int numRemaining = (numRenamedItems - iterBatchBase);
                     int numThisTime = Math.Min(batchSize, numRemaining);
-                    List<int> previousSourceItemIds = new List<int>();
+                    List<int> previousSourceItemIds = new List<int>(numThisTime);
 
                     var iterBatchEnd = iterBatchBase + numThisTime;
                     // Performance WARNING: in execution time terms,
@@ -2997,7 +2997,7 @@ namespace SvnBridge.SourceControl
                 return sourceItems_UnknownOrder;
             }
 
-            var itemsById = new Dictionary<int, SourceItem>();
+            var itemsById = new Dictionary<int, SourceItem>(sourceItems_UnknownOrder.Length);
             foreach (SourceItem item in sourceItems_UnknownOrder)
             {
                 if (null != item)
@@ -3005,7 +3005,7 @@ namespace SvnBridge.SourceControl
                     itemsById[item.ItemId] = item;
                 }
             }
-            List<SourceItem> sourceItems_CorrectedOrder = new List<SourceItem>();
+            List<SourceItem> sourceItems_CorrectedOrder = new List<SourceItem>(arrSourceItemIds.Length);
             foreach(int id in arrSourceItemIds)
             {
                 SourceItem item = null;
@@ -3076,7 +3076,7 @@ namespace SvnBridge.SourceControl
         // thereby simplifying common invocations.
         private void ServiceSubmitPendingRequest(string activityId, PendRequest pendRequest)
         {
-            List<PendRequest> pendRequests = new List<PendRequest>();
+            List<PendRequest> pendRequests = new List<PendRequest>(1);
             pendRequests.Add(pendRequest);
             ServiceSubmitPendingRequests(activityId, pendRequests);
         }

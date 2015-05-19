@@ -41,6 +41,10 @@ namespace SvnBridge.Infrastructure
         // should ideally be improved if possible.
         public override SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
         {
+            // Unable to do a helpful educated guess
+            // of initial List capacity here
+            // since number of results
+            // is completely unknown/random (recursion type, ...).
             List<SourceItem> items = new List<SourceItem>();
             foreach (string path in paths)
             {

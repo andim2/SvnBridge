@@ -31,7 +31,7 @@ namespace SvnBridge.Cache
 
         public virtual void Clear()
         {
-            List<string> keys = new List<string>();
+            List<string> keys = new List<string>(cache.Count);
             foreach (DictionaryEntry de in cache)
             {
                 keys.Add((string)de.Key);

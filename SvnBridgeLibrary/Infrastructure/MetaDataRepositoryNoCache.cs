@@ -34,7 +34,7 @@ namespace SvnBridge.Infrastructure
 
         public override SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
         {
-            List<ItemSpec> itemSpecs = new List<ItemSpec>();
+            List<ItemSpec> itemSpecs = new List<ItemSpec>(paths.Length);
             foreach (string path in paths)
             {
                 ItemSpec itemspec = new ItemSpec();
@@ -56,7 +56,7 @@ namespace SvnBridge.Infrastructure
                 itemSpecs.ToArray(),
                 0);
 
-            SortedList<string, SourceItem> resultUniqueSorted = new SortedList<string, SourceItem>();
+            SortedList<string, SourceItem> resultUniqueSorted = new SortedList<string, SourceItem>(); // double loop and complex insertion condition --> no initial capacity guesstimate possible
             string serverDownloadUrlForParms = GetServerDownloadUrl() + "?";
             foreach (ItemSet itemSet in itemSets)
             {

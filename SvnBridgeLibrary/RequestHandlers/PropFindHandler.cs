@@ -584,7 +584,8 @@ namespace SvnBridge.Handlers
 			output.Write("<D:href>" + Helper.UrlEncodeIfNecessary(node.Href(this)) + "</D:href>\n");
 
             XmlDocument doc = new XmlDocument();
-            List<string> propertyResults = new List<string>();
+            var propertyResultsInitialCapacity = properties.Count;
+            List<string> propertyResults = new List<string>(propertyResultsInitialCapacity);
 
             foreach (XmlElement prop in properties)
             {
