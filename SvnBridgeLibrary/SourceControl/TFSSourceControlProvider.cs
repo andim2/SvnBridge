@@ -814,7 +814,8 @@ namespace SvnBridge.SourceControl
             // done *both* by GetItems() internally (its inner copy of the variable)
             // *and* below, by ItemMetaData implementation.
             SVNPathStripLeadingSlash(ref path);
-            ItemMetaData item = GetItems(version, path, Recursion.None, true);
+            bool returnPropertyFiles = true;
+            ItemMetaData item = GetItems(version, path, Recursion.None, returnPropertyFiles);
             if (item != null)
             {
                 itemExists = true;
@@ -831,10 +832,23 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
+                        // Comparison for path being data item vs. result being property storage item
+                        // would fail, thus we need to do an additional comparison against data item path where needed:
                         itemExists = false;
                         bool haveCorrectlyCasedItem = item.Name.Equals(path);
                         if (haveCorrectlyCasedItem)
                             itemExists = true;
+                        if (!itemExists)
+                        {
+                            bool itemMightBePropStorageItem = (returnPropertyFiles);
+                            if (itemMightBePropStorageItem)
+                            {
+                                string itemPropPath = GetPropertiesFileName(path, item.ItemType);
+                                bool haveCorrectlyCasedItem_Prop = item.Name.Equals(itemPropPath);
+                                if (haveCorrectlyCasedItem_Prop)
+                                    itemExists = true;
+                            }
+                        }
                     }
                 }
             }
