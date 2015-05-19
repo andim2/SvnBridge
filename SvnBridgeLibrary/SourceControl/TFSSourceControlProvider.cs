@@ -1248,11 +1248,11 @@ namespace SvnBridge.SourceControl
                         }
                     }
                     SourceItem[] subFolderProperties = metaDataRepository.QueryItems(version, propertiesForSubFolders.ToArray(), Recursion.None);
-                    List<SourceItem> mergedItems = new List<SourceItem>(items);
+                    List<SourceItem> combinedItems = new List<SourceItem>(items);
                     foreach (SourceItem item in subFolderProperties)
-                        mergedItems.Add(item);
+                        combinedItems.Add(item);
 
-                    items = mergedItems.ToArray();
+                    items = combinedItems.ToArray();
                 }
             }
 
