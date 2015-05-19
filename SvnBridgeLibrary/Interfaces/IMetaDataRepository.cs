@@ -12,7 +12,17 @@ namespace SvnBridge.Interfaces
 {
     public interface IMetaDataRepository
     {
+        // Note: this interface has certain parameters (revision)
+        // *swapped* vs. the interface (<see cref="ISourceControlService"/>)
+        // that its implementations usually forward to.
+        // While this may be inconvenient at implementation time
+        // (manual param swapping, potential stack inefficiency),
+        // I guess it was done to bring some common appearance to these methods
+        // (revision is first param, at all methods).
         SourceItem[] QueryItems(int revision, int itemId);
+        SourceItem[] QueryItems(
+            int revision,
+            int[] itemIds);
         SourceItem[] QueryItems(int revision, string path, Recursion recursion);
         SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion);
     }
@@ -70,11 +80,44 @@ namespace SvnBridge.Infrastructure
         }
 
         //public abstract SourceItem[] QueryItems(int revision, int itemId);
+
+        /// <summary>
+        /// WARNING: at least on TFS2008, it seems ID-based SourceControlService.QueryItems()
+        /// for any changeSet equal or newer of the one which deleted an item
+        /// *does* still return the item
+        /// (with none of its SourceItem members having a different state due to deletion!!),
+        /// whereas the path-based QueryItems() *does not* return the item! (NULL result)
+        /// This might be one of the many(?) victims of TFS2008 operating in "item mode" (vs. TFS2010 "slot mode").
+        /// OTOH this probably just means that with TFS, items do remain in existence forever,
+        /// irrespective of their "deletion state".
+        /// Perhaps this behaviour of QueryItems() still returning an item even for "deleted" state
+        /// is one of the reasons for having created QueryItemsExtended()...
+        /// </summary>
+        /// <param name="revision">Revision to query items of</param>
+        /// <param name="itemId">ID of the item to be queried</param>
+        /// <param name="recursion">Recursion level</param>
+        /// <returns>Potentially empty array of items</returns>
         public SourceItem[] QueryItems(int revision, int itemId)
+        {
+            return QueryItems(
+                revision,
+                new int[] { itemId });
+        }
+
+        /// <summary>
+        /// See important comment at our other QueryItems() implementation variant.
+        /// </summary>
+        /// <param name="revision">Revision to query items of</param>
+        /// <param name="itemIds">Array of IDs of the items to be queried</param>
+        /// <param name="recursion">Recursion level</param>
+        /// <returns>Potentially empty array of items</returns>
+        public SourceItem[] QueryItems(
+            int revision,
+            int[] itemIds)
         {
             return Service_QueryItems(
                 revision,
-                itemId);
+                itemIds);
         }
         public abstract SourceItem[] QueryItems(int revision, string path, Recursion recursion);
         public abstract SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion);
@@ -83,8 +126,17 @@ namespace SvnBridge.Infrastructure
             int revision,
             int itemId)
         {
+            return Service_QueryItems(
+                revision,
+                new int[] { itemId });
+        }
+
+        protected SourceItem[] Service_QueryItems(
+            int revision,
+            int[] itemIds)
+        {
             return sourceControlService.QueryItems(serverUrl, credentials,
-                new int[] { itemId },
+                itemIds,
                 revision,
                 0);
         }

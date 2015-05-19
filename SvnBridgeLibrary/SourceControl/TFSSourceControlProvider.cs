@@ -2159,10 +2159,9 @@ namespace SvnBridge.SourceControl
             {
                 // fallback for TFS08 and earlier
                 var previousSourceItemIds = items.Select(item => item.ItemId).ToArray();
-                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials,
-                    previousSourceItemIds,
+                var previousSourceItems = metaDataRepository.QueryItems(
                     previousRevision,
-                    0);
+                    previousSourceItemIds);
                 return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
             }
 
@@ -2171,10 +2170,9 @@ namespace SvnBridge.SourceControl
             {
                 var renamedItem = renamedItems[i];
                 var previousSourceItemId = (renamedItem != null && renamedItem.FromItem != null) ? renamedItem.FromItem.ItemId : items[i].ItemId;
-                var previousSourceItems = sourceControlService.QueryItems(serverUrl, credentials,
-                    new[] { previousSourceItemId },
+                var previousSourceItems = metaDataRepository.QueryItems(
                     previousRevision,
-                    0);
+                    previousSourceItemId);
                 result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
             return result.ToArray();
