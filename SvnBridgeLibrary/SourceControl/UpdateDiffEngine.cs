@@ -456,16 +456,21 @@ namespace SvnBridge.SourceControl
         {
             if (item == null)
                 return;
+            bool needUpdateContainer = false;
             if (propertyChange == false)
             {
-                additionForPropertyChangeOnly[item] = propertyChange;
+                needUpdateContainer = true;
             }
             else
             {
                 if (additionForPropertyChangeOnly.ContainsKey(item) == false)
                 {
-                    additionForPropertyChangeOnly[item] = propertyChange;
+                    needUpdateContainer = true;
                 }
+            }
+            if (needUpdateContainer)
+            {
+                additionForPropertyChangeOnly[item] = propertyChange;
             }
         }
 
