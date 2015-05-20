@@ -2024,7 +2024,44 @@ namespace SvnBridge.SourceControl
                 true, false, false,
                 sortAscending);
 
+            bool havePolicySanitizeTfsBug = true;
+            if (havePolicySanitizeTfsBug)
+            {
+                Service_QueryHistory_TFSBugSanitize(ref changesets);
+            }
+
             return changesets;
+        }
+
+        private void Service_QueryHistory_TFSBugSanitize(ref Changeset[] changesets)
+        {
+            TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer = new TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder(
+                sourceControlService,
+                serverUrl, credentials);
+
+            int cs = 0; // Debug helper (it's sufficiently relevant to know the current element)
+            foreach (var changeset in changesets)
+            {
+                int cg = 0; // Debug helper (it's sufficiently relevant to know the current element)
+                foreach (var change in changeset.Changes)
+                {
+                    string pathToBeChecked = change.Item.item;
+                    bool needCheckPath = (pathToBeChecked.Contains("/display/"));
+                    if (needCheckPath)
+                    {
+                        string result = bugSanitizer.GetItemPathSanitized(
+                            pathToBeChecked,
+                            changeset.cset);
+                        bool hadSanePath = (result.Equals(pathToBeChecked));
+                        if (!(hadSanePath))
+                        {
+                            change.Item.item = result;
+                        }
+                    }
+                    ++cg;
+                }
+                ++cs;
+            }
         }
 
         /// <summary>
