@@ -1769,6 +1769,29 @@ namespace SvnBridge.SourceControl
                         bool addPropEditChangeForItem = !itemFileIncludedInChanges;
                         if (addPropEditChangeForItem)
                         {
+                            // Need to guard against the pathological case of there being a property storage item
+                            // yet no corresponding data item (WTH!?) - may happen in at least two cases:
+                            // - property storage handling implementation bugs
+                            // - accidental modifications/deletes of these SCM items
+                            //   (partially even SVN-specific ones, as in the property storage items)
+                            //   by non-SVN (i.e., TFS) clients
+                            // When there's no data item file at all, it's a bit "inconvenient" (tm)
+                            // to announce an invented "Edit" on it (and inventing an "Add" would be equally wrong)...
+
+                            // HACK: need to *temporarily* go from TFS path to SVN syntax
+                            // (*actual* TFS->SVN conversion of item members will be done over all changes later in processing,
+                            // thus do NOT modify this single one here!).
+                            string nonTfsPath = FilesysHelpers.PathPrefix_Checked_Strip(rootPath, changePropEdit.Item.RemoteName);
+                            // Yup, verified to be that revision proper, not minus 1 or some such:
+                            int itemVersion_VerifyExistence = changePropEdit.Item.RemoteChangesetId;
+                            bool haveValidDataItemFile = SVNItemExists(nonTfsPath, itemVersion_VerifyExistence);
+                            if (!haveValidDataItemFile)
+                            {
+                                addPropEditChangeForItem = false;
+                            }
+                        }
+                        if (addPropEditChangeForItem)
+                        {
                             changesSVNValid.Add(changePropEdit);
                         }
                         break;
