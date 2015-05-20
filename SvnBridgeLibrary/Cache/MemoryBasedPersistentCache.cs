@@ -37,9 +37,9 @@ namespace SvnBridge.Cache
             CachedResult result = null;
             ReadLock(delegate
             {
-                if (RequestCache.Items.Contains(key))
+                if (RequestCacheHelper.Contains(key))
                 {
-                    result = new CachedResult(RequestCache.Items[key]);
+                    result = new CachedResult(RequestCacheHelper.Get(key));
                 }
                 else
                 {
@@ -48,7 +48,7 @@ namespace SvnBridge.Cache
                     {
                         // we have to store it back in the per request, to ensure that we
                         // wouldn't lose it during this request
-                        RequestCache.Items[key] = result.Value;
+                        RequestCacheHelper.Set(key, result.Value);
                     }
                 }
             });
@@ -76,7 +76,7 @@ namespace SvnBridge.Cache
         public virtual void Set(string key, object obj)
         {
             cache.Set(key, obj);
-            RequestCache.Items[key] = obj;
+            RequestCacheHelper.Set(key, obj);
         }
 
         public virtual void UnitOfWork(Action action)
@@ -103,7 +103,7 @@ namespace SvnBridge.Cache
             bool result = false;
             ReadLock(delegate
             {
-                result = RequestCache.Items.Contains(key);
+                result = RequestCacheHelper.Contains(key);
                 if (result == false)
                     result = cache.Get(key) != null;
             });
@@ -115,8 +115,8 @@ namespace SvnBridge.Cache
             rwLock.AcquireWriterLock(Timeout.Infinite);
             try
             {
-                if(RequestCache.IsInitialized)
-                    RequestCache.Items.Clear();
+                if(RequestCacheHelper.IsInitialized)
+                    RequestCacheHelper.Clear();
                 cache.Clear();
             }
             finally
@@ -168,6 +168,45 @@ namespace SvnBridge.Cache
                 return;
             });
             return items;
+        }
+    }
+
+    /// <summary>
+    /// RequestCache abstraction helper.
+    /// </summary>
+    internal class RequestCacheHelper
+    {
+        public static bool Contains(string strKey)
+        {
+            return RequestCache.Items.Contains(MakeSessionKey(strKey));
+        }
+
+        public static object Get(string strKey)
+        {
+            return RequestCache.Items[MakeSessionKey(strKey)];
+        }
+
+        public static void Set(string strKey, object objValue)
+        {
+            RequestCache.Items[MakeSessionKey(strKey)] = objValue;
+        }
+
+        public static bool IsInitialized
+        {
+            get
+            {
+                return RequestCache.IsInitialized;
+            }
+        }
+
+        public static void Clear()
+        {
+            RequestCache.Items.Clear();
+        }
+
+        private static string MakeSessionKey(string key)
+        {
+            return key;
         }
     }
 }
