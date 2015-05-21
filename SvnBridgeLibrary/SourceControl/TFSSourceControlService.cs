@@ -97,24 +97,6 @@ namespace SvnBridge.SourceControl
             });
 		}
 
-		public SourceItem QueryItems(
-            string tfsUrl,
-            ICredentials credentials,
-            int itemId,
-            int changeSet,
-            int options)
-		{
-            SourceItem[] items = QueryItems(
-                tfsUrl,
-                credentials,
-                new int[] { itemId },
-                changeSet,
-                options);
-            if (items.Length == 0)
-                return null;
-            return items[0];
-		}
-
         public virtual ItemSet[] QueryItems(
             string tfsUrl,
             ICredentials credentials,
