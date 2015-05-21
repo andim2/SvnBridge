@@ -104,18 +104,15 @@ namespace SvnBridge.SourceControl
             int changeSet,
             int options)
 		{
-            return WrapWebException<SourceItem>(delegate
-            {
-                SourceItem[] items = QueryItems(
-                    tfsUrl,
-                    credentials,
-                    new int[] { itemId },
-                    changeSet,
-                    options);
-                if (items.Length == 0)
-                    return null;
-                return items[0];
-            });
+            SourceItem[] items = QueryItems(
+                tfsUrl,
+                credentials,
+                new int[] { itemId },
+                changeSet,
+                options);
+            if (items.Length == 0)
+                return null;
+            return items[0];
 		}
 
         public virtual ItemSet[] QueryItems(
