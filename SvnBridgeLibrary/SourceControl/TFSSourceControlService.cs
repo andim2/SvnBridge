@@ -235,9 +235,21 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        private delegate T WrapWebExceptionDelegate<T>();
+        // NOTE: WrapWebException* are duplicated local implementations (i.e., copies)
+        // of the *private* (read: unreachable) helpers
+        // in the external-library base class.
+        delegate T WrapWebExceptionDelegate<T>();
 
-        private T WrapWebException<T>(WrapWebExceptionDelegate<T> function)
+        // Please note that use of this method here
+        // constitutes somewhat of a layer violation,
+        // since *some* public methods of our (derived!) service class
+        // do wrap things yet *other* *public* methods of the *base* service class
+        // quite obviously *don't*.
+        // The correct way to do things would probably be to correct TFSSourceControlService
+        // to be an ISourceControlService-compatible *wrapper*(!)
+        // around an internal SourceControlService *member*
+        // (hmm, probably to be done via IInterceptor mechanism instead).
+        static T WrapWebException<T>(WrapWebExceptionDelegate<T> function)
         {
             try
             {
