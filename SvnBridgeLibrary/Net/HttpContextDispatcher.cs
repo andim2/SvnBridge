@@ -134,11 +134,16 @@ namespace SvnBridge.Net
 
                 HttpWebResponse response = ex.Response as HttpWebResponse;
 
-                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
+                bool bHandled = false;
+                if (response != null)
                 {
-                    SendUnauthorizedResponse(connection);
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        SendUnauthorizedResponse(connection);
+                        bHandled = true;
+                    }
                 }
-                else
+                if (!bHandled)
                 {
                     throw;
                 }
