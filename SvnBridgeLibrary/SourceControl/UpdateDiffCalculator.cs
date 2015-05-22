@@ -61,7 +61,8 @@ namespace SvnBridge.SourceControl
             if (((changeType & ChangeType.Add) == ChangeType.Add) ||
                 ((changeType & ChangeType.Edit) == ChangeType.Edit))
             {
-                if ((clientExistingFiles.ContainsKey(changePath)) && (clientExistingFiles[changePath] >= itemRevision))
+                int revisionClientExistingFile = 0;
+                if ((HaveClientExistingFile(changePath, ref revisionClientExistingFile)) && (revisionClientExistingFile >= itemRevision))
                 {
                     return true;
                 }
@@ -77,8 +78,9 @@ namespace SvnBridge.SourceControl
             }
             else if ((changeType & ChangeType.Delete) == ChangeType.Delete)
             {
+                int revisionClientExistingFile = 0;
                 if (clientMissingFiles.ContainsKey(changePath) ||
-                    (clientExistingFiles.ContainsKey(changePath) && (clientExistingFiles[changePath] >= itemRevision)))
+                    (HaveClientExistingFile(changePath, ref revisionClientExistingFile) && (revisionClientExistingFile >= itemRevision)))
                 {
                     return true;
                 }
@@ -92,6 +94,19 @@ namespace SvnBridge.SourceControl
                 }
             }
             return false;
+        }
+
+        private bool HaveClientExistingFile(string path, ref int revisionClientExistingFile)
+        {
+            bool haveFile = false;
+
+            if (clientExistingFiles.ContainsKey(path))
+            {
+                haveFile = true;
+                revisionClientExistingFile = clientExistingFiles[path];
+            }
+
+            return haveFile;
         }
 
         public ClientMissingFiles ClientMissingFiles
