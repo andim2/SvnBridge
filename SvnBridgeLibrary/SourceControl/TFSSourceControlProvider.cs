@@ -1763,6 +1763,28 @@ namespace SvnBridge.SourceControl
                 version = GetLatestVersion();
             }
 
+            SourceItem[] sourceItems = GetTFSSourceItems(version, path, recursion);
+
+            if (sourceItems.Length > 0)
+            {
+                var itemCollector = new ItemQueryCollector(this);
+                ItemMetaData[] items = sourceItems.Select(sourceItem => SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker)).ToArray();
+                rootItem = itemCollector.process(items, returnPropertyFiles);
+
+                if (!returnPropertyFiles)
+                {
+                    if (null != rootItem)
+                    {
+                        UpdateFolderRevisions(rootItem, version, recursion);
+                    }
+                }
+            } // sourceItems.Length > 0
+
+            return rootItem;
+        }
+
+        private SourceItem[] GetTFSSourceItems(int version, string path, Recursion recursion)
+        {
             List<string> itemPathsToBeQueried = new List<string>();
             CollectItemPaths(
                 path,
@@ -1790,23 +1812,9 @@ namespace SvnBridge.SourceControl
                         sourceItems = Helper.ArrayCombine(sourceItems, subFolderProperties);
                     }
                 }
+            }
 
-                {
-                    var itemCollector = new ItemQueryCollector(this);
-                    ItemMetaData[] items = sourceItems.Select(sourceItem => SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker)).ToArray();
-                    rootItem = itemCollector.process(items, returnPropertyFiles);
-
-                    if (!returnPropertyFiles)
-                    {
-                        if (null != rootItem)
-                        {
-                            UpdateFolderRevisions(rootItem, version, recursion);
-                        }
-                    }
-                }
-            } // sourceItems.Length > 0
-
-            return rootItem;
+            return sourceItems;
         }
 
         /// <summary>
