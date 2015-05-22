@@ -18,7 +18,12 @@ namespace SvnBridge.Handlers
 
             string requestPath = GetPath(request);
             string itemPath = Helper.Decode(requestPath);
-            bool created = Put(sourceControlProvider, requestPath, request.InputStream, request.Headers["X-SVN-Base-Fulltext-MD5"], request.Headers["X-SVN-Result-Fulltext-MD5"]);
+            bool created = Put(
+                sourceControlProvider,
+                requestPath,
+                request.InputStream,
+                request.Headers["X-SVN-Base-Fulltext-MD5"],
+                request.Headers["X-SVN-Result-Fulltext-MD5"]);
 
             if (created)
             {
@@ -39,7 +44,12 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private static bool Put(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream inputStream, string baseHash, string resultHash)
+        private static bool Put(
+            TFSSourceControlProvider sourceControlProvider,
+            string requestPath,
+            Stream inputStream,
+            string baseHash,
+            string resultHash)
         {
             // Hmm, is this part really necessary??
             // See also MkColHandler where it's being fed into a regex match...
