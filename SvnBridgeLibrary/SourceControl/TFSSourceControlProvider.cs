@@ -3935,10 +3935,14 @@ namespace SvnBridge.SourceControl
                                                         0);
             if (items[0].Length == 0)
                 return null;
-            ItemMetaData pendingItem = new ItemMetaData();
+            ItemMetaData pendingItem;
             if (items[0][0].type == ItemType.Folder)
             {
                 pendingItem = new FolderMetaData();
+            }
+            else
+            {
+                pendingItem = new ItemMetaData();
             }
 
             pendingItem.Id = items[0][0].itemid;
