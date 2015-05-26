@@ -387,7 +387,7 @@ namespace SvnBridge.SourceControl
                 }
                 if (branchedItems.Count > 0)
                 {
-                    var itemsBranched = branchedItems.Select(item => CreateItemSpec(Helper.CombinePath(rootPath, item.RemoteName), RecursionType.None)).ToArray();
+                    var itemsBranched = branchedItems.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray();
 
                     ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
                     branchChangeset.cs = history.ChangeSetID;
@@ -1723,13 +1723,13 @@ namespace SvnBridge.SourceControl
         {
             var branchQueries = sourceControlService.QueryBranches(serverUrl, 
                                                                    credentials,
-                                                                   items.Select(item => CreateItemSpec(rootPath + item.RemoteName, RecursionType.None)).ToArray(), 
+                                                                   items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(), 
                                                                    VersionSpec.FromChangeset(changeset));
             var renamedItems = items.Select((item, i) =>
                 branchQueries[i].FirstOrDefault(branchItem => 
                     branchItem.ToItem != null && 
                     branchItem.ToItem.RemoteChangesetId == changeset && 
-                    branchItem.ToItem.RemoteName == rootPath + item.RemoteName)).ToList();
+                    branchItem.ToItem.RemoteName == MakeTfsPath(item.RemoteName))).ToList();
             
             var previousRevision = changeset - 1;
 
