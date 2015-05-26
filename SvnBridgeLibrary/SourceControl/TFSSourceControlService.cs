@@ -9,11 +9,507 @@ using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
 
 namespace SvnBridge.SourceControl
 {
-	public class TFSSourceControlService : SourceControlService /* concrete foreign class implementing *parts* of the interface */, ITFSSourceControlService
+    // FIXME: these are using:s required for ITFSSourceControlService_wrapper-related types...
+    using System.IO; // Stream
+    using System.Collections.Generic; // IEnumerable
+
+    /// <summary>
+    /// Simple wrapper to provide the externally used class
+    /// with its correct name and full class-specific parameter set,
+    /// at a generic ITFSSourceControlService interface.
+    /// </summary>
+    public class TFSSourceControlService : ITFSSourceControlService_wrapper
+    {
+        public TFSSourceControlService(
+            IRegistrationService registrationService,
+            IRepositoryWebSvcFactory webSvcFactory,
+            IWebTransferService webTransferService,
+            IFileSystem fileSystem,
+            DefaultLogger logger)
+            : base(
+                ConstructWrappedSourceControlService(
+                    registrationService,
+                    webSvcFactory,
+                    webTransferService,
+                    fileSystem,
+                    logger))
+        {
+        }
+
+        /// <summary>
+        /// ITFSSourceControlService-constructing helper (wrapper chain).
+        /// Required in order to be able to properly serve
+        /// the *ctor-side* chaining mechanism
+        /// as provided by the ITFSSourceControlService_wrapper.
+        /// </summary>
+        private static ITFSSourceControlService ConstructWrappedSourceControlService(
+            IRegistrationService registrationService,
+            IRepositoryWebSvcFactory webSvcFactory,
+            IWebTransferService webTransferService,
+            IFileSystem fileSystem,
+            DefaultLogger logger)
+        {
+            ITFSSourceControlService scs_wrapper_outermost = null;
+
+            bool useTfsService = true;
+            if (useTfsService)
+            {
+                ITFSSourceControlService scs_inner = new TFSSourceControlService_inner(
+                    registrationService,
+                    webSvcFactory,
+                    webTransferService,
+                    fileSystem,
+                    logger);
+                scs_wrapper_outermost = scs_inner;
+            }
+            else
+            {
+                // Well, what kind of emulation service or other
+                // would one want to offer here??
+            }
+
+            return scs_wrapper_outermost;
+        }
+    }
+
+    /// <summary>
+    /// Interface chaining wrapper helper class.
+    /// To be used as a base for purposes such as
+    /// - augmenting interface activity (e.g. statistics)
+    /// - filtering / sanitizing incorrect interface-provided raw data
+    /// </summary>
+    /// <remarks>
+    /// Note: I decided to do full interface-wrapping forwarders
+    /// (which we can wrap/stack fully runtime-dynamically,
+    /// i.e. construct a full *chain* of interface implementers!!)
+    /// rather than alternative possibilities such as:
+    /// - interception (which is said to have a *huge* performance penalty)
+    ///
+    /// "C# Interface Based Development" http://www.c-sharpcorner.com/UploadFile/rmcochran/csharp_interrfaces03052006095933AM/csharp_interrfaces.aspx?ArticleID=cd6a6952-530a-4250-a6d7-5%3Ccode%3E%3Ca%20href=
+    /// http://stackoverflow.com/questions/8387004/how-to-make-a-simple-dynamic-proxy-in-c-sharp
+    ///
+    /// This particular implementation layer (class)
+    /// is expected to do/contain *nothing other*
+    /// than *clean and direct forwards* of all interface calls
+    /// to the lower wrapped service.
+    /// By doing these operations within virtuals,
+    /// we are then able to create derived classes of this class
+    /// which will be able
+    /// to selectively override certain interface methods as needed
+    /// and within these
+    /// call down to the base wrapper's implementation
+    /// as/where needed.
+    /// But WARNING: do make sure to provide overrides
+    /// of *all* of the methods which you would want to do further overriding of
+    /// (especially take note of the THREE QueryItems() variants!!!!).
+    ///
+    /// Please note that interface chaining
+    /// best ought to be done in a certain order,
+    /// e.g. something like:
+    /// [innermost]
+    /// 1) most painful (e.g. latency-hampered network access) parts
+    /// 2) crucial corrections
+    /// 3) data caching
+    /// 4) object conversions etc.
+    /// [outermost i.e. interface-user facing parts]
+    /// (hmm, but OTOH perhaps data caching
+    /// should be done *prior* to the correction layer,
+    /// since the correction layer might cause large request overhead
+    /// which would then go to network in uncached manner?)
+    ///
+    /// For individual filter classes to be used within an entire filter/processing chain,
+    /// please have them implemented in a way
+    /// which keeps separate concerns fully separate,
+    /// especially for dangerously similar but unrelated filter cases.
+    /// </remarks>
+    public class ITFSSourceControlService_wrapper : ITFSSourceControlService
+    {
+        private readonly ITFSSourceControlService scsWrapped = null;
+
+        /// <summary>
+        /// Ctor which enables a clean (and thus properly performant)
+        /// *ctor-side* class init chaining mechanism
+        /// (rather than dirtily assigning it via a post-construction setter).
+        /// </summary>
+        public ITFSSourceControlService_wrapper(
+            ITFSSourceControlService scsWrapped)
+        {
+            this.scsWrapped = scsWrapped;
+        }
+
+        /// <summary>
+        /// Provides access to the underlying ITFSSourceControlService interface
+        /// which this instance wraps.
+        /// </summary>
+        /// Performance note:
+        /// since this class
+        /// is as much of a hotpath
+        /// as it can ever get,
+        /// I originally had decided
+        /// to do direct member accesses
+        /// in all wrapper virtuals,
+        /// rather than going through properties or so,
+        /// *for all locations in this very limited/tiny private layer*.
+        /// However, performance overhead of properties
+        /// is said to be non-existent:
+        /// http://stackoverflow.com/questions/3264833/performance-overhead-for-properties-in-net
+        /// , thus definitely prefer using
+        /// such abstraction helpers.
+        protected ITFSSourceControlService SCSWrapped
+        {
+            get
+            {
+                return scsWrapped;
+            }
+        }
+
+        #region ISourceControlService members
+        public virtual void AddWorkspaceMapping(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string serverPath,
+            string localPath,
+            int supportedFeatures)
+        {
+            SCSWrapped.AddWorkspaceMapping(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                serverPath,
+                localPath,
+                supportedFeatures);
+        }
+
+        public virtual int Commit(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string comment,
+            IEnumerable<string> serverItems,
+            bool deferCheckIn,
+            int checkInTicket)
+        {
+            return SCSWrapped.Commit(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                comment,
+                serverItems,
+                deferCheckIn,
+                checkInTicket);
+        }
+
+        public virtual void CreateWorkspace(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string workspaceComment)
+        {
+            SCSWrapped.CreateWorkspace(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                workspaceComment);
+        }
+
+        public virtual void DeleteWorkspace(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName)
+        {
+            SCSWrapped.DeleteWorkspace(
+                tfsUrl,
+                credentials,
+                workspaceName);
+        }
+
+        public virtual Guid GetRepositoryId(
+            string tfsUrl,
+            ICredentials credentials)
+        {
+            return SCSWrapped.GetRepositoryId(
+                tfsUrl,
+                credentials);
+        }
+
+        public virtual int GetLatestChangeset(
+            string tfsUrl,
+            ICredentials credentials)
+        {
+            return SCSWrapped.GetLatestChangeset(
+                tfsUrl,
+                credentials);
+        }
+
+        public virtual WorkspaceInfo[] GetWorkspaces(
+            string tfsUrl,
+            ICredentials credentials,
+            WorkspaceComputers computers,
+            int permissionsFilter)
+        {
+            return SCSWrapped.GetWorkspaces(
+                tfsUrl,
+                credentials,
+                computers,
+                permissionsFilter);
+        }
+
+        public virtual void PendChanges(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            IEnumerable<PendRequest> requests,
+            int pendChangesOptions,
+            int supportedFeatures)
+        {
+            SCSWrapped.PendChanges(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                requests,
+                pendChangesOptions,
+                supportedFeatures);
+        }
+
+        public virtual SourceItem[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            string serverPath,
+            RecursionType recursion,
+            VersionSpec version,
+            DeletedState deletedState,
+            ItemType itemType,
+            bool sortAscending,
+            int options)
+        {
+            return SCSWrapped.QueryItems(
+                tfsUrl,
+                credentials,
+                serverPath,
+                recursion,
+                version,
+                deletedState,
+                itemType,
+                sortAscending,
+                options);
+        }
+
+        public virtual SourceItem[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            int[] itemIds,
+            int changeSet,
+            int options)
+        {
+            return SCSWrapped.QueryItems(
+                tfsUrl,
+                credentials,
+                itemIds,
+                changeSet,
+                options);
+        }
+
+        public virtual LogItem QueryLog(
+            string tfsUrl,
+            ICredentials credentials,
+            string serverPath,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            RecursionType recursionType,
+            int maxCount,
+            bool sortAscending)
+        {
+            return SCSWrapped.QueryLog(
+                tfsUrl,
+                credentials,
+                serverPath,
+                versionFrom,
+                versionTo,
+                recursionType,
+                maxCount,
+                sortAscending);
+        }
+
+        public virtual void UndoPendingChanges(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            IEnumerable<string> serverItems)
+        {
+            SCSWrapped.UndoPendingChanges(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                serverItems);
+        }
+
+        public virtual void UpdateLocalVersions(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            IEnumerable<LocalUpdate> updates)
+        {
+            SCSWrapped.UpdateLocalVersions(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                updates);
+        }
+
+        public virtual void UploadFile(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string localPath,
+            string serverPath)
+        {
+            SCSWrapped.UploadFile(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                localPath,
+                serverPath);
+        }
+
+        public virtual void UploadFileFromBytes(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            byte[] localContents,
+            string serverPath)
+        {
+            SCSWrapped.UploadFileFromBytes(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                localContents,
+                serverPath);
+        }
+
+        public virtual void UploadFileFromStream(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            Stream localContents,
+            string serverPath)
+        {
+            SCSWrapped.UploadFileFromStream(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                localContents,
+                serverPath);
+        }
+        #endregion
+
+
+        #region ISourceControlService_broken_missing_methods members
+        public virtual BranchItem[][] QueryBranches(
+            string tfsUrl,
+            ICredentials credentials,
+            ItemSpec[] items,
+            VersionSpec version)
+        {
+            return SCSWrapped.QueryBranches(
+                tfsUrl,
+                credentials,
+                items,
+                version);
+        }
+        #endregion
+
+
+        #region ITFSSourceControlService_parts members
+        public virtual BranchRelative[][] QueryBranches(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            VersionSpec version)
+        {
+            return SCSWrapped.QueryBranches(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                items,
+                version);
+        }
+
+        public virtual Changeset[] QueryHistory(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string workspaceOwner,
+            ItemSpec itemSpec,
+            VersionSpec versionItem,
+            string user,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
+            bool sortAscending)
+        {
+            return SCSWrapped.QueryHistory(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                workspaceOwner,
+                itemSpec,
+                versionItem,
+                user,
+                versionFrom,
+                versionTo,
+                maxCount,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
+                sortAscending);
+        }
+
+        public virtual ItemSet[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            VersionSpec version,
+            ItemSpec[] items,
+            int options)
+        {
+            return SCSWrapped.QueryItems(
+                tfsUrl,
+                credentials,
+                version,
+                items,
+                options);
+        }
+
+        public virtual ExtendedItem[][] QueryItemsExtended(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            DeletedState deletedState,
+            ItemType itemType,
+            int options)
+        {
+            return SCSWrapped.QueryItemsExtended(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                items,
+                deletedState,
+                itemType,
+                options);
+        }
+        #endregion
+    }
+
+	public class TFSSourceControlService_inner : SourceControlService /* concrete foreign class implementing *parts* of the interface */, ITFSSourceControlService
 	{
         private readonly DefaultLogger logger;
 
-        public TFSSourceControlService(
+        public TFSSourceControlService_inner(
             IRegistrationService registrationService,
             IRepositoryWebSvcFactory webSvcFactory,
             IWebTransferService webTransferService,
