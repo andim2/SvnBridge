@@ -387,14 +387,7 @@ namespace SvnBridge.SourceControl
                 }
                 if (branchedItems.Count > 0)
                 {
-                    List<ItemSpec> items = new List<ItemSpec>();
-                    foreach (SourceItem item in branchedItems)
-                    {
-                        ItemSpec spec = new ItemSpec();
-                        spec.item = Helper.CombinePath(rootPath, item.RemoteName);
-                        items.Add(spec);
-                    }
-                    var itemsBranched = items.ToArray();
+                    var itemsBranched = branchedItems.Select(item => CreateItemSpec(Helper.CombinePath(rootPath, item.RemoteName), RecursionType.None)).ToArray();
 
                     ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
                     branchChangeset.cs = history.ChangeSetID;
