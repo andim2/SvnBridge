@@ -394,10 +394,11 @@ namespace SvnBridge.SourceControl
                         spec.item = Helper.CombinePath(rootPath, item.RemoteName);
                         items.Add(spec);
                     }
+                    var itemsBranched = items.ToArray();
 
                     ChangesetVersionSpec branchChangeset = new ChangesetVersionSpec();
                     branchChangeset.cs = history.ChangeSetID;
-                    BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, items.ToArray(), branchChangeset);
+                    BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, itemsBranched, branchChangeset);
 
                     foreach (BranchRelative[] branch in branches)
                     {
