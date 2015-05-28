@@ -837,7 +837,7 @@ namespace SvnBridge.SourceControl
                 int dbgCg = 0;
                 foreach (var change in changeset.Changes)
                 {
-                    bool needCheckPath = (change.Item.item.Contains("/display/"));
+                    bool needCheckPath = true;
                     if (needCheckPath)
                     {
                         VersionSpec versionSpecItem = versionSpecChangeset;
