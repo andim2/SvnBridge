@@ -2051,6 +2051,14 @@ namespace SvnBridge.SourceControl
                     if (needCheckPath)
                     {
                         VersionSpec versionSpecItem = versionSpecChangeset;
+                        bool isDelete = ((change.type & ChangeType.Delete) == ChangeType.Delete);
+                        bool isCurrentVersionUnavailable = (isDelete);
+                        bool needQueryPriorVersion = (isCurrentVersionUnavailable);
+                        if (needQueryPriorVersion)
+                        {
+                            VersionSpec versionSpecItemPrev = VersionSpec.FromChangeset(change.Item.cs - 1);
+                            versionSpecItem = versionSpecItemPrev;
+                        }
                         try
                         {
                             bugSanitizer.CheckNeedItemPathSanitize(
