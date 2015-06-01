@@ -1033,13 +1033,13 @@ namespace SvnBridge.SourceControl
                 version = GetLatestVersion();
             }
 
-            List<string> itemPaths = new List<string>();
+            List<string> itemPathsToBeQueried = new List<string>();
             CollectItemPaths(
                 path,
-                ref itemPaths,
+                ref itemPathsToBeQueried,
                 recursion);
 
-            SourceItem[] items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
+            SourceItem[] items = metaDataRepository.QueryItems(version, itemPathsToBeQueried.ToArray(), recursion);
             if (recursion == Recursion.OneLevel)
             {
                 if (items.Length > 0 && items[0].ItemType == ItemType.Folder)
