@@ -69,7 +69,7 @@ namespace SvnBridge.SourceControl
                 // Well, what kind of emulation service or other
                 // would one want to offer here??
             }
-            bool doSanitize_BugAll = true;
+            bool doSanitize_BugAll = (Configuration.TfsCorrectCaseSensitivityInconsistentCommitRecords);
             if (doSanitize_BugAll)
             {
                 ITFSSourceControlService scs_wrapper_bug_sanitizer = new TFSSourceControlService_BugSanitizerAll(

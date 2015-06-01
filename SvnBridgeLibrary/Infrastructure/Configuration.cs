@@ -42,6 +42,7 @@ namespace SvnBridge.Infrastructure
             TfsRequestsPendingMax,
             TfsTcpKeepAliveSeconds,
             TfsProxyUrl,
+            TfsCorrectCaseSensitivityInconsistentCommitRecords,
             SCMWantCaseSensitiveItemMatch,
             TraceEnabled,
             UseCodePlexServers,
@@ -208,6 +209,27 @@ namespace SvnBridge.Infrastructure
         public static int TfsTcpKeepAliveSeconds
         {
             get { return ReadConfig<int>(ConfigSettings.TfsTcpKeepAliveSeconds, 50); }
+        }
+
+        /// <summary>
+        /// Central flag to indicate
+        /// whether SvnBridge should laboriously/expensively apply corrections
+        /// to the buggy data stream as gotten from TFS web service
+        /// (TFS2013 at least, but probably all TFS versions;
+        /// details see central docs at inner correction implementation).
+        /// While this setting likely will incur large overhead
+        /// (need to query all parent folder items of an item,
+        /// which may turn into a problem
+        /// depending on whether queries are [un]cached),
+        /// keeping this performance-hampering correction setting active
+        /// is strongly recommended,
+        /// unless you definitely know that your repositories
+        /// do not and will never
+        /// include any glaring incorrect-case inconsistencies.
+        /// </summary>
+        public static bool TfsCorrectCaseSensitivityInconsistentCommitRecords
+        {
+            get { return ReadConfig<bool>(ConfigSettings.TfsCorrectCaseSensitivityInconsistentCommitRecords, true); }
         }
 
         /// <summary>
