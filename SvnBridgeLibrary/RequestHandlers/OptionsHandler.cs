@@ -25,7 +25,7 @@ namespace SvnBridge.Handlers
             response.AppendHeader("Allow", "OPTIONS,GET,HEAD,POST,DELETE,TRACE,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,CHECKOUT");
             string itemPathUndecoded = requestPath;
             string itemPath = Helper.Decode(itemPathUndecoded);
-            sourceControlProvider.ItemExists(itemPath); // Verify permissions to access
+            VerifyPermissionsToItemPath(itemPath);
 
             if (request.InputStream.Length != 0)
             {

@@ -201,6 +201,25 @@ namespace SvnBridge.Handlers
 			return pathParser.GetLocalPath(request);
 		}
 
+    /// <summary>
+    /// Pretty much comment-only helper:
+    /// used to ensure that certain requests (e.g. DAV OPTIONS)
+    /// fail immediately and in a controlled manner
+    /// (via exception)
+    /// whenever user is not properly authenticated yet
+    /// and thus does not have proper access permissions
+    /// (this failure will be converted into an "Unauthorized" response,
+    /// which forces a retry by client
+    /// with proper authentication,
+    /// i.e. it will usually be followed
+    /// by another client-side OPTIONS request
+    /// with properly full auth credentials).
+    /// </summary>
+    protected void VerifyPermissionsToItemPath(string itemPath)
+    {
+        sourceControlProvider.ItemExists(itemPath);
+    }
+
 		public string VccPath
 		{
 			get { return GetLocalPath(Constants.SvnVccPath); }
