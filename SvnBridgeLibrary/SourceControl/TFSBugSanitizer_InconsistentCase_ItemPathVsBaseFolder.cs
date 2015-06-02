@@ -135,7 +135,15 @@ namespace SvnBridge.SourceControl
             // from the last separator each time
             // (that probably would be more imprecise/risky).
             ItemType itemTypeCurr = itemType;
-            for (var numElemsRemain = pathElemsCount; numElemsRemain > 0; --numElemsRemain)
+            // SPECIAL NOTE: I decided to start at pathElemsCount - 1
+            // rather than the full item path,
+            // since querying the item itself is not interesting,
+            // and we need to try hard to achieve maximum performance
+            // of this *EXTREMELY PAINFUL* correction overhead
+            // (3 or 4 network queries for each path!!).
+            // And so far implementing a sufficiently generic/global SCS cache layer
+            // remains difficult...
+            for (var numElemsRemain = pathElemsCount - 1; numElemsRemain > 0; --numElemsRemain)
             {
                 bool haveHitRoot = (1 == numElemsRemain);
                 if (haveHitRoot)
