@@ -587,9 +587,18 @@ namespace SvnBridge.SourceControl
                                     {
                                         if (change.Item.ItemId == item.ItemId)
                                         {
-                                            string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
-                                            int oldRevision = item.RemoteChangesetId - 1;
-                                            change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                                            // The branching actions history table of an item
+                                            // lists *all* actions of that item,
+                                            // no matter whether:
+                                            // actual branching, or renaming, or initial creation...
+                                            bool newlyAdded = (null == branchItem.BranchFromItem);
+                                            bool bRenamed = (!newlyAdded);
+                                            if (bRenamed)
+                                            {
+                                                string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
+                                                int oldRevision = item.RemoteChangesetId - 1;
+                                                change.Item = new RenamedSourceItem(item, oldName, oldRevision);
+                                            }
                                         }
                                     }
                                 }
