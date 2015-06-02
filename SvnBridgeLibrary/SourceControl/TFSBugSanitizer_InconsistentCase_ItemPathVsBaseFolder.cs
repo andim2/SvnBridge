@@ -208,4 +208,34 @@ namespace SvnBridge.SourceControl
             pathElemsToBeCorrected[idxPathElemToBeCorrected] = pathElemsCorrected[idxPathElemToBeCorrected];
         }
     }
+
+    public class TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Bracketed
+    {
+        /// <summary>
+        /// Simply bracketing/scoping/instruction-cache-optimizing helper.
+        /// Does everything that's usually needed internally,
+        /// and as an added bonus
+        /// the particular candidate parameter to be modified
+        /// has to be referenced only once, too.
+        /// Not usable in certain cases where the reference cannot be passed directly, though:
+        /// "error CS0206: A property, indexer or dynamic member access may not be passed as an out or ref parameter"
+        /// (should be using an explicit try /catch frame then (to keep exceptional handling in exception path).
+        /// </summary>
+        public static bool CheckNeededItemPathSanitized(
+            TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer,
+            ref string itemPathToBeSanitized,
+            int itemRevision)
+        {
+            string result = bugSanitizer.GetItemPathSanitized(
+                itemPathToBeSanitized,
+                itemRevision);
+            bool hadSanePath = (result.Equals(itemPathToBeSanitized));
+            if (!(hadSanePath))
+            {
+                itemPathToBeSanitized = result;
+            }
+
+            return !(hadSanePath);
+        }
+    }
 }
