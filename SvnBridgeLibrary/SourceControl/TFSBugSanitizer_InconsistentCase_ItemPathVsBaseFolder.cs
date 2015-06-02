@@ -2,6 +2,7 @@ namespace SvnBridge.SourceControl
 {
     using System; // StringSplitOptions
     using System.Collections.Generic; // List
+    using System.Diagnostics; // Conditional
     using System.Net; // ICredentials
     using CodePlex.TfsLibrary; // NetworkAccessDeniedException
     using CodePlex.TfsLibrary.ObjectModel; // SourceItem
@@ -107,6 +108,12 @@ namespace SvnBridge.SourceControl
             ItemType itemType)
         {
             EnsureServerRootSyntax(pathToBeChecked);
+
+            bool wantCheckItem = false; // debug tweak helper var
+            if (wantCheckItem)
+            {
+                CheckItem(pathToBeChecked, 0, itemType);
+            }
 
             string[] pathElemsOrig = PathSplit(pathToBeChecked);
             int pathElemsCount = pathElemsOrig.Length;
@@ -365,6 +372,63 @@ namespace SvnBridge.SourceControl
                 : base(string.Format("empty/incompatible path \"{0}\"", path))
             {
                 Helper.DebugUsefulBreakpointLocation();
+            }
+        }
+
+        /// <summary>
+        /// Hopefully useful debug helper.
+        /// </summary>
+        [Conditional("DEBUG")]
+        private void CheckItem(string pathToBeChecked, int rev, ItemType itemType)
+        {
+            BranchItem[][] branches;
+            Changeset[] history;
+            SourceItem[] sourceItems;
+
+            VersionSpec versionSpec = VersionSpec.FromChangeset(rev);
+            ItemSpec itemSpec = new ItemSpec { item = pathToBeChecked, recurse = RecursionType.None };
+            ItemSpec[] itemSpecs = new ItemSpec[] { itemSpec };
+            try
+            {
+                bool querybranches = true;
+                bool queryhistory = true;
+                bool queryitem = true;
+
+                if (querybranches)
+                {
+                    branches = sourceControlService.QueryBranches(serverUrl, credentials, itemSpecs, versionSpec);
+                }
+                if (queryhistory)
+                {
+                    history = sourceControlService.QueryHistory(serverUrl, credentials,
+                        null,
+                        null,
+                        itemSpec,
+                        versionSpec,
+                        null,
+                        versionSpec,
+                        versionSpec,
+                        1,
+                        true,
+                        false,
+                        false,
+                        false);
+
+                }
+                if (queryitem)
+                {
+                     sourceItems = sourceControlService.QueryItems(serverUrl, credentials,
+                        pathToBeChecked,
+                        RecursionType.None,
+                        versionSpec,
+                        DeletedState.Any, // This is ok, right?
+                        itemType,
+                        false, 0
+                    );
+                }
+            }
+            catch
+            {
             }
         }
 
