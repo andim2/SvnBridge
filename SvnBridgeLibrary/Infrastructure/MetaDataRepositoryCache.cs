@@ -48,7 +48,8 @@ namespace SvnBridge.Infrastructure
             List<SourceItem> items = new List<SourceItem>();
             foreach (string path in paths)
             {
-                foreach (SourceItem item in QueryItems(revision, path, recursion))
+                var sourceItems = QueryItems(revision, path, recursion);
+                foreach (SourceItem item in sourceItems)
                 {
                     items.Add(item);
                 }
