@@ -474,6 +474,11 @@ namespace SvnBridge.Handlers
                 int.Parse(logreport.Limit ?? "1000000"),
                 (start < end));
 
+            LogReportFromLogItem(logItem, output);
+        }
+
+        private static void LogReportFromLogItem(LogItem logItem, TextWriter output)
+        {
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
 
