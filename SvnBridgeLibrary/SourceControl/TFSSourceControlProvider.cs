@@ -584,7 +584,7 @@ namespace SvnBridge.SourceControl
             if (maxCount > TFS_QUERY_LIMIT)
             {
                 // Query container to be sure whether we actually hit the limit:
-                int logItemsCount_ThisRun = changesets.Count();
+                int logItemsCount_ThisRun = changesets.Length;
                 while (logItemsCount_ThisRun == TFS_QUERY_LIMIT)
                 {
                     int earliestVersionFound = changesets[changesets.Length - 1].cset - 1;
@@ -597,7 +597,7 @@ namespace SvnBridge.SourceControl
                         maxCount,
                         sortAscending);
                     changesetsTotal.AddRange(changesets);
-                    logItemsCount_ThisRun = changesets.Count();
+                    logItemsCount_ThisRun = changesets.Length;
                 }
             }
 
