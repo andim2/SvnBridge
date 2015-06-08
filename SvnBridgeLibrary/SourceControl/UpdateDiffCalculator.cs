@@ -183,7 +183,11 @@ namespace SvnBridge.SourceControl
                 int versionTo = Math.Max(lastVersion, targetVersion);
                 var historiesSorted = FetchSortedHistory(changePath, changeVersion, versionFrom, versionTo, updatingForwardInTime);
 
-                CalculateChangeViaSourceItemHistories(historiesSorted, checkoutRootPath, root, updatingForwardInTime, ref lastVersion);
+                bool needProcessHistories = (null != historiesSorted); // shortcut
+                if (needProcessHistories)
+                {
+                    CalculateChangeViaSourceItemHistories(historiesSorted, checkoutRootPath, root, updatingForwardInTime, ref lastVersion);
+                }
                 // No change was made, break out
                 if (previousLoopLastVersion == lastVersion)
                 {
@@ -203,7 +207,11 @@ namespace SvnBridge.SourceControl
                 Recursion.Full,
                 256);
 
-            historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
+            bool needProcessHistories = (logItem.History.Length > 0); // shortcut
+            if (needProcessHistories)
+            {
+                historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
+            }
 
             return historiesSorted;
         }
