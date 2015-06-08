@@ -144,7 +144,9 @@ namespace SvnBridge.SourceControl
                     Recursion.Full,
                     256);
 
-                foreach (SourceItemHistory history in Helper.SortHistories(updatingForwardInTime, logItem.History))
+                var historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
+
+                foreach (SourceItemHistory history in historiesSorted)
                 {
                     lastVersion = history.ChangeSetID;
                     if (updatingForwardInTime == false)
