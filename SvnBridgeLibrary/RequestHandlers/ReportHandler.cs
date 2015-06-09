@@ -649,9 +649,7 @@ namespace SvnBridge.Handlers
                 bool needFiltering = (history.Changes.Count > 1);
                 if (needFiltering) // optimization shortcut
                 {
-                    List<SourceItemChange> changesFiltered;
-                    changesFiltered = new List<SourceItemChange>(FilterImplicitChanges(history.Changes));
-                    history.Changes = changesFiltered;
+                    FilterImplicitChanges(ref history.Changes);
                 }
             }
         }
@@ -662,12 +660,22 @@ namespace SvnBridge.Handlers
         /// single action on the directory (as expected by SVN clients)
         /// rather than incompatibly additionally listing all individual sub files, too!
         /// </summary>
-        /// <param name="changesOrig">Original (unfiltered) list of changes</param>
-        /// <returns>Possibly filtered list of changes</returns>
-        private static IEnumerable<SourceItemChange> FilterImplicitChanges(IEnumerable<SourceItemChange> changesOrig)
+        /// <param name="changesFiltered">Reference to original (unfiltered) list of changes (will get filtered in-place when needed)</param>
+        /// <returns>Nothing</returns>
+        private static void FilterImplicitChanges(ref List<SourceItemChange> changesFiltered)
+        {
+            ChangesDict dictToBeRemoved = DetermineImplicitChanges(changesFiltered);
+            bool needFiltering = (dictToBeRemoved.Count > 0);
+            if (needFiltering)
+            {
+                changesFiltered.RemoveAll(elem => (dictToBeRemoved.ContainsKey(elem.GetHashCode())));
+            }
+        }
+
+        private static ChangesDict DetermineImplicitChanges(IEnumerable<SourceItemChange> changes)
         {
             ChangesDict dictToBeRemoved = new ChangesDict();
-            foreach (SourceItemChange change in changesOrig)
+            foreach (SourceItemChange change in changes)
             {
                 if (!(change.Item.ItemType == ItemType.Folder))
                 {
@@ -683,7 +691,7 @@ namespace SvnBridge.Handlers
                     string folderRemoteName = itemFolder.RemoteName;
                     // Remove all within-folder deletion-type changes,
                     // since they're redundant on SVN protocol:
-                    foreach (SourceItemChange changeVictim in changesOrig)
+                    foreach (SourceItemChange changeVictim in changes)
                     {
                         if (!((changeVictim.ChangeType & ChangeType.Delete) == ChangeType.Delete))
                         {
@@ -707,7 +715,7 @@ namespace SvnBridge.Handlers
                     RenamedSourceItem itemFolder = (RenamedSourceItem)change.Item;
                     string folderOriginalRemoteName = itemFolder.OriginalRemoteName;
                     string folderRemoteName = itemFolder.RemoteName;
-                    foreach (SourceItemChange changeVictim in changesOrig)
+                    foreach (SourceItemChange changeVictim in changes)
                     {
                         if (!((changeVictim.ChangeType & ChangeType.Rename) == ChangeType.Rename))
                         {
@@ -729,18 +737,7 @@ namespace SvnBridge.Handlers
                     }
                 }
             }
-
-            bool needFiltering = (dictToBeRemoved.Count > 0);
-            if (needFiltering)
-            {
-                List<SourceItemChange> changesFiltered = new List<SourceItemChange>(changesOrig);
-                changesFiltered.RemoveAll(elem => (dictToBeRemoved.ContainsKey(elem.GetHashCode())));
-                return changesFiltered;
-            }
-            else
-            {
-                return changesOrig;
-            }
+            return dictToBeRemoved;
         }
 
         private static bool IsBelowBaseFolder(string itemBaseFolder, string itemCandidate)
