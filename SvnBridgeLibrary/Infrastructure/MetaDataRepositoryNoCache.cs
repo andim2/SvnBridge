@@ -3,33 +3,28 @@ using System.Collections.Generic;
 using System.Net;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces; // IMetaDataRepository
 using SvnBridge.Proxies; // TracingInterceptor
 using SvnBridge.SourceControl;
 
 namespace SvnBridge.Infrastructure
 {
     [Interceptor(typeof(TracingInterceptor))]
-    public class MetaDataRepositoryNoCache : IMetaDataRepository
+    public class MetaDataRepositoryNoCache : MetaDataRepositoryBase
     {
-        private readonly TFSSourceControlService sourceControlService;
-        private readonly string serverUrl;
-        private readonly ICredentials credentials;
-        private readonly string rootPath;
-
         public MetaDataRepositoryNoCache(
             TFSSourceControlService sourceControlService,
             string serverUrl,
             ICredentials credentials,
             string rootPath)
+            : base(
+                sourceControlService,
+                serverUrl,
+                credentials,
+                rootPath)
         {
-            this.sourceControlService = sourceControlService;
-            this.serverUrl = serverUrl;
-            this.credentials = credentials;
-            this.rootPath = rootPath;
         }
 
-        public SourceItem[] QueryItems(int revision, int itemId)
+        public override SourceItem[] QueryItems(int revision, int itemId)
         {
             return sourceControlService.QueryItems(serverUrl, credentials,
                 new int[] { itemId },
@@ -37,12 +32,12 @@ namespace SvnBridge.Infrastructure
                 0);
         }
 
-        public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
+        public override SourceItem[] QueryItems(int revision, string path, Recursion recursion)
         {
             return QueryItems(revision, new string[] { path }, recursion);
         }
 
-        public SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
+        public override SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
         {
             List<ItemSpec> itemSpecs = new List<ItemSpec>();
             foreach (string path in paths)
@@ -92,30 +87,6 @@ namespace SvnBridge.Infrastructure
                 result2.Add(sourceItem);
             }
             return result2.ToArray();
-        }
-
-        private string GetServerPath(string path)
-        {
-            if (path.StartsWith("$//"))
-                return Constants.ServerRootPath + path.Substring(3);
-
-            if (path.StartsWith("$/"))
-                return path;
-
-            string serverPath = rootPath;
-
-            if (serverPath.EndsWith("/"))
-                serverPath = serverPath.Substring(0, serverPath.Length - 1);
-
-            if (path.StartsWith("/") == false)
-                serverPath = serverPath + '/' + path;
-            else
-                serverPath = serverPath + path;
-
-            if (serverPath.EndsWith("/") && serverPath != "$/")
-                serverPath = serverPath.Substring(0, serverPath.Length - 1);
-
-            return serverPath;
         }
     }
 }

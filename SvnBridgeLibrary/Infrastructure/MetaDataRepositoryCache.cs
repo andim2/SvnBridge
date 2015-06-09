@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces; // CachedResult, IMetaDataRepository
+using SvnBridge.Interfaces; // CachedResult
 using SvnBridge.Net;
 using SvnBridge.Proxies;
 using SvnBridge.SourceControl;
@@ -12,12 +12,8 @@ using SvnBridge.Cache;
 namespace SvnBridge.Infrastructure
 {
     [Interceptor(typeof(TracingInterceptor))]
-    public class MetaDataRepositoryCache : IMetaDataRepository
+    public class MetaDataRepositoryCache : MetaDataRepositoryBase
     {
-        private readonly TFSSourceControlService sourceControlService;
-        private readonly string serverUrl;
-        private readonly ICredentials credentials;
-        private readonly string rootPath;
         private readonly MemoryBasedPersistentCache persistentCache;
 
         public MetaDataRepositoryCache(
@@ -26,15 +22,24 @@ namespace SvnBridge.Infrastructure
             ICredentials credentials,
             string rootPath,
             MemoryBasedPersistentCache persistentCache)
+            : base(
+                sourceControlService,
+                serverUrl,
+                credentials,
+                rootPath)
         {
-            this.sourceControlService = sourceControlService;
-            this.serverUrl = serverUrl;
-            this.credentials = credentials;
-            this.rootPath = rootPath;
             this.persistentCache = persistentCache;
         }
 
-        public SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
+        // TODO: any reason why
+        // in this Cache class implementation this *array-based* method
+        // iterates over *single*-path QueryItems() calls,
+        // whereas in NoCache class the array-based QueryItems()
+        // directly forwards to array-based SourceControlProvider interface method?
+        // This is a very asymmetric (and obviously performance-hampering due to huge requests overhead)
+        // differing implementation between Cache/NoCache,
+        // should ideally be improved if possible.
+        public override SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
         {
             List<SourceItem> items = new List<SourceItem>();
             foreach (string path in paths)
@@ -48,7 +53,7 @@ namespace SvnBridge.Infrastructure
             return items.ToArray();
         }
 
-        public SourceItem[] QueryItems(int revision, int itemId)
+        public override SourceItem[] QueryItems(int revision, int itemId)
         {
             return sourceControlService.QueryItems(serverUrl, credentials,
                 new int[] { itemId },
@@ -56,7 +61,7 @@ namespace SvnBridge.Infrastructure
                 0);
         }
 
-        public SourceItem[] QueryItems(int revision, string path, Recursion recursion)
+        public override SourceItem[] QueryItems(int revision, string path, Recursion recursion)
         {
             List<SourceItem> list = null;
             persistentCache.UnitOfWork(delegate
@@ -122,30 +127,6 @@ namespace SvnBridge.Infrastructure
                 }
                 return (string)RequestCache.Items["CurrentUserName"];
             }
-        }
-
-        private string GetServerPath(string path)
-        {
-            if (path.StartsWith("$//"))
-                return Constants.ServerRootPath + path.Substring(3);
-
-            if (path.StartsWith("$/"))
-                return path;
-
-            string serverPath = rootPath;
-
-            if (serverPath.EndsWith("/"))
-                serverPath = serverPath.Substring(0, serverPath.Length - 1);
-
-            if (path.StartsWith("/") == false)
-                serverPath = serverPath + '/' + path;
-            else
-                serverPath = serverPath + path;
-
-            if (serverPath.EndsWith("/") && serverPath != "$/")
-                serverPath = serverPath.Substring(0, serverPath.Length - 1);
-
-            return serverPath;
         }
 
         private void EnsureRevisionIsCached(int revision, string path)
