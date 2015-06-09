@@ -521,7 +521,20 @@ namespace SvnBridge.Handlers
                 int.Parse(logreport.Limit ?? "1000000"),
                 (start < end));
 
-            bool needProcessFilterImplicitChanges = true;
+            // Testing of svn log -v -r BEGIN:END vs. non-[-v]
+            // showed that adding -v
+            // causes subversion to add a discover-changed-paths request property (<S:discover-changed-paths/> element) -
+            // while real Subversion (1.6.17) server did honour (non-)existence of this property,
+            // SvnBridge didn't (it always added path information). Doh.
+            bool discoverChangedPaths = (logreport.DiscoverChangedPaths != null);
+
+            bool requestInclusionOfPathChanges = (discoverChangedPaths);
+
+            bool needProcessFilterImplicitChanges = false;
+            if (requestInclusionOfPathChanges)
+            {
+                needProcessFilterImplicitChanges = true;
+            }
 
             if (needProcessFilterImplicitChanges)
             {
@@ -546,7 +559,7 @@ namespace SvnBridge.Handlers
                 FilterImplicitLogItemHistoryChanges(ref logItem);
             }
 
-            LogReportFromLogItem(logItem, output);
+            LogReportFromLogItem(logItem, output, discoverChangedPaths);
         }
 
         private static void FilterImplicitLogItemHistoryChanges(ref LogItem logItem)
@@ -660,7 +673,7 @@ namespace SvnBridge.Handlers
             return itemCandidate.StartsWith(itemBaseFolder);
         }
 
-        private static void LogReportFromLogItem(LogItem logItem, TextWriter output)
+        private static void LogReportFromLogItem(LogItem logItem, TextWriter output, bool discoverChangedPaths)
         {
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
@@ -674,7 +687,10 @@ namespace SvnBridge.Handlers
                 output.Write("<S:date>" + Helper.FormatDate(history.CommitDateTime) + "</S:date>\n");
                 output.Write("<D:comment>" + Helper.EncodeB(history.Comment) + "</D:comment>\n");
 
-                LogReportChangedPaths(history.Changes, output);
+                if (discoverChangedPaths)
+                {
+                    LogReportChangedPaths(history.Changes, output);
+                }
 
                 output.Write("</S:log-item>\n");
             }
