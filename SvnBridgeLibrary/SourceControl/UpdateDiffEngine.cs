@@ -472,9 +472,10 @@ namespace SvnBridge.SourceControl
             bool bResult = false;
 
             // http://stackoverflow.com/questions/9382681/what-is-more-efficient-dictionary-trygetvalue-or-containskeyitem
-            if (additionForPropertyChangeOnly.ContainsKey(item))
+            //if (additionForPropertyChangeOnly.ContainsKey(item))
+            bool bDictEntry = false;
+            if (additionForPropertyChangeOnly.TryGetValue(item, out bDictEntry))
             {
-                bool bDictEntry = additionForPropertyChangeOnly[item];
                 bResult = bDictEntry;
             }
 

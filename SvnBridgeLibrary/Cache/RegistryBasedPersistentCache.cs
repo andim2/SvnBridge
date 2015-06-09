@@ -56,9 +56,10 @@ namespace SvnBridge.Cache
 			CachedResult result = null;
 			UnitOfWork(delegate
 			{
-				if (CurrentItems.ContainsKey(key))
+				PersistentItem persistentItem;
+				if (CurrentItems.TryGetValue(key, persistentItem))
 				{
-					result = new CachedResult(CurrentItems[key].Item);
+					result = new CachedResult(persistentItem.Item);
 					return;
 				}
 				AddToCurrentUnitOfWork(key);

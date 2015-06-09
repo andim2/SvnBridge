@@ -2670,9 +2670,8 @@ namespace SvnBridge.SourceControl
         private static DAVPropertiesChanges FetchPathProperties(IDictionary<string, DAVPropertiesChanges> dict, string path)
         {
             DAVPropertiesChanges propsChanges;
-            if (dict.ContainsKey(path))
+            if (dict.TryGetValue(path, out propsChanges))
             {
-                propsChanges = dict[path];
             }
             else
             {
@@ -3561,9 +3560,8 @@ namespace SvnBridge.SourceControl
                     else
                     {
                         pendRequest = pendRequestRename;
-                        if (activity.PendingRenames.ContainsKey(localPath))
+                        if (activity.PendingRenames.TryGetValue(localPath, out pendRequestPending))
                         {
-                            pendRequestPending = activity.PendingRenames[localPath];
                             activity.PendingRenames.Remove(localPath);
                         }
                     }

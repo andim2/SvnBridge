@@ -100,10 +100,9 @@ namespace SvnBridge.SourceControl
         {
             bool haveFile = false;
 
-            if (clientExistingFiles.ContainsKey(path))
+            if (clientExistingFiles.TryGetValue(path, out revisionClientExistingFile))
             {
                 haveFile = true;
-                revisionClientExistingFile = clientExistingFiles[path];
             }
 
             return haveFile;
