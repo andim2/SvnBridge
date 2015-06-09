@@ -1,7 +1,7 @@
 using System;
 using System.Net;
 using CodePlex.TfsLibrary;
-using CodePlex.TfsLibrary.ObjectModel;
+using CodePlex.TfsLibrary.ObjectModel; // LogItem
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary.Utility;
 using SvnBridge.Infrastructure; // DefaultLogger
@@ -252,6 +252,26 @@ namespace SvnBridge.SourceControl
 
                 throw;
             }
+        }
+    }
+
+    /// <summary>
+    /// Intended to provide various helpers
+    /// which offer missing TfsLibrary object model functionality
+    /// and are generic enough
+    /// that they ought to have (could have?) been provided
+    /// by the TfsLibrary project already.
+    /// Since this class is about TfsLibrary parts,
+    /// should try to have only helpers here
+    /// which are limited to TfsLibrary-provided types,
+    /// i.e. avoid foreign (e.g. SvnBridge) types.
+    /// </summary>
+    public class TfsLibraryHelpers
+    {
+        public static LogItem LogItemClone(LogItem logItem)
+        {
+            // Resort to open-coded ctor (for lack of a class-side .Clone()...):
+            return new LogItem(logItem.LocalPath, logItem.ServerPath, logItem.History);
         }
     }
 }

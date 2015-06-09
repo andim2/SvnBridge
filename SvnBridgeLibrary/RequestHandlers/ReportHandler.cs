@@ -478,6 +478,17 @@ namespace SvnBridge.Handlers
 
             if (needProcessFilterImplicitChanges)
             {
+                // For debugging usability purposes
+                // (definitely remain able to *directly compare* prior/post state),
+                // keep a copy of the unfiltered original data
+                // if so requested (performance optimization):
+                LogItem logItemOrig;
+                bool keepBackup = false; // debug toggle helper
+                if (keepBackup)
+                {
+                    logItemOrig = TfsLibraryHelpers.LogItemClone(logItem);
+                }
+
                 // FIXME layering violation!?: the changes should actually have been filtered already -
                 // this is supposed to be a simple reporting-only class,
                 // yet the input data should be in suitable format already,
