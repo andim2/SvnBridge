@@ -477,7 +477,8 @@ namespace SvnBridge.Handlers
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
 
-            foreach (SourceItemHistory history in logItem.History)
+            var sourceItemHistories = logItem.History;
+            foreach (SourceItemHistory history in sourceItemHistories)
             {
                 output.Write("<S:log-item>\n");
                 output.Write("<D:version-name>" + history.ChangeSetID + "</D:version-name>\n");
