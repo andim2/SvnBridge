@@ -16,6 +16,10 @@ using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.EncodeB() etc.
 
 namespace SvnBridge.Handlers
 {
+    // Use a Dictionary to fake a HashSet (.NET >= 3.5 only).
+    // Not using our local SvnBridge HashSet impl here either... (yet?)
+    using ChangesDict = Dictionary<int, bool>;
+
     /// <remarks>
     /// TODO: should possibly be developed into a class hierarchy for various item operations.
     /// </remarks>
@@ -662,8 +666,7 @@ namespace SvnBridge.Handlers
         /// <returns>Possibly filtered list of changes</returns>
         private static IEnumerable<SourceItemChange> FilterImplicitChanges(IEnumerable<SourceItemChange> changesOrig)
         {
-            // Use a Dictionary to fake a HashSet (.NET >= 3.5 only).
-            Dictionary<int, bool> dictToBeRemoved = new Dictionary<int, bool>();
+            ChangesDict dictToBeRemoved = new ChangesDict();
             foreach (SourceItemChange change in changesOrig)
             {
                 if (!(change.Item.ItemType == ItemType.Folder))
