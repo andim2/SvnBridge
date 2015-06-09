@@ -612,51 +612,56 @@ namespace SvnBridge.Handlers
                 output.Write("<S:date>" + Helper.FormatDate(history.CommitDateTime) + "</S:date>\n");
                 output.Write("<D:comment>" + Helper.EncodeB(history.Comment) + "</D:comment>\n");
 
-                foreach (SourceItemChange change in history.Changes)
-                {
-                    SourceItem item = change.Item;
-                    if ((change.ChangeType & ChangeType.Add) == ChangeType.Add ||
-                        (change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete)
-                    {
-                        output.Write("<S:added-path>/" + Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
-                    }
-                    else if ((change.ChangeType & ChangeType.Edit) == ChangeType.Edit)
-                    {
-                        output.Write("<S:modified-path>/" + Helper.EncodeB(item.RemoteName) + "</S:modified-path>\n");
-                    }
-                    else if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
-                    {
-                        output.Write("<S:deleted-path>/" + Helper.EncodeB(item.RemoteName) + "</S:deleted-path>\n");
-                    }
-                    else if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
-                    {
-                        var renamedItem = (RenamedSourceItem)item;
-                        output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
-                                     "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
-                                     Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
-                        output.Write("<S:deleted-path>/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
-                                     "</S:deleted-path>\n");
-                    }
-                    else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
-                    {
-                        var renamedItem = (RenamedSourceItem)item;
-                        output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
-                                     "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
-                                     Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
-                    }
-                    else if (change.ChangeType == ChangeType.Merge)
-                    {
-                        // Ignore merge entries that are not an add, edit, delete, or rename
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Unrecognized change type " + change.ChangeType);
-                    }
-                }
+                LogReportChangedPaths(history.Changes, output);
 
                 output.Write("</S:log-item>\n");
             }
             output.Write("</S:log-report>\n");
+        }
+
+        private static void LogReportChangedPaths(IEnumerable<SourceItemChange> changes, TextWriter output)
+        {
+            foreach (SourceItemChange change in changes)
+            {
+                SourceItem item = change.Item;
+                if ((change.ChangeType & ChangeType.Add) == ChangeType.Add ||
+                    (change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete)
+                {
+                    output.Write("<S:added-path>/" + Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
+                }
+                else if ((change.ChangeType & ChangeType.Edit) == ChangeType.Edit)
+                {
+                    output.Write("<S:modified-path>/" + Helper.EncodeB(item.RemoteName) + "</S:modified-path>\n");
+                }
+                else if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
+                {
+                    output.Write("<S:deleted-path>/" + Helper.EncodeB(item.RemoteName) + "</S:deleted-path>\n");
+                }
+                else if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
+                {
+                    var renamedItem = (RenamedSourceItem)item;
+                    output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
+                                 "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
+                                 Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
+                    output.Write("<S:deleted-path>/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
+                                 "</S:deleted-path>\n");
+                }
+                else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
+                {
+                    var renamedItem = (RenamedSourceItem)item;
+                    output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
+                                 "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
+                                 Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
+                }
+                else if (change.ChangeType == ChangeType.Merge)
+                {
+                    // Ignore merge entries that are not an add, edit, delete, or rename
+                }
+                else
+                {
+                    throw new InvalidOperationException("Unrecognized change type " + change.ChangeType);
+                }
+            }
         }
     }
 }
