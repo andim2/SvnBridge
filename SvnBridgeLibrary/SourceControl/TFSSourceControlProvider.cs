@@ -1268,7 +1268,7 @@ namespace SvnBridge.SourceControl
         /// <returns>MergeActivityResponse object</returns>
         public virtual MergeActivityResponse MergeActivity(string activityId)
         {
-            MergeActivityResponse response = null;
+            MergeActivityResponse mergeResponse = null;
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 UpdateProperties(activityId);
@@ -1340,10 +1340,10 @@ namespace SvnBridge.SourceControl
                             false, 0);
                 }
                 AssociateWorkItemsWithChangeSet(activity.Comment, changesetId);
-                response = GenerateMergeResponse(activityId, changesetId);
+                mergeResponse = GenerateMergeResponse(activityId, changesetId);
             });
 
-            return response;
+            return mergeResponse;
         }
 
         public virtual void AssociateWorkItemsWithChangeSet(string comment, int changesetId)
