@@ -61,6 +61,15 @@ namespace SvnBridge.Handlers
 			output.Write("</D:propstat>\n");
 			output.Write("</D:response>\n");
 
+			GenerateMergeResponseItems(request, mergeResponse, output);
+
+			output.Write("</D:updated-set>\n");
+			output.Write("</D:merge-response>\n");
+		}
+
+		private void GenerateMergeResponseItems(IHttpRequest request, MergeActivityResponse mergeResponse,
+										TextWriter output)
+		{
 			foreach (MergeActivityResponseItem item in mergeResponse.Items)
 			{
 				output.Write("<D:response>\n");
@@ -86,9 +95,6 @@ namespace SvnBridge.Handlers
 				output.Write("</D:propstat>\n");
 				output.Write("</D:response>\n");
 			}
-
-			output.Write("</D:updated-set>\n");
-			output.Write("</D:merge-response>\n");
 		}
 	}
 }
