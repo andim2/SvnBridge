@@ -353,26 +353,26 @@ namespace SvnBridge.SourceControl
 
         private void UpdatePropertiesOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
         {
-            foreach (KeyValuePair<string, ItemProperties> itemProperties in properties)
+            foreach (KeyValuePair<string, ItemProperties> pairItemProperties in properties)
             {
                 ItemMetaData item = null;
-                string key = itemProperties.Key.ToLowerInvariant();
+                string key = pairItemProperties.Key.ToLowerInvariant();
                 if (folders.ContainsKey(key))
                 {
                     item = folders[key];
                 }
                 else
                 {
-                    string folderName = FilesysHelpers.GetFolderPathPart(itemProperties.Key)
+                    string folderName = FilesysHelpers.GetFolderPathPart(pairItemProperties.Key)
                         .ToLowerInvariant();
                     if (folders.ContainsKey(folderName))
                     {
-                        item = folders[folderName].FindItem(itemProperties.Key);
+                        item = folders[folderName].FindItem(pairItemProperties.Key);
                     }
                 }
                 if (item != null)
                 {
-                    foreach (Property property in itemProperties.Value.Properties)
+                    foreach (Property property in pairItemProperties.Value.Properties)
                     {
                         item.Properties[property.Name] = property.Value;
                     }
