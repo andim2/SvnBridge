@@ -6,7 +6,7 @@ using SvnBridge.Handlers;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {
@@ -70,6 +70,7 @@ namespace SvnBridge.Infrastructure
         private readonly UpdateReportData updateReportRequest;
         private readonly string srcPath;
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly AsyncItemLoader loader;
         private readonly RequestHandlerBase handler;
         private readonly FolderMetaData root;
         private readonly bool requestedTxDelta;
@@ -79,6 +80,7 @@ namespace SvnBridge.Infrastructure
             UpdateReportData updateReportRequest,
             string srcPath,
             TFSSourceControlProvider sourceControlProvider,
+            AsyncItemLoader loader,
             RequestHandlerBase handler,
             FolderMetaData root)
         {
@@ -87,6 +89,7 @@ namespace SvnBridge.Infrastructure
             this.srcPath = srcPath;
             this.handler = handler;
             this.sourceControlProvider = sourceControlProvider;
+            this.loader = loader;
             this.root = root;
             this.requestedTxDelta = HaveRequestTxDelta(updateReportRequest);
         }
@@ -213,14 +216,13 @@ namespace SvnBridge.Infrastructure
         UpdateReportWriteItemAttributes(output, item);
 
 				// wait for data (required by *both* txdelta [optional] and md5 below!)
-                long retry = 0;
-				while (item.DataLoaded == false)
+                TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
+                bool gotData = loader.WaitForItemLoaded(
+                    item,
+                    spanLoadTimeout);
+                if (!(gotData))
                 {
-                    if (++retry > 3000)
-                    {
-                        ReportErrorItemDataRetrievalTimeout();
-                    }
-					Helper.CooperativeSleep(100);
+                    ReportErrorItemDataRetrievalTimeout();
                 }
                                 var base64DiffData = item.Base64DiffData;
                                 // Immediately release data memory from item's reach
@@ -471,11 +473,13 @@ namespace SvnBridge.Infrastructure
 	{
 		private readonly RequestHandlerBase handler;
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly AsyncItemLoader loader;
 
-        public UpdateReportService(RequestHandlerBase handler, TFSSourceControlProvider sourceControlProvider)
+        public UpdateReportService(RequestHandlerBase handler, TFSSourceControlProvider sourceControlProvider, AsyncItemLoader loader)
 		{
 			this.handler = handler;
 			this.sourceControlProvider = sourceControlProvider;
+			this.loader = loader;
 		}
 
         /// <summary>
@@ -492,6 +496,7 @@ namespace SvnBridge.Infrastructure
                 updateReportRequest,
                 srcPath,
                 sourceControlProvider,
+                loader,
                 handler,
                 folder);
 

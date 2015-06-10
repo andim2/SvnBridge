@@ -11,7 +11,7 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.EncodeB() etc.
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.EncodeB() etc.
 
 namespace SvnBridge.Handlers
 {
@@ -302,6 +302,7 @@ namespace SvnBridge.Handlers
                 output.Write("</S:change-dir-prop>\n");
             }
 
+            TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
             foreach (ItemMetaData item in folder.Items)
             {
                 if (item.ItemRevision != revision)
@@ -327,8 +328,14 @@ namespace SvnBridge.Handlers
                         output.Write("<S:add-file name=\"{0}\"/>\n", Helper.EncodeB(item.Name));
                     }
 
-                    while (item.DataLoaded == false)
-                        Helper.CooperativeSleep(100);
+                    bool gotData = loader.WaitForItemLoaded(
+                        item,
+                        spanLoadTimeout);
+                    if (!(gotData))
+                    {
+                        Helper.DebugUsefulBreakpointLocation();
+                        throw new TimeoutException("Timeout while waiting for file retrieval");
+                    }
 
                     var base64DiffData = item.Base64DiffData;
                     // Immediately release data memory from item's reach
@@ -484,7 +491,7 @@ namespace SvnBridge.Handlers
             output.Write("<S:update-report xmlns:S=\"svn:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:D=\"DAV:\" send-all=\"" + sendAllSetting + "\">\n");
             output.Write("<S:target-revision rev=\"" + targetRevision + "\"/>\n");
 
-            UpdateReportService updateReportService = new UpdateReportService(this, sourceControlProvider);
+            UpdateReportService updateReportService = new UpdateReportService(this, sourceControlProvider, loader);
             var srcPath = DetermineSrcPath(this, updatereport);
             updateReportService.ProcessUpdateReport(updatereport, srcPath, metadata, output);
 

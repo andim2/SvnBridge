@@ -156,5 +156,64 @@ namespace SvnBridge.Infrastructure
             Helper.DebugUsefulBreakpointLocation();
             throw new TimeoutException("Timeout while waiting for consumption of filesystem item data");
         }
+
+        /// <summary>
+        /// Helper for the *consumer*-side thread context,
+        /// to allow for a reliable wait on an item to have achieved "loaded" state.
+        /// </summary>
+        /// <param name="item">Item whose data we will be waiting for to have finished loading</param>
+        /// <param name="spanTimeout">Expiry timeout for waiting for the item's data to become loaded</param>
+        public bool WaitForItemLoaded(
+            ItemMetaData item,
+            TimeSpan spanTimeout)
+        {
+            DateTime timeUtcWaitLoaded_Start = DateTime.UtcNow; // Calculate ASAP (to determine timeout via precise right-upon-start timestamp)
+            DateTime timeUtcWaitLoaded_Expire = DateTime.MinValue;
+            TimeSpan spanTimeoutRemain = spanTimeout;
+
+            for (;;)
+            {
+                // IMPORTANT: definitely remember to do an *initial* status check
+                // directly prior to first wait.
+                if (item.DataLoaded)
+                {
+                    break;
+                }
+
+                // Since we don't have a wait handle here,
+                // need to use fixed short intervals
+                // to ensure that we notice changes sufficiently quickly:
+                Helper.CooperativeSleep(100);
+
+                if (item.DataLoaded)
+                {
+                    break;
+                }
+
+                // Performance: nice trick: do expensive calculation of expiration stamp
+                // only *after* the first wait has already been done :)
+                bool expire_needs_init = (DateTime.MinValue == timeUtcWaitLoaded_Expire);
+                if (expire_needs_init)
+                {
+                    timeUtcWaitLoaded_Expire = timeUtcWaitLoaded_Start + spanTimeout;
+                }
+
+                // Performance: implement grabbing current timestamp ALAP, to have strict timeout-side handling.
+                DateTime timeUtcNow = DateTime.UtcNow; // debug helper
+
+                // Make sure to have handling be focussed on a precise final timepoint
+                // to have a precisely bounded timeout endpoint
+                // (i.e., avoid annoying accumulation of added-up multi-wait scheduling delays imprecision).
+                spanTimeoutRemain = timeUtcWaitLoaded_Expire - timeUtcNow;
+
+                bool isTimeout = (spanTimeoutRemain.CompareTo(TimeSpan.Zero) < 0);
+                if (isTimeout)
+                {
+                    break;
+                }
+            }
+
+            return item.DataLoaded;
+        }
     }
 }
