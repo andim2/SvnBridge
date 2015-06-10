@@ -2116,7 +2116,14 @@ namespace SvnBridge.SourceControl
                                 mergeResponse.Items.Add(responseItem);
                             }
 
-                            MergeResponse_AddBaseFolderIfRequired(activityId, newItem, baseFolders, mergeResponse);
+                            bool mayNeedBaseFolder =
+                                (newItem.Action == ActivityItemAction.New) || (newItem.Action == ActivityItemAction.Deleted) ||
+                                (newItem.Action == ActivityItemAction.RenameDelete);
+
+                            if (mayNeedBaseFolder)
+                            {
+                                MergeResponse_AddBaseFolderIfRequired(activityId, newItem, baseFolders, mergeResponse);
+                            }
                         }
                     }
                 }
@@ -2127,8 +2134,7 @@ namespace SvnBridge.SourceControl
         private void MergeResponse_AddBaseFolderIfRequired(string activityId, ActivityItem item, ICollection<string> baseFolders, MergeActivityResponse mergeResponse)
         {
             string folderName = FilesysHelpers.GetFolderPathPart(item.Path);
-            if (((item.Action == ActivityItemAction.New) || (item.Action == ActivityItemAction.Deleted) ||
-                 (item.Action == ActivityItemAction.RenameDelete)) && !baseFolders.Contains(folderName))
+            if (!baseFolders.Contains(folderName))
             {
                 baseFolders.Add(folderName);
                 bool folderFound = false;
