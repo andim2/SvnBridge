@@ -474,7 +474,39 @@ namespace SvnBridge.Handlers
                 int.Parse(logreport.Limit ?? "1000000"),
                 (start < end));
 
+            bool needProcessFilterImplicitChanges = true;
+
+            if (needProcessFilterImplicitChanges)
+            {
+                // FIXME layering violation!?: the changes should actually have been filtered already -
+                // this is supposed to be a simple reporting-only class,
+                // yet the input data should be in suitable format already,
+                // thus our SVN protocol provider class ought to have done that.
+                // Unless Changes usually *should* contain unfiltered content
+                // for use by SVN generators and REPORT happens to be
+                // the only component which actually requires filtering...
+                FilterImplicitLogItemHistoryChanges(ref logItem);
+            }
+
             LogReportFromLogItem(logItem, output);
+        }
+
+        private static void FilterImplicitLogItemHistoryChanges(ref LogItem logItem)
+        {
+            var sourceItemHistories = logItem.History;
+            foreach (SourceItemHistory history in sourceItemHistories)
+            {
+                // We'll keep the filtering conditionals part inline,
+                // since we access .Count, which requires ICollection at least
+                // (would be less suitable to pass as a sub method param).
+                bool needFiltering = (history.Changes.Count > 1);
+                if (needFiltering) // optimization shortcut
+                {
+                    List<SourceItemChange> changesFiltered;
+                    changesFiltered = new List<SourceItemChange>(FilterImplicitChanges(history.Changes));
+                    history.Changes = changesFiltered;
+                }
+            }
         }
 
         /// <summary>
@@ -584,28 +616,7 @@ namespace SvnBridge.Handlers
                 output.Write("<S:date>" + Helper.FormatDate(history.CommitDateTime) + "</S:date>\n");
                 output.Write("<D:comment>" + Helper.EncodeB(history.Comment) + "</D:comment>\n");
 
-                // FIXME layering violation!?: the changes should actually have been filtered already -
-                // this is supposed to be a simple reporting-only class,
-                // yet the input data should be in suitable format already,
-                // thus our SVN protocol provider class ought to have done that.
-                // Unless Changes usually *should* contain unfiltered content
-                // for use by SVN generators and REPORT happens to be
-                // the only component which actually requires filtering...
-
-                // We'll keep the filtering conditionals part inline,
-                // since we access .Count, which requires ICollection at least
-                // (would be less suitable to pass as a sub method param).
-                List<SourceItemChange> changesFiltered;
-                if (history.Changes.Count > 1) // optimization shortcut
-                {
-                    changesFiltered = new List<SourceItemChange>(FilterImplicitChanges(history.Changes));
-                }
-                else
-                {
-                    changesFiltered = history.Changes;
-                }
-
-                foreach (SourceItemChange change in changesFiltered)
+                foreach (SourceItemChange change in history.Changes)
                 {
                     if ((change.ChangeType & ChangeType.Add) == ChangeType.Add ||
                         (change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete)
