@@ -2523,6 +2523,29 @@ namespace SvnBridge.SourceControl
             });
         }
 
+        private static bool MergeResponse_ShouldBeIgnored(string itemPath)
+        {
+            return WebDAVPropertyStorageAdaptor.IsPropertyFolderType(itemPath);
+        }
+
+        private static void MergeResponse_OverrideItem(ref ActivityItem item)
+        {
+            bool needOverride = false;
+            string itemPath = item.Path;
+            ItemType itemType = item.FileType;
+
+            bool isPropertyStorageItem = WebDAVPropertyStorageAdaptor.IsPropertyStorageItem(ref itemPath, ref itemType);
+            if (isPropertyStorageItem)
+            {
+                needOverride = true;
+            }
+
+            if (needOverride)
+            {
+                item = new ActivityItem(itemPath, itemType, item.Action);
+            }
+        }
+
         private void MergeResponse_GatherEntries(string activityId, MergeActivityResponse mergeResponse)
         {
             List<string> baseFolders = new List<string>();
@@ -2531,20 +2554,11 @@ namespace SvnBridge.SourceControl
             {
                 foreach (ActivityItem item in activity.MergeList)
                 {
-                    ActivityItem newItem = item;
-                    if (!WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Path))
+                    if (!MergeResponse_ShouldBeIgnored(item.Path))
                     {
-                        if (WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Path))
-                        {
-                            string path = item.Path.Replace("/" + WebDAVPropertyStorageAdaptor.propFolderPlusSlash, "/");
-                            ItemType newItemType = item.FileType;
-                            if (path.EndsWith("/" + Constants.FolderPropFile))
-                            {
-                                path = path.Replace("/" + Constants.FolderPropFile, "");
-                                newItemType = ItemType.Folder;
-                            }
-                            newItem = new ActivityItem(path, newItemType, item.Action);
-                        }
+                        ActivityItem newItem = item;
+
+                        MergeResponse_OverrideItem(ref newItem);
 
                         if (!sortedMergeResponse.Contains(newItem.Path))
                         {
@@ -3702,9 +3716,7 @@ namespace SvnBridge.SourceControl
     /// which correspond to specific SCM items.
     internal sealed class WebDAVPropertyStorageAdaptor
     {
-        // FIXME: this member ought to be made private, with suitably slim helpers offered to users,
-        // but for now I will not do that (in order to avoid bugs from excessive changes).
-        public const string propFolderPlusSlash = Constants.PropFolder + "/";
+        private const string propFolderPlusSlash = Constants.PropFolder + "/";
 
         private readonly TFSSourceControlProvider sourceControlProvider;
         private readonly IWebDAVPropertySerializeFormatProvider formatProvider;
@@ -3758,6 +3770,23 @@ namespace SvnBridge.SourceControl
         {
             var itemContent = formatProvider.Serialize(newItemProperties);
             sourceControlProvider.WriteFile(activityId, propertiesPath, itemContent, reportUpdatedFile);
+        }
+
+        public static bool IsPropertyStorageItem(ref string itemPath, ref ItemType itemType)
+        {
+            bool isPropertyStorageItem = false;
+            if (IsPropertyFileType(itemPath))
+            {
+                itemPath = itemPath.Replace("/" + propFolderPlusSlash, "/");
+                if (itemPath.EndsWith("/" + Constants.FolderPropFile))
+                {
+                    itemPath = itemPath.Replace("/" + Constants.FolderPropFile, "");
+                    // itemType externally pre-set - prefer doing explicit assignment in folder case only
+                    itemType = ItemType.Folder;
+                }
+                isPropertyStorageItem = true;
+            }
+            return isPropertyStorageItem;
         }
 
         public static string GetItemFileNameFromPropertiesFileName(string path)
