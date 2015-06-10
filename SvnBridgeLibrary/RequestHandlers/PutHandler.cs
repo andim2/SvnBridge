@@ -18,14 +18,14 @@ namespace SvnBridge.Handlers
 
             string requestPath = GetPath(request);
             string itemPath = Helper.Decode(requestPath);
-            bool created = Put(
+            bool isWebdavResourceNewlyCreated = Put(
                 sourceControlProvider,
                 requestPath,
                 request.InputStream,
                 request.Headers["X-SVN-Base-Fulltext-MD5"],
                 request.Headers["X-SVN-Result-Fulltext-MD5"]);
 
-            if (created)
+            if (isWebdavResourceNewlyCreated)
             {
                 SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
 
@@ -40,6 +40,7 @@ namespace SvnBridge.Handlers
             }
             else
             {
+                // "204 No Content" == "source successfully copied to pre-existing destination resource"
                 SetResponseSettings(response, "text/plain", Encoding.UTF8, 204);
             }
         }
@@ -51,6 +52,8 @@ namespace SvnBridge.Handlers
             string baseHashSvnProvided,
             string resultHashSvnProvided)
         {
+            bool isWebdavResourceNewlyCreated = false;
+
             // Hmm, is this part really necessary??
             // See also MkColHandler where it's being fed into a regex match...
             if (!requestPath.StartsWith("//"))
@@ -84,7 +87,13 @@ namespace SvnBridge.Handlers
                     ReportErrorChecksumMismatch("with updated result file");
                 }
             }
-            return sourceControlProvider.WriteFile(activityId, serverPath, resultData);
+
+            bool isUpdateNeeded = true;
+            if (isUpdateNeeded)
+            {
+                isWebdavResourceNewlyCreated = sourceControlProvider.WriteFile(activityId, serverPath, resultData);
+            }
+            return isWebdavResourceNewlyCreated;
         }
 
         private static bool ChecksumMismatch(string hash, byte[] data)
