@@ -380,31 +380,31 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private static void UpdatePropertiesRevisionOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
+        private static void UpdatePropertiesRevisionOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> pairsPropertiesRevisionOfItems)
         {
-            foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)
+            foreach (KeyValuePair<string, int> pairItemPropertiesRevision in pairsPropertiesRevisionOfItems)
             {
-                string propertyKey = propertyRevision.Key;
+                string itemPath = pairItemPropertiesRevision.Key;
 
-                string propertyKeyMangled = propertyKey.ToLower();
-                if (folders.ContainsKey(propertyKeyMangled))
+                string itemPathMangled = itemPath.ToLower();
+                if (folders.ContainsKey(itemPathMangled))
                 {
-                    ItemMetaData item = folders[propertyKeyMangled];
-                    item.PropertyRevision = propertyRevision.Value;
+                    ItemMetaData item = folders[itemPathMangled];
+                    item.PropertyRevision = pairItemPropertiesRevision.Value;
                 }
                 else
                 {
-                    string folderName = FilesysHelpers.GetFolderPathPart(propertyKey).ToLowerInvariant();
+                    string baseFolderNameMangled = FilesysHelpers.GetFolderPathPart(itemPath).ToLowerInvariant();
 
                     FolderMetaData folder;
-                    if (folders.TryGetValue(folderName, out folder) == false)
+                    if (folders.TryGetValue(baseFolderNameMangled, out folder) == false)
                         continue;
 
-                    foreach (ItemMetaData folderItem in folder.Items)
+                    foreach (ItemMetaData item in folder.Items)
                     {
-                        if (folderItem.Name == propertyKey)
+                        if (item.Name == itemPath)
                         {
-                            folderItem.PropertyRevision = propertyRevision.Value;
+                            item.PropertyRevision = pairItemPropertiesRevision.Value;
                         }
                     }
                 }
