@@ -32,9 +32,12 @@ namespace SvnBridge.SourceControl
     /// </summary>
     public sealed class FilesysHelpers
     {
+        private const string repo_separator_s = "/";
+        private const char repo_separator_c = '/';
+
         public static void StripRootSlash(ref string path)
         {
-            if (path.StartsWith("/"))
+            if (path.StartsWith(repo_separator_s))
                 path = path.Substring(1);
         }
 
@@ -52,6 +55,24 @@ namespace SvnBridge.SourceControl
                 StripRootSlash(ref name);
             }
             return name;
+        }
+
+        // A helper not unlike UNIX "dirname"
+        // (albeit for filename-only arguments it will return "" rather than ".").
+        public static string GetFolderPathPart(string path)
+        {
+            string folderName = "";
+            if (path.Contains(repo_separator_s))
+            {
+                folderName = path.Substring(0, path.LastIndexOf(repo_separator_c));
+            }
+            return folderName;
+        }
+
+        public static string StripPrefix(string prefix, string full)
+        {
+            string res = (full.Length > prefix.Length) ? full.Substring(prefix.Length) : "";
+            return res;
         }
 
         /// <summary>
@@ -476,7 +497,7 @@ namespace SvnBridge.SourceControl
 
                 foreach (SourceItemChange change in history.Changes)
                 {
-                    change.Item.RemoteName = StripPrefix(rootPath, change.Item.RemoteName);
+                    change.Item.RemoteName = FilesysHelpers.StripPrefix(rootPath, change.Item.RemoteName);
 
                     if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
                     {
@@ -1334,7 +1355,7 @@ namespace SvnBridge.SourceControl
                         firstItem = item;
                         if (item.ItemType == ItemType.File)
                         {
-                            string folderName = GetFolderPathPart(item.Name);
+                            string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
                             string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
                             folders[folderNameMangled] = new FolderMetaData();
                             folders[folderNameMangled].Items.Add(item);
@@ -1342,7 +1363,7 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        string folderName = GetFolderPathPart(item.Name);
+                        string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
                         string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
                         FolderMetaData folder = null;
                         if (!folders.TryGetValue(folderNameMangled, out folder))
@@ -1504,7 +1525,7 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    string folderName = GetFolderPathPart(propertyKey).ToLowerInvariant();
+                    string folderName = FilesysHelpers.GetFolderPathPart(propertyKey).ToLowerInvariant();
 
                     FolderMetaData folder;
                     if (folders.TryGetValue(folderName, out folder) == false)
@@ -1605,7 +1626,7 @@ namespace SvnBridge.SourceControl
 
         private void AddBaseFolderIfRequired(string activityId, ActivityItem item, ICollection<string> baseFolders, MergeActivityResponse mergeResponse)
         {
-            string folderName = GetFolderPathPart(item.Path);
+            string folderName = FilesysHelpers.GetFolderPathPart(item.Path);
             if (((item.Action == ActivityItemAction.New) || (item.Action == ActivityItemAction.Deleted) ||
                  (item.Action == ActivityItemAction.RenameDelete)) && !baseFolders.Contains(folderName))
             {
@@ -1626,7 +1647,7 @@ namespace SvnBridge.SourceControl
 
                 if (!folderFound)
                 {
-                    folderName = GetFolderPathPart(item.Path.Substring(rootPath.Length));
+                    folderName = FilesysHelpers.GetFolderPathPart(item.Path.Substring(rootPath.Length));
                     if (!folderName.StartsWith("/"))
                         folderName = "/" + folderName;
                     MergeActivityResponseItem responseItem = new MergeActivityResponseItem(ItemType.Folder, folderName);
@@ -2072,16 +2093,6 @@ namespace SvnBridge.SourceControl
             return properties;
         }
 
-        private static string GetFolderPathPart(string path)
-        {
-            string folderName = "";
-            if (path.Contains("/"))
-            {
-                folderName = path.Substring(0, path.LastIndexOf('/'));
-            }
-            return folderName;
-        }
-
         private ItemMetaData GetPendingItem(string activityId, string path)
         {
             ItemSpec spec = new ItemSpec();
@@ -2119,7 +2130,7 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    string folderName = GetFolderPathPart(itemProperties.Key)
+                    string folderName = FilesysHelpers.GetFolderPathPart(itemProperties.Key)
                         .ToLowerInvariant();
                     if (folders.ContainsKey(folderName))
                     {
@@ -2192,12 +2203,6 @@ namespace SvnBridge.SourceControl
                 Recursion.None,
                 int.MaxValue);
             return log.History[log.History.Length - 1].ChangeSetID;
-        }
-
-        private static string StripPrefix(string prefix, string full)
-        {
-            string res = (full.Length > prefix.Length) ? full.Substring(prefix.Length) : "";
-            return res;
         }
 
         // TODO: these helpers should perhaps eventually be moved
@@ -2278,7 +2283,7 @@ namespace SvnBridge.SourceControl
             }
 
             item.Id = sourceItem.ItemId;
-            item.Name = StripPrefix(rootPath, sourceItem.RemoteName);
+            item.Name = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
 
             item.Author = "unknown";
             item.LastModifiedDate = sourceItem.RemoteDate;
