@@ -54,6 +54,12 @@ namespace SvnBridge.PathParsing
 
         string authorityPlusTfsServiceBasePath;
         string tfsTeamProjPath;
+        SplitTFSServiceAndTeamProjParts(path, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
+        return authorityPlusTfsServiceBasePath;
+    }
+
+    private static void SplitTFSServiceAndTeamProjParts(string path, out string authorityPlusTfsServiceBasePath, out string tfsTeamProjPath)
+    {
         // When using TFS installations with /tfs/DefaultCollection suffix,
         // it's very important to specify the TFS Team project sub part
         // via the proper magic team project syntax
@@ -68,7 +74,6 @@ namespace SvnBridge.PathParsing
             string delimRawPath = "/";
             SplitString(path, delimRawPath, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
         }
-        return authorityPlusTfsServiceBasePath;
 		}
 
 		public override string GetLocalPath(IHttpRequest request)
@@ -92,17 +97,10 @@ namespace SvnBridge.PathParsing
 
 			Uri urlAsUri = new Uri(url);
 			string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
-			string urlFromRequest = GetUrlFromRequest(urlAsUri);
-			string localPath = path.Substring(urlFromRequest.Length);
-      string delimTfsTeamProjPart = "/" + TFSTeamProjectRootPrefixMagic;
-      string dummy;
+      string authorityPlusTfsServiceBasePath;
       string tfsTeamProjPath;
-      int delimIndex = SplitString(localPath, delimTfsTeamProjPart, out dummy, out tfsTeamProjPath);
-      bool foundDelim = (-1 != delimIndex);
-      if (foundDelim)
-      {
-          localPath = tfsTeamProjPath;
-      }
+      SplitTFSServiceAndTeamProjParts(path, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
+      string localPath = tfsTeamProjPath;
 			if (!localPath.StartsWith("/"))
 				localPath = "/" + localPath;
 
