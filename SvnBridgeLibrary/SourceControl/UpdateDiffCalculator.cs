@@ -21,6 +21,21 @@ namespace SvnBridge.SourceControl
             return (change.ChangeType & ChangeType.Merge) == ChangeType.Merge;
         }
 
+        public static bool IsChangeTypeAddKind(ChangeType changeType)
+        {
+            bool isAdd = false;
+            // First a rough but fast check...
+            if ((changeType & (ChangeType.Add | ChangeType.Branch | ChangeType.Undelete)) > 0)
+            {
+                // ...then specifics:
+                isAdd =
+                ((changeType & ChangeType.Add) == ChangeType.Add) ||
+                ((changeType & ChangeType.Branch) == ChangeType.Branch) ||
+                ((changeType & ChangeType.Undelete) == ChangeType.Undelete);
+            }
+            return isAdd;
+        }
+
         public static bool IsDeleteOperation(SourceItemChange change, bool updatingForwardInTime)
         {
             if (updatingForwardInTime == false)
@@ -36,9 +51,7 @@ namespace SvnBridge.SourceControl
             {
                 return IsDeleteOperation(change, true);
             }
-            return ((change.ChangeType & ChangeType.Add) == ChangeType.Add) ||
-                   ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch) ||
-                   ((change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete);
+            return IsChangeTypeAddKind(change.ChangeType);
         }
 
         public static bool IsEditOperation(SourceItemChange change)
