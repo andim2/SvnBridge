@@ -43,7 +43,6 @@ namespace SvnBridge.Utility
 
         public static string GetBase64SvnDiffData(byte[] data)
         {
-            int index = 0;
             int diff_chunk_size_max = DiffChunkSizeMax;
             // Technically spoken the length of SVN signature below
             // is in _addition_ to the chunk size - it may exceed stream size.
@@ -53,6 +52,7 @@ namespace SvnBridge.Utility
             using (MemoryStream svnDiffStream = new MemoryStream(diff_chunk_size_max))
             {
                 SvnDiffEngine.WriteSvnDiffSignature(svnDiffStream);
+                int index = 0;
                 while (index < data.Length)
                 {
                     int length = data.Length - index;
