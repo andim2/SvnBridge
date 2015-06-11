@@ -92,9 +92,10 @@ namespace SvnBridge.Infrastructure
                 output.AppendFormat("User     : {0}\r\n", credential.UserName);
             }
             output.AppendFormat("Request  : {0} {1} HTTP/1.1\r\n", context.Request.HttpMethod, context.Request.Url.AbsolutePath);
-            if (RequestCache.Items["RequestBody"] != null)
+            var requestBody = RequestCache.Items["RequestBody"];
+            if (null != requestBody)
             {
-                output.AppendFormat("{0}\r\n", Helper.SerializeXmlString(RequestCache.Items["RequestBody"]));
+                output.AppendFormat("{0}\r\n", Helper.SerializeXmlString(requestBody));
             }
             output.AppendFormat("\r\nException:\r\n   {0}\r\n", exception);
             output.AppendFormat("\r\nStack Trace:\r\n{0}\r\n", exception.StackTrace);
