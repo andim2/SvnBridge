@@ -299,6 +299,23 @@ namespace SvnBridge.Utility
 			return Decode(value, true);
 		}
 
+		public static string UrlEncodeIfNecessary(string href)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach (char c in href)
+			{
+				if (c > 256)
+				{
+					sb.Append(HttpUtility.UrlEncode(c.ToString()));
+				}
+				else
+				{
+					sb.Append(c);
+				}
+			}
+			return sb.ToString();
+		}
+
 		public static string FormatDate(DateTime date)
 		{
 			string result = date.ToUniversalTime().ToString("o");
@@ -354,23 +371,6 @@ namespace SvnBridge.Utility
 			if (folderName == "$")
 				return Constants.ServerRootPath;
 			return folderName;
-		}
-
-		public static string UrlEncodeIfNecessary(string href)
-		{
-			StringBuilder sb = new StringBuilder();
-			foreach (char c in href)
-			{
-				if (c > 256)
-				{
-					sb.Append(HttpUtility.UrlEncode(c.ToString()));
-				}
-				else
-				{
-					sb.Append(c);
-				}
-			}
-			return sb.ToString();
 		}
 
 		public static string CombinePath(string path1, string path2)
