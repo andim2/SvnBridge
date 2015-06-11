@@ -154,11 +154,6 @@ namespace SvnBridge.SourceControl
             return remoteName;
         }
 
-        private static bool IsRenameOperation(SourceItemChange change)
-        {
-            return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
-        }
-
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)
         {
             bool alreadyInClientCurrentState = IsChangeAlreadyCurrentInClientState(ChangeType.Add,
@@ -356,6 +351,11 @@ namespace SvnBridge.SourceControl
         {
             //return updatingForwardInTime ? Recursion.None : Recursion.Full;
             return Recursion.None;
+        }
+
+        private static bool IsRenameOperation(SourceItemChange change)
+        {
+            return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
         }
 
         private static bool IsAddOperation(SourceItemChange change)
