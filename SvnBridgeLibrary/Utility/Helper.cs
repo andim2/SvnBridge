@@ -44,10 +44,67 @@ namespace SvnBridge.Utility
     // part, with potentially different encoding requirements
     // (when used for D:href element etc.).
 
-		private static readonly string[] DECODED = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`", "&" };
+    // Intermingled transcoding: I really *don't* think that it's correct
+    // to have a coding map for percent-encoding
+    // which then suddenly contains one grossly foreign XML entity escaping, too.
+    // Quite likely that's due to intermingling transcoding requirements
+    // of two *unrelated* transcoding-requiring layers rather than doing separate precise, correct
+    // transcoding steps each, from each layer with its precise transcoding requirements
+    // to another layer with likely *other* distinct requirements,
+    // with an entire roundtrip ending up correct.
+    // Seems like this originated from the ampersand mentioning at
+    // http://tools.ietf.org/html/rfc4918#section-8.3.1, however it's
+    // still not a good idea (which is very obvious when looking at
+    // the dirty '&' special-casing in Encode())
+    // to intermingle **separate** (read: to be applied in series!!)
+    // URI encoding and XML entity escaping concerns.
+
+    // So, e.g. for a fully internationalized resource (umlauts etc.),
+    // an *encoding* process chain would be:
+    // original string (UTF-8)
+    // --> RFC3986 encoding run
+    // --> Non-RFC3986 (Non-ASCII) parts to hex-encoded representation encoding run
+    // --> XML entity escaping run
+    // [-----> on the HTTP protocol wire!]
+    // And the decoding chain would then be applied precisely in reverse.
+    // Watch out for double-transcoding issues with '%' char, though
+    // (doing RFC3986 encoding *prior* to encoding of left-over non-ASCII chars
+    // probably is crucial).
+
+    // We'll try to correct wrong transcoding issues as we encounter them,
+    // but we might temporarily hit problems though, namely if we announce content in our
+    // *encoding* which then gets fed back by the client in other SVN requests
+    // where we do NOT do *decoding* via the same (hopefully properly corrected) transformation yet.
+
+    // TODO: get rid of all public APIs
+    // which are horribly unspecifically named "Encode"/"Decode" -
+    // naming should be *specific*,
+    // to indicate exactly which requirements are being met.
+    // And when adding an encoding type description part,
+    // then prefer something like "PercentEncode"
+    // rather than "Encode" or "Escape".
+
+    // See e.g. http://www.websitedev.de/temp/rfc3986-check.html.gz
+    // for a very nice RFC3986 online checker.
+    //
+    // [1] http://stackoverflow.com/questions/602642/server-urlencode-vs-httputility-urlencode
+
+    // The existing maps seem buggy for purposes of RFC3986 URI transform,
+    // i.e. for payload content (potentially containing URI-special chars)
+    // which is being announced via URIs (i.e., D:href etc.), as specified by current RFC3986
+    // (hmm, or would these mechanisms be specifically written for obsolete RFC2396 only?
+    // The thing that's relevant here is probably what assumptions WebDAV is making...).
+    // We definitely need to transform all "reserved" codes for
+    // any payload content which should not conflict with URI-side
+    // delimiters, plus the percent-encoding-required '%' char, obviously.
+    // reserved = gen-delims / sub-delims
+    // gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+    // sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+
+		private static readonly string[] DECODED = new string[] { "%",   "#",   " ",   "^",   "{",   "[",   "}",   "]",   ";",   "`",   "&" };
 		private static readonly string[] ENCODED = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60", "&amp;" };
 
-		private static readonly string[] DECODED_B = new string[] { "&", "<", ">" };
+		private static readonly string[] DECODED_B = new string[] { "&",     "<",    ">" };
 		private static readonly string[] ENCODED_B = new string[] { "&amp;", "&lt;", "&gt;" };
 
         // XML has 5 (FIVE) mandatory entities to be encoded, not merely the 3 above.
@@ -55,10 +112,10 @@ namespace SvnBridge.Utility
         // thus provide another helper for the corrected(?) encoding.
 	// (note that it turned out that e.g. D:comment does not seem to require all of these escapes after all).
 	// See also http://stackoverflow.com/questions/1664208/encode-quotes-in-html-body
-        private static readonly string[] DECODED_B_FIXED = new string[] { "&", "<", ">", "\"", "'" };
-        private static readonly string[] ENCODED_B_FIXED = new string[] { "&amp;", "&lt;", "&gt;", "&quot;", "&apos;" };
+		private static readonly string[] DECODED_B_FIXED = new string[] { "&",     "<",    ">",    "\"",     "'" };
+		private static readonly string[] ENCODED_B_FIXED = new string[] { "&amp;", "&lt;", "&gt;", "&quot;", "&apos;" };
 
-        private static readonly string[] DECODED_C = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`" };
+		private static readonly string[] DECODED_C = new string[] { "%",   "#",   " ",   "^",   "{",   "[",   "}",   "]",   ";",   "`" };
 		private static readonly string[] ENCODED_C = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60" };
 
         public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
@@ -296,6 +353,7 @@ namespace SvnBridge.Utility
             return sb.ToString();
         }
 
+        // (Almost) generic encoder (transform item set #2 to item set #1)
 		private static string Encode(string[] encoded, string[] decoded, string value, bool capitalize)
 		{
 			if (value == null)
@@ -318,36 +376,46 @@ namespace SvnBridge.Utility
 			return value;
 		}
 
-		private static string Decode(string value, bool capitalize)
+        // (Almost) generic decoder (transform item set #1 to item set #2)
+        private static string Decode(string[] encoded, string[] decoded, string value, bool capitalize)
 		{
 			if (value == null)
 			{
 				return value;
 			}
 
-			for (int i = ENCODED.Length - 1; i >= 0; i--)
+			for (int i = encoded.Length - 1; i >= 0; i--)
 			{
 				if (capitalize)
 				{
-					value = value.Replace(ENCODED[i].ToUpper(), DECODED[i]);
+					value = value.Replace(encoded[i].ToUpper(), decoded[i]);
 				}
 				else
 				{
-					value = value.Replace(ENCODED[i], DECODED[i]);
+					value = value.Replace(encoded[i], decoded[i]);
 				}
 			}
 
 			return value;
 		}
 
+        private static string Decode(string value, bool capitalize)
+        {
+            return Decode(ENCODED, DECODED, DecodeURIComponent_NonASCII(value), capitalize);
+        }
+
+        // FIXME: several functions here use capitalize == false,
+        // but this conflicts with RFC3986 recommendation to use upper-case for consistency!
+        // So this should probably be changed,
+        // except for cases where lower-case happens to be a foreign-party communication requirement.
 		public static string Encode(string value)
 		{
-			return Encode(value, false);
+			return EncodeURIComponent_NonASCII(Encode(value, false));
 		}
 
 		public static string Encode(string value, bool capitalize)
 		{
-			return Encode(ENCODED, DECODED, value, capitalize);
+			return EncodeURIComponent_NonASCII(Encode(ENCODED, DECODED, value, capitalize));
 		}
 
 		public static string Decode(string value)
@@ -370,29 +438,71 @@ namespace SvnBridge.Utility
 			return Decode(value, false);
 		}
 
-    // Capitalizing encode.
+        // Preferred newer API.
+        public static string EncodeURIComponent_RFC3986_plus_i18n(string value_utf8)
+        {
+            return EncodeURIComponent_NonASCII(Encode(ENCODED_C, DECODED_C, value_utf8, true));
+        }
+
+        // Preferred newer API.
+        public static string DecodeURIComponent_RFC3986_plus_i18n(string value_utf8)
+        {
+            return Decode(DecodeURIComponent_NonASCII(value_utf8), true);
+        }
+
+		// Deprecated. Capitalizing form of Encode().
 		public static string EncodeC(string value)
 		{
-			return Encode(ENCODED_C, DECODED_C, value, true);
+			return EncodeURIComponent_RFC3986_plus_i18n(value);
 		}
 
-    // Capitalizing decode.
+		// Deprecated. Capitalizing decode.
 		public static string DecodeC(string value)
 		{
-			return Decode(value, true);
+			return DecodeURIComponent_RFC3986_plus_i18n(value);
 		}
 
-		public static string UrlEncodeIfNecessary(string href)
+    /// <summary>
+    /// Comment-only directly-HttpUtility.UrlEncode()-wrapping function.
+    /// </summary>
+    /// <remarks>
+    /// Note that UrlEncode() is problematic
+    /// since it will replace ' ' by '+'
+    /// (UrlPathEncode() does a more common replacement: ' ' by "%20" -
+    ///   but MSDN UrlPathEncode() says "Do not use").
+    /// </remarks>
+    private static string MyUrlEncode(string href_utf8)
+    {
+        return HttpUtility.UrlEncode(href_utf8);
+    }
+
+    /// <summary>
+    /// This function seems B0RKEN and should thus be deprecated. See comments below.
+    /// </summary>
+		public static string UrlEncodeIfNecessary(string href_utf8)
 		{
                         // Hmm... why can't we use the venerable
-                        // Uri.EscapeUriString() method instead?
+                        // Uri.EscapeDataString() method instead?
                         // Surely would be much faster, too...
 			StringBuilder sb = new StringBuilder();
-			foreach (char c in href)
+			foreach (char c in href_utf8)
 			{
+        // I don't know WHAT THE H*LL this function does:
+        // A) no comment anywhere
+        // B) Non-ASCII codepages (well, single-byte ones) are 8bit i.e.
+        //    resulting in a 0..*255* range! Why "> 256"??
+        // C) why 25X? Pure ASCII is 7bit! (making the gross assumption that this function
+        //    was originally intended to be used to escape some chars in non-ASCII range)
+        // D) Finally, it is emphatically *NOT* fully complete URI input which
+        //    an encoder should process - rather, it's *payload* segments which should
+        //    be encoded *prior* to forming full URI syntax from it,
+        //    in order to prevent accidentally matching parts
+        //    from being mistaken as URI parts ('/' etc.)
+        //    --> misnomer.
+        // C.f. the report at [1]
 				if (c > 256)
 				{
-					sb.Append(HttpUtility.UrlEncode(c.ToString()));
+					sb.Append(MyUrlEncode(c.ToString()));
 				}
 				else
 				{
@@ -401,6 +511,85 @@ namespace SvnBridge.Utility
 			}
 			return sb.ToString();
 		}
+
+    private static bool CharIsInASCIIRange(char c)
+    {
+        return (c <= 127);
+    }
+
+    /// <remarks>
+    /// RFC3986 covers URI components in ASCII range only,
+    /// i.e. it does not cover International Domain Names (IDN).
+    /// Thus, if you want to ensure that an URI remains within RFC3986
+    /// compatibility requirements (ASCII-only),
+    /// *all* incompatible chars (i.e. Non-ASCII range, too) need to be percent-encoded.
+    ///
+    /// We'll strictly limit this transcoding layer
+    /// to transcoding percent-encoded characters of non-ASCII range only!
+    /// Reasoning: RFC3986 handlers are expected to (and thus should always be used to)
+    /// properly handle all other cases of percent-encoded chars.
+    ///
+    /// While it's sometimes recommended to use Uri.EscapeDataString() rather
+    /// than the seemingly somewhat buggy HttpUtility.UrlPathEncode()
+    /// (see [1], e.g. handling of '%' sign),
+    /// Uri.EscapeDataString() provides optional(!) IRI functionality
+    /// which is beyond the scope of RFC3986 (this seems to also mean that it
+    /// uses Punycode rather than percent-encoding!).
+    /// Thus we have to fall back to using buggy(?) HttpUtility.UrlPathEncode()
+    /// (WARNING: it assumes string to be in proper UTF-8 encoding,
+    /// thus you ought to pass compatible input!)
+    /// Nope, better: we'll simply use Uri.HexEscape() for this task!
+    /// </remarks>
+    private static string EncodeURIComponent_NonASCII(string href_utf8)
+    {
+			StringBuilder sb = new StringBuilder();
+			foreach (char c in href_utf8)
+			{
+				bool isInASCIIRange = (CharIsInASCIIRange(c));
+				bool notNeedPercentEncoding = (isInASCIIRange);
+				if (notNeedPercentEncoding)
+				{
+					sb.Append(c);
+				}
+				else
+				{
+					sb.Append(Uri.HexEscape(c));
+				}
+			}
+			return sb.ToString();
+    }
+
+    private static string DecodeURIComponent_NonASCII(string href_utf8)
+    {
+        StringBuilder sb = new StringBuilder();
+        int href_utf8Len = href_utf8.Length;
+        for (int index = 0; index < href_utf8Len; /* specially conditionally incremented below */)
+        {
+            if (Uri.IsHexEncoding(href_utf8, index))
+            {
+                int index_new = index;
+                char c_candidate = Uri.HexUnescape(href_utf8, ref index_new);
+                if (CharIsInASCIIRange(c_candidate))
+                {
+                    // *pass on* RFC3986-side ASCII arguments unprocessed!
+                    int encoded_arg_length = index_new - index;
+                    string percent_encoded_ascii_char = href_utf8.Substring(index, encoded_arg_length);
+                    sb.Append(percent_encoded_ascii_char);
+                }
+                else
+                {
+                    sb.Append(c_candidate);
+                }
+                index = index_new;
+            }
+            else
+            {
+                sb.Append(href_utf8[index]);
+                ++index;
+            }
+        }
+        return sb.ToString();
+    }
 
 		public static string FormatDate(DateTime date)
 		{
