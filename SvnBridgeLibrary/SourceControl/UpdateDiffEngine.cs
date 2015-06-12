@@ -442,8 +442,8 @@ namespace SvnBridge.SourceControl
                 return;
             }
 
-            string folderName = _checkoutRootPath;
-            string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : folderName;
+            string itemName = _checkoutRootPath;
+            string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemName;
 
             string[] nameParts = remoteName.Substring(remoteNameStart.Length)
                 .Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -453,24 +453,24 @@ namespace SvnBridge.SourceControl
             {
                 bool isLastNamePart = i == nameParts.Length - 1;
 
-                if (folderName != "" && !folderName.EndsWith("/"))
-                    folderName += "/" + nameParts[i];
+                if (itemName != "" && !itemName.EndsWith("/"))
+                    itemName += "/" + nameParts[i];
                 else
-                    folderName += nameParts[i];
+                    itemName += nameParts[i];
 
-                bool fullyHandled = HandleDeleteItem(remoteName, change, folderName, ref folder, isLastNamePart);
+                bool fullyHandled = HandleDeleteItem(remoteName, change, itemName, ref folder, isLastNamePart);
                 if (fullyHandled)
                     break;
             }
             if (nameParts.Length == 0)//we have to delete the checkout root itself
             {
-                HandleDeleteItem(remoteName, change, folderName, ref folder, true);
+                HandleDeleteItem(remoteName, change, itemName, ref folder, true);
             }
         }
 
-        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string folderName, ref FolderMetaData folder, bool isLastNamePart)
+        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemName, ref FolderMetaData folder, bool isLastNamePart)
         {
-            ItemMetaData item = folder.FindItem(folderName);
+            ItemMetaData item = folder.FindItem(itemName);
             // Shortcut: valid item in our cache, and it's a delete already? We're done :)
             if (IsDeleteMetaDataKind(item))
                 return true;
@@ -490,14 +490,14 @@ namespace SvnBridge.SourceControl
                 else
                 {
                     var processedVersion = _targetVersion;
-                    item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, folderName, Recursion.None);
+                    item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, itemName, Recursion.None);
                     if (item == null)
                     {
                         // FIXME: hmm, are we really supposed to actively Delete a non-isLastNamePart item
                         // rather than indicating a MissingItemMetaData!?
                         // After all the actual delete operation is expected to be carried out (possibly later) properly, too...
                         item = new DeleteFolderMetaData();
-                        item.Name = folderName;
+                        item.Name = itemName;
                         item.ItemRevision = processedVersion;
                     }
                     else
