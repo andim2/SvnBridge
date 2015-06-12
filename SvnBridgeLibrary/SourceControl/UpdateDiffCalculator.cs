@@ -152,18 +152,18 @@ namespace SvnBridge.SourceControl
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)
         {
             FolderMetaData folder = root;
-            string[] parts = path.Split('/');
+            string[] nameParts = path.Split('/');
             string itemName = pathRoot;
             ItemMetaData item = null;
-            for (int i = 0; i < parts.Length; i++)
+            for (int i = 0; i < nameParts.Length; i++)
             {
                 if (itemName != "" && !itemName.EndsWith("/"))
-                    itemName += "/" + parts[i];
+                    itemName += "/" + nameParts[i];
                 else
-                    itemName += parts[i];
+                    itemName += nameParts[i];
 
                 item = folder.FindItem(itemName);
-                bool lastNamePart = i == parts.Length - 1;
+                bool lastNamePart = i == nameParts.Length - 1;
                 if (item == null)
                 {
                     if (lastNamePart)
