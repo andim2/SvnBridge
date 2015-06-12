@@ -157,10 +157,7 @@ namespace SvnBridge.SourceControl
             ItemMetaData item = null;
             for (int i = 0; i < nameParts.Length; i++)
             {
-                if (itemName != "" && !itemName.EndsWith("/"))
-                    itemName += "/" + nameParts[i];
-                else
-                    itemName += nameParts[i];
+                UpdateDiffEngine.PathAppendElem(ref itemName, nameParts[i]);
 
                 item = folder.FindItem(itemName);
                 bool lastNamePart = i == nameParts.Length - 1;

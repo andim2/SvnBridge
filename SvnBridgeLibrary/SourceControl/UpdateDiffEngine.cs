@@ -252,10 +252,7 @@ namespace SvnBridge.SourceControl
                     if (i == nameParts.Length - 1)
                         lastNamePart = true;
 
-                    if (itemName != "" && !itemName.EndsWith("/"))
-                        itemName += "/" + nameParts[i];
-                    else
-                        itemName += nameParts[i];
+                    PathAppendElem(ref itemName, nameParts[i]);
 
                     // Detect our possibly pre-existing record of this item within the changeset version range
                     // that we're in the process of analyzing/collecting...
@@ -453,10 +450,7 @@ namespace SvnBridge.SourceControl
             {
                 bool isLastNamePart = i == nameParts.Length - 1;
 
-                if (itemName != "" && !itemName.EndsWith("/"))
-                    itemName += "/" + nameParts[i];
-                else
-                    itemName += nameParts[i];
+                PathAppendElem(ref itemName, nameParts[i]);
 
                 bool fullyHandled = HandleDeleteItem(remoteName, change, itemName, ref folder, isLastNamePart);
                 if (fullyHandled)
@@ -568,6 +562,14 @@ namespace SvnBridge.SourceControl
             }
             folder = (item as FolderMetaData) ?? folder;
             return false;
+        }
+
+        public static void PathAppendElem(ref string path, string pathElem)
+        {
+            if (path != "" && !path.EndsWith("/"))
+                path += "/" + pathElem;
+            else
+                path += pathElem;
         }
 
         private static bool IsChangeAlreadyCurrentInClientState(ChangeType changeType,
