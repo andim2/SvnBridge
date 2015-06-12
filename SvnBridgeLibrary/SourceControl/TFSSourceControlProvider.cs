@@ -993,6 +993,36 @@ namespace SvnBridge.SourceControl
             {
                 SourceItemHistory historyOfSVNCommit = ConstructSourceItemHistoryFromChangeset(
                     changeset);
+                historyOfSVNCommit.Changes = ConvertTFSChangesetToSVNSourceItemChanges(
+                    changeset).ToList();
+                history.Add(historyOfSVNCommit);
+            }
+
+            return history;
+        }
+
+        private static SourceItemHistory ConstructSourceItemHistoryFromChangeset(
+            Changeset changeset)
+        {
+            // Username used to get set to changeset.cmtr, but at
+            // least for VSS-migrated repositories and for gated
+            // checkins this is wrong, thus try using changeset.owner.
+            // For details and possible variants to get this fixed,
+            // please see "Log Messages Issue - Committer vs. Owner when
+            // using Gated Check-In"
+            //   http://svnbridge.codeplex.com/discussions/260147
+            return new SourceItemHistory(
+                changeset.Changes[0].Item.cs,
+                changeset.owner,
+                changeset.date,
+                changeset.Comment);
+        }
+
+        private IEnumerable<SourceItemChange> ConvertTFSChangesetToSVNSourceItemChanges(
+            Changeset changeset)
+        {
+            List<SourceItemChange> sourceItemChanges = new List<SourceItemChange>();
+
                 foreach (Change change in changeset.Changes)
                 {
                     bool isChangeRelevantForSVNHistory = !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item);
@@ -1021,7 +1051,7 @@ namespace SvnBridge.SourceControl
                             SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
                             ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
 
-                            historyOfSVNCommit.Changes.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
+                            sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
                         }
                     }
                     else // change of a standard source control item
@@ -1031,30 +1061,11 @@ namespace SvnBridge.SourceControl
                         if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
                             (changeType == (ChangeType.Add | ChangeType.Encoding)))
                             changeType = ChangeType.Add;
-                        historyOfSVNCommit.Changes.Add(new SourceItemChange(sourceItem, changeType));
+                        sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType));
                     }
                 }
-                history.Add(historyOfSVNCommit);
-            }
 
-            return history;
-        }
-
-        private static SourceItemHistory ConstructSourceItemHistoryFromChangeset(
-            Changeset changeset)
-        {
-            // Username used to get set to changeset.cmtr, but at
-            // least for VSS-migrated repositories and for gated
-            // checkins this is wrong, thus try using changeset.owner.
-            // For details and possible variants to get this fixed,
-            // please see "Log Messages Issue - Committer vs. Owner when
-            // using Gated Check-In"
-            //   http://svnbridge.codeplex.com/discussions/260147
-            return new SourceItemHistory(
-                changeset.Changes[0].Item.cs,
-                changeset.owner,
-                changeset.date,
-                changeset.Comment);
+            return sourceItemChanges;
         }
 
         /// WARNING: the service-side QueryHistory() API will silently discard **older** entries
