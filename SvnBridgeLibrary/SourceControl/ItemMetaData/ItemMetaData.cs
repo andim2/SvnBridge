@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics; // Debug.WriteLine()
+using System.Text; // StringBuilder
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Utility; // SvnDiffParser, Helper
 
 namespace SvnBridge.SourceControl
 {
+    // http://blogs.msdn.com/b/jaredpar/archive/2011/03/18/debuggerdisplay-attribute-best-practices.aspx
+    //[DebuggerDisplay("{DebuggerDisplay}")]
+    //[DebuggerDisplay("{DebuggerDisplay,nq}")]
+    //[DebuggerDisplay("{DebugShowContent.ToString()}")]
     public class ItemMetaData
     {
     	private FolderMetaData parent;
@@ -33,6 +39,7 @@ namespace SvnBridge.SourceControl
         public Dictionary<string, string> Properties = new Dictionary<string, string>();
         public int PropertyRevision;
         public int SubItemRevision;
+        private const int RenderContentAsString_indent = 2;
 
         public ItemMetaData()
         {
@@ -221,5 +228,97 @@ namespace SvnBridge.SourceControl
         {
             get { return Configuration.SCMWantCaseSensitiveItemMatch; }
         }
+
+        /// <summary>
+        /// *VERY* important debug helper
+        /// (for quick and elegant analysis in MSVS watch areas).
+        /// </summary>
+        public string DebugShowContent
+        {
+            get
+            {
+                StringBuilder sb = new StringBuilder();
+                RenderContentAsString(sb, 0);
+
+                // Since things such as DebuggerDisplay, TextVisualizer etc.
+                // do not (sufficiently easily?)
+                // work for *formatted* content (the list that I'm trying to show),
+                // simply resort to using Debug.WriteLine().
+                string content = sb.ToString();
+                Debug.WriteLine(content);
+                return "Please see Debug.WriteLine() result in Output window";
+            }
+        }
+
+        public void RenderContentAsString(StringBuilder sb, int indent)
+        {
+            RenderContentAsString_Header(sb, indent);
+            sb.Append(":");
+            RenderContentAsString_nextline(sb);
+            RenderContentAsString_IndentIncr(ref indent); RenderContentAsString_Content(sb, indent);
+        }
+
+        protected static void RenderContentAsString_IndentIncr(ref int indent)
+        {
+            indent += RenderContentAsString_indent;
+        }
+
+        protected static string RenderContentAsString_IndentGet(int indent)
+        {
+            // http://www.dotnetexamples.com/2012/06/c-indent-stringtext-with-spaces.html
+            return "".PadLeft(indent);
+        }
+
+        protected virtual void RenderContentAsString_Header(StringBuilder sb, int indent)
+        {
+            sb.Append(RenderContentAsString_IndentGet(indent)); sb.Append(GetType().Name);
+        }
+
+        /// <summary>
+        /// This method is supposed to render
+        /// a string-based equivalent
+        /// of the entire (possibly recursive) content within this item.
+        /// </summary>
+        /// I decided to have a StringBuilder passed directly as a method param
+        /// (somewhat in violation of proper per-object-result modularity),
+        /// since that way
+        /// there is only one central StringBuilder object maintained
+        /// which we generate the result in.
+        protected virtual void RenderContentAsString_Content(StringBuilder sb, int indent)
+        {
+            sb.Append(RenderContentAsString_IndentGet(indent));
+            // We'll restrict things to displaying only those attributes
+            // that are "usually" of interest
+            // in a huge hierarchical dump
+            // of such items.
+            sb.Append("Name ");
+            sb.Append(Name);
+            sb.Append(", id ");
+            sb.Append(Id);
+            sb.Append(", rev ");
+            sb.Append(Revision);
+            sb.Append(", itemRev ");
+            sb.Append(ItemRevision);
+            sb.Append(", loaded ");
+            sb.Append(DataLoaded);
+            sb.Append(", lastMod ");
+            sb.Append(LastModifiedDate);
+            sb.Append(", origDeleted ");
+            sb.Append(OriginallyDeleted);
+            RenderContentAsString_nextline(sb);
+        }
+
+        protected static void RenderContentAsString_nextline(StringBuilder sb)
+        {
+            sb.Append("\r\n");
+        }
+
+        //private string DebuggerDisplay
+        //{
+        //    get
+        //    {
+        //        return string.Format("{0}", DebugShowContent);
+        //    }
+        //}
     }
 }

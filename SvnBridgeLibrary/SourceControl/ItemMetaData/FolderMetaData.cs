@@ -1,6 +1,7 @@
 using System; // InvalidOperationException
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text; // StringBuilder
 using CodePlex.TfsLibrary;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
@@ -166,6 +167,16 @@ namespace SvnBridge.SourceControl
                 Guard.ArgumentNotNull(item, "item");
                 item.SetParent(parent);
                 base.SetItem(index, item);
+            }
+        }
+
+        protected override void RenderContentAsString_Content(StringBuilder sb, int indent)
+        {
+            base.RenderContentAsString_Content(sb, indent);
+            RenderContentAsString_IndentIncr(ref indent);
+            foreach (ItemMetaData item in Items)
+            {
+                item.RenderContentAsString(sb, indent);
             }
         }
     }
