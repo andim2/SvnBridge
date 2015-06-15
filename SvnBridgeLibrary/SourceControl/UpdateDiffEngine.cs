@@ -212,7 +212,8 @@ namespace SvnBridge.SourceControl
                         }
                         // ...and fetch the updated one
                         // for the currently processed version:
-                        item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
+                        var processedVersion = _targetVersion;
+                        item = sourceControlProvider.GetItems(processedVersion, itemName, Recursion.None);
                         if (item == null)
                         {
                             // THIS IS *NOT* TRUE!!
@@ -252,7 +253,7 @@ namespace SvnBridge.SourceControl
                             {
                                 return;
                             }
-                            item = new MissingItemMetaData(itemName, _targetVersion, edit);
+                            item = new MissingItemMetaData(itemName, processedVersion, edit);
                         }
                         if (!lastNamePart)
                         {
@@ -392,18 +393,20 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
-                    item = sourceControlProvider.GetItemsWithoutProperties(_targetVersion, folderName, Recursion.None);
+                    var processedVersion = _targetVersion;
+                    item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, folderName, Recursion.None);
                     if (item == null)
                     {
                         item = new DeleteFolderMetaData();
                         item.Name = folderName;
-                        item.ItemRevision = _targetVersion;
+                        item.ItemRevision = processedVersion;
                     }
                 }
                 folder.Items.Add(item);
             }
             else if (isLastNamePart) // we need to revert the item addition
             {
+                var processedVersion = _targetVersion;
                 if (item.OriginallyDeleted) // convert back into a delete
                 {
                     folder.Items.Remove(item);
@@ -420,7 +423,7 @@ namespace SvnBridge.SourceControl
                 {
                     DeleteFolderMetaData removeFolder = new DeleteFolderMetaData();
                     removeFolder.Name = item.Name;
-                    removeFolder.ItemRevision = _targetVersion;
+                    removeFolder.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
                 }
@@ -430,7 +433,7 @@ namespace SvnBridge.SourceControl
                                                     ? (ItemMetaData)new DeleteFolderMetaData()
                                                     : new DeleteMetaData();
                     removeFolder.Name = item.Name;
-                    removeFolder.ItemRevision = _targetVersion;
+                    removeFolder.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
                 }
@@ -438,7 +441,7 @@ namespace SvnBridge.SourceControl
                 {
                     ItemMetaData removeFolder = new DeleteMetaData();
                     removeFolder.Name = item.Name;
-                    removeFolder.ItemRevision = _targetVersion;
+                    removeFolder.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
                     folder.Items.Add(removeFolder);
                 }
