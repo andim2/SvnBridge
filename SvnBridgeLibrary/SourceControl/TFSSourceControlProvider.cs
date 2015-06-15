@@ -985,20 +985,24 @@ namespace SvnBridge.SourceControl
             sourceItem.RemoteName = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
         }
 
-        private List<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changesets)
+        private IEnumerable<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changesets)
         {
-            List<SourceItemHistory> history = new List<SourceItemHistory>();
+            IEnumerable<SourceItemHistory> commits;
 
-            foreach (Changeset changeset in changesets)
-            {
-                SourceItemHistory historyOfSVNCommit = ConstructSourceItemHistoryFromChangeset(
-                    changeset);
-                historyOfSVNCommit.Changes = ConvertTFSChangesetToSVNSourceItemChanges(
-                    changeset).ToList();
-                history.Add(historyOfSVNCommit);
-            }
+            commits = changesets.Select(changeset => ConvertTFSChangesetToSVNCommit(changeset));
 
-            return history;
+            return commits;
+        }
+
+        private SourceItemHistory ConvertTFSChangesetToSVNCommit(
+            Changeset changeset)
+        {
+            SourceItemHistory historyOfSVNCommit = ConstructSourceItemHistoryFromChangeset(
+                changeset);
+            historyOfSVNCommit.Changes = ConvertTFSChangesetToSVNSourceItemChanges(
+                changeset).ToList();
+
+            return historyOfSVNCommit;
         }
 
         private static SourceItemHistory ConstructSourceItemHistoryFromChangeset(
@@ -1211,7 +1215,7 @@ namespace SvnBridge.SourceControl
                 }
             }
 
-            histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray());
+            histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray()).ToList();
 
             return histories;
         }
