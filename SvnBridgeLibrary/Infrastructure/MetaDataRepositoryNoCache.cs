@@ -37,9 +37,7 @@ namespace SvnBridge.Infrastructure
             List<ItemSpec> itemSpecs = new List<ItemSpec>(paths.Length);
             foreach (string path in paths)
             {
-                ItemSpec itemspec = new ItemSpec();
-                itemspec.item = GetServerPath(path);
-                itemspec.recurse = RecursionType.None;
+                ItemSpec itemspec = new ItemSpec { item = GetServerPath(path), recurse = RecursionType.None };
                 switch (recursion)
                 {
                     case Recursion.OneLevel:

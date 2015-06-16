@@ -3560,8 +3560,7 @@ namespace SvnBridge.SourceControl
         /// <returns>Meta data of the item, else null</returns>
         private ItemMetaData GetPendingItem(string activityId, string path)
         {
-            ItemSpec spec = new ItemSpec();
-            spec.item = MakeTfsPath(path);
+            ItemSpec spec = new ItemSpec { item = MakeTfsPath(path), recurse = RecursionType.None };
             ExtendedItem[][] items =
                 sourceControlService.QueryItemsExtended(serverUrl,
                                                         credentials,
