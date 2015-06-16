@@ -2848,15 +2848,7 @@ namespace SvnBridge.SourceControl
 
             SVNPathStripLeadingSlash(ref path);
 
-            if (version == 0 && path.Equals(""))
-            {
-                version = GetEarliestVersion(path);
-            }
-
-            if (version == LATEST_VERSION)
-            {
-                version = GetLatestVersion();
-            }
+            DetermineDesiredRevision(ref version, path);
 
             SourceItem[] sourceItems = GetTFSSourceItems(version, path, recursion);
 
@@ -2883,6 +2875,23 @@ namespace SvnBridge.SourceControl
             } // sourceItems.Length > 0
 
             return rootItem;
+        }
+
+        /// <summary>
+        /// Small helper (moves unrelated code out of the way,
+        /// e.g. in order to ease debugger stepping)
+        /// </summary>
+        private void DetermineDesiredRevision(ref int version, string path)
+        {
+            if (version == 0 && path.Equals(""))
+            {
+                version = GetEarliestVersion(path);
+            }
+
+            if (version == LATEST_VERSION)
+            {
+                version = GetLatestVersion();
+            }
         }
 
         private SourceItem[] GetTFSSourceItems(int version, string path, Recursion recursion)
