@@ -56,15 +56,15 @@ namespace SvnBridge.Infrastructure
                 }
                 itemSpecs.Add(itemspec);
             }
-            ItemSet[] items = sourceControlService.QueryItems(serverUrl, credentials,
+            ItemSet[] itemSets = sourceControlService.QueryItems(serverUrl, credentials,
                 VersionSpec.FromChangeset(revision),
                 itemSpecs.ToArray(),
                 0);
 
             SortedList<string, SourceItem> result = new SortedList<string, SourceItem>();
-            foreach (ItemSet itemset in items)
+            foreach (ItemSet itemSet in itemSets)
             {
-                foreach (Item item in itemset.Items)
+                foreach (Item item in itemSet.Items)
                 {
                     SourceItem sourceItem = new SourceItem();
                     sourceItem.RemoteChangesetId = item.cs;
