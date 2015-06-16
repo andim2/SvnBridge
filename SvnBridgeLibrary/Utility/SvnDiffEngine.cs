@@ -338,7 +338,7 @@ namespace SvnBridge.Utility
             bytesRead = 0;
 
             byte b = reader.ReadByte();
-            bytesRead++;
+            ++bytesRead;
 
             while ((b & 0x80) != 0)
             {
@@ -346,7 +346,7 @@ namespace SvnBridge.Utility
                 value <<= 7;
 
                 b = reader.ReadByte();
-                bytesRead++;
+                ++bytesRead;
             }
 
             value |= (ulong)b;
@@ -361,7 +361,7 @@ namespace SvnBridge.Utility
             while (temp > 0)
             {
                 temp = temp >> 7;
-                count++;
+                ++count;
             }
 
             bytesWritten = count;
