@@ -766,8 +766,9 @@ namespace SvnBridge.SourceControl
         public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
         {
                 FolderMap folderMap = new FolderMap(sourceControlProvider, version);
-                Dictionary<string, ItemProperties> dictPropertiesOfItems = new Dictionary<string, ItemProperties>(items.Length);
-                Dictionary<string, int> dictPropertiesRevisionOfItems = new Dictionary<string, int>(items.Length);
+                Dictionary<string, ItemProperties> dictPropertiesOfItems = null;
+                Dictionary<string, int> dictPropertiesRevisionOfItems = null;
+                bool havePropertyData = false;
                 WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
 
                 //if (items.Length > 1)
@@ -782,6 +783,13 @@ namespace SvnBridge.SourceControl
                     bool wantReadPropertyData = (isPropertyFile && !returnPropertyFiles);
                     if (wantReadPropertyData)
                     {
+                        // Implements lazy init:
+                        if (null == dictPropertiesOfItems)
+                        {
+                            dictPropertiesOfItems = new Dictionary<string, ItemProperties>(items.Length);
+                            dictPropertiesRevisionOfItems = new Dictionary<string, int>(items.Length);
+                            havePropertyData = true;
+                        }
                         string itemPath = WebDAVPropertyStorageAdaptor.GetPathOfDataItemFromPathOfPropStorageItem(item.Name);
                         dictPropertiesRevisionOfItems[itemPath] = item.Revision;
                         dictPropertiesOfItems[itemPath] = propsSerializer.PropertiesRead(item);
@@ -792,14 +800,11 @@ namespace SvnBridge.SourceControl
                         folderMap.Insert(item);
                     }
                 }
-                // Could have added an expensive(?)/extraneous "need properties update" bool calculation here
-                // to skip handling when possible,
-                // but such semi-direct logic would be quite risky,
-                // and the two sub functions have an empty-skip of their loops anyway...
-                // (this sadly is a relatively common case though since not many items
-                // are property-related).
-                UpdatePropertiesOfItems(folderMap, dictPropertiesOfItems);
-                UpdatePropertiesRevisionOfItems(folderMap, dictPropertiesRevisionOfItems);
+                if (havePropertyData)
+                {
+                    UpdatePropertiesOfItems(folderMap, dictPropertiesOfItems);
+                    UpdatePropertiesRevisionOfItems(folderMap, dictPropertiesRevisionOfItems);
+                }
 
                 // Either (usually) a folder or sometimes even single-item:
                 ItemMetaData root = folderMap.QueryRootItem();
