@@ -76,6 +76,15 @@ namespace SvnBridge.SourceControl
                     scs_wrapper_outermost);
                 scs_wrapper_outermost = scs_wrapper_bug_sanitizer;
             }
+            // For the cases where we enable a statistics counter,
+            // this should always remain at the outermost wrapper layer,
+            // right in front of the interface user which submits requests.
+            bool statistics_count_requests = false;
+            if (statistics_count_requests)
+            {
+                ITFSSourceControlService scs_wrapper_statistics_count_requests = new TFSSourceControlService_Statistics_CountRequests(scs_wrapper_outermost);
+                scs_wrapper_outermost = scs_wrapper_statistics_count_requests;
+            }
 
             return scs_wrapper_outermost;
         }
@@ -536,6 +545,335 @@ namespace SvnBridge.SourceControl
         {
             ++idx;
         }
+    }
+
+    internal class TFSSourceControlService_Statistics_CountRequests_Stats
+    {
+        public int AddWorkspaceMapping;
+        public int Commit;
+        public int CreateWorkspace;
+        public int DeleteWorkspace;
+        public int GetRepositoryId;
+        public int GetLatestChangeset;
+        public int GetWorkspaces;
+        public int PendChanges;
+        public int QueryItems_SourceItem_paths;
+        public int QueryItems_SourceItem_ids;
+        public int QueryLog;
+        public int UndoPendingChanges;
+        public int UpdateLocalVersions;
+        public int UploadFile;
+        public int UploadFileFromBytes;
+        public int UploadFileFromStream;
+        public int QueryBranches;
+        public int QueryBranches_workspace;
+        public int QueryHistory;
+        public int QueryItems_ItemSet;
+        public int QueryItemsExtended;
+    }
+
+    /// <summary>
+    /// Provides interface invocation/call count statistics.
+    /// TODO: should also provide a class
+    /// which is derived from this one
+    /// which collects per-call latency information,
+    /// also in averaged form (divided by the number of requests).
+    /// </summary>
+    public class TFSSourceControlService_Statistics_CountRequests : ITFSSourceControlService_wrapper
+    {
+        private readonly TFSSourceControlService_Statistics_CountRequests_Stats stats;
+
+        public TFSSourceControlService_Statistics_CountRequests(ITFSSourceControlService scsWrapped)
+            : base(scsWrapped)
+        {
+            this.stats = new TFSSourceControlService_Statistics_CountRequests_Stats();
+        }
+
+        /// <summary>
+        /// Destructor merely provided
+        /// to have a convenient breakpoint location
+        /// to watch collected statistics in their entirety.
+        /// </summary>
+        ~TFSSourceControlService_Statistics_CountRequests()
+        {
+        }
+
+        #region ISourceControlService members
+        public override void AddWorkspaceMapping(string tfsUrl,
+                                 ICredentials credentials,
+                                 string workspaceName,
+                                 string serverPath,
+                                 string localPath,
+                                 int supportedFeatures)
+        {
+            ++stats.AddWorkspaceMapping;
+            base.AddWorkspaceMapping(tfsUrl, credentials,
+                workspaceName,
+                serverPath,
+                localPath,
+                supportedFeatures);
+        }
+
+        public override int Commit(string tfsUrl,
+                   ICredentials credentials,
+                   string workspaceName,
+                   string comment,
+                   IEnumerable<string> serverItems,
+                   bool deferCheckIn,
+                   int checkInTicket)
+        {
+            ++stats.Commit;
+            return base.Commit(tfsUrl, credentials,
+                workspaceName,
+                comment,
+                serverItems,
+                deferCheckIn,
+                checkInTicket);
+        }
+
+        public override void CreateWorkspace(string tfsUrl,
+                             ICredentials credentials,
+                             string workspaceName,
+                             string workspaceComment)
+        {
+            ++stats.CreateWorkspace;
+            base.CreateWorkspace(tfsUrl, credentials,
+                workspaceName,
+                workspaceComment);
+        }
+
+        public override void DeleteWorkspace(string tfsUrl,
+                             ICredentials credentials,
+                             string workspaceName)
+        {
+            ++stats.DeleteWorkspace;
+            base.DeleteWorkspace(tfsUrl, credentials,
+                workspaceName);
+        }
+
+
+        public override Guid GetRepositoryId(string tfsUrl,
+							   ICredentials credentials)
+        {
+            ++stats.GetRepositoryId;
+            return base.GetRepositoryId(tfsUrl, credentials);
+        }
+
+
+        public override int GetLatestChangeset(string tfsUrl,
+                               ICredentials credentials)
+        {
+            ++stats.GetLatestChangeset;
+            return base.GetLatestChangeset(tfsUrl, credentials);
+        }
+
+        public override WorkspaceInfo[] GetWorkspaces(string tfsUrl,
+                                      ICredentials credentials,
+                                      WorkspaceComputers computers,
+                                      int permissionsFilter)
+        {
+            ++stats.GetWorkspaces;
+            return base.GetWorkspaces(tfsUrl, credentials,
+                computers,
+                permissionsFilter);
+        }
+
+        public override void PendChanges(string tfsUrl,
+                         ICredentials credentials,
+                         string workspaceName,
+                         IEnumerable<PendRequest> requests,
+                         int pendChangesOptions,
+                         int supportedFeatures)
+        {
+            ++stats.PendChanges;
+            base.PendChanges(tfsUrl, credentials,
+                workspaceName,
+                requests,
+                pendChangesOptions,
+                supportedFeatures);
+        }
+
+        public override SourceItem[] QueryItems(string tfsUrl,
+                                ICredentials credentials,
+                                string serverPath,
+                                RecursionType recursion,
+                                VersionSpec version,
+                                DeletedState deletedState,
+                                ItemType itemType,
+                                bool sortAscending,
+                                int options)
+        {
+            ++stats.QueryItems_SourceItem_paths;
+            return base.QueryItems(tfsUrl, credentials,
+                serverPath,
+                recursion,
+                version,
+                deletedState,
+                itemType,
+                sortAscending,
+                options);
+        }
+
+        public override SourceItem[] QueryItems(string tfsUrl,
+                                ICredentials credentials,
+                                int[] itemIds,
+                                int changeSet,
+                                int options)
+        {
+            ++stats.QueryItems_SourceItem_ids;
+            return base.QueryItems(tfsUrl, credentials,
+                itemIds,
+                changeSet,
+                options);
+        }
+
+        public override LogItem QueryLog(string tfsUrl,
+                         ICredentials credentials,
+                         string serverPath,
+                         VersionSpec versionFrom,
+                         VersionSpec versionTo,
+                         RecursionType recursionType,
+                         int maxCount,
+                         bool sortAscending)
+        {
+            ++stats.QueryLog;
+            return base.QueryLog(tfsUrl, credentials,
+                serverPath,
+                versionFrom,
+                versionTo,
+                recursionType,
+                maxCount,
+                sortAscending);
+        }
+
+        public override void UndoPendingChanges(string tfsUrl,
+                                ICredentials credentials,
+                                string workspaceName,
+                                IEnumerable<string> serverItems)
+        {
+            ++stats.UndoPendingChanges;
+            base.UndoPendingChanges(tfsUrl, credentials,
+                workspaceName,
+                serverItems);
+        }
+
+        public override void UpdateLocalVersions(string tfsUrl,
+                                 ICredentials credentials,
+                                 string workspaceName,
+                                 IEnumerable<LocalUpdate> updates)
+        {
+            ++stats.UpdateLocalVersions;
+            base.UpdateLocalVersions(tfsUrl, credentials,
+                workspaceName,
+                updates);
+        }
+
+        public override void UploadFile(string tfsUrl,
+                        ICredentials credentials,
+                        string workspaceName,
+                        string localPath,
+                        string serverPath)
+        {
+            ++stats.UploadFile;
+            base.UploadFile(tfsUrl, credentials,
+                workspaceName,
+                localPath,
+                serverPath);
+        }
+
+        public override void UploadFileFromBytes(string tfsUrl,
+                                 ICredentials credentials,
+                                 string workspaceName,
+                                 byte[] localContents,
+                                 string serverPath)
+        {
+            ++stats.UploadFileFromBytes;
+            base.UploadFileFromBytes(tfsUrl, credentials,
+                workspaceName,
+                localContents,
+                serverPath);
+        }
+
+        public override void UploadFileFromStream(string tfsUrl,
+                                  ICredentials credentials,
+                                  string workspaceName,
+                                  Stream localContents,
+                                  string serverPath)
+        {
+            ++stats.UploadFileFromStream;
+            base.UploadFileFromStream(tfsUrl, credentials,
+                workspaceName,
+                localContents,
+                serverPath);
+        }
+        #endregion
+
+
+        #region ISourceControlService_broken_missing_methods members
+        public override BranchItem[][] QueryBranches(string tfsUrl,
+                                     ICredentials credentials,
+                                     ItemSpec[] items,
+                                     VersionSpec version)
+        {
+            ++stats.QueryBranches;
+            return base.QueryBranches(tfsUrl, credentials,
+                items,
+                version);
+        }
+        #endregion
+
+
+        #region ITFSSourceControlService_parts members
+        public override BranchRelative[][] QueryBranches(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, VersionSpec version)
+        {
+            ++stats.QueryBranches_workspace;
+            return base.QueryBranches(tfsUrl, credentials,
+                workspaceName,
+                items,
+                version);
+        }
+
+        public override Changeset[] QueryHistory(string tfsUrl, ICredentials credentials, string workspaceName, string workspaceOwner,
+            ItemSpec itemSpec, VersionSpec versionItem, string user, VersionSpec versionFrom, VersionSpec versionTo, int maxCount,
+            bool includeFiles, bool generateDownloadUrls, bool slotMode, bool sortAscending
+        )
+        {
+            ++stats.QueryHistory;
+            return base.QueryHistory(tfsUrl, credentials,
+                workspaceName,
+                workspaceOwner,
+                itemSpec,
+                versionItem,
+                user,
+                versionFrom,
+                versionTo,
+                maxCount,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
+                sortAscending);
+        }
+
+        public override ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items, int options)
+        {
+            ++stats.QueryItems_ItemSet;
+            return base.QueryItems(tfsUrl, credentials,
+                version,
+                items,
+                options);
+        }
+
+        public override ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType, int options)
+        {
+            ++stats.QueryItemsExtended;
+            return base.QueryItemsExtended(tfsUrl, credentials,
+                workspaceName,
+                items,
+                deletedState,
+                itemType,
+                options);
+        }
+        #endregion
     }
 
     /// <summary>
