@@ -1138,9 +1138,12 @@ namespace SvnBridge.SourceControl
                 {
                     try
                     {
-                        // FIXME: do mismatch against *base* path of sub item only, right!?!?
+                        // Definitely verify exact base path part,
+                        // for any sub items which might have been delivered
+                        // for a (recursive?) base path query.
+                        string itemBasePath = item.item.Substring(0, queryPath.Length);
                         CheckPreciseCaseSensitivityMismatch(
-                            item.item,
+                            itemBasePath,
                             queryPath);
                     }
                     catch(TFSBugSanitizer_CaseMismatchingResultVsQuery_Exception_NeedSanitize)
