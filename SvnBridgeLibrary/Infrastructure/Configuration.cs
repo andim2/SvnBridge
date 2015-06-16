@@ -246,7 +246,7 @@ namespace SvnBridge.Infrastructure
         /// </summary>
         public static bool SCMWantCaseSensitiveItemMatch
         {
-            get { return ReadConfig<bool>(ConfigSettings.SCMWantCaseSensitiveItemMatch, false); }
+            get { return ReadConfig<bool>(ConfigSettings.SCMWantCaseSensitiveItemMatch, true); }
         }
 
         public static bool TraceEnabled

@@ -2223,7 +2223,11 @@ namespace SvnBridge.SourceControl
             ItemMetaData item = GetItems(version, path, Recursion.None, returnPropertyFiles);
             if (item != null)
             {
-                bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
+                // Now that these checks are implemented
+                // in a nicely efficient and central manner in lower layers,
+                // we can disable it here:
+                //bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
+                bool needCheckCaseSensitiveItemMatch = false;
                 // FIXME: one could say that this case sensitivity check here
                 // shouldn't be at this layer
                 // (most likely it should be handled fully internally
