@@ -3001,14 +3001,14 @@ namespace SvnBridge.SourceControl
         /// </summary>
         private void DetermineDesiredRevision(ref int version, string path)
         {
-            if (version == 0 && path.Equals(""))
-            {
-                version = GetEarliestVersion(path);
-            }
-
             if (version == LATEST_VERSION)
             {
                 version = GetLatestVersion();
+            }
+            else
+            if (version == 0 && path.Equals(""))
+            {
+                version = GetEarliestVersion(path);
             }
         }
 
