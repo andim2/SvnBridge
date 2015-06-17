@@ -23,7 +23,7 @@ namespace SvnBridge.Handlers
                 string requestPath = GetPath(request);
                 string location = CheckOut(sourceControlProvider, data, requestPath);
                 SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
-                response.AppendHeader("Cache-Control", "no-cache");
+                SetResponseHeader_CacheControl_Uncached(response);
                 string locationUrl = "http://" + request.Headers["Host"] + Helper.EncodeC(location);
                 response.AppendHeader("Location", Helper.UrlEncodeIfNecessary(locationUrl));
                 string responseContent = GetResourceCreatedResponse(

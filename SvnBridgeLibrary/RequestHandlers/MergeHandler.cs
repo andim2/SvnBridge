@@ -20,7 +20,7 @@ namespace SvnBridge.Handlers
 
 			MergeData data = Helper.DeserializeXml<MergeData>(request.InputStream);
 			string activityId = PathParser.GetActivityId(data.Source.Href);
-			response.AppendHeader("Cache-Control", "no-cache");
+			SetResponseHeader_CacheControl_Uncached(response);
 
             // Provide an all-items merge-response only if wanted. Coincidentally this is how we fix a
             // "A MERGE response for "/tfsserver:8080/proj/fs_item" is not a child of the destination

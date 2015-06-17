@@ -26,6 +26,16 @@ namespace SvnBridge.Handlers
 			response.StatusCode = status;
 		}
 
+        /// <summary>
+        /// For some methods, the internet sez:
+        /// "Responses to this method MUST NOT be cached.",
+        /// thus have a central helper for this purpose.
+        /// </summary>
+        protected static void SetResponseHeader_CacheControl_Uncached(IHttpResponse response)
+        {
+            response.AppendHeader("Cache-Control", "no-cache");
+        }
+
         /// <remarks>
         /// Related info:
         /// http://stackoverflow.com/questions/8711584/x-pad-avoid-browser-bug-header-added-by-apache
