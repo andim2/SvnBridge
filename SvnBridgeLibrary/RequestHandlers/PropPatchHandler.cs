@@ -37,6 +37,8 @@ namespace SvnBridge.Handlers
 
                 PropertyUpdateData data = Helper.DeserializeXml<PropertyUpdateData>(correctXml);
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
+                // RFC4918 "9.2 PROPPATCH Method" "Responses to this method MUST NOT be cached."
+                SetResponseHeader_CacheControl_Uncached(response);
 
                 using (StreamWriter output = CreateStreamWriter(response.OutputStream))
                 {

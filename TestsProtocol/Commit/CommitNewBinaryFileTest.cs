@@ -295,6 +295,7 @@ namespace ProtocolTests
                 "HTTP/1.1 207 Multi-Status\r\n" +
                 "Date: Fri, 15 Jun 2007 23:02:16 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
+                "Cache-Control: no-cache\r\n" +
                 "Content-Length: 348\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +
@@ -528,6 +529,7 @@ namespace ProtocolTests
                 "HTTP/1.1 207 Multi-Status\r\n" +
                 "Date: Fri, 15 Jun 2007 23:02:17 GMT\r\n" +
                 "Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2\r\n" +
+                "Cache-Control: no-cache\r\n" +
                 "Content-Length: 520\r\n" +
                 "Content-Type: text/xml; charset=\"utf-8\"\r\n" +
                 "\r\n" +
