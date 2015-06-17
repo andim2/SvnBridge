@@ -325,6 +325,7 @@ namespace SvnBridge.SourceControl
             if (itemVersion != -1)
                 itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
 
+            // WARNING: TFS08 QueryHistory() is very problematic! (see comments in next inner layer)
             SourceItemHistory[] histories = QueryHistory(
                 serverPath,
                 itemVersionSpec,
@@ -498,6 +499,22 @@ namespace SvnBridge.SourceControl
                 changeset.Comment);
         }
 
+        /// WARNING: the service-side QueryHistory() API will silently discard **older** entries
+        /// in case maxCount is not big enough to hold all history entries!
+        /// When attempting to linearly iterate from a very old revision to a much newer one (i.e., huge range)
+        /// this is a *PROBLEM* since it's not easy to pick up where the result left us
+        /// (i.e. within your older->newer loop you definitely end up
+        /// with an unwanted newer-entries result part first,
+        /// despite going from old to new).
+        /// Certain (newer, it seems) variants of MSDN VersionControlServer.QueryHistory()
+        /// include a sortAscending param which might be helpful to resolve this,
+        /// but I don't know whether it can be used.
+        /// Thus currently the only way to ensure non-clipped history
+        /// is to supply maxCount int.MaxValue.
+        ///
+        /// Since call hierarchy of history handling is a multitude of private calls,
+        /// it might be useful to move all this class-bloating handling
+        /// into a separate properly isolated class specifically for this purpose.
         private List<SourceItemHistory> QueryHistory(
             string serverPath,
             VersionSpec itemVersion,
@@ -525,6 +542,7 @@ namespace SvnBridge.SourceControl
                 {
                     // Workaround for bug in TFS2008sp1
                     int latestVersion = GetLatestVersion();
+                    // WARNING: TFS08 QueryHistory() is very problematic! (see comments here and in next inner layer)
                     List<SourceItemHistory> tempHistories = QueryHistory(
                         serverPath,
                         itemVersion,
@@ -626,6 +644,12 @@ namespace SvnBridge.SourceControl
         {
             Changeset[] changesets;
 
+            // WARNING!! QueryHistory() (at least on TFS08) is very problematic, to say the least!
+            // E.g. for a folder renamed-away into a subdir,
+            // doing a query on its *previous* location, with an itemVersion/versionFrom/versionTo config that's properly pointing
+            // at the prior state, will fail to yield any history. Only by doing a query on the still-existing *parent* folder
+            // with these revision ranges will one manage to retrieve the proper history records of the prior folder location.
+            // A somewhat related (but then not really...) SVN attribute is strict-node-history.
             changesets = sourceControlService.QueryHistory(serverUrl, credentials,
                 null, null,
                 itemSpec, itemVersion,
