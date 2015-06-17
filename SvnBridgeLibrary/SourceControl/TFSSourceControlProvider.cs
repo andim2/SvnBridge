@@ -513,20 +513,44 @@ namespace SvnBridge.SourceControl
             return root;
         }
 
-
-        public virtual ItemMetaData GetItemInActivity(string activityId, string path)
+        /// <summary>
+        /// This method appears to iterate over all prior actions within this transaction,
+        /// in order to figure out where a soon-processed (and thus relocated, once the transaction
+        /// gets processed) item used to originate *from*.
+        /// I somewhat doubt that its implementation is fully precise, though -
+        /// let's hope that order of activity.CopiedItems is precise, otherwise it might happen
+        /// that current-path vs. current-TargetPath values as assigned within the loop
+        /// fail to match, thus we won't make the next transition.
+        /// Also, it might be that one CopyAction item that happens to have matching TargetPath
+        /// actually is about copy of a *foreign* item, thus we'll enter the wrong source/dest path
+        /// action chain and never make it back to the actually correct location sequence.
+        /// Thus, FIXME (after a couple more hard looks at this method's behaviour).
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
+        /// <param name="pathQuery">Location of the item to be searched within recorded activity</param>
+        /// <returns>Valid ItemMetaData on success, else null</returns>
+        public virtual ItemMetaData GetItemInActivity(string activityId, string pathQuery)
         {
+            // The path that eventually is to contain the most original path of the actual item,
+            // after having taken into account all recorded movements (if any) within the activity:
+            string pathOrigin = pathQuery;
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
                 foreach (CopyAction copy in activity.CopiedItems)
                 {
-                    if (path.StartsWith(copy.TargetPath))
+                    if (pathOrigin.StartsWith(copy.TargetPath))
                     {
-                        path = copy.Path + path.Substring(copy.TargetPath.Length);
+                        string priorSourcePath = copy.Path;
+                        string targetPathSubdirPart = pathOrigin.Substring(copy.TargetPath.Length);
+
+                        // Let's have path point to the likely candidate that it was prior to when
+                        // the current (**hopefully** relevant!) CopyAction happened.
+                        pathOrigin = priorSourcePath + targetPathSubdirPart;
                     }
                 }
             });
-            return GetItemsWithoutProperties(LATEST_VERSION, path, Recursion.None);
+            // Now that we have the most authoritative path, grab the actual item:
+            return GetItemsWithoutProperties(LATEST_VERSION, pathOrigin, Recursion.None);
         }
 
         /// <summary>
