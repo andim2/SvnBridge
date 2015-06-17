@@ -207,10 +207,12 @@ namespace SvnBridge.SourceControl
                 Recursion.Full,
                 256);
 
-            bool needProcessHistories = (logItem.History.Length > 0); // shortcut
+            var numHistories = logItem.History.Length;
+            bool needProcessHistories = (numHistories > 0); // shortcut
             if (needProcessHistories)
             {
-                historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
+                bool needCreateSortedCopy = (numHistories > 1); // common-case shortcut
+                historiesSorted = (needCreateSortedCopy) ? Helper.SortHistories(updatingForwardInTime, logItem.History) : logItem.History;
             }
 
             return historiesSorted;
