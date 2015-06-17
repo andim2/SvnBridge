@@ -96,6 +96,20 @@ namespace SvnBridge.Handlers
 			return propertyName;
 		}
 
+		private void OutputElement(TextWriter output, XmlElement element)
+		{
+            string elementName = BrokenXml.UnEscape(element.LocalName);
+
+			if (element.NamespaceURI == WebDav.Namespaces.SVNDAV)
+                output.Write("<ns3:" + elementName + "/>\r\n");
+			else if (element.NamespaceURI == WebDav.Namespaces.TIGRISSVN)
+                output.Write("<ns1:" + elementName + "/>\r\n");
+			else if (element.NamespaceURI == WebDav.Namespaces.DAV)
+                output.Write("<ns0:" + elementName + "/>\r\n");
+			else //custom
+                output.Write("<ns2:" + elementName + "/>\r\n");
+		}
+
         private void OutputSetPropertiesResponse(string requestPath, PropertyUpdateData request, TFSSourceControlProvider sourceControlProvider, string activityId, TextWriter output, string itemPath)
 		{
 			foreach (XmlElement prop in request.Set.Prop.Properties)
@@ -117,20 +131,6 @@ namespace SvnBridge.Handlers
 			output.Write("</D:propstat>\n");
 			output.Write("</D:response>\n");
 			output.Write("</D:multistatus>\n");
-		}
-
-		private void OutputElement(TextWriter output, XmlElement element)
-		{
-            string elementName = BrokenXml.UnEscape(element.LocalName);
-
-			if (element.NamespaceURI == WebDav.Namespaces.SVNDAV)
-                output.Write("<ns3:" + elementName + "/>\r\n");
-			else if (element.NamespaceURI == WebDav.Namespaces.TIGRISSVN)
-                output.Write("<ns1:" + elementName + "/>\r\n");
-			else if (element.NamespaceURI == WebDav.Namespaces.DAV)
-                output.Write("<ns0:" + elementName + "/>\r\n");
-			else //custom
-                output.Write("<ns2:" + elementName + "/>\r\n");
 		}
 
         private void OutputLogResponse(string requestPath, PropertyUpdateData request, TFSSourceControlProvider sourceControlProvider, bool extendedNamespaces, string activityId, TextWriter output)
