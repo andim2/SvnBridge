@@ -85,6 +85,26 @@ namespace UnitTests
             Assert.Equal("%20%25%20%25", result);
         }
 
+#if false // Does not work yet. Should be activated once this needs to be supported.
+        [Fact]
+        [Trait("TestName", "VDWCWNSBCR")]
+        public void VerifyDecodeWorksCorrectlyWithNonSingleByteCharRange()
+        {
+            string result = Helper.Decode("%e2%82%Ac%e6%B5%8b%e8%Af%95");
+
+            Assert.Equal("€测试", result);
+        }
+#endif
+
+        [Fact]
+        [Trait("TestName", "VEWCWNSBCR")]
+        public void VerifyEncodeWorksCorrectlyWithNonSingleByteCharRange()
+        {
+            string result = Helper.Encode("€测试");
+
+            Assert.Equal("%e2%82%ac%e6%b5%8b%e8%af%95", result);
+        }
+
         [Fact]
         public void SerializeXmlString_CorrectlyReturnsSerializedObject()
         {

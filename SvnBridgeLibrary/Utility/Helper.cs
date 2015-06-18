@@ -517,6 +517,11 @@ namespace SvnBridge.Utility
         return (c <= 127);
     }
 
+    private static bool CharIsInSingleByteRange(char c)
+    {
+        return (c <= 255);
+    }
+
     /// <remarks>
     /// RFC3986 covers URI components in ASCII range only,
     /// i.e. it does not cover International Domain Names (IDN).
@@ -553,7 +558,27 @@ namespace SvnBridge.Utility
 				}
 				else
 				{
-					sb.Append(Uri.HexEscape(c));
+					string escaped;
+					bool isBeyondSingleByteRange = (!CharIsInSingleByteRange(c));
+					bool canUseApi_UriHexEscape = (!isBeyondSingleByteRange);
+					if (canUseApi_UriHexEscape)
+					{
+						// Uri.HexEscape() supports single-byte values (0..255) only,
+						// else throws ArgumentOutOfRangeException!
+						// (e.g.: Euro sign [0x20ac])
+						// I could have implemented non-single-byte handling
+						// via a fallback (after catching Uri.HexEscape() exceptions),
+						// but I decided against doing it this way
+						// since for certain URL content
+						// non-standard characters are *not* really exceptional
+						// i.e. this should *not* be handled via "exceptional" cases.
+						escaped = Uri.HexEscape(c);
+					}
+					else
+					{
+						escaped = HttpUtility.UrlEncode(c.ToString());
+					}
+					sb.Append(escaped);
 				}
 			}
 			return sb.ToString();
@@ -565,6 +590,10 @@ namespace SvnBridge.Utility
         int href_utf8Len = href_utf8.Length;
         for (int index = 0; index < href_utf8Len; /* specially conditionally incremented below */)
         {
+            // XXX: this handling is the complementary part to Uri.HexEscape(),
+            // which turned out to be restricted to 0..255 char value range.
+            // Thus it may very well be
+            // that we need to fix this handling here, too.
             if (Uri.IsHexEncoding(href_utf8, index))
             {
                 int index_new = index;
