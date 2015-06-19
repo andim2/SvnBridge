@@ -106,14 +106,22 @@ namespace SvnBridge.Handlers
                                                     int? version,
                                                     bool loadPropertiesFromFile)
         {
+            FolderMetaData folderInfo = null;
+
             Recursion recursion = ConvertDepthHeaderToRecursion(depthHeader);
             var versionToFetch = version.HasValue ? version.Value : TFSSourceControlProvider.LATEST_VERSION;
             if (recursion == Recursion.OneLevel)
-                return (FolderMetaData)GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+            {
+                folderInfo = (FolderMetaData)GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+            }
+            else
+            {
+                folderInfo = new FolderMetaData();
+                ItemMetaData item =
+                    GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+                ItemHelpers.FolderOps_AddItem(folderInfo, item);
+            }
 
-            FolderMetaData folderInfo = new FolderMetaData();
-            ItemMetaData item = GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
-            ItemHelpers.FolderOps_AddItem(folderInfo, item);
             return folderInfo;
         }
 
