@@ -143,14 +143,12 @@ namespace SvnBridge.SourceControl
             // (3 or 4 network queries for each path!!).
             // And so far implementing a sufficiently generic/global SCS cache layer
             // remains difficult...
-            for (var numElemsRemain = pathElemsCount - 1; numElemsRemain > 0; --numElemsRemain)
+            //
+            // Also, we'll skip last iteration (by doing "numElemsRemain > 1"),
+            // since that element is the TFS root ($/),
+            // and when doing a root-only request, TFS APIs would bail out...
+            for (var numElemsRemain = pathElemsCount - 1; numElemsRemain > 1; --numElemsRemain)
             {
-                bool haveHitRoot = (1 == numElemsRemain);
-                if (haveHitRoot)
-                {
-                    // When doing a root-only request, TFS APIs would bail out...
-                    break;
-                }
                 bool isLastPathElem = (pathElemsCount == numElemsRemain);
                 bool isFolder = (!isLastPathElem);
                 if (isFolder)
