@@ -36,6 +36,19 @@ namespace SvnBridge
                 // [This .PreAuthenticate optimization flag is relevant only
                 // for non-persistent-connection case i.e. non-HTTP-Keep-Alive]
                 //httpWebRequest.PreAuthenticate = true;
+
+                // Note that TfsLibrary already sets
+                // .UseNagleAlgorithm = false;
+                // , otherwise we likely ought to do it here, too,
+                // since quite likely we're predominantly sending
+                // *small* request packets
+                // (where it's better to have Nagle disabled).
+
+                // Not sure yet whether
+                // we can (strength of our support infrastructure?)
+                // and should (remote side always compatible?)
+                // enable this.
+                //httpWebRequest.Pipelined = true; // said to only be used if .KeepAlive true, too.
 			}
 		}
 	}
