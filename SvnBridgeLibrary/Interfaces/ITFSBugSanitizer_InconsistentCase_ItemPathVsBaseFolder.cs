@@ -1,5 +1,7 @@
 namespace SvnBridge.Interfaces
 {
+    using CodePlex.TfsLibrary.RepositoryWebSvc; // VersionSpec
+
     /// <summary>
     /// TFS (at least TFS2013, but quite likely also TFS2008 etc.)
     /// somehow manages to produce veritable, true cases of TFS SCM history
@@ -78,7 +80,7 @@ namespace SvnBridge.Interfaces
         ///     string pathToBeChecked = dataItemToPotentiallyBeCorrected;
         ///     bool haveEncounteredAnyMismatch = MakeItemPathSanitized(
         ///         ref pathToBeChecked,
-        ///         revision);
+        ///         versionSpec);
         ///     bool hadSanePath = !(haveEncounteredAnyMismatch);
         ///     if (!(hadSanePath))
         ///     {
@@ -104,11 +106,28 @@ namespace SvnBridge.Interfaces
         /// (and of each [potentially differing] implementation variant also -
         /// otherwise one could have a central helper here
         /// which does the comparison centrally for all implementations).
+        ///
+        /// Performance note: I decided to alter interface
+        /// to directly require a VersionSpec
+        /// rather than an int-based version value, reasons:
+        /// - otherwise every single MakeItemPathSanitized() request
+        ///   would need to laboriously create a temporary VersionSpec internally,
+        ///   rather than often being able to reuse
+        ///   a globally available (per-whole-Changeset) version value
+        ///   (while some users
+        ///   do need to create a new VersionSpec value each time,
+        ///   the overhead that we save for the users
+        ///   which do not need to do so
+        ///   is worth more...)
+        /// - this bug is fully TFS-specific,
+        ///   thus we are able to (and it is a good idea)
+        ///   to be directly making use of
+        ///   helper types specific to that toolkit
         /// <param name="pathToBeChecked">Full SCM path of item - potentially tweaked (sanitized)</param>
-        /// <param name="revision">Revision to query items of</param>
+        /// <param name="versionSpec">Version to query items of</param>
         /// <returns>bool which indicates whether the path string has been sanitized</returns>
         bool MakeItemPathSanitized(
             ref string pathToBeChecked,
-            int revision);
+            VersionSpec versionSpec);
     }
 }

@@ -51,14 +51,11 @@ namespace SvnBridge.SourceControl
 
         public virtual bool MakeItemPathSanitized(
             ref string pathToBeChecked,
-            int revision)
+            VersionSpec versionSpec)
         {
             bool haveEncounteredAnyMismatch = false;
 
             EnsureServerRootSyntax(pathToBeChecked);
-
-            // FIXME: should likely have VersionSpec directly at interface layer...
-            VersionSpec versionSpec = VersionSpec.FromChangeset(revision);
 
             string[] pathElemsOrig = PathSplit(pathToBeChecked);
             int pathElemsCount = pathElemsOrig.Length;
@@ -220,11 +217,11 @@ namespace SvnBridge.SourceControl
         public static bool CheckNeededItemPathSanitized(
             TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer,
             ref string itemPathToBeSanitized,
-            int itemRevision)
+            VersionSpec versionSpecItem)
         {
             bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
                 ref itemPathToBeSanitized,
-                itemRevision);
+                versionSpecItem);
             bool hadSanePath = !(haveEncounteredAnyMismatch);
 
             return !(hadSanePath);

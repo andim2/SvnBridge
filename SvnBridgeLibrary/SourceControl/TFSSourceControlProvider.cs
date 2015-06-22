@@ -2042,6 +2042,8 @@ namespace SvnBridge.SourceControl
             int cs = 0; // Debug helper (it's sufficiently relevant to know the current element)
             foreach (var changeset in changesets)
             {
+                VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset.cset);
+
                 int cg = 0; // Debug helper (it's sufficiently relevant to know the current element)
                 foreach (var change in changeset.Changes)
                 {
@@ -2049,9 +2051,10 @@ namespace SvnBridge.SourceControl
                     bool needCheckPath = (pathToBeChecked.Contains("/display/"));
                     if (needCheckPath)
                     {
+                        VersionSpec versionSpecItem = versionSpecChangeset;
                         bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
                             ref pathToBeChecked,
-                            changeset.cset);
+                            versionSpecItem);
                         bool hadSanePath = !(haveEncounteredAnyMismatch);
                         if (!(hadSanePath))
                         {
