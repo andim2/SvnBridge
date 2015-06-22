@@ -262,9 +262,29 @@ namespace SvnBridge.Infrastructure
 
         private HttpWebRequest GetWebRequest()
         {
+            string webServiceUrl = GetWebServiceUrl();
+            return GetWebRequest(new Uri(webServiceUrl));
+        }
+
+        private string GetWebServiceUrl()
+        {
+            string urlTfsService;
+
+            urlTfsService = GetWebServiceUrl_hardcoded();
+
+            return urlTfsService;
+        }
+
+        private string GetWebServiceUrl_hardcoded()
+        {
+            return serverUrl + "/WorkItemTracking/v1.0/ClientService.asmx";
+        }
+
+        private HttpWebRequest GetWebRequest(Uri webServiceUri)
+        {
             HttpWebRequest request =
                 (HttpWebRequest)
-                WebRequest.Create(serverUrl + "/WorkItemTracking/v1.0/ClientService.asmx");
+                WebRequest.Create(webServiceUri);
             request.Credentials = credentials;
             request.UserAgent = "Team Foundation (SvnBridge)";
             request.Headers.Add("X-TFS-Version", "1.0.0.0");

@@ -269,11 +269,16 @@ namespace SvnBridge.Utility
 		{
 			try
 			{
-				WebRequest request = WebRequest.Create(url + "/Services/v1.0/Registration.asmx");
+				string urlTfsService;
 				// For the simple purpose of checking whether a web service exists,
 				// using an unsafe credential ought to be ok
 				// (actual use should then be properly using a client-provided credential).
-				request.Credentials = GetUnsafeNetworkCredential();
+				ICredentials credentials = GetUnsafeNetworkCredential();
+				string output_expected;
+				urlTfsService = url + "/Services/v1.0/Registration.asmx";
+				output_expected = "Team Foundation Registration web service";
+				WebRequest request = WebRequest.Create(urlTfsService);
+				request.Credentials = credentials;
 				request.Proxy = CreateProxy(proxyInformation);
 				request.Timeout = 60000;
 
@@ -281,7 +286,8 @@ namespace SvnBridge.Utility
 				using (StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
 				{
 					string output = reader.ReadToEnd();
-					return (output.Contains("Team Foundation Registration web service"));
+					bool isExpectedService = (output.Contains(output_expected));
+					return isExpectedService;
 				}
 			}
 			catch (WebException e)
