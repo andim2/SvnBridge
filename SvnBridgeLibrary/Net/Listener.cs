@@ -232,9 +232,67 @@ namespace SvnBridge.Net
         {
             using (var networkStream = tcpClient.GetStream())
             {
-                ProcessClientStream(
-                    networkStream);
+                try
+                {
+                    ProcessClientStream(
+                        networkStream);
+                }
+                catch(IOException ex)
+                {
+                    bool needSilenceException = NeedSilenceThisIOExceptionTypeForClientProcessing(
+                        ex);
+
+                    if (!(needSilenceException))
+                    {
+                        throw;
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// (Almost) comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// For the Keep-Alive case we have code to keep listening
+        /// for potentially incoming additional requests,
+        /// thus we actively choose to work against a receive timeout
+        /// which *will* cause IOException on timeout (i.e. no more requests arriving).
+        /// Thus ignore IOExceptions in case of Keep-Alive, but only in that case!!
+        /// http://stackoverflow.com/questions/3066404/streamreader-endofstream-produces-ioexception
+        /// http://stackoverflow.com/questions/2652496/how-long-will-networkstream-read-wait-before-dying
+        /// http://stackoverflow.com/questions/5579498/how-to-stop-a-blocking-streamreader-endofstream-on-a-networkstream
+        /// http://stackoverflow.com/questions/1361714/how-do-you-wait-for-a-network-stream-to-have-data-to-read
+        /// </remarks>
+        private bool NeedSilenceThisIOExceptionTypeForClientProcessing(
+            IOException ex)
+        {
+            bool needSilenceException = false;
+
+            if (supportHttpKeepAlive)
+            {
+                if (IsIOExceptionOfTypeUnableToReadData(
+                    ex))
+                {
+                    needSilenceException = true;
+                }
+            }
+
+            return needSilenceException;
+        }
+
+        /// <summary>
+        /// Helper to try to contribute to properly telling apart
+        /// distinctly different yet woefully indiscernible types of IOException:s.
+        /// </summary>
+        /// <remarks>
+        /// Related:
+        /// http://stackoverflow.com/questions/5638231/socketchannel-java-io-ioexception-an-existing-connection-was-forcibly-closed-b
+        /// </remarks>
+        private static bool IsIOExceptionOfTypeUnableToReadData(
+            IOException ex)
+        {
+            return ex.Message.StartsWith("Unable to read data from the transport connection");
         }
 
         /// <remarks>
