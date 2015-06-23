@@ -600,6 +600,45 @@ namespace SvnBridge.SourceControl
                 maxCount,
                 sortAscending).ToArray();
 
+            LogHistory_TweakIt_ForSVN(ref histories);
+
+            LogItem logItem = new LogItem(null, serverPath, histories);
+
+            return logItem;
+        }
+
+        private static RecursionType GetLogRecursionType(Recursion recursion)
+        {
+            // SVNBRIDGE_WARNING_REF_RECURSION
+            RecursionType recursionType = RecursionType.None;
+            switch (recursion)
+            {
+                case Recursion.OneLevel:
+                    // Hmm, why is this translated to .None here?
+                    // There was neither a comment here nor was it encapsulated into a self-explanatory
+                    // helper method.
+                    // Perhaps it's for correcting OneLevel requests
+                    // which probably don't make sense with log-type SVN queries... right?
+                    recursionType = RecursionType.None;
+                    break;
+                case Recursion.Full:
+                    recursionType = RecursionType.Full;
+                    break;
+            }
+            return recursionType;
+        }
+
+        /// <remarks>
+        /// I don't fully know what exactly it is that we're doing in here,
+        /// but I do know that whatever it is, it should be done in this separate helper here
+        /// (ok, I think it's about converting log stuff towards SVN requirements).
+        /// While this helper actually might be completely specific to UpdateDiffCalculator,
+        /// I guess it's currently(?) implemented in this class since it needs to make direct use
+        /// of internal sourceControlService member. Hmm.
+        /// </remarks>
+        /// <param name="histories">Array of histories to be tweaked</param>
+        private void LogHistory_TweakIt_ForSVN(ref SourceItemHistory[] histories)
+        {
             foreach (SourceItemHistory history in histories)
             {
                 List<SourceItem> renamedItems = new List<SourceItem>();
@@ -735,31 +774,6 @@ namespace SvnBridge.SourceControl
                     }
                 }
             }
-
-            LogItem logItem = new LogItem(null, serverPath, histories);
-
-            return logItem;
-        }
-
-        private static RecursionType GetLogRecursionType(Recursion recursion)
-        {
-            // SVNBRIDGE_WARNING_REF_RECURSION
-            RecursionType recursionType = RecursionType.None;
-            switch (recursion)
-            {
-                case Recursion.OneLevel:
-                    // Hmm, why is this translated to .None here?
-                    // There was neither a comment here nor was it encapsulated into a self-explanatory
-                    // helper method.
-                    // Perhaps it's for correcting OneLevel requests
-                    // which probably don't make sense with log-type SVN queries... right?
-                    recursionType = RecursionType.None;
-                    break;
-                case Recursion.Full:
-                    recursionType = RecursionType.Full;
-                    break;
-            }
-            return recursionType;
         }
 
         /// <summary>
