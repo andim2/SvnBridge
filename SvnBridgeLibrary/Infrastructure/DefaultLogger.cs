@@ -40,14 +40,16 @@ namespace SvnBridge.Infrastructure
                             Directory.CreateDirectory(logPath);
                     }
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException e)
                 {
                     throw new UnauthorizedAccessException(
                         string.Format(
                             "Tried to write to a log file in: {0} and in {1}, but did not have the required permissions to do so." +
                             Environment.NewLine +
                             "Please set the permissions for either of those locations, or set the 'LogPath' property in the application configuration file.",
-                            Environment.CurrentDirectory, Path.GetFullPath(logPath)));
+                            Environment.CurrentDirectory, Path.GetFullPath(logPath)
+                        ), e
+                    );
                 }
                 return logPath;
             }
