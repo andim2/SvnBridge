@@ -102,12 +102,9 @@ namespace SvnBridge.Infrastructure
                     string text =
                         GetAssociateWorkItemWithChangeSetMessage()
                             .Replace("{ChangeSetId}", changeSetId.ToString())
-                            .Replace("{Guid}", Guid.NewGuid().ToString())
-                            .Replace("{WorkItemId}", workItemId.ToString())
-                            .Replace("{RevisionId}", workItemRevisionId.ToString())
-                            .Replace("{ServerUrl}", serverUrl)
-                            .Replace("{UserName}", username)
                         ;
+                    text = FillTemplateVars_WorkItemId_Guid(text, workItemId);
+                    text = FillTemplateVars_RevisionId_ServerUrl_UserName(text, workItemRevisionId, serverUrl, username);
 
                     sw.Write(text);
                 }
@@ -145,12 +142,9 @@ namespace SvnBridge.Infrastructure
                     int workItemRevisionId = information.Revision;
                     string text =
                         GetSetWorkItemStatusToFixedMessage()
-                            .Replace("{Guid}", Guid.NewGuid().ToString())
-                            .Replace("{WorkItemId}", workItemId.ToString())
-                            .Replace("{RevisionId}", workItemRevisionId.ToString())
-                            .Replace("{ServerUrl}", serverUrl)
-                            .Replace("{UserName}", username)
                         ;
+                    text = FillTemplateVars_WorkItemId_Guid(text, workItemId);
+                    text = FillTemplateVars_RevisionId_ServerUrl_UserName(text, workItemRevisionId, serverUrl, username);
 
                     sw.Write(text);
                 }
@@ -198,9 +192,8 @@ namespace SvnBridge.Infrastructure
                 using (StreamWriter sw = new StreamWriter(stream))
                 {
                     string text = getWorkItemInformationMessage
-                        .Replace("{Guid}", Guid.NewGuid().ToString())
-                        .Replace("{WorkItemId}", workItemId.ToString())
                     ;
+                    text = FillTemplateVars_WorkItemId_Guid(text, workItemId);
 
                     sw.Write(text);
                 }
@@ -246,6 +239,25 @@ namespace SvnBridge.Infrastructure
                 index += 1;
             }
             return index;
+        }
+
+        private static string FillTemplateVars_WorkItemId_Guid(string templated, int workItemId)
+        {
+            string production = templated
+                .Replace("{Guid}", Guid.NewGuid().ToString())
+                .Replace("{WorkItemId}", workItemId.ToString())
+            ;
+            return production;
+        }
+
+        private static string FillTemplateVars_RevisionId_ServerUrl_UserName(string templated, int workItemRevisionId, string serverUrl, string username)
+        {
+            string production = templated
+                .Replace("{RevisionId}", workItemRevisionId.ToString())
+                .Replace("{ServerUrl}", serverUrl)
+                .Replace("{UserName}", username)
+            ;
+            return production;
         }
 
         private HttpWebRequest GetWebRequest()
