@@ -4392,6 +4392,61 @@ namespace SvnBridge.SourceControl
             // transaction lifecycle:
             Helper.DebugUsefulBreakpointLocation();
 
+            // SAME-FOLDER DIFFERENT-CASE RENAME NOTES:
+            // When submitting a case-only rename of a *folder*
+            // (not *file* - that seems to work...),
+            // TFS2013 will react with returning a Failure[] element
+            // (in TfsLibrary SourceControlService.cs PendChangesHelper())
+            // which indicates
+            // ItemExistsException "The item $/...ToNewCaseRenamedFolder already exists.".
+            // Unfortunately, no amount of fiddling with
+            // pendChangesOptions / supportedFeatures params
+            // (roughly documented at
+            // Microsoft.TeamFoundation.VersionControl.Common
+            // PendChangesOptions,
+            // and judging from TFS errors
+            // it seems supportedFeatures value needs to match pendChangesOptions)
+            // helped (setting pendChangesOptions "silent"
+            // managed to skip producing a Failure[] element,
+            // however having a closer look at temporary SvnBridge workspace
+            // in MSVS Source Control Explorer showed that there were
+            // no pending changes registered, IOW it was [rightfully...]
+            // "silently ignored").
+            // So, while we now do have
+            // tons of filesystem item case bug filter functionality in place,
+            // it seems we're still partially stuck
+            // since on the *commit* side of things (rather than working copy *update*)
+            // TFS will not accept submitting a "slightly-different" item path
+            // (even trying to submit a PendChange to different-name
+            // and a subsequent one to case-renamed-name will be caught by TFS).
+            // For certain controlled situations it might be ok
+            // to do an interim commit
+            // which actively renames the item away
+            // and *then* renames it to the real case-only-renamed name.
+            // Especially in order to support non-controlled situations
+            // (think import of a large *pre-existing* commit history),
+            // this could possibly also be provided as an automated mechanism
+            // (also, opt-out via config flag) by SvnBridge,
+            // by doing a "preparatory" commit which does the rename-away
+            // (and contains both a "preparatory" explanation *plus*
+            // the commit description of the following "real" commit),
+            // then doing the real commit
+            // which then also contains the rename-back-to-case-only-change.
+            // "TFS – ItemExistsException Fix"
+            //   http://www.donnfelker.com/2008/01/ says: "
+            // Robert Horvick had some great insight into this error on this post. Here’s what he says:
+            // “At a high level what is happening here is that there are two distinct items
+            // which happen to have the same path name (at different points in time, obviously).
+            // When you are labeling TFS sees what you want to put into the label (the new item)
+            // and what is already in the old label (the old item) and sees the name conflict.
+            // Since /child:replace means to replace the label on the same item
+            // it can’t drop the label off the old item
+            // which means it can’t add it to the new item so it issues this error message.“
+            // THANK YOU Robert.
+            // "
+            // Interesting discussion related to git-tfs:
+            // "TFS side folder upper/lower case renaming not handled properly"
+            //   https://github.com/git-tfs/git-tfs/issues/104
             sourceControlService.PendChanges(
                 serverUrl, credentials,
                 activityId, pendRequests,
