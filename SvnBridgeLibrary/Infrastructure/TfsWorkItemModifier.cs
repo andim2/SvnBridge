@@ -101,12 +101,13 @@ namespace SvnBridge.Infrastructure
                     int workItemRevisionId = GetWorkItemInformation(workItemId).Revision;
                     string text =
                         GetAssociateWorkItemWithChangeSetMessage()
+                            .Replace("{ChangeSetId}", changeSetId.ToString())
                             .Replace("{Guid}", Guid.NewGuid().ToString())
                             .Replace("{WorkItemId}", workItemId.ToString())
-                            .Replace("{ChangeSetId}", changeSetId.ToString())
                             .Replace("{RevisionId}", workItemRevisionId.ToString())
                             .Replace("{ServerUrl}", serverUrl)
-                            .Replace("{UserName}", username);
+                            .Replace("{UserName}", username)
+                        ;
 
                     sw.Write(text);
                 }
@@ -148,7 +149,8 @@ namespace SvnBridge.Infrastructure
                             .Replace("{WorkItemId}", workItemId.ToString())
                             .Replace("{RevisionId}", workItemRevisionId.ToString())
                             .Replace("{ServerUrl}", serverUrl)
-                            .Replace("{UserName}", username);
+                            .Replace("{UserName}", username)
+                        ;
 
                     sw.Write(text);
                 }
@@ -197,7 +199,8 @@ namespace SvnBridge.Infrastructure
                 {
                     string text = getWorkItemInformationMessage
                         .Replace("{Guid}", Guid.NewGuid().ToString())
-                        .Replace("{WorkItemId}", workItemId.ToString());
+                        .Replace("{WorkItemId}", workItemId.ToString())
+                    ;
 
                     sw.Write(text);
                 }
