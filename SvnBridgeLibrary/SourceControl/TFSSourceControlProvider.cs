@@ -103,6 +103,18 @@ namespace SvnBridge.SourceControl
             string pathCommonParent = "";
 
             // First, handle special cases:
+            // [ermm, is null input even supposed to be valid?
+            // After all one could argue
+            // that it should be caught/handled by the user of this API
+            // since it knows best what exactly to do in such a case,
+            // and one could also argue
+            // that generally unconditionally placing a "null" item
+            // within the root of the other valid item is "strange".
+            // Thus, keep a watch on such uses!]
+            if ((null == path1) || (null == path2))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
             if (null == path1)
             {
                 pathCommonParent = path2;
