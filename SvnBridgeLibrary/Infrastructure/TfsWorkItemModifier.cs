@@ -164,11 +164,19 @@ namespace SvnBridge.Infrastructure
 
         private static void ReportWebServiceFailure(string domain_specific_error, WebException we)
         {
-            using (Stream stream = we.Response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(stream))
+            string response = "";
+            // At least for the case of WebException being of
+            // InvalidOperationException "Timeout für Vorgang überschritten" type,
+            // a we.Response did NOT become available --> null.
+            if (null != we.Response)
             {
-                throw new InvalidOperationException(domain_specific_error + Environment.NewLine + reader.ReadToEnd(), we);
+                using (Stream stream = we.Response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    response = reader.ReadToEnd();
+                }
             }
+            throw new InvalidOperationException(domain_specific_error + Environment.NewLine + response, we);
         }
 
         private static string GetSetWorkItemStatusToFixedMessage()
