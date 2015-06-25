@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Xml;
 using SvnBridge.SourceControl;
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.Infrastructure
 {
@@ -176,6 +177,7 @@ namespace SvnBridge.Infrastructure
                     response = reader.ReadToEnd();
                 }
             }
+            Helper.DebugUsefulBreakpointLocation();
             throw new InvalidOperationException(domain_specific_error + Environment.NewLine + response, we);
         }
 

@@ -603,6 +603,7 @@ namespace SvnBridge.SourceControl
                         if (null == item)
                         {
                             bool edit = false; // FIXME correct value!?
+                            Helper.DebugUsefulBreakpointLocation();
                             item = new MissingItemMetaData(itemPath, _targetVersion, edit);
                         }
                         ItemHelpers.FolderOps_AddItem(folder, item);
