@@ -119,11 +119,8 @@ namespace SvnBridge.Infrastructure
             }
             catch (WebException we)
             {
-                using (Stream stream = we.Response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    throw new InvalidOperationException("Failed to associate work item " + workItemId + " with changeset " + changeSetId + Environment.NewLine + reader.ReadToEnd(), we);
-                }
+                string domain_specific_error = "Failed to associate work item " + workItemId + " with changeset " + changeSetId;
+                ReportWebServiceFailure(domain_specific_error, we);
             }
         }
 
@@ -160,11 +157,17 @@ namespace SvnBridge.Infrastructure
             }
             catch (WebException we)
             {
-                using (Stream stream = we.Response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    throw new InvalidOperationException("Failed to set work item " + workItemId + " status to fixed" + Environment.NewLine + reader.ReadToEnd(), we);
-                }
+                string domain_specific_error = "Failed to set work item " + workItemId + " status to fixed";
+                ReportWebServiceFailure(domain_specific_error, we);
+            }
+        }
+
+        private static void ReportWebServiceFailure(string domain_specific_error, WebException we)
+        {
+            using (Stream stream = we.Response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                throw new InvalidOperationException(domain_specific_error + Environment.NewLine + reader.ReadToEnd(), we);
             }
         }
 
