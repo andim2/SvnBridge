@@ -204,7 +204,8 @@ namespace SvnBridge.Infrastructure
             }
 
             WebResponse response = request.GetResponse();
-            using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+            using (Stream stream = response.GetResponseStream())
+            using (StreamReader sr = new StreamReader(stream))
             {
                 XmlDocument xdoc = new XmlDocument();
                 xdoc.Load(sr);
