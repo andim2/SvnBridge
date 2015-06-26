@@ -22,6 +22,8 @@ namespace SvnBridge.Infrastructure
         private readonly AutoResetEvent crawlerEvent;
         private readonly WaitHandle[] crawlerEventArray;
 
+        private readonly TimeSpan spanTimeoutAwaitAnyConsumptionActivity;
+
         private readonly TimeSpan spanTimeoutTryWaitConsumptionStep;
 
         public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider, long cacheTotalSizeLimit)
@@ -37,6 +39,8 @@ namespace SvnBridge.Infrastructure
 
             this.crawlerEvent = new AutoResetEvent(false);
             this.crawlerEventArray = new WaitHandle[] { crawlerEvent };
+
+            this.spanTimeoutAwaitAnyConsumptionActivity = TimeoutAwaitAnyConsumptionActivity;
 
             this.spanTimeoutTryWaitConsumptionStep = DefineTimeoutTryWaitConsumptionStep();
         }
@@ -108,10 +112,13 @@ namespace SvnBridge.Infrastructure
         {
             bool haveUnusedItemLoadBufferCapacity = false;
 
-            // Q&D HACK to ensure that this crawler resource will bail out at least eventually
+            // Ensure that this crawler resource will bail out at least eventually
             // in case of a problem (e.g. missing consumer-side fetching).
-            long timeoutInSeconds = TimeoutAwaitAnyConsumptionActivity;
-            long retry = 0;
+            // And make sure to keep calculating this expire time *locally*,
+            // i.e. for every use of this handler!
+            DateTime timeUtcStartWait = DateTime.UtcNow;
+            // Have a precisely bounded timeout endpoint to compare against:
+            DateTime timeUtcExpireAwaitAnyConsumptionActivity = timeUtcStartWait + spanTimeoutAwaitAnyConsumptionActivity;
             for (; ; )
             {
                 var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
@@ -123,7 +130,8 @@ namespace SvnBridge.Infrastructure
 
                 CheckCancel();
 
-                bool isWaitExceeded = (++retry > timeoutInSeconds);
+                DateTime timeUtcNow = DateTime.UtcNow; // debug helper
+                bool isWaitExceeded = (timeUtcNow >= timeUtcExpireAwaitAnyConsumptionActivity);
                 bool haveTimeRemain = !(isWaitExceeded);
                 if (!(haveTimeRemain))
                 {
@@ -171,9 +179,9 @@ namespace SvnBridge.Infrastructure
         /// We will have to drastically rework things to handle file crawling
         /// in a more robust way.
         /// </remarks>
-        private static long TimeoutAwaitAnyConsumptionActivity
+        private static TimeSpan TimeoutAwaitAnyConsumptionActivity
         {
-            get { return 3600*4; }
+            get { return TimeSpan.FromHours(4); }
         }
 
         private bool WaitNotify(
