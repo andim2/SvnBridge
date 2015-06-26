@@ -300,6 +300,118 @@ namespace SvnBridge.Infrastructure
         }
     }
 
+    internal sealed class ItemDataDownloadWaiter
+    {
+        private readonly ItemMetaData item;
+        private readonly WaitHandle[] finishedOneArray;
+
+        public ItemDataDownloadWaiter(
+            ItemMetaData item,
+            WaitHandle finishedOne)
+        {
+            this.item = item;
+            this.finishedOneArray = new WaitHandle[] { finishedOne };
+        }
+
+        public void Wait(
+            TimeSpan spanTimeout)
+        {
+            WaitLoop(
+                spanTimeout);
+        }
+
+        private void WaitLoop(
+            TimeSpan spanTimeout)
+        {
+            DateTime timeUtcWaitLoaded_Start = DateTime.UtcNow; // Calculate ASAP (to determine timeout via precise right-upon-start timestamp)
+            DateTime timeUtcWaitLoaded_Expire = DateTime.MinValue;
+            TimeSpan spanTimeoutRemain = spanTimeout;
+
+            // Since the event handle currently is loader-global (and probably will remain,
+            // since that ought to be more efficient than per-item handles horror),
+            // it will be used to signal *any* progress.
+            // Thus we need to keep iterating until in fact *our* item is loaded.
+            // And since we need to do that, update a timeout value
+            // which will be reliably determined from actual current timestamp.
+
+            for (;;)
+            {
+                bool isTimeout;
+                DoWait(
+                    spanTimeoutRemain,
+                    out isTimeout);
+                if (isTimeout)
+                {
+                    break;
+                }
+
+                // One reason for .DataLoaded ending up false
+                // even after having waited for success
+                // is that loader is now loading multiple items in parallel
+                // (via truly asynchronous request handling),
+                // thus it may happen that
+                // while item production and consumption side
+                // are doing same-order recursion,
+                // one item has been loaded successfully faster (perhaps less data?)
+                // and thus is ready earlier - but this is not the item yet
+                // that the consumer side here is currently waiting for!!
+                if (item.DataLoaded)
+                {
+                    break;
+                }
+
+                // Performance: nice trick: do expensive calculation of expiration stamp
+                // only *after* the first wait has already been done :)
+                bool expire_needs_init = (DateTime.MinValue == timeUtcWaitLoaded_Expire);
+                if (expire_needs_init)
+                {
+                    timeUtcWaitLoaded_Expire = timeUtcWaitLoaded_Start + spanTimeout;
+                }
+
+                // Performance: implement grabbing current timestamp ALAP, to have strict timeout-side handling.
+                DateTime timeUtcNow = DateTime.UtcNow; // debug helper
+
+                // Make sure to have the timeout value variable updated for next round above:
+                // And make sure to have handling be focussed on a precise final timepoint
+                // to have a precisely bounded timeout endpoint
+                // (i.e., avoid annoying accumulation of added-up multi-wait scheduling delays imprecision).
+                spanTimeoutRemain = timeUtcWaitLoaded_Expire - timeUtcNow;
+            }
+        }
+
+        private void DoWait(
+            TimeSpan spanTimeout,
+            out bool isTimeout)
+        {
+            isTimeout = false;
+
+            // IMPORTANT: definitely remember to do an *initial* status check
+            // directly prior to first wait.
+            if (item.DataLoaded)
+            {
+                return;
+            }
+
+            // FIXME!! race window *here*:
+            // if producer happens to be doing [set .DataLoaded true and signal event] *right here*,
+            // then prior .DataLoaded false check will have failed
+            // and we're about to wait on an actually successful load
+            // (and having missed the signal event).
+            // The properly atomically scoped (read: non-racy) solution likely would be
+            // to move .DataLoaded evaluation inside a Monitor scope
+            // (and below wait activity would then unlock the Monitor),
+            // but since finishedOneArray is currently managed separately from a Monitor scope
+            // properly handshaked unlocked-waiting might be not doable ATM.
+
+            // To observe item loader's async download progress,
+            // see method which serves async callback
+            // (TfsLibrary.DownloadBytesReadState.ReadCallback()).
+            // Cannot use .WaitOne() since that one does not signal .WaitTimeout (has bool result).
+            int idxEvent = WaitHandle.WaitAny(finishedOneArray, spanTimeout);
+            isTimeout = (WaitHandle.WaitTimeout == idxEvent);
+        }
+    }
+
     public /* no "sealed" here (class subsequently derived by Tests) */ class AsyncItemLoader
     {
         private readonly FolderMetaData folderInfo;
@@ -314,7 +426,6 @@ namespace SvnBridge.Infrastructure
         private readonly AsyncCallback callback;
 
         private readonly AutoResetEvent finishedOne;
-        private readonly WaitHandle[] finishedOneArray;
 
         private readonly AutoResetEvent crawlerEvent;
         private readonly WaitHandle[] crawlerEventArray;
@@ -340,12 +451,11 @@ namespace SvnBridge.Infrastructure
             this.callback = new AsyncCallback(
                 OnItemDataDownloadEnded);
 
+            this.finishedOne = new AutoResetEvent(false);
+
             // Performance: do allocation of event array on init rather than per-use.
             // And keep specific member for handle itself, too,
             // to enable direct (non-dereferenced) fast access.
-            this.finishedOne = new AutoResetEvent(false);
-            this.finishedOneArray = new WaitHandle[] { finishedOne };
-
             this.crawlerEvent = new AutoResetEvent(false);
             this.crawlerEventArray = new WaitHandle[] { crawlerEvent };
 
@@ -832,80 +942,12 @@ namespace SvnBridge.Infrastructure
             ItemMetaData item,
             TimeSpan spanTimeout)
         {
-            DateTime timeUtcWaitLoaded_Start = DateTime.UtcNow; // Calculate ASAP (to determine timeout via precise right-upon-start timestamp)
-            DateTime timeUtcWaitLoaded_Expire = DateTime.MinValue;
-            TimeSpan spanTimeoutRemain = spanTimeout;
+            ItemDataDownloadWaiter waiter = new ItemDataDownloadWaiter(
+                item,
+                finishedOne);
 
-            // Since the event handle currently is loader-global (and probably will remain,
-            // since that ought to be more efficient than per-item handles horror),
-            // it will be used to signal *any* progress.
-            // Thus we need to keep iterating until in fact *our* item is loaded.
-            // And since we need to do that, update a timeout value
-            // which will be reliably determined from actual current timestamp.
-
-            for (;;)
-            {
-                // IMPORTANT: definitely remember to do an *initial* status check
-                // directly prior to first wait.
-                if (item.DataLoaded)
-                {
-                    break;
-                }
-
-                // FIXME!! race window *here*:
-                // if producer happens to be doing [set .DataLoaded true and signal event] *right here*,
-                // then prior .DataLoaded false check will have failed
-                // and we're about to wait on an actually successful load
-                // (and having missed the signal event).
-                // The properly atomically scoped (read: non-racy) solution likely would be
-                // to move .DataLoaded evaluation inside a Monitor scope
-                // (and below wait activity would then unlock the Monitor),
-                // but since finishedOneArray is currently managed separately from a Monitor scope
-                // properly handshaked unlocked-waiting might be not doable ATM.
-
-                // To observe item loader's async download progress,
-                // see method which serves async callback
-                // (TfsLibrary.DownloadBytesReadState.ReadCallback()).
-                // Cannot use .WaitOne() since that one does not signal .WaitTimeout (has bool result).
-                int idxEvent = WaitHandle.WaitAny(finishedOneArray, spanTimeoutRemain);
-                bool isTimeout = (WaitHandle.WaitTimeout == idxEvent);
-                if (isTimeout)
-                {
-                    break;
-                }
-
-                // One reason for .DataLoaded ending up false
-                // even after having waited for success
-                // is that loader is now loading multiple items in parallel
-                // (via truly asynchronous request handling),
-                // thus it may happen that
-                // while item production and consumption side
-                // are doing same-order recursion,
-                // one item has been loaded successfully faster (perhaps less data?)
-                // and thus is ready earlier - but this is not the item yet
-                // that the consumer side here is currently waiting for!!
-                if (item.DataLoaded)
-                {
-                    break;
-                }
-
-                // Performance: nice trick: do expensive calculation of expiration stamp
-                // only *after* the first wait has already been done :)
-                bool expire_needs_init = (DateTime.MinValue == timeUtcWaitLoaded_Expire);
-                if (expire_needs_init)
-                {
-                    timeUtcWaitLoaded_Expire = timeUtcWaitLoaded_Start + spanTimeout;
-                }
-
-                // Performance: implement grabbing current timestamp ALAP, to have strict timeout-side handling.
-                DateTime timeUtcNow = DateTime.UtcNow; // debug helper
-
-                // Make sure to have the timeout value variable updated for next round above:
-                // And make sure to have handling be focussed on a precise final timepoint
-                // to have a precisely bounded timeout endpoint
-                // (i.e., avoid annoying accumulation of added-up multi-wait scheduling delays imprecision).
-                spanTimeoutRemain = timeUtcWaitLoaded_Expire - timeUtcNow;
-            }
+            waiter.Wait(
+                spanTimeout);
 
             return item.DataLoaded;
         }
