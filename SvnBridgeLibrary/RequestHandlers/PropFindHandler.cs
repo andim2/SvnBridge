@@ -5,7 +5,6 @@ using System.Text;
 using System.Xml;
 using CodePlex.TfsLibrary.RepositoryWebSvc; // TFS's ItemType only (layer violation)
 using SvnBridge.Interfaces; // IHttpContext, IHttpRequest
-using SvnBridge.Net; // RequestCache
 using SvnBridge.Nodes; // INode
 using SvnBridge.Protocol; // PropData only
 using SvnBridge.SourceControl;
@@ -69,7 +68,7 @@ namespace SvnBridge.Handlers
             }
             catch
             {
-                RequestCache.Items["RequestBody"] = propfind;
+                OnErrorRetainRequestInfo_RequestBody(propfind);
                 throw;
             }
         }

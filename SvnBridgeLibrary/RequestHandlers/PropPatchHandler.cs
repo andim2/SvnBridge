@@ -3,7 +3,6 @@ using System.Text;
 using System.Xml;
 using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
-using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.Utility;
 using SvnBridge.SourceControl;
@@ -43,7 +42,11 @@ namespace SvnBridge.Handlers
             }
             catch
             {
-                RequestCache.Items["RequestBody"] = originalXml;
+                // Assigning originalXml content here seems to be asymmetric
+                // compared to all other use sites and to what DefaultLogger does with it
+                // (SerializeXmlString()), however most likely it is due to the escaping issue above
+                // that we don't have a choice...
+                OnErrorRetainRequestInfo_RequestBody(originalXml);
                 throw;
             }
 		}

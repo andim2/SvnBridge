@@ -3,6 +3,7 @@ using System.IO; // Path.Combine(), Stream, StreamWriter, TextWriter
 using System.Net; // ICredentials
 using System.Text; // Encoding
 using SvnBridge.Interfaces;
+using SvnBridge.Net; // RequestCache
 using SvnBridge.SourceControl;
 using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.Encode*()
 using SvnBridge.Infrastructure;
@@ -47,6 +48,18 @@ namespace SvnBridge.Handlers
 				writer.Write(content);
 			}
 		}
+
+        /// <summary>
+        /// Central (and possibly comment-only) helper
+        /// to store RequestBody payload in case of certain errors.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        protected static void OnErrorRetainRequestInfo_RequestBody<T>(T data)
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            RequestCache.Items["RequestBody"] = data;
+        }
     }
 
     public abstract class RequestHandlerBase : RequestHandlerHttpBase

@@ -1,7 +1,6 @@
 using System.Text;
 using SvnBridge.Exceptions;
 using SvnBridge.Interfaces;
-using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
@@ -43,7 +42,7 @@ namespace SvnBridge.Handlers
             }
             catch (ConflictException ex)
             {
-                RequestCache.Items["RequestBody"] = data;
+                OnErrorRetainRequestInfo_RequestBody(data);
                 DefaultLogger logger = Container.Resolve<DefaultLogger>();
                 logger.ErrorFullDetails(ex, context);
 
@@ -61,7 +60,7 @@ namespace SvnBridge.Handlers
             }
             catch
             {
-                RequestCache.Items["RequestBody"] = data;
+                OnErrorRetainRequestInfo_RequestBody(data);
                 throw;
             }
         }

@@ -9,7 +9,6 @@ using CodePlex.TfsLibrary.ObjectModel; // LogItem, SourceItem, SourceItemChange
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ChangeType, ItemType
 using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
-using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.EncodeB() etc.
@@ -174,14 +173,14 @@ namespace SvnBridge.Handlers
                     }
                     //if (data != null)
                     //{
-                    //    RequestCache.Items["RequestBody"] = data;
+                    //    OnErrorRetainRequestInfo_RequestBody(data);
                     //    DefaultLogger logger = Container.Resolve<DefaultLogger>();
                     //    logger.ErrorFullDetails(new Exception("Logging"), context);
                     //}
                 }
                 catch
                 {
-                    RequestCache.Items["RequestBody"] = data;
+                    OnErrorRetainRequestInfo_RequestBody(data);
                     throw;
                 }
             }
