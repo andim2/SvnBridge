@@ -1083,7 +1083,8 @@ namespace SvnBridge.Infrastructure
             {
                 if (item.ItemType == ItemType.Folder)
                 {
-                    itemsSize += CalculateLoadedItemsSize((FolderMetaData) item);
+                    FolderMetaData folderSub = item as FolderMetaData; // prefer fast "isinst" cast to "castclass"
+                    itemsSize += CalculateLoadedItemsSize(folderSub);
                 }
                 else
                 {
