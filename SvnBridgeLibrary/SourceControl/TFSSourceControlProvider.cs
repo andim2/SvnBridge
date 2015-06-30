@@ -554,7 +554,7 @@ namespace SvnBridge.SourceControl
                 int logItemsCount = changesets.Count();
                 while (logItemsCount == QUERY_LIMIT)
                 {
-                    int earliestVersionFound = changesets[QUERY_LIMIT - 1].cset - 1;
+                    int earliestVersionFound = changesets[changesets.Length - 1].cset - 1;
                     if (earliestVersionFound == versionFrom)
                         break;
 
