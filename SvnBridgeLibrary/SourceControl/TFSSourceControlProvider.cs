@@ -575,6 +575,8 @@ namespace SvnBridge.SourceControl
 
             changesetsTotal.AddRange(changesets);
 
+            int logItemsCount_ThisRun = changesets.Length;
+
             // TFS QueryHistory API won't return more than 256 items,
             // so need to call multiple times if more requested
             // IMPLEMENTATION WARNING: since the 256 items limit
@@ -582,11 +584,13 @@ namespace SvnBridge.SourceControl
             // make sure to always keep this correction handling code
             // situated within inner TFS-side handling layers!!
             const int TFS_QUERY_LIMIT = 256;
-            if (maxCount > TFS_QUERY_LIMIT)
+            bool didHitPossiblyPrematureLimit = ((logItemsCount_ThisRun == TFS_QUERY_LIMIT) && (maxCount > TFS_QUERY_LIMIT));
+            if (didHitPossiblyPrematureLimit)
             {
-                // Query container to be sure whether we actually hit the limit:
-                int logItemsCount_ThisRun = changesets.Length;
-                while (logItemsCount_ThisRun == TFS_QUERY_LIMIT)
+                // Confirmed! We *did* get TFS_QUERY_LIMIT entries, yet request *was* larger than that,
+                // so there might be further entries remaining...
+
+                do
                 {
                     int earliestVersionFound = changesets[changesets.Length - 1].cset - 1;
                     if (earliestVersionFound == versionFrom)
@@ -600,6 +604,7 @@ namespace SvnBridge.SourceControl
                     changesetsTotal.AddRange(changesets);
                     logItemsCount_ThisRun = changesets.Length;
                 }
+                while (TFS_QUERY_LIMIT == logItemsCount_ThisRun);
             }
 
             histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray());
