@@ -106,9 +106,10 @@ namespace SvnBridge.Infrastructure
                 {
                     try
                     {
-                        if (Configuration.AppSettings(info.Name) != null)
+                        object appSetting = Configuration.AppSettings(info.Name);
+                        if (appSetting != null)
                         {
-                            args.Add(Configuration.AppSettings(info.Name));
+                            args.Add(appSetting);
                         }
                         else if (RequestCache.IsInitialized && RequestCache.Items.Contains(info.Name))
                         {
