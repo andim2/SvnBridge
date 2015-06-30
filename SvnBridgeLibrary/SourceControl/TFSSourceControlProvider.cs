@@ -3057,6 +3057,13 @@ namespace SvnBridge.SourceControl
             FilesysHelpers.StripRootSlash(ref path);
         }
 
+        internal sealed class MostRecent_results
+        {
+            public int changeChangeSetID;
+            public DateTime changeCommitDateTime;
+            public bool result;
+        };
+
         /// <summary>
         /// Helper to determine the most recent change somewhere within the directory tree of this (possibly folder) item.
         /// Desperately tries to do some shortcuts of this otherwise very expensive network request operation,
@@ -3069,12 +3076,87 @@ namespace SvnBridge.SourceControl
         /// - to ease debugging, via combination of indicating success
         ///   and indicating result values to be assigned
         /// -  ref would be less clean
-        /// <param name="itemName">item to be queried</param>
+        /// <param name="item">item to be queried</param>
         /// <param name="version">version to do the query for</param>
         /// <param name="changeChangeSetID">Changeset ID of most recent change</param>
         /// <param name="changeCommitDateTime">Changeset commit date of most recent change</param>
         /// <returns>true when successfully queried, else false</returns>
         private bool DetermineMostRecentChangesetInTree(
+            ItemMetaData item,
+            int version,
+            out int changeChangeSetID,
+            out DateTime changeCommitDateTime)
+        {
+            // Admittedly I'm unsure of
+            // what exactly the very expensive
+            // DetermineMostRecentChangesetInTree_ExpensiveQuery() helper is about,
+            // thus I'm doing some shortcut and comparison here,
+            // to gain further insight
+            // once things have been successfully determined to "break" here.
+            MostRecent_results simple = null;
+            MostRecent_results expensive = null;
+            bool wantSimple = (item.Revision == version);
+            bool wantExpensive = false;
+            // Have breakpointable syntax:
+            if (!wantExpensive)
+            {
+                if (!wantSimple)
+                {
+                    wantExpensive = true;
+                }
+            }
+            if (!wantExpensive)
+            {
+                int doVerificationPercentage = 5;
+                wantExpensive = GotRandom_percentage(doVerificationPercentage);
+            }
+
+            if (wantSimple)
+            {
+                simple = new MostRecent_results();
+                simple.changeChangeSetID = item.Revision;
+                simple.changeCommitDateTime = item.LastModifiedDate;
+                simple.result = true;
+            }
+            if (wantExpensive)
+            {
+                expensive = new MostRecent_results();
+                expensive.result = DetermineMostRecentChangesetInTree_ExpensiveQuery(
+                    item.Name,
+                    version,
+                    out expensive.changeChangeSetID,
+                    out expensive.changeCommitDateTime);
+            }
+            bool canCompareResults = false;
+            //if (wantSimple && wantExpensive) // not needed
+            if (true)
+            {
+                canCompareResults = ((null != simple) && (null != expensive));
+            }
+            if (canCompareResults)
+            {
+                // .Equals() does NOT work (automatically) here!
+                //bool isMatch = simple.Equals(expensive);
+                // [performance: comparison of less complex yet "decisive" objects first!]
+                bool isMatch = (
+                    (simple.changeChangeSetID == expensive.changeChangeSetID) &&
+                    (simple.changeCommitDateTime == expensive.changeCommitDateTime) &&
+                    (simple.result == expensive.result)
+                );
+                if (!(isMatch))
+                {
+                    Helper.DebugUsefulBreakpointLocation();
+                    throw new InvalidOperationException("ERROR: simple vs. expensive lookup mismatch, please report!!");
+                }
+            }
+            MostRecent_results results = (null != expensive) ? expensive : simple;
+
+            changeChangeSetID = results.changeChangeSetID;
+            changeCommitDateTime = results.changeCommitDateTime;
+            return results.result;
+        }
+
+        private bool DetermineMostRecentChangesetInTree_ExpensiveQuery(
             string itemName,
             int version,
             out int changeChangeSetID,
@@ -3250,7 +3332,7 @@ namespace SvnBridge.SourceControl
                     int changeChangeSetID;
                     DateTime changeCommitDateTime;
                     bool determinedMostRecentChangeset = DetermineMostRecentChangesetInTree(
-                        item.Name,
+                        item,
                         version,
                         out changeChangeSetID,
                         out changeCommitDateTime);
