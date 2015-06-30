@@ -2178,12 +2178,13 @@ namespace SvnBridge.SourceControl
             // make sure to always keep this correction handling code
             // situated within inner TFS-side handling layers!!
             const int TFS_QUERY_LIMIT = 256;
-            bool didHitPossiblyPrematureLimit = ((logItemsCount_ThisRun == TFS_QUERY_LIMIT) && (maxCount_Allowed > TFS_QUERY_LIMIT));
-            if (didHitPossiblyPrematureLimit)
+            bool isRequestedLimitLargerThanMaxQueriesLimit = (maxCount_Allowed > TFS_QUERY_LIMIT);
+            bool needCheckHitMaxQueriesLimit = (isRequestedLimitLargerThanMaxQueriesLimit);
+            if (needCheckHitMaxQueriesLimit)
             {
                 for (; ; )
                 {
-                    didHitPossiblyPrematureLimit = (TFS_QUERY_LIMIT == logItemsCount_ThisRun);
+                    bool didHitPossiblyPrematureLimit = (TFS_QUERY_LIMIT == logItemsCount_ThisRun);
                     bool needContinueQuery = (didHitPossiblyPrematureLimit);
                     if (!(needContinueQuery))
                     {
