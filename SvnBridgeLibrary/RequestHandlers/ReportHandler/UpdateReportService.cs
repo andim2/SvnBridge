@@ -247,15 +247,15 @@ namespace SvnBridge.Infrastructure
         UpdateReportWriteItemAttributes(output, item);
 
                 string result_Md5Hash;
-                string result_Base64DiffData;
-                URSHelpers.GrabItemDeltaAndHash(
-                    loader,
-                    item,
-                    out result_Base64DiffData,
-                    out result_Md5Hash);
-
                 if (requestedTxDelta)
                 {
+                    string result_Base64DiffData;
+                    URSHelpers.GrabItemDeltaAndHash(
+                        loader,
+                        item,
+                        out result_Base64DiffData,
+                        out result_Md5Hash);
+
 				output.Write("<S:txdelta>");
                 // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
                 URSHelpers.PushTxDeltaData(
@@ -291,6 +291,15 @@ namespace SvnBridge.Infrastructure
                         }
                         output.Write("/>\n");
                     }
+                    // Request result item data only *after* our base item query above,
+                    // since fetching gets (hopefully got) done (in parallel??) by crawler thread...
+                    string result_Base64DiffData;
+                    URSHelpers.GrabItemDeltaAndHash(
+                        loader,
+                        item,
+                        out result_Base64DiffData,
+                        out result_Md5Hash);
+                    result_Base64DiffData = null; // huge data (we don't need it here)
                 }
                 output.Write("<S:prop><V:md5-checksum>" + result_Md5Hash + "</V:md5-checksum></S:prop>\n");
 
