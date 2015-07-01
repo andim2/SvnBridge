@@ -284,6 +284,27 @@ namespace SvnBridge.Infrastructure
 
         private void WaitFinished_i()
         {
+            // [[
+            // Actually should NOT ignore Cancel() here:
+            // users may invoke Cancel() (e.g. for exception cleanup),
+            // in which case the crawler *ought* to stop
+            // waiting for the async item downloaders to have finished
+            // (since they will already have been Cancel()ed, too!).
+            // ]]
+            // UPDATE: yes, we *should* ignore Cancel requests here -
+            // otherwise we will bail out early,
+            // despite internally used asynchronous APIs
+            // still being active
+            // (they do not seem to offer a cancel mechanism
+            // thus we do need to wait for them to be finished,
+            // no matter what...).
+            // Also, we would get notified via Cancel exception,
+            // which we would need to handle
+            // yet currently don't.
+            // So, keep waiting until hitting the final timeout.
+            // It somewhat sucks possibly piling up dozens of worker instances
+            // which are doing useless waiting, but...
+            //SetCancelIgnored();
             SetCancelIgnored();
             WaitFinishedImpl();
         }
