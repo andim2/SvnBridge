@@ -663,6 +663,8 @@ namespace SvnBridge.Infrastructure
             DateTime timeUtcStartWait = DateTime.UtcNow;
             // Have a precisely bounded timeout endpoint to compare against:
             DateTime timeUtcExpireAwaitAnyConsumptionActivity = timeUtcStartWait + spanTimeoutAwaitAnyConsumptionActivity;
+            bool isTimeout_Last = false;
+            long totalLoadedItemsSize_Exceeded_Last = 0;
             for (; ; )
             {
                 var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
@@ -671,6 +673,23 @@ namespace SvnBridge.Infrastructure
                 {
                     break;
                 }
+
+                bool haveConsumptionProgress = HaveConsumerProgress(
+                    isTimeout_Last, totalLoadedItemsSize,
+                    totalLoadedItemsSize_Exceeded_Last);
+                bool doEmergencyLastDitchEffort = !(haveConsumptionProgress);
+                bool pretendSuccess = (doEmergencyLastDitchEffort);
+                if (pretendSuccess)
+                {
+                    // Note that even with such emergency-continue handling
+                    // we will not continue endlessly
+                    // (which could possibly result in OOM situations),
+                    // since processing ultimately also remains bounded
+                    // by the global consumption timeout.
+                    break;
+                }
+
+                totalLoadedItemsSize_Exceeded_Last = totalLoadedItemsSize;
 
                 DateTime timeUtcNow = DateTime.UtcNow; // debug helper
                 bool isWaitExceeded = (timeUtcNow >= timeUtcExpireAwaitAnyConsumptionActivity);
@@ -684,7 +703,37 @@ namespace SvnBridge.Infrastructure
                 // got consumed (by consumer side, obviously).
                 bool isWaitSuccess = WaitNotify(
                     spanTimeoutTryWaitConsumptionStep);
+                isTimeout_Last = !(isWaitSuccess);
             }
+        }
+
+        /// <summary>
+        /// Helper to try to determine the situation
+        /// where a consumer keeps waiting on an item to be loaded
+        /// yet that item in combination with several other items
+        /// which had managed to get successfully loaded earlier
+        /// had such a large data memory size
+        /// that it exceeded the limit,
+        /// thus the producer part will keep waiting for the size to be reduced
+        /// and the consumer will keep waiting for the item's data to get loaded state
+        /// --> DEADLOCK.
+        /// </summary>
+        private static bool HaveConsumerProgress(
+            bool isTimeout_Last,
+            long totalLoadedItemsSize,
+            long totalLoadedItemsSize_Exceeded_Last)
+        {
+            bool progress = true;
+            bool hadConsumptionTimeout = (isTimeout_Last);
+            bool needCheckSizeProgress = (hadConsumptionTimeout);
+            if (needCheckSizeProgress)
+            {
+                if (totalLoadedItemsSize == totalLoadedItemsSize_Exceeded_Last)
+                {
+                    progress = false;
+                }
+            }
+            return progress;
         }
 
         private bool HaveUnusedItemLoadBufferCapacity(long totalLoadedItemsSize)
@@ -708,14 +757,6 @@ namespace SvnBridge.Infrastructure
         /// as opposed to us having to go through *hugely* complex
         /// TFS <-> SVN conversion processes)
         /// to have fetched data.
-        ///
-        /// Well, hmm, but OTOH in pathological cases
-        /// even this timeout *will* get exceeded
-        /// since some very large requests (>10M total) may happen
-        /// where the consumer is waiting for the last parts -
-        /// crawler will hit limit, and consumer will never get its last file served.
-        /// We will have to drastically rework things to handle file crawling
-        /// in a more robust way.
         /// </remarks>
         private static TimeSpan TimeoutAwaitAnyConsumptionActivity
         {
