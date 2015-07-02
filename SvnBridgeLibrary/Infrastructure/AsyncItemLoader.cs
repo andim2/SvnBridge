@@ -38,7 +38,7 @@ namespace SvnBridge.Infrastructure
                 // Wanted to move size check/data reading into a helper,
                 // but then the cancel handling below
                 // would have to be implemented in an awkward more indirect way...
-                while (CalculateLoadedItemsSize(folderInfo) > CacheTotalSizeLimit)
+                while (CalculateLoadedItemsSize(folderInfo) >= CacheTotalSizeLimit)
                 {
                     if (cancelOperation)
                         break;
