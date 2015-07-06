@@ -259,6 +259,18 @@ namespace SvnBridge.SourceControl
                 // we have to calculate the difference from the project root
                 // this is because we may have a file move from below the checkoutRootPath, 
                 // which we still need to consider
+                // Hrmm, above comment was imprecise -
+                // it likely means that we need to consider
+                // existing items moving from (copied/renamed away from) *outside* the checkoutRootPath
+                // (since checkoutRootPath may be a *sub* path of the TFS team proj).
+                // In that case, we need to have the calculation
+                // be based more globally on the outer TFS team proj root even,
+                // with the checkout path item being properly contained by it,
+                // by simply *inserting* checkout item into this root-item-based hierarchy.
+                // Example:
+                // $/TfsTeamProj/MySubCheckoutRoot
+                // projectRootPath: "TfsTeamProj"
+                // checkoutRootPath: "TfsTeamProj/MySubCheckoutRoot"
                 FolderMetaData projectRoot = checkoutRoot;
                 if (!(projectRootPath.Equals(checkoutRootPath)))
                 {

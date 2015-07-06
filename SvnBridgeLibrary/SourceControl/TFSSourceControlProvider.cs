@@ -102,7 +102,8 @@ namespace SvnBridge.SourceControl
         public static string GetIntermediatePathElems(string root, string sub)
         {
             string folderParentOfSub_absolute = sub.Substring(0, sub.LastIndexOf('/'));
-            string folderParentOfSub_relative = folderParentOfSub_absolute.Substring(folderParentOfSub_absolute.IndexOf('/') + 1); // XXX this does not really handle the (potentially multi-elem) "root" param
+            var idxSeparator = folderParentOfSub_absolute.IndexOf('/'); // XXX this does not really handle the (potentially multi-elem) "root" param
+            string folderParentOfSub_relative = (-1 != idxSeparator) ? folderParentOfSub_absolute.Substring(idxSeparator + 1) : "";
             string folderPathElemsIntermediate = folderParentOfSub_relative;
             return folderPathElemsIntermediate;
         }
