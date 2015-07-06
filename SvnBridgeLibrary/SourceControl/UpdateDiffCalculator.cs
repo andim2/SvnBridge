@@ -263,10 +263,9 @@ namespace SvnBridge.SourceControl
                 if (!(projectRootPath.Equals(checkoutRootPath)))
                 {
                     projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
-                    string path = checkoutRootPath.Substring(0, checkoutRootPath.LastIndexOf('/'));
-                    path = path.Substring(path.IndexOf('/') + 1);
-                    FolderMetaData result = (FolderMetaData)FindItemOrCreateItem(projectRoot, projectRootPath, path, versionTo, Recursion.None);
-                    ItemHelpers.FolderOps_AddItem(result, checkoutRoot);
+                    string folderIntermediatePath = FilesysHelpers.GetIntermediatePathElems(projectRootPath, checkoutRootPath);
+                    FolderMetaData folderIntermediate = (FolderMetaData)FindItemOrCreateItem(projectRoot, projectRootPath, folderIntermediatePath, versionTo, Recursion.None);
+                    ItemHelpers.FolderOps_AddItem(folderIntermediate, checkoutRoot);
                 }
 
                 CalculateChangeBetweenVersions(projectRootPath, TFSSourceControlProvider.LATEST_VERSION, projectRoot, versionFrom, versionTo);

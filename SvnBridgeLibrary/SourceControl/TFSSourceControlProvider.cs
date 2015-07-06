@@ -91,6 +91,23 @@ namespace SvnBridge.SourceControl
         }
 
         /// <summary>
+        /// Given input such as
+        /// root: Proj
+        /// sub: Proj/sub/folder/file.txt
+        /// this method is expected
+        /// to be returning this string
+        /// (which represents all intermediate folder element parts):
+        /// sub/folder
+        /// </summary>
+        public static string GetIntermediatePathElems(string root, string sub)
+        {
+            string folderParentOfSub_absolute = sub.Substring(0, sub.LastIndexOf('/'));
+            string folderParentOfSub_relative = folderParentOfSub_absolute.Substring(folderParentOfSub_absolute.IndexOf('/') + 1); // XXX this does not really handle the (potentially multi-elem) "root" param
+            string folderPathElemsIntermediate = folderParentOfSub_relative;
+            return folderPathElemsIntermediate;
+        }
+
+        /// <summary>
         /// Calculates the common parent folder path of two items
         /// (returning a path which is able to contain both path items),
         /// irrespective of whether that path then happens to already exist or not.
