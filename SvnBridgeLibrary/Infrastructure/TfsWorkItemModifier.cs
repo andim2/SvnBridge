@@ -14,6 +14,10 @@ namespace SvnBridge.Infrastructure
     /// First, we can't take dependencies on the TFS API, we would need to redistribute it with us, and 
     /// that is problematic. The second is that the ClientService API is complex and undocumented, which 
     /// means that it is actually easier to use this approach than through the SOAP proxy.
+    /// The template content XML files which this implementation requires
+    /// are expected to be manually copied over
+    /// to the app runtime directory (AppDomain.CurrentDomain.BaseDirectory)
+    /// and possibly adapted.
     /// </summary>
     /// <remarks>
     /// Yes, we shouldn't have to write our own SOAP handling, sorry about that.
@@ -137,6 +141,16 @@ namespace SvnBridge.Infrastructure
             {
                 using (StreamWriter sw = new StreamWriter(stream))
                 {
+                    // This handling might be way too inflexible
+                    // (hard-coded "Fixed" state both in check and template content, etc.),
+                    // and quite possibly the reason for getting a TFS237165 on this TFS setup
+                    // (Reason for getting a denied exception might be
+                    // that the setup here possibly does not accept
+                    // "Fixed" as a valid state string).
+                    // Should thus probably change interface to instead offer:
+                    //     SetWorkItemState(..., string state, string reason)
+                    // Possibly useful:
+                    // http://stackoverflow.com/questions/11522246/tfs-2012-rc-tf237165-team-foundation-could-not-update-the-work-item-because-o
                     WorkItemInformation information = GetWorkItemInformation(workItemId);
                     if(information.State.Equals("Fixed"))
                         return; // already fixed
@@ -178,6 +192,10 @@ namespace SvnBridge.Infrastructure
                 }
             }
             Helper.DebugUsefulBreakpointLocation();
+            // NOTE: "response" may contain the usual TFS failure explanations with their TFxxxx error code
+            // (e.g. "TF51535: Missing or unsupported field name")
+            // In certain error constellations, the content of the .xml template files
+            // will need to be adapted to fit expectations of the local TFS deployment.
             throw new InvalidOperationException(domain_specific_error + Environment.NewLine + response, we);
         }
 
