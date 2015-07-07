@@ -190,10 +190,11 @@ namespace SvnBridge.Net
                     string username = credentialParts[0];
                     string password = credentialParts[1];
 
-                    if (username.IndexOf('\\') >= 0)
+                    var idxDomainSep = username.IndexOf('\\');
+                    if (idxDomainSep >= 0)
                     {
-                        string domain = username.Substring(0, username.IndexOf('\\'));
-                        username = username.Substring(username.IndexOf('\\') + 1);
+                        string domain = username.Substring(0, idxDomainSep);
+                        username = username.Substring(idxDomainSep + 1);
                         return new NetworkCredential(username, password, domain);
                     }
                     return new NetworkCredential(username, password);
