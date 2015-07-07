@@ -381,7 +381,7 @@ namespace SvnBridge.Handlers
         /// (indeed, it's also used for at least DELETE / COPY / MOVE).
         protected static void ReportUnsupportedDepthHeaderValue(string depthHeaderValue)
         {
-            throw new InvalidOperationException(String.Format("Depth not supported: {0}", depthHeaderValue));
+            throw new InvalidOperationException(String.Format("Invalid/unsupported Depth header value: {0}", depthHeaderValue));
         }
 
         protected static void WriteHumanReadableError(TextWriter output, int svn_error_code, string error_string)
