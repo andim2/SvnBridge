@@ -44,7 +44,8 @@ namespace SvnBridge.SourceControl
 
         private static bool IsUriCodePlex(Uri uri)
         {
-            return (uri.Host.ToLowerInvariant().EndsWith("codeplex.com") || uri.Host.ToLowerInvariant().Contains("tfs.codeplex.com"));
+            string uriHost_Lowercase = uri.Host.ToLowerInvariant();
+            return (uriHost_Lowercase.EndsWith("codeplex.com") || uriHost_Lowercase.Contains("tfs.codeplex.com"));
         }
     }
 }
