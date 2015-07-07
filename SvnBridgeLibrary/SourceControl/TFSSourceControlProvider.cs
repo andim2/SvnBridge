@@ -941,22 +941,27 @@ namespace SvnBridge.SourceControl
                         {
                             continue;
                         }
-                        try
-                        {
-                            workItemModifier.Associate(id, changesetId);
-                            workItemModifier.SetWorkItemFixed(id, changesetId);
-                        }
-                        catch (Exception e)
-                        {
-                            // We can't really raise an error here, because
-                            // we would fail the commit from the client side, while the changes
-                            // were already committed to the source control provider;
-                            // since we consider associating with work items nice but not essential,
-                            // we will log the error and ignore it.
-                            logger.Error("Failed to associate work item with changeset", e);
-                        }
+                        DoAssociate(id, changesetId);
                     }
                 }
+            }
+        }
+
+        private void DoAssociate(int workItemId, int changesetId)
+        {
+            try
+            {
+                workItemModifier.Associate(workItemId, changesetId);
+                workItemModifier.SetWorkItemFixed(workItemId, changesetId);
+            }
+            catch (Exception e)
+            {
+                // We can't really raise an error here, because
+                // we would fail the commit from the client side, while the changes
+                // were already committed to the source control provider;
+                // since we consider associating with work items nice but not essential,
+                // we will log the error and ignore it.
+                logger.Error("Failed to associate work item with changeset", e);
             }
         }
 
