@@ -15,7 +15,8 @@ namespace SvnBridge.SourceControl
             if (credentials == null)
             {
                 var uri = new Uri(tfsUrl);
-                if (uri.Host.ToLowerInvariant().EndsWith("codeplex.com") || uri.Host.ToLowerInvariant().Contains("tfs.codeplex.com"))
+                bool want_codeplex_credential = IsUriCodePlex(uri);
+                if (want_codeplex_credential)
                 {
                     if (!string.IsNullOrEmpty(Configuration.CodePlexAnonUserName))
                     {
@@ -39,6 +40,11 @@ namespace SvnBridge.SourceControl
                     credentials = DefaultCredentials;
             }
             return credentials;
+        }
+
+        private static bool IsUriCodePlex(Uri uri)
+        {
+            return (uri.Host.ToLowerInvariant().EndsWith("codeplex.com") || uri.Host.ToLowerInvariant().Contains("tfs.codeplex.com"));
         }
     }
 }
