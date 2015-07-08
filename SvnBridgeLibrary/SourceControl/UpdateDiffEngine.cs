@@ -334,15 +334,16 @@ namespace SvnBridge.SourceControl
                     // Detect our possibly pre-existing record of this item within the changeset version range
                     // that we're in the process of analyzing/collecting...
                     // This existing item may possibly be a placeholder (stub folder).
-                    ItemMetaData item = folder.FindItem(itemPath);
-                    bool doReplaceByNewItem = (item == null);
+                    ItemMetaData itemPrev = folder.FindItem(itemPath);
+                    ItemMetaData item = itemPrev;
+                    bool doReplaceByNewItem = (itemPrev == null);
                     if (!doReplaceByNewItem) // further checks...
                     {
                         if (isLastPathElem) // only if final item...
                         {
                             bool existingItemsVersionIsOutdated =
                                 updatingForwardInTime ?
-                                    (item.Revision < change.Item.RemoteChangesetId) : (item.Revision > change.Item.RemoteChangesetId);
+                                    (itemPrev.Revision < change.Item.RemoteChangesetId) : (itemPrev.Revision > change.Item.RemoteChangesetId);
                             // I seem to not like this IsDeleteMetaDataKind() check here...
                             // (reasoning: we're doing processing from Changeset to Changeset,
                             // thus if an old Changeset item happened to be a Delete yet a new non-Delete
@@ -353,7 +354,7 @@ namespace SvnBridge.SourceControl
                             // is a bit too complex, could be simplified.
                             // Well, the whole special-casing below seems to be
                             // for properly setting the OriginallyDeleted member...
-                            if (existingItemsVersionIsOutdated && !IsDeleteMetaDataKind(item))
+                            if (existingItemsVersionIsOutdated && !IsDeleteMetaDataKind(itemPrev))
                                 doReplaceByNewItem = true;
                         }
                     }
@@ -361,9 +362,9 @@ namespace SvnBridge.SourceControl
                     if (doReplaceByNewItem)
                     {
                         // First remove this prior item...
-                        if (item != null)
+                        if (itemPrev != null)
                         {
-                            folder.Items.Remove(item);
+                            folder.Items.Remove(itemPrev);
                         }
                         // ...and fetch the updated one
                         // (forward *or* backward change)
@@ -426,12 +427,12 @@ namespace SvnBridge.SourceControl
                         folder.Items.Add(item);
                         SetAdditionForPropertyChangeOnly(item, propertyChange);
                     }
-                    else if ((item is StubFolderMetaData) && isLastPathElem)
+                    else if ((itemPrev is StubFolderMetaData) && isLastPathElem)
                     {
-                        folder.Items.Remove(item);
-                        folder.Items.Add(((StubFolderMetaData)item).RealFolder);
+                        folder.Items.Remove(itemPrev);
+                        folder.Items.Add(((StubFolderMetaData)itemPrev).RealFolder);
                     }
-                    else if (IsDeleteMetaDataKind(item))
+                    else if (IsDeleteMetaDataKind(itemPrev))
                     { // former item was a DELETE...
 
                         // ...and new one then _resurrects_ the (_actually_ deleted) item:
@@ -439,7 +440,7 @@ namespace SvnBridge.SourceControl
                         {
                           if (!propertyChange)
                           {
-                              folder.Items.Remove(item);
+                              folder.Items.Remove(itemPrev);
                               item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
                               item.OriginallyDeleted = true;
                               folder.Items.Add(item);
@@ -555,12 +556,14 @@ namespace SvnBridge.SourceControl
 
         private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemPath, ref FolderMetaData folder, bool isLastPathElem)
         {
-            ItemMetaData item = folder.FindItem(itemPath);
+            ItemMetaData itemPrev = folder.FindItem(itemPath);
             // Shortcut: valid item in our cache, and it's a delete already? We're done :)
-            if (IsDeleteMetaDataKind(item))
+            if (IsDeleteMetaDataKind(itemPrev))
                 return true;
 
-            if (item == null)
+            ItemMetaData item = itemPrev;
+
+            if (itemPrev == null)
             {
                 if (isLastPathElem)
                 {
@@ -608,9 +611,9 @@ namespace SvnBridge.SourceControl
             else if (isLastPathElem) // we need to revert the item addition
             {
                 var processedVersion = _targetVersion;
-                if (item.OriginallyDeleted) // convert back into a delete
+                if (itemPrev.OriginallyDeleted) // convert back into a delete
                 {
-                    folder.Items.Remove(item);
+                    folder.Items.Remove(itemPrev);
                     if (change.Item.ItemType == ItemType.File)
                         item = new DeleteMetaData();
                     else
@@ -620,35 +623,35 @@ namespace SvnBridge.SourceControl
                     item.ItemRevision = change.Item.RemoteChangesetId;
                     folder.Items.Add(item);
                 }
-                else if (item is StubFolderMetaData)
+                else if (itemPrev is StubFolderMetaData)
                 {
                     DeleteFolderMetaData itemDeleteFolder = new DeleteFolderMetaData();
-                    itemDeleteFolder.Name = item.Name;
+                    itemDeleteFolder.Name = itemPrev.Name;
                     itemDeleteFolder.ItemRevision = processedVersion;
-                    folder.Items.Remove(item);
+                    folder.Items.Remove(itemPrev);
                     folder.Items.Add(itemDeleteFolder);
                 }
-                else if (IsAdditionForPropertyChangeOnly(item))
+                else if (IsAdditionForPropertyChangeOnly(itemPrev))
                 {
-                    ItemMetaData itemDelete = item is FolderMetaData
+                    ItemMetaData itemDelete = itemPrev is FolderMetaData
                                                     ? (ItemMetaData)new DeleteFolderMetaData()
                                                     : new DeleteMetaData();
-                    itemDelete.Name = item.Name;
+                    itemDelete.Name = itemPrev.Name;
                     itemDelete.ItemRevision = processedVersion;
-                    folder.Items.Remove(item);
+                    folder.Items.Remove(itemPrev);
                     folder.Items.Add(itemDelete);
                 }
-                else if (item is MissingItemMetaData && ((MissingItemMetaData)item).Edit == true)
+                else if (itemPrev is MissingItemMetaData && ((MissingItemMetaData)itemPrev).Edit == true)
                 {
                     ItemMetaData itemDelete = new DeleteMetaData();
-                    itemDelete.Name = item.Name;
+                    itemDelete.Name = itemPrev.Name;
                     itemDelete.ItemRevision = processedVersion;
-                    folder.Items.Remove(item);
+                    folder.Items.Remove(itemPrev);
                     folder.Items.Add(itemDelete);
                 }
                 else
                 {
-                    folder.Items.Remove(item);
+                    folder.Items.Remove(itemPrev);
                 }
             }
             folder = (item as FolderMetaData) ?? folder;
@@ -688,7 +691,8 @@ namespace SvnBridge.SourceControl
             {
                 if (item.Name.Equals(name) && item is MissingItemMetaData)
                 {
-                    folder.Items.Remove(item);
+                    ItemMetaData itemPrev = item;
+                    folder.Items.Remove(itemPrev);
                     return true;
                 }
                 FolderMetaData subFolder = item as FolderMetaData;

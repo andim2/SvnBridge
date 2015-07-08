@@ -289,8 +289,9 @@ namespace SvnBridge.SourceControl
 
                 FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
 
-                item = folder.FindItem(itemPath);
-                if (item == null)
+                ItemMetaData itemPrev = folder.FindItem(itemPath);
+                item = itemPrev;
+                if (itemPrev == null)
                 {
                     ItemMetaData itemFetched = sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
 
