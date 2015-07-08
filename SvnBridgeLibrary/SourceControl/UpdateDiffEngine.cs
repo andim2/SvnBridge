@@ -574,7 +574,8 @@ namespace SvnBridge.SourceControl
             else if (isLastPathElem) // we need to revert the item addition
             {
                 var processedVersion = _targetVersion;
-                if (itemPrev.OriginallyDeleted) // convert back into a delete
+                bool needIndicateRealDelete = (itemPrev.OriginallyDeleted); // convert back into a delete
+                if (needIndicateRealDelete)
                 {
                     item = ConstructDeletedItem(
                         (ItemType.File != change.Item.ItemType));
