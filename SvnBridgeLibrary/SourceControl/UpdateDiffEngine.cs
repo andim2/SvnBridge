@@ -440,9 +440,9 @@ namespace SvnBridge.SourceControl
                         {
                           if (!propertyChange)
                           {
-                              folder.Items.Remove(itemPrev);
                               item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
                               item.OriginallyDeleted = true;
+                              folder.Items.Remove(itemPrev);
                               folder.Items.Add(item);
                           }
                         }
@@ -613,7 +613,6 @@ namespace SvnBridge.SourceControl
                 var processedVersion = _targetVersion;
                 if (itemPrev.OriginallyDeleted) // convert back into a delete
                 {
-                    folder.Items.Remove(itemPrev);
                     if (change.Item.ItemType == ItemType.File)
                         item = new DeleteMetaData();
                     else
@@ -621,6 +620,7 @@ namespace SvnBridge.SourceControl
 
                     item.Name = remoteName;
                     item.ItemRevision = change.Item.RemoteChangesetId;
+                    folder.Items.Remove(itemPrev);
                     folder.Items.Add(item);
                 }
                 else if (itemPrev is StubFolderMetaData)
