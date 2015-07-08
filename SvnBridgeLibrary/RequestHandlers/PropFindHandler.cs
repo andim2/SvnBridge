@@ -113,7 +113,7 @@ namespace SvnBridge.Handlers
 
             FolderMetaData folderInfo = new FolderMetaData();
             ItemMetaData item = GetItems(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
-            folderInfo.Items.Add(item);
+            ItemHelpers.FolderOps_AddItem(folderInfo, item);
             return folderInfo;
         }
 

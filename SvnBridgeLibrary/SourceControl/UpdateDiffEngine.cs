@@ -364,7 +364,7 @@ namespace SvnBridge.SourceControl
                         // First remove this prior item...
                         if (itemPrev != null)
                         {
-                            folder.Items.Remove(itemPrev);
+                            ItemHelpers.FolderOps_RemoveItem(folder, itemPrev);
                         }
                         // ...and fetch the updated one
                         // (forward *or* backward change)
@@ -415,22 +415,14 @@ namespace SvnBridge.SourceControl
                         }
                         if (!isLastPathElem)
                         {
-                            StubFolderMetaData stubFolder = new StubFolderMetaData();
-                            stubFolder.RealFolder = (FolderMetaData)item;
-                            stubFolder.Name = item.Name;
-                            stubFolder.ItemRevision = item.ItemRevision;
-                            stubFolder.PropertyRevision = item.PropertyRevision;
-                            stubFolder.LastModifiedDate = item.LastModifiedDate;
-                            stubFolder.Author = item.Author;
-                            item = stubFolder;
+                            item = WrapFolderAsStubFolder((FolderMetaData)item);
                         }
-                        folder.Items.Add(item);
+                        Folder_AddItem(folder, item);
                         SetAdditionForPropertyChangeOnly(item, propertyChange);
                     }
                     else if ((itemPrev is StubFolderMetaData) && isLastPathElem)
                     {
-                        folder.Items.Remove(itemPrev);
-                        folder.Items.Add(((StubFolderMetaData)itemPrev).RealFolder);
+                        ItemHelpers.FolderOps_UnwrapStubFolder(folder, (StubFolderMetaData)itemPrev);
                     }
                     else if (IsDeleteMetaDataKind(itemPrev))
                     { // former item was a DELETE...
@@ -442,8 +434,7 @@ namespace SvnBridge.SourceControl
                           {
                               item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
                               item.OriginallyDeleted = true;
-                              folder.Items.Remove(itemPrev);
-                              folder.Items.Add(item);
+                              Folder_ReplaceItem(folder, itemPrev, item);
                           }
                         }
 //                        // [section below was a temporary patch which should not be needed any more now that our processing is much better]
@@ -460,7 +451,7 @@ namespace SvnBridge.SourceControl
                           // SvnBridge does generate both delete and add diffs,
                           // whereas for similar-name renames it previously did not -> buggy!]
                           item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
-                          folder.Items.Add(item);
+                          Folder_AddItem(folder, item);
                         }
 //#endif
                     }
@@ -596,17 +587,10 @@ namespace SvnBridge.SourceControl
                         // within the currently processed Changeset,
                         // which it would if we now queued the live item directly rather than
                         // providing a StubFolderMetaData indirection for it...
-                        StubFolderMetaData stubFolder = new StubFolderMetaData();
-                        stubFolder.RealFolder = (FolderMetaData)item;
-                        stubFolder.Name = item.Name;
-                        stubFolder.ItemRevision = item.ItemRevision;
-                        stubFolder.PropertyRevision = item.PropertyRevision;
-                        stubFolder.LastModifiedDate = item.LastModifiedDate;
-                        stubFolder.Author = item.Author;
-                        item = stubFolder;
+                        item = WrapFolderAsStubFolder((FolderMetaData)item);
                     }
                 }
-                folder.Items.Add(item);
+                Folder_AddItem(folder, item);
             }
             else if (isLastPathElem) // we need to revert the item addition
             {
@@ -620,16 +604,14 @@ namespace SvnBridge.SourceControl
 
                     item.Name = remoteName;
                     item.ItemRevision = change.Item.RemoteChangesetId;
-                    folder.Items.Remove(itemPrev);
-                    folder.Items.Add(item);
+                    Folder_ReplaceItem(folder, itemPrev, item);
                 }
                 else if (itemPrev is StubFolderMetaData)
                 {
                     DeleteFolderMetaData itemDeleteFolder = new DeleteFolderMetaData();
                     itemDeleteFolder.Name = itemPrev.Name;
                     itemDeleteFolder.ItemRevision = processedVersion;
-                    folder.Items.Remove(itemPrev);
-                    folder.Items.Add(itemDeleteFolder);
+                    Folder_ReplaceItem(folder, itemPrev, itemDeleteFolder);
                 }
                 else if (IsAdditionForPropertyChangeOnly(itemPrev))
                 {
@@ -638,20 +620,18 @@ namespace SvnBridge.SourceControl
                                                     : new DeleteMetaData();
                     itemDelete.Name = itemPrev.Name;
                     itemDelete.ItemRevision = processedVersion;
-                    folder.Items.Remove(itemPrev);
-                    folder.Items.Add(itemDelete);
+                    Folder_ReplaceItem(folder, itemPrev, itemDelete);
                 }
                 else if (itemPrev is MissingItemMetaData && ((MissingItemMetaData)itemPrev).Edit == true)
                 {
                     ItemMetaData itemDelete = new DeleteMetaData();
                     itemDelete.Name = itemPrev.Name;
                     itemDelete.ItemRevision = processedVersion;
-                    folder.Items.Remove(itemPrev);
-                    folder.Items.Add(itemDelete);
+                    Folder_ReplaceItem(folder, itemPrev, itemDelete);
                 }
                 else
                 {
-                    folder.Items.Remove(itemPrev);
+                    Folder_RemoveItem(folder, itemPrev);
                 }
             }
             folder = (item as FolderMetaData) ?? folder;
@@ -692,7 +672,7 @@ namespace SvnBridge.SourceControl
                 if (item.Name.Equals(name) && item is MissingItemMetaData)
                 {
                     ItemMetaData itemPrev = item;
-                    folder.Items.Remove(itemPrev);
+                    Folder_RemoveItem(folder, itemPrev);
                     return true;
                 }
                 FolderMetaData subFolder = item as FolderMetaData;
@@ -708,6 +688,30 @@ namespace SvnBridge.SourceControl
         private static bool IsDeleteMetaDataKind(ItemMetaData item)
         {
           return (item is DeleteFolderMetaData || item is DeleteMetaData);
+        }
+
+        // Folder operation encapsulation helpers:
+        // may be needed to be able to centrally apply
+        // certain precisely controlled housekeeping activities.
+
+        private static FolderMetaData WrapFolderAsStubFolder(FolderMetaData folder)
+        {
+            return ItemHelpers.WrapFolderAsStubFolder(folder);
+        }
+
+        private static void Folder_ReplaceItem(FolderMetaData folder, ItemMetaData itemVictim, ItemMetaData itemWinner)
+        {
+            ItemHelpers.FolderOps_ReplaceItem(folder, itemVictim, itemWinner);
+        }
+
+        private static void Folder_AddItem(FolderMetaData folder, ItemMetaData item)
+        {
+            ItemHelpers.FolderOps_AddItem(folder, item);
+        }
+
+        private static void Folder_RemoveItem(FolderMetaData folder, ItemMetaData itemVictim)
+        {
+            ItemHelpers.FolderOps_RemoveItem(folder, itemVictim);
         }
     }
 }

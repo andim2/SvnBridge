@@ -248,7 +248,7 @@ namespace SvnBridge.SourceControl
                     string path = checkoutRootPath.Substring(0, checkoutRootPath.LastIndexOf('/'));
                     path = path.Substring(path.IndexOf('/') + 1);
                     FolderMetaData result = (FolderMetaData)FindItemOrCreateItem(projectRoot, projectRootPath, path, versionTo, Recursion.None);
-                    result.Items.Add(checkoutRoot);
+                    ItemHelpers.FolderOps_AddItem(result, checkoutRoot);
                 }
 
                 CalculateChangeBetweenVersions(projectRootPath, TFSSourceControlProvider.LATEST_VERSION, projectRoot, versionFrom, versionTo);
@@ -307,7 +307,7 @@ namespace SvnBridge.SourceControl
                     }
 
                     item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
-                    folder.Items.Add(item);
+                    ItemHelpers.FolderOps_AddItem(folder, item);
                 }
                 if (isLastPathElem == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                 {
@@ -678,7 +678,7 @@ namespace SvnBridge.SourceControl
 
                     if (nameMatchingSourceItemConvention.StartsWith(itemPath, stringCompareMode))
                     {
-                        root.Items.Remove(data);
+                        ItemHelpers.FolderOps_RemoveItem(root, data);
                         continue;
                     }
                 }

@@ -126,6 +126,45 @@ namespace SvnBridge.SourceControl
                 UpdateItemProperty(item, property);
             }
         }
+
+        public static FolderMetaData WrapFolderAsStubFolder(FolderMetaData folder)
+        {
+            StubFolderMetaData stubFolder = new StubFolderMetaData();
+            stubFolder.RealFolder = folder;
+            stubFolder.Name = folder.Name;
+            stubFolder.ItemRevision = folder.ItemRevision;
+            stubFolder.PropertyRevision = folder.PropertyRevision;
+            stubFolder.LastModifiedDate = folder.LastModifiedDate;
+            stubFolder.Author = folder.Author;
+            return stubFolder;
+        }
+
+        public static void FolderOps_AddItem(FolderMetaData folder, ItemMetaData item)
+        {
+            folder.Items.Add(item);
+        }
+
+        public static void FolderOps_RemoveItem(FolderMetaData folder, ItemMetaData itemVictim)
+        {
+            folder.Items.Remove(itemVictim);
+        }
+
+        public static ItemMetaData FolderOps_ReplaceItem(FolderMetaData folder, ItemMetaData itemVictim, ItemMetaData itemWinner)
+        {
+            FolderOps_RemoveItem(folder, itemVictim);
+            FolderOps_AddItem(folder, itemWinner);
+            return itemWinner;
+        }
+
+        public static ItemMetaData FolderOps_UnwrapStubFolder(FolderMetaData folder, StubFolderMetaData itemStubFolder)
+        {
+            // Note that the reason that we don't seem to need to reassign
+            // any existing .Items from stubFolder to RealFolder here
+            // appears to be that StubFolderMetaData class has an override
+            // which properly ensures
+            // that .Items operations always directly get done on the real folder anyway.
+            return ItemHelpers.FolderOps_ReplaceItem(folder, itemStubFolder, itemStubFolder.RealFolder);
+        }
     }
 
     public sealed class SCMHelpers
@@ -264,7 +303,7 @@ namespace SvnBridge.SourceControl
                 FolderMetaData folder = new FolderMetaData();
                 folder.Name = folderName;
                 InsertFolder(folder);
-                folder.Items.Add(newItem);
+                ItemHelpers.FolderOps_AddItem(folder, newItem);
                 SubmitAsRootItem(newItem);
             }
 
@@ -272,7 +311,7 @@ namespace SvnBridge.SourceControl
                 FolderMetaData folder = FetchContainerFolderForItem(newItem);
                 // NO null check here - I'm not quite certain about the rootItem mechanism yet,
                 // thus if it crashes, then it does, which ensures that we'll be able to notice it.
-                folder.Items.Add(newItem);
+                ItemHelpers.FolderOps_AddItem(folder, newItem);
             }
         }
 
@@ -800,7 +839,7 @@ namespace SvnBridge.SourceControl
                     ItemRevision = versionTo,
                     Name = reportData.UpdateTarget
                 };
-                root.Items.Add(deletedFile);
+                ItemHelpers.FolderOps_AddItem(root, deletedFile);
                 return root;
             }
             if (root == null)
@@ -828,7 +867,7 @@ namespace SvnBridge.SourceControl
                 foreach (ItemMetaData item in new List<ItemMetaData>(root.Items))
                 {
                     if (!item.IsSamePath(targetPath))
-                        root.Items.Remove(item);
+                        ItemHelpers.FolderOps_RemoveItem(root, item);
                 }
             }
             return root;
