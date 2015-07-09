@@ -639,8 +639,13 @@ namespace SvnBridge.Net
             }
             finally
             {
+                // Performance: first grab timestamp
+                // to achieve precise time length of the HTTP handling scope,
+                // *then* immediately ensure a flush of the connection data to consumer,
+                // *then* do remaining unimportant evaluation handling.
+                DateTime timeUtcEnd = DateTime.UtcNow; // debug helper
                 FlushConnection(connection);
-                TimeSpan duration = DateTime.UtcNow - timeUtcStart;
+                TimeSpan duration = timeUtcEnd - timeUtcStart;
                 FinishedHandling(this, new FinishedHandlingEventArgs(duration,
                     connection.Request.Url.AbsoluteUri,
                     connection.Request.HttpMethod));
