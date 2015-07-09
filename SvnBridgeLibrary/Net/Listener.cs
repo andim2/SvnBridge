@@ -135,9 +135,42 @@ namespace SvnBridge.Net
         /// <param name="tcpClient">The TCP client to be processed</param>
         private void ProcessClient(TcpClient tcpClient)
         {
-            IHttpContext connection = new ListenerContext(tcpClient.GetStream(), logger);
             try
             {
+                ProcessClientStream(
+                    tcpClient.GetStream());
+            }
+            finally
+            {
+                TcpClientClose(tcpClient);
+            }
+        }
+
+        /// <remarks>
+        /// Provide both ProcessClient() and ProcessClientStream() methods,
+        /// to keep processing nicely and cleanly sub scoped.
+        /// </remarks>
+        private void ProcessClientStream(
+            NetworkStream networkStream)
+        {
+            IHttpContext connection = new ListenerContext(
+                networkStream,
+                logger);
+
+            HandleConnection(
+                connection);
+        }
+
+        private void HandleConnection(
+            IHttpContext connection)
+        {
+            HandleOneHttpRequest(
+                connection);
+        }
+
+        private void HandleOneHttpRequest(
+            IHttpContext connection)
+        {
                 DateTime start = DateTime.Now;
                 try
                 {
@@ -169,11 +202,6 @@ namespace SvnBridge.Net
                         connection.Request.HttpMethod,
                         connection.Request.Url.AbsoluteUri));
                 }
-            }
-            finally
-            {
-                TcpClientClose(tcpClient);
-            }
         }
 
         /// <summary>
