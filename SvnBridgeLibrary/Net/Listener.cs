@@ -120,7 +120,7 @@ namespace SvnBridge.Net
             {
                 if (tcpClient != null)
                 {
-                    Process(tcpClient);
+                    ProcessClient(tcpClient);
                 }
             }
             catch (Exception ex)
@@ -133,7 +133,7 @@ namespace SvnBridge.Net
         /// Processes the TcpClient.
         /// </summary>
         /// <param name="tcpClient">The TCP client to be processed</param>
-        private void Process(TcpClient tcpClient)
+        private void ProcessClient(TcpClient tcpClient)
         {
             IHttpContext connection = new ListenerContext(tcpClient.GetStream(), logger);
             try
