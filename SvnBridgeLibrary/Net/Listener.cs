@@ -251,7 +251,7 @@ namespace SvnBridge.Net
         private void HandleOneHttpRequest(
             IHttpContext connection)
         {
-            DateTime start = DateTime.Now;
+            DateTime timeUtcStart = DateTime.UtcNow;
             try
             {
                 RequestCache.Init();
@@ -277,7 +277,7 @@ namespace SvnBridge.Net
             {
                 RequestCache.Dispose();
                 FlushConnection(connection);
-                TimeSpan duration = DateTime.Now - start;
+                TimeSpan duration = DateTime.UtcNow - timeUtcStart;
                 FinishedHandling(this, new FinishedHandlingEventArgs(duration,
                     connection.Request.Url.AbsoluteUri,
                     connection.Request.HttpMethod));
