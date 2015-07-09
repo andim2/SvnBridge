@@ -40,7 +40,6 @@ namespace SvnBridge.Infrastructure
         protected readonly string serverUrl;
         protected readonly ICredentials credentials;
         protected readonly string rootPath;
-        protected readonly bool wantCaseSensitiveMatch;
 
         protected MetaDataRepositoryBase(
             ITFSSourceControlService sourceControlService,
@@ -52,7 +51,6 @@ namespace SvnBridge.Infrastructure
             this.serverUrl = serverUrl;
             this.credentials = credentials;
             this.rootPath = rootPath;
-            this.wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch;
         }
 
         protected string GetServerPath(string path)

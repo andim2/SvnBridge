@@ -546,6 +546,30 @@ namespace SvnBridge.SourceControl
     /// - doing certain corrections
     ///   only for those TFS versions where such corrections are needed
     /// </summary>
+    /// IMPORTANT order comment:
+    /// [[
+    /// First (innermost) executing element should be the class
+    /// which checks whether a result got delivered
+    /// that is properly case-correct vs. its query.
+    /// Reason being that this is a simple string match query
+    /// where we would already be able
+    /// to invalidate the result element
+    /// , to then be ignored by subsequent filter elements.
+    /// ]]
+    /// NOPE!!! It strongly seems as if the first inner handler
+    /// ought to be the one which *first* corrects paths,
+    /// and the outer handler *then* checks whether the
+    /// (now possibly corrected and thus *reliable*, *authentic*) path value
+    /// actually also matches the query input.
+    /// Not doing it in this order
+    /// led to the simple query<->result check to already throw away result items,
+    /// and the other handler could then not do its checks properly any more.
+    /// The reason that this is problematic most likely is
+    /// that the full-path-verifier filter feeds *UNRELIABLE* content
+    /// into lower interface parts, yet the other filter expects *input*
+    /// to already be *RELIABLE* (which it isn't yet since
+    /// we're exactly in the process of
+    /// *determining* the reliable value!).
     internal class TFSSourceControlService_BugSanitizerAll : ITFSSourceControlService_wrapper
     {
         public TFSSourceControlService_BugSanitizerAll(
@@ -567,6 +591,15 @@ namespace SvnBridge.SourceControl
                 ITFSSourceControlService scs_wrapper_bug_sanitizer_CaseInconsistentCommitRecords = new TFSSourceControlService_BugSanitizerCaseSensitivityInconsistentCommitRecords(
                     scs_wrapper_outermost);
                 scs_wrapper_outermost = scs_wrapper_bug_sanitizer_CaseInconsistentCommitRecords;
+            }
+            // IMPORTANT NOTE:
+            // Order of these filters
+            // is more than maximally crucial!!! (see comment above).
+            bool doSanitize_BugCaseMismatchingResult = (Configuration.SCMWantCaseSensitiveItemMatch);
+            if (doSanitize_BugCaseMismatchingResult)
+            {
+                ITFSSourceControlService scs_wrapper_bug_sanitizer_CaseMismatchingResult = new TFSSourceControlService_BugSanitizerCaseMismatchingResultVsQuery(scs_wrapper_outermost);
+                scs_wrapper_outermost = scs_wrapper_bug_sanitizer_CaseMismatchingResult;
             }
 
             return scs_wrapper_outermost;
@@ -1030,6 +1063,114 @@ namespace SvnBridge.SourceControl
                     DebugMaintainLoopPositionHint(ref dbgIc);
                 }
                 DebugMaintainLoopPositionHint(ref dbgIh);
+            }
+        }
+    }
+
+    public sealed class TFSBugSanitizer_CaseMismatchingResultVsQuery_Exception_NeedSanitize : Exception
+    {
+    }
+
+    /// <summary>
+    /// Oh well, *yet another* TFS case insensitivity disease.
+    /// The last-ditch assumption here
+    /// (which we dearly need to hold on to as the absolute truth)
+    /// is that the incoming *client query*
+    /// knew exactly which item case it wanted,
+    /// i.e. that request data is *correct*.
+    /// And if it *is* correct (which we *NEED* to clearly assume),
+    /// then we *can* verify
+    /// that the result set properly *matches* the query,
+    /// and discard content anywhere that this ain't so
+    /// (and this correction handling will then contribute to ensuring
+    /// that a client will remain able to work with -
+    /// and thus supply as new requests - actually *correct* data!).
+    /// Example 1:
+    /// an incoming query of
+    ///     /proj1
+    /// where the actually correct (existing) TFS location is
+    ///     /Proj1
+    /// may have a result of
+    ///     /Proj1....
+    /// and that *needs* to fail,
+    /// since the *incoming query* is incorrect.
+    /// Example 2:
+    /// an incoming query of
+    ///     /Proj2
+    /// where the actually correct (existing) TFS location is
+    ///     /proj2
+    /// (specifically known possible reason:
+    /// path has just been case-renamed to /proj2 in this very revision)
+    /// may have a result of
+    ///     /proj2....
+    /// (rather than providing a correct "non-existing item" failure)
+    /// and that *needs* to fail,
+    /// since the *TFS result* is incorrect.
+    /// </summary>
+    internal class TFSSourceControlService_BugSanitizerCaseMismatchingResultVsQuery : ITFSSourceControlService_wrapper
+    {
+        public TFSSourceControlService_BugSanitizerCaseMismatchingResultVsQuery(ITFSSourceControlService scsWrapped)
+            : base(scsWrapped)
+        {
+        }
+
+        public override ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items, int options)
+        {
+            ItemSet[] itemSets = base.QueryItems(tfsUrl, credentials,
+                version,
+                items,
+                options);
+
+            QueryItems_sanitize(ref itemSets);
+
+            return itemSets;
+        }
+
+        private static void QueryItems_sanitize(ref ItemSet[] itemSets)
+        {
+            int dbgIset = 0;
+            foreach (var itemSet in itemSets)
+            {
+                Dictionary<int, bool> itemsToBeRemoved = null;
+                string queryPath = itemSet.QueryPath;
+                int dbgI = 0;
+                foreach (var item in itemSet.Items)
+                {
+                    try
+                    {
+                        // FIXME: do mismatch against *base* path of sub item only, right!?!?
+                        CheckPreciseCaseSensitivityMismatch(
+                            item.item,
+                            queryPath);
+                    }
+                    catch(TFSBugSanitizer_CaseMismatchingResultVsQuery_Exception_NeedSanitize)
+                    {
+                        if (null == itemsToBeRemoved)
+                        {
+                            itemsToBeRemoved = new Dictionary<int, bool>();
+                        }
+                        itemsToBeRemoved[item.GetHashCode()] = true;
+                    }
+                    DebugMaintainLoopPositionHint(ref dbgI);
+                }
+                bool isSane = (null == itemsToBeRemoved);
+                if (!isSane)
+                {
+                    List<Item> itemsToBeFiltered = new List<Item>(itemSet.Items);
+                    itemsToBeFiltered.RemoveAll(elem => (itemsToBeRemoved.ContainsKey(elem.GetHashCode())));
+                    itemSet.Items = itemsToBeFiltered.ToArray();
+                }
+                DebugMaintainLoopPositionHint(ref dbgIset);
+            }
+        }
+
+        private static void CheckPreciseCaseSensitivityMismatch(string arg1, string arg2)
+        {
+            bool isMatch = !(Helper.IsStringsPreciseCaseSensitivityMismatch(arg1, arg2));
+            if (!(isMatch))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+                throw new TFSBugSanitizer_CaseMismatchingResultVsQuery_Exception_NeedSanitize();
             }
         }
     }

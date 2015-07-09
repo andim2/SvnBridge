@@ -5,7 +5,6 @@ using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Proxies; // TracingInterceptor
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.IsStringsPreciseCaseSensitivityMismatch()
 
 namespace SvnBridge.Infrastructure
 {
@@ -51,18 +50,6 @@ namespace SvnBridge.Infrastructure
             {
                 foreach (Item item in itemSet.Items)
                 {
-                    // This case sensitivity filtering needs to be done within this layer since this is the only layer
-                    // where we have access to members itemSet.QueryPath vs. item.item required for comparison
-                    // /(fortunately .QueryPath is provided, to indicate the original query,
-                    // whereas .item contains the - potentially case-WRONG - source control result).
-                    // FIXME: this often is not sufficient (e.g. in Recursion.Full case)
-                    // since it does a compare of the single query param item only!
-                    if (wantCaseSensitiveMatch)
-                    {
-                        if (Helper.IsStringsPreciseCaseSensitivityMismatch(itemSet.QueryPath, item.item))
-                            continue; // skip mismatching result
-                    }
-
                     if (resultUniqueSorted.ContainsKey(item.item))
                         continue; // skip existing element
 
