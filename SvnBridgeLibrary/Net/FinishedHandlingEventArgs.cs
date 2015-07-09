@@ -9,7 +9,7 @@ namespace SvnBridge.Net
         public readonly string Url;
         public readonly string Method;
 
-        public FinishedHandlingEventArgs(TimeSpan duration, string method, string url)
+        public FinishedHandlingEventArgs(TimeSpan duration, string url, string method)
         {
             Duration = duration;
             Url = url;

@@ -279,8 +279,8 @@ namespace SvnBridge.Net
                 FlushConnection(connection);
                 TimeSpan duration = DateTime.Now - start;
                 FinishedHandling(this, new FinishedHandlingEventArgs(duration,
-                    connection.Request.HttpMethod,
-                    connection.Request.Url.AbsoluteUri));
+                    connection.Request.Url.AbsoluteUri,
+                    connection.Request.HttpMethod));
             }
         }
 
