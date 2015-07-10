@@ -81,21 +81,22 @@ namespace SvnBridge.Infrastructure
 						existingFolder = true;
 					}
 
+          string itemNameEncoded = GetEncodedNamePart(folder);
 					//another item with the same name already exists, need to remove it.
 					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
 					{
-						output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
+						output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
                         folderWasDeleted = true;
 					}
 
 					if (existingFolder)
 					{
-						output.Write("<S:open-directory name=\"" + GetEncodedNamePart(folder) +
+						output.Write("<S:open-directory name=\"" + itemNameEncoded +
 									 "\" rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
 					}
 					else
 					{
-						output.Write("<S:add-directory name=\"" + GetEncodedNamePart(folder) +
+						output.Write("<S:add-directory name=\"" + itemNameEncoded +
 									 "\" bc-url=\"" + handler.GetLocalPath("/!svn/bc/" + folder.Revision + "/" + Helper.Encode(folder.Name, true)) +
 									 "\">\n");
 					}
@@ -149,20 +150,21 @@ namespace SvnBridge.Infrastructure
 					existingFile = true;
 				}
 
+        string itemNameEncoded = GetEncodedNamePart(item);
 				//another item with the same name already exists, need to remove it.
 				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, existingFile))
 				{
-					output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(item) + "\"/>\n");
+					output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
 				}
 
 				if (existingFile)
 				{
-					output.Write("<S:open-file name=\"" + GetEncodedNamePart(item) + "\" rev=\"" +
+					output.Write("<S:open-file name=\"" + itemNameEncoded + "\" rev=\"" +
                                  clientRevisionForItem + "\">\n");
 				}
 				else
 				{
-					output.Write("<S:add-file name=\"" + GetEncodedNamePart(item) + "\">\n");
+					output.Write("<S:add-file name=\"" + itemNameEncoded + "\">\n");
 				}
 
         UpdateReportWriteItemAttributes(output, item);
