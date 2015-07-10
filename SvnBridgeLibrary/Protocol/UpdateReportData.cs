@@ -28,6 +28,9 @@ namespace SvnBridge.Protocol
         [XmlElement("update-target", Namespace = WebDav.Namespaces.SVN, DataType = "string")]
         public string UpdateTarget /* = null */;
 
+        [XmlElement("ignore-ancestry", Namespace = WebDav.Namespaces.SVN, DataType = "string")]
+        public string IgnoreAncestry /* = null */; // e.g. "yes"
+
         public bool IsCheckOut
         {
             get { return Entries.Count == 1 && Entries[0].StartEmpty; }

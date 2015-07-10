@@ -6,7 +6,7 @@ using SvnBridge.Handlers;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // DebugRandomActivator, Helper.Encode() etc.
+using SvnBridge.Utility; // DebugRandomActivator, Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {
@@ -124,6 +124,10 @@ namespace SvnBridge.Infrastructure
 
         public void Generate()
         {
+            if (null != updateReportRequest.IgnoreAncestry)
+            {
+                Helper.DebugUsefulBreakpointLocation(); // TODO: we currently don't handle S:ignore-ancestry element!
+            }
             ProcessUpdateReportForDirectory(root, false);
         }
 
