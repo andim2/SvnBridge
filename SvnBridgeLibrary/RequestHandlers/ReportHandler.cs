@@ -473,7 +473,7 @@ namespace SvnBridge.Handlers
             output.Write("<S:target-revision rev=\"" + targetRevision + "\"/>\n");
 
             UpdateReportService updateReportService = new UpdateReportService(this, sourceControlProvider);
-            updateReportService.ProcessUpdateReportForDirectory(updatereport, metadata, output, true, false);
+            updateReportService.ProcessUpdateReport(updatereport, metadata, output);
 
             output.Write("</S:update-report>\n");
         }

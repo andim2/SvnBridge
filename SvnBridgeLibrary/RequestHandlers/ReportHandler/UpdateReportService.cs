@@ -67,7 +67,15 @@ namespace SvnBridge.Infrastructure
 			this.sourceControlProvider = sourceControlProvider;
 		}
 
-		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool isRootFolder, bool parentFolderWasDeleted)
+        /// <summary>
+        /// Helper to minimize externally visible interface changes (hide recursion-specific parameters)
+        /// </summary>
+        public void ProcessUpdateReport(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output)
+        {
+            ProcessUpdateReportForDirectory(updateReportRequest, folder, output, true, false);
+        }
+
+		private void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, TextWriter output, bool isRootFolder, bool parentFolderWasDeleted)
 		{
 			if (folder is DeleteFolderMetaData)
 			{
@@ -147,7 +155,7 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
-		private void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, StreamWriter output, bool parentFolderWasDeleted)
+		private void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, TextWriter output, bool parentFolderWasDeleted)
 		{
 			if (item is DeleteMetaData)
 			{
