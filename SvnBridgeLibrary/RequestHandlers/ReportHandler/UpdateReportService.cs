@@ -147,7 +147,7 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
-		public void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, StreamWriter output, bool parentFolderWasDeleted)
+		private void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, StreamWriter output, bool parentFolderWasDeleted)
 		{
 			if (item is DeleteMetaData)
 			{
