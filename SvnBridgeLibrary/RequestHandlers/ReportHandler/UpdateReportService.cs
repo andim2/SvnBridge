@@ -22,6 +22,79 @@ namespace SvnBridge.Infrastructure
 			this.sourceControlProvider = sourceControlProvider;
 		}
 
+		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool rootFolder, bool parentFolderWasDeleted)
+		{
+			if (folder is DeleteFolderMetaData)
+			{
+                if (!parentFolderWasDeleted)
+                {
+                    output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
+                }
+			}
+			else
+			{
+				bool existingFolder = false;
+                bool folderWasDeleted = parentFolderWasDeleted;
+                if (rootFolder)
+				{
+					output.Write("<S:open-directory rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
+				}
+				else
+				{
+					string srcPath = GetSrcPath(updateReportRequest);
+                    int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(folder, srcPath));
+					if (ItemExistsAtTheClient(folder, updateReportRequest, srcPath, clientRevisionForItem))
+					{
+						existingFolder = true;
+					}
+
+					//another item with the same name already exists, need to remove it.
+					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
+					{
+						output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
+                        folderWasDeleted = true;
+					}
+
+					if (existingFolder)
+					{
+						output.Write("<S:open-directory name=\"" + GetEncodedNamePart(folder) +
+									 "\" rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
+					}
+					else
+					{
+						output.Write("<S:add-directory name=\"" + GetEncodedNamePart(folder) +
+									 "\" bc-url=\"" + handler.GetLocalPath("/!svn/bc/" + folder.Revision + "/" + Helper.Encode(folder.Name, true)) +
+									 "\">\n");
+					}
+				}
+				if (!rootFolder || updateReportRequest.UpdateTarget == null)
+				{
+          UpdateReportWriteItemAttributes(output, folder);
+				}
+
+				foreach (ItemMetaData item in folder.Items)
+				{
+					if (item.ItemType == ItemType.Folder)
+					{
+						ProcessUpdateReportForDirectory(updateReportRequest, (FolderMetaData)item, output, false, folderWasDeleted);
+					}
+					else
+					{
+						ProcessUpdateReportForFile(updateReportRequest, item, output, folderWasDeleted);
+					}
+				}
+				output.Write("<S:prop></S:prop>\n");
+				if (rootFolder || existingFolder)
+				{
+					output.Write("</S:open-directory>\n");
+				}
+				else
+				{
+					output.Write("</S:add-directory>\n");
+				}
+			}
+		}
+
 		public void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, StreamWriter output, bool parentFolderWasDeleted)
 		{
 			if (item is DeleteMetaData)
@@ -104,79 +177,6 @@ namespace SvnBridge.Infrastructure
 			if (updateReportRequest.UpdateTarget != null)
 				return url + "/" + updateReportRequest.UpdateTarget;
 			return url;
-		}
-
-		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool rootFolder, bool parentFolderWasDeleted)
-		{
-			if (folder is DeleteFolderMetaData)
-			{
-                if (!parentFolderWasDeleted)
-                {
-                    output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
-                }
-			}
-			else
-			{
-				bool existingFolder = false;
-                bool folderWasDeleted = parentFolderWasDeleted;
-                if (rootFolder)
-				{
-					output.Write("<S:open-directory rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
-				}
-				else
-				{
-					string srcPath = GetSrcPath(updateReportRequest);
-                    int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(folder, srcPath));
-					if (ItemExistsAtTheClient(folder, updateReportRequest, srcPath, clientRevisionForItem))
-					{
-						existingFolder = true;
-					}
-
-					//another item with the same name already exists, need to remove it.
-					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
-					{
-						output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
-                        folderWasDeleted = true;
-					}
-
-					if (existingFolder)
-					{
-						output.Write("<S:open-directory name=\"" + GetEncodedNamePart(folder) +
-									 "\" rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
-					}
-					else
-					{
-						output.Write("<S:add-directory name=\"" + GetEncodedNamePart(folder) +
-									 "\" bc-url=\"" + handler.GetLocalPath("/!svn/bc/" + folder.Revision + "/" + Helper.Encode(folder.Name, true)) +
-									 "\">\n");
-					}
-				}
-				if (!rootFolder || updateReportRequest.UpdateTarget == null)
-				{
-          UpdateReportWriteItemAttributes(output, folder);
-				}
-
-				foreach (ItemMetaData item in folder.Items)
-				{
-					if (item.ItemType == ItemType.Folder)
-					{
-						ProcessUpdateReportForDirectory(updateReportRequest, (FolderMetaData)item, output, false, folderWasDeleted);
-					}
-					else
-					{
-						ProcessUpdateReportForFile(updateReportRequest, item, output, folderWasDeleted);
-					}
-				}
-				output.Write("<S:prop></S:prop>\n");
-				if (rootFolder || existingFolder)
-				{
-					output.Write("</S:open-directory>\n");
-				}
-				else
-				{
-					output.Write("</S:add-directory>\n");
-				}
-			}
 		}
 
 		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData folder,
