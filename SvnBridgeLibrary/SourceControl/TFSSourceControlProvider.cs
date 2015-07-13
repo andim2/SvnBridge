@@ -2300,6 +2300,8 @@ namespace SvnBridge.SourceControl
             BranchItem[] renamedItems;
 
             {
+                var itemSpecs = items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray();
+                ChangesetVersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset);
                 BranchItem[][] thisRevBranches;
                 {
                     // FIXME: I'm totally in the dark about the reason for doing QueryBranches()/renamedItems.
@@ -2310,8 +2312,8 @@ namespace SvnBridge.SourceControl
                     // about 1 second per 100 items).
                     thisRevBranches = sourceControlService.QueryBranches(serverUrl,
                                                                          credentials,
-                                                                         items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(),
-                                                                         VersionSpec.FromChangeset(changeset));
+                                                                         itemSpecs,
+                                                                         versionSpecChangeset);
                 }
                 renamedItems = items.Select((item, i) =>
                     thisRevBranches[i].FirstOrDefault(branchItem =>
