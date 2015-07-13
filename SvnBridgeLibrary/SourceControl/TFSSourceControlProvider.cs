@@ -1655,6 +1655,12 @@ namespace SvnBridge.SourceControl
         /// where "any" type i.e. ItemType.Any is requested),
         /// causing us to skip path checks,
         /// since we generally do that for all non-matching item types.
+        /// FIXME: Hmmm, something still seems to be fishy -
+        /// many items (at least some of those also have a Delete change,
+        /// while actually having been Delete:d before)
+        /// within a commit which does case-only renames of folders
+        /// do NOT end up with a renamed path
+        /// once past our sanitizing filters.
         /// </remarks>
         /// <param name="oldItem"></param>
         /// <param name="newItem"></param>

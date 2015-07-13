@@ -139,6 +139,15 @@ namespace SvnBridge.SourceControl
     /// please have them implemented in a way
     /// which keeps separate concerns fully separate,
     /// especially for dangerously similar but unrelated filter cases.
+    ///
+    /// When using this class to implement a filtering component,
+    /// you should try to not remove seemingly "superfluous" information
+    /// within TFS data,
+    /// since these might eventually turn out
+    /// to supply much-needed context information
+    /// to users of this source control service interface.
+    /// IOW, "augment" usefulness/correctness of data supplied by this interface,
+    /// rather than "reducing" it.
     /// </remarks>
     public class ITFSSourceControlService_wrapper : TFSSourceControlServiceHelpers, ITFSSourceControlService
     {
@@ -1900,6 +1909,9 @@ namespace SvnBridge.SourceControl
     /// </summary>
     public interface ISourceControlService_interface_breakage_missing_methods
     {
+        /// <summary>
+        /// Side note: QueryBranches() API method is VersionControlServer.GetBranchHistory() in newer TFS API.
+        /// </summary>
         BranchItem[][] QueryBranches(
             string tfsUrl,
             ICredentials credentials,
