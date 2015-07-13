@@ -1084,11 +1084,14 @@ namespace SvnBridge.SourceControl
         {
             SourceItem sourceItem;
 
+            // Side note: .durl may turn out to be null in certain occasions...
+
             // Do this conversion via internal, central (cache-friendly) handling
             // of standard toolkit APIs (TfsLibrary),
             // and choose the most direct API variant.
-            //sourceItem = SourceItem.FromRemoteItem(item.itemid, item.type, item.item, item.cs, item.len, item.date, null);
+            //sourceItem = SourceItem.FromRemoteItem(item.itemid, item.type, item.item, item.cs, item.len, item.date, item.durl);
             sourceItem = SourceItem.FromRemoteItem(item);
+            sourceItem.DownloadUrl = item.durl;
 
             return sourceItem;
         }
