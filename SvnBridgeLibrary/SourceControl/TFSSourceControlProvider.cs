@@ -1574,8 +1574,8 @@ namespace SvnBridge.SourceControl
 
                     // [this is slowpath (rare event),
                     // thus Remove() is better than Enumerable.Except() use:]
-                    foreach (var rename in renamesWithNoPreviousVersion)
-                        history.Changes.Remove(rename);
+                    foreach (var victim in renamesWithNoPreviousVersion)
+                        history.Changes.Remove(victim);
 
                     // Hmm, was .None handling really intended to be specifically done in this rename handling part only??
                     // OTOH perhaps .None entries *are* meaningful for (some?) changes other than renames
