@@ -653,13 +653,8 @@ namespace SvnBridge.SourceControl
         /// (i.e., one could very strongly argue that such inconsistent commit data is TERRIBLY B0RKEN,
         /// irrespective of whether TFS does or does not have contracted
         /// the case insensitive disease in general).
-        /// I would think that such cases best ought be treated at the following location:
-        /// *after* having compiled the full set of changes within a commit
-        /// (i.e., post-processed),
-        /// and *per-commit* only!!
-        /// (i.e. avoid applying such corrective actions beyond a single commit's border,
-        /// since it's that commit and that commit only
-        /// which is to blame for having introduced such case inconsistency).
+        /// UPDATE: such damage is now hopefully being sanitized properly,
+        /// right after having received b0rken data from our TFS-side interfaces.
         /// </remarks>
         public FolderMetaData TryGetFolder(string key)
         {
@@ -4118,7 +4113,8 @@ namespace SvnBridge.SourceControl
                     // once it's known what this is for.
                     // FIXME_PERFORMANCE: QueryBranches() is very slow!
                     // (note that behaviour of this web service request delay seems to be linear:
-                    // about 1 second per 100 items).
+                    // about 1 second per 100 items
+                    // in the raw [uncooked / uncorrected] direct request case).
                     // Note that some elements may end up null; known reasons so far:
                     // - renamed item already had "deleted" state
                     //   (one such situation may be one where the item's containing folder gets renamed).

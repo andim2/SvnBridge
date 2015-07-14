@@ -627,6 +627,8 @@ namespace SvnBridge.SourceControl
                 sortAscending,
                 options);
 
+            MakeBugSanitizer(tfsUrl, credentials).QueryItems_sanitize(ref sourceItems);
+
             return sourceItems;
         }
 
@@ -643,6 +645,8 @@ namespace SvnBridge.SourceControl
                 itemIds,
                 changeSet,
                 options);
+
+            MakeBugSanitizer(tfsUrl, credentials).QueryItems_sanitize(ref sourceItems);
 
             return sourceItems;
         }
@@ -667,6 +671,8 @@ namespace SvnBridge.SourceControl
                 maxCount,
                 sortAscending);
 
+            MakeBugSanitizer(tfsUrl, credentials).QueryLog_sanitize(ref logItem);
+
             return logItem;
         }
         #endregion
@@ -685,6 +691,8 @@ namespace SvnBridge.SourceControl
                 credentials,
                 items,
                 version);
+
+            MakeBugSanitizer(tfsUrl, credentials).QueryBranches_sanitize(ref branchItems);
 
             return branchItems;
         }
@@ -746,6 +754,8 @@ namespace SvnBridge.SourceControl
                 items,
                 options);
 
+            MakeBugSanitizer(tfsUrl, credentials).QueryItems_sanitize(ref itemSets);
+
             return itemSets;
         }
 
@@ -766,6 +776,8 @@ namespace SvnBridge.SourceControl
                 deletedState,
                 itemType,
                 options);
+
+            MakeBugSanitizer(tfsUrl, credentials).QueryItemsExtended_sanitize(ref extendedItems);
 
             return extendedItems;
         }
@@ -812,6 +824,56 @@ namespace SvnBridge.SourceControl
         private static VersionSpec GetVersionSpecPrevious(int rev)
         {
             return VersionSpec.FromChangeset(rev - 1);
+        }
+
+        private void SourceItem_sanitize(SourceItem sourceItem, bool isFromItem, bool isBranch)
+        {
+            bool needCheckPath = true;
+            if (null == sourceItem)
+            {
+                needCheckPath = false;
+            }
+
+            if (needCheckPath)
+            {
+                var itemRev = sourceItem.RemoteChangesetId;
+                bool needQueryPriorVersion = (isFromItem && !isBranch);
+                if (needQueryPriorVersion)
+                {
+                  --itemRev;
+                }
+                VersionSpec versionSpecItem = VersionSpec.FromChangeset(itemRev);
+                TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Bracketed.EnsureItemPathSanitized(bugSanitizer, ref sourceItem.RemoteName, versionSpecItem, sourceItem.ItemType);
+                // possibly id-based lookup of path useful/required??
+            }
+        }
+
+        public void QueryBranches_sanitize(ref BranchItem[][] branchItemsArrays)
+        {
+            int dbgBia = 0;
+            foreach (var branchItemArray in branchItemsArrays)
+            {
+                int dbgBi = 0;
+                foreach (var branchItem in branchItemArray)
+                {
+                    bool isRename = TfsLibraryHelpers.IsRenameOperation(branchItem);
+                    bool isBranch = (!isRename); // rather than rename - signifies whether .FromItem is still existing at this revision or not!
+                    bool needCheckFrom = false;
+                    bool needCheckTo = false;
+                    needCheckFrom = true;
+                    needCheckTo = true;
+                    if (needCheckFrom)
+                    {
+                        SourceItem_sanitize(branchItem.FromItem, true, isBranch);
+                    }
+                    if (needCheckTo)
+                    {
+                        SourceItem_sanitize(branchItem.ToItem, false, isBranch);
+                    }
+                    DebugMaintainLoopPositionHint(ref dbgBi);
+                }
+                DebugMaintainLoopPositionHint(ref dbgBia);
+            }
         }
 
         // Since I'm somewhat unsure
@@ -865,6 +927,109 @@ namespace SvnBridge.SourceControl
                     DebugMaintainLoopPositionHint(ref dbgCg);
                 }
                 DebugMaintainLoopPositionHint(ref dbgCs);
+            }
+        }
+
+        public void QueryItems_sanitize(ref SourceItem[] sourceItems)
+        {
+            int dbgSi = 0;
+            foreach (var sourceItem in sourceItems)
+            {
+                bool needCheckChange = true;
+                if (needCheckChange)
+                {
+                    VersionSpec versionSpecItem = VersionSpec.FromChangeset(sourceItem.RemoteChangesetId);
+                    TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Bracketed.EnsureItemPathSanitized(bugSanitizer, ref sourceItem.RemoteName, versionSpecItem, sourceItem.ItemType);
+                }
+                DebugMaintainLoopPositionHint(ref dbgSi);
+            }
+        }
+
+        public void QueryItems_sanitize(ref ItemSet[] itemSets)
+        {
+            int dbgSi = 0;
+            foreach (var itemSet in itemSets)
+            {
+                int dbgI = 0;
+                foreach (var item in itemSet.Items)
+                {
+                    bool needCheckChange = true;
+                    if (needCheckChange)
+                    {
+                        VersionSpec versionSpecItem = VersionSpec.FromChangeset(item.cs);
+                        try
+                        {
+                            bugSanitizer.CheckNeedItemPathSanitize(item.item, versionSpecItem, item.type);
+                        }
+                        catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+                        {
+                            item.item = e.PathSanitized;
+                        }
+                    }
+                    DebugMaintainLoopPositionHint(ref dbgI);
+                }
+                DebugMaintainLoopPositionHint(ref dbgSi);
+            }
+        }
+
+        public void QueryItemsExtended_sanitize(ref ExtendedItem[][] extendedItemsArrays)
+        {
+            int dbgEia = 0;
+            foreach (var extendedItemArray in extendedItemsArrays)
+            {
+                int dbgEi = 0;
+                foreach (var extendedItem in extendedItemArray)
+                {
+                    bool needCheckChange = true;
+                    if (needCheckChange)
+                    {
+                        Helper.DebugUsefulBreakpointLocation(); // FIXME: .latest or .lver??
+                        VersionSpec versionSpecItem = VersionSpec.FromChangeset(extendedItem.latest);
+                        Helper.DebugUsefulBreakpointLocation(); // FIXME: .titem or .sitem??
+                        // According to MSDN ExtendedItem docs, it seems:
+                        // sitem == SourceServerItem  Gets the path to the source server item.
+                        // titem == TargetServerItem  Gets the path to the target server item.
+                        try
+                        {
+                            bugSanitizer.CheckNeedItemPathSanitize(extendedItem.titem, versionSpecItem, extendedItem.type);
+                        }
+                        catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+                        {
+                            extendedItem.titem = e.PathSanitized;
+                        }
+                    }
+                    DebugMaintainLoopPositionHint(ref dbgEi);
+                }
+                DebugMaintainLoopPositionHint(ref dbgEia);
+            }
+        }
+
+        public void QueryLog_sanitize(ref LogItem logItem)
+        {
+            SourceItemHistory_sanitize(ref logItem.History);
+        }
+
+        private void SourceItemHistory_sanitize(ref SourceItemHistory[] itemHistories)
+        {
+            int dbgIh = 0;
+            foreach (var itemHistory in itemHistories)
+            {
+                VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(itemHistory.ChangeSetID);
+                int dbgIc = 0;
+                foreach (var change in itemHistory.Changes)
+                {
+                    bool needCheckChange = true;
+                    if (needCheckChange)
+                    {
+                        bool isDelete = ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete);
+                        bool isCurrentVersionUnavailable = (isDelete);
+                        bool needQueryPriorVersion = (isCurrentVersionUnavailable);
+                        VersionSpec versionSpecItem = needQueryPriorVersion ? GetVersionSpecPrevious(change.Item.RemoteChangesetId) : versionSpecChangeset;
+                        TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Bracketed.EnsureItemPathSanitized(bugSanitizer, ref change.Item.RemoteName, versionSpecItem, change.Item.ItemType);
+                    }
+                    DebugMaintainLoopPositionHint(ref dbgIc);
+                }
+                DebugMaintainLoopPositionHint(ref dbgIh);
             }
         }
     }
@@ -1237,6 +1402,34 @@ namespace SvnBridge.SourceControl
         {
             // Resort to open-coded ctor (for lack of a class-side .Clone()...):
             return new LogItem(logItem.LocalPath, logItem.ServerPath, logItem.History);
+        }
+
+        /// <summary>
+        /// Tries to determine whether a particular BranchItem
+        /// was a rename
+        /// (.FromItem deleted, .ToItem new location)
+        /// rather than a branching
+        /// (.FromItem at its changeset taken, then applied as a branch
+        /// at .ToItem of current changeset)
+        /// operation.
+        /// </summary>
+        /// XXX: Hmm, perhaps we should also be doing some item id comparison here??
+        /// For interesting "detect a rename" details, see also
+        ///   https://social.msdn.microsoft.com/Forums/vstudio/en-US/home?searchTerm=How%20to%20merge%20a%20%27Rename%27%20using%20the%20API%20in%20TFS%202010
+        /// <param name="branchItem">Branch item to be examined</param>
+        /// <returns>true if operation was a rename rather than branch</returns>
+        public static bool IsRenameOperation(BranchItem branchItem)
+        {
+            bool isRename = false;
+
+            bool isValidFromAndToItems = ((null != branchItem.FromItem) && (null != branchItem.ToItem));
+            if (isValidFromAndToItems)
+            {
+                bool isSameRevision = (branchItem.FromItem.RemoteChangesetId == branchItem.ToItem.RemoteChangesetId);
+                isRename = (isSameRevision);
+            }
+
+            return isRename;
         }
     }
 }
