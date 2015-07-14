@@ -221,6 +221,11 @@ namespace SvnBridge.SourceControl
         /// in case the user's checkout root ends up somewhere *below* the actual repository root,
         /// IOW both old and new name are within the *same* repo and thus Delete
         /// of the pre-existing item is valid/required (TODO?).
+        /// UPDATE: NOPE, we should *not* focus on this being a Merge change -
+        /// rather, the criteria is that some side of this change
+        /// is NOT located within our checkout root,
+        /// and this may be the case
+        /// for either Merge *or* Rename (at least those two).
         /// </remarks>
         private bool IsOriginItemOfForeignScope(
             SourceItemChange change,
@@ -228,7 +233,7 @@ namespace SvnBridge.SourceControl
         {
             bool isOriginItemOfForeignScope = false;
 
-            bool needCheckForSkippingForeignScopeItems = (ChangeTypeAnalyzer.IsMergeOperation(change));
+            bool needCheckForSkippingForeignScopeItems = (ChangeTypeAnalyzer.IsRenameOperation(change) || ChangeTypeAnalyzer.IsMergeOperation(change));
             if (needCheckForSkippingForeignScopeItems)
             {
                 StringComparison stringCompareMode =
