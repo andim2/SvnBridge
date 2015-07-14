@@ -809,6 +809,11 @@ namespace SvnBridge.SourceControl
                 credentials);
         }
 
+        private static VersionSpec GetVersionSpecPrevious(int rev)
+        {
+            return VersionSpec.FromChangeset(rev - 1);
+        }
+
         // Since I'm somewhat unsure
         // whether/where this might occur (perhaps branch merges?),
         // keep an eye on such cases...
@@ -840,16 +845,11 @@ namespace SvnBridge.SourceControl
                     bool needCheckPath = true;
                     if (needCheckPath)
                     {
-                        VersionSpec versionSpecItem = versionSpecChangeset;
                         bool isDelete = ((change.type & ChangeType.Delete) == ChangeType.Delete);
                         bool isCurrentVersionUnavailable = (isDelete);
                         bool needQueryPriorVersion = (isCurrentVersionUnavailable);
                         AssertVersionMatch(change.Item.cs, changeset.cset);
-                        if (needQueryPriorVersion)
-                        {
-                            VersionSpec versionSpecItemPrev = VersionSpec.FromChangeset(change.Item.cs - 1);
-                            versionSpecItem = versionSpecItemPrev;
-                        }
+                        VersionSpec versionSpecItem = needQueryPriorVersion ? GetVersionSpecPrevious(change.Item.cs) : versionSpecChangeset;
                         try
                         {
                             bugSanitizer.CheckNeedItemPathSanitize(
