@@ -1848,20 +1848,20 @@ namespace SvnBridge.SourceControl
                 if ((recursionType == RecursionType.Full) && (ex.Message.EndsWith(" does not exist at the specified version.")))
                 {
                     // Workaround for bug in TFS2008sp1
-                    int latestVersion = GetLatestVersion();
+                    int latestVersionToBeQueried = GetLatestVersion();
                     // WARNING: TFS08 QueryHistory() is very problematic! (see comments here and in next inner layer)
                     List<Changeset> tempChangesets = QueryChangesets_TFS_sanitize_querylimit_etc(
                         serverPath,
                         itemVersion,
                         1,
-                        latestVersion,
+                        latestVersionToBeQueried,
                         RecursionType.None,
                         2,
                         sortAscending /* is this the value to pass to have this workaround still work properly? */);
                     if (tempChangesets[0].Changes[0].type == ChangeType.Delete && tempChangesets.Count == 2)
-                        latestVersion = tempChangesets[1].cset;
+                        latestVersionToBeQueried = tempChangesets[1].cset;
 
-                    if (versionTo == latestVersion)
+                    if (versionTo == latestVersionToBeQueried)
                     {
                         // in this case, there are only 2 revisions in TFS
                         // the first being the initial checkin, and the second
@@ -1873,9 +1873,9 @@ namespace SvnBridge.SourceControl
                         string itemFirstPath = tempChangesets[0].Changes[0].Item.item; // debug helper
                         changesetsTotal = QueryChangesets_TFS_sanitize_querylimit_etc(
                             itemFirstPath,
-                            VersionSpec.FromChangeset(latestVersion),
+                            VersionSpec.FromChangeset(latestVersionToBeQueried),
                             1,
-                            latestVersion,
+                            latestVersionToBeQueried,
                             RecursionType.Full,
                             int.MaxValue,
                             sortAscending);
