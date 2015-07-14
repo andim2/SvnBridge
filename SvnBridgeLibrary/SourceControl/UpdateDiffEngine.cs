@@ -542,21 +542,21 @@ namespace SvnBridge.SourceControl
                 }
                 else if (additionForPropertyChangeOnly.ContainsKey(item) && additionForPropertyChangeOnly[item])
                 {
-                    ItemMetaData deleteFolder = item is FolderMetaData
+                    ItemMetaData deleteItem = item is FolderMetaData
                                                     ? (ItemMetaData)new DeleteFolderMetaData()
                                                     : new DeleteMetaData();
-                    deleteFolder.Name = item.Name;
-                    deleteFolder.ItemRevision = processedVersion;
+                    deleteItem.Name = item.Name;
+                    deleteItem.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
-                    folder.Items.Add(deleteFolder);
+                    folder.Items.Add(deleteItem);
                 }
                 else if (item is MissingItemMetaData && ((MissingItemMetaData)item).Edit == true)
                 {
-                    ItemMetaData deleteFolder = new DeleteMetaData();
-                    deleteFolder.Name = item.Name;
-                    deleteFolder.ItemRevision = processedVersion;
+                    ItemMetaData deleteItem = new DeleteMetaData();
+                    deleteItem.Name = item.Name;
+                    deleteItem.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
-                    folder.Items.Add(deleteFolder);
+                    folder.Items.Add(deleteItem);
                 }
                 else
                 {
