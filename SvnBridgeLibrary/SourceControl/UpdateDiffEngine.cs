@@ -536,29 +536,29 @@ namespace SvnBridge.SourceControl
                 }
                 else if (item is StubFolderMetaData)
                 {
-                    DeleteFolderMetaData deleteFolder = new DeleteFolderMetaData();
-                    deleteFolder.Name = item.Name;
-                    deleteFolder.ItemRevision = processedVersion;
+                    DeleteFolderMetaData itemDeleteFolder = new DeleteFolderMetaData();
+                    itemDeleteFolder.Name = item.Name;
+                    itemDeleteFolder.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
-                    folder.Items.Add(deleteFolder);
+                    folder.Items.Add(itemDeleteFolder);
                 }
                 else if (additionForPropertyChangeOnly.ContainsKey(item) && additionForPropertyChangeOnly[item])
                 {
-                    ItemMetaData deleteItem = item is FolderMetaData
+                    ItemMetaData itemDelete = item is FolderMetaData
                                                     ? (ItemMetaData)new DeleteFolderMetaData()
                                                     : new DeleteMetaData();
-                    deleteItem.Name = item.Name;
-                    deleteItem.ItemRevision = processedVersion;
+                    itemDelete.Name = item.Name;
+                    itemDelete.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
-                    folder.Items.Add(deleteItem);
+                    folder.Items.Add(itemDelete);
                 }
                 else if (item is MissingItemMetaData && ((MissingItemMetaData)item).Edit == true)
                 {
-                    ItemMetaData deleteItem = new DeleteMetaData();
-                    deleteItem.Name = item.Name;
-                    deleteItem.ItemRevision = processedVersion;
+                    ItemMetaData itemDelete = new DeleteMetaData();
+                    itemDelete.Name = item.Name;
+                    itemDelete.ItemRevision = processedVersion;
                     folder.Items.Remove(item);
-                    folder.Items.Add(deleteItem);
+                    folder.Items.Add(itemDelete);
                 }
                 else
                 {
