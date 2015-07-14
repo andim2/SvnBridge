@@ -396,9 +396,9 @@ namespace SvnBridge.SourceControl
                     foreach (var rename in renamesWithNoPreviousVersion)
                         history.Changes.Remove(rename);
 
-                    history.Changes.RemoveAll(item => item.ChangeType == ChangeType.None);
-                    history.Changes.RemoveAll(item => item.ChangeType == ChangeType.Delete &&
-                                              oldItems.Any(oldItem => oldItem != null && oldItem.Id == item.Item.ItemId));
+                    history.Changes.RemoveAll(change => change.ChangeType == ChangeType.None);
+                    history.Changes.RemoveAll(change => change.ChangeType == ChangeType.Delete &&
+                                              oldItems.Any(oldItem => oldItem != null && oldItem.Id == change.Item.ItemId));
                 }
                 if (branchedItems.Count > 0)
                 {
