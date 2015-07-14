@@ -2185,16 +2185,8 @@ namespace SvnBridge.SourceControl
             //   figure out the corresponding maximally-authoritative representation (numeric IDs) of these items
             // - do a QueryItems() with these IDs, on the *previous* changeset
 
-            var branchQueries = sourceControlService.QueryBranches(serverUrl, 
-                                                                   credentials,
-                                                                   items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(), 
-                                                                   VersionSpec.FromChangeset(changeset));
-            BranchItem[] renamedItems = items.Select((item, i) =>
-                branchQueries[i].FirstOrDefault(branchItem => 
-                    branchItem.ToItem != null && 
-                    branchItem.ToItem.RemoteChangesetId == changeset && 
-                    branchItem.ToItem.RemoteName == MakeTfsPath(item.RemoteName))).ToArray();
-            
+            BranchItem[] renamedItems = GetRenamedItems(items, changeset);
+
             var previousRevision = changeset - 1;
 
             if (renamedItems.All(item => item == null || item.FromItem == null))
@@ -2218,6 +2210,28 @@ namespace SvnBridge.SourceControl
                 result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
             return result.ToArray();
+        }
+
+        private BranchItem[] GetRenamedItems(SourceItem[] items, int changeset)
+        {
+            BranchItem[] renamedItems;
+
+            {
+                BranchItem[][] thisRevBranches;
+                {
+                    thisRevBranches = sourceControlService.QueryBranches(serverUrl,
+                                                                         credentials,
+                                                                         items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(),
+                                                                         VersionSpec.FromChangeset(changeset));
+                }
+                renamedItems = items.Select((item, i) =>
+                    thisRevBranches[i].FirstOrDefault(branchItem =>
+                        branchItem.ToItem != null &&
+                        branchItem.ToItem.RemoteChangesetId == changeset &&
+                        branchItem.ToItem.RemoteName == MakeTfsPath(item.RemoteName))).ToArray();
+            }
+
+            return renamedItems;
         }
 
         /// <summary>
