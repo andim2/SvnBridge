@@ -2189,11 +2189,11 @@ namespace SvnBridge.SourceControl
                                                                    credentials,
                                                                    items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(), 
                                                                    VersionSpec.FromChangeset(changeset));
-            var renamedItems = items.Select((item, i) =>
+            BranchItem[] renamedItems = items.Select((item, i) =>
                 branchQueries[i].FirstOrDefault(branchItem => 
                     branchItem.ToItem != null && 
                     branchItem.ToItem.RemoteChangesetId == changeset && 
-                    branchItem.ToItem.RemoteName == MakeTfsPath(item.RemoteName))).ToList();
+                    branchItem.ToItem.RemoteName == MakeTfsPath(item.RemoteName))).ToArray();
             
             var previousRevision = changeset - 1;
 
@@ -2208,7 +2208,7 @@ namespace SvnBridge.SourceControl
             }
 
             var result = new List<ItemMetaData>();
-            for (var i = 0; i < renamedItems.Count; i++)
+            for (var i = 0; i < renamedItems.Length; i++)
             {
                 var renamedItem = renamedItems[i];
                 var previousSourceItemId = GetItemIdOfRenamedItem(renamedItem, items[i]);
