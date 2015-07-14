@@ -1051,8 +1051,11 @@ namespace SvnBridge.SourceControl
                     }
                     if (!itemFileIncludedInChanges)
                     {
-                        ItemType itemType = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
-                        SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
+                        SourceItem sourceItem = ConvertChangeToSourceItem(change);
+                        string item_actual = item;
+                        ItemType itemType_actual = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
+                        sourceItem.RemoteName = item_actual;
+                        sourceItem.ItemType = itemType_actual;
                         ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
 
                         sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
@@ -1060,7 +1063,7 @@ namespace SvnBridge.SourceControl
                 }
                 else // change of a standard source control item
                 {
-                    SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
+                    SourceItem sourceItem = ConvertChangeToSourceItem(change);
                     ChangeType changeType = change.type;
                     if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
                         (changeType == (ChangeType.Add | ChangeType.Encoding)))
@@ -1070,6 +1073,24 @@ namespace SvnBridge.SourceControl
             }
 
             return sourceItemChanges;
+        }
+
+        private static SourceItem ConvertChangeToSourceItem(Change change)
+        {
+            return ConvertItemToSourceItem(change.Item);
+        }
+
+        private static SourceItem ConvertItemToSourceItem(Item item)
+        {
+            SourceItem sourceItem;
+
+            // Do this conversion via internal, central (cache-friendly) handling
+            // of standard toolkit APIs (TfsLibrary),
+            // and choose the most direct API variant.
+            //sourceItem = SourceItem.FromRemoteItem(item.itemid, item.type, item.item, item.cs, item.len, item.date, null);
+            sourceItem = SourceItem.FromRemoteItem(item);
+
+            return sourceItem;
         }
 
         /// WARNING: the service-side QueryHistory() API will silently discard **older** entries
