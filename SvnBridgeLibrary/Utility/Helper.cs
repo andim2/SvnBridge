@@ -1,4 +1,4 @@
-using System; // IntPtr.Size
+using System; // IntPtr.Size , Random
 using System.Diagnostics; // Conditional
 using System.Collections.Generic;
 using System.IO;
@@ -937,6 +937,73 @@ namespace SvnBridge.Utility
         public MemoryStreamLOHSanitized()
             : base(capacityCtorParm)
         {
+        }
+    }
+
+    public class DebugRandomActivatorImplRandom
+    {
+        // random member done via delay-init.
+        // Not choosing static member (due to thread-safety requirement, yet Random
+        // very understandably not making any such guarantees).
+        // See also http://stackoverflow.com/questions/4933823/class-system-random-why-not-static
+        private Random random /* = null*/;
+
+        private Random Random
+        {
+            get
+            {
+                // Delay-construct random member (first use only)
+                if (null == random)
+                {
+                    random = new Random();
+                }
+                return random;
+            }
+        }
+
+        public bool TryGetTrue(int percentageForSuccessResult)
+        {
+            bool success = (Random.Next(0, 99) < percentageForSuccessResult);
+
+            return success;
+        }
+    }
+
+    public class DebugRandomActivatorImplDummyAlwaysFalse
+    {
+        public bool TryGetTrue(int percentageForSuccessResult)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Helper class to deliver a success result
+    /// in a certain percentage of invocations only
+    /// (debug-only!! Else result always false).
+    /// May e.g. be used to optionally do
+    /// some special expensive verification/comparison runs.
+    /// </summary>
+    /// <remarks>
+    /// Should be used in very rare and justified cases only,
+    /// since it will obviously disrupt
+    /// the application's sufficiently(?) deterministic behaviour.
+    /// Hmm, since this will also affect unit tests
+    /// (which suddenly face going into code paths
+    /// which the unit test stub environment
+    /// does not have preparations for)
+    /// we will keep it disabled.
+    /// </remarks>
+//#if DEBUG
+#if false
+    public sealed class DebugRandomActivator : DebugRandomActivatorImplRandom
+#else
+    public sealed class DebugRandomActivator : DebugRandomActivatorImplDummyAlwaysFalse
+#endif
+    {
+        public bool YieldTrueOnPercentageOfCalls(int percentageForSuccessResult)
+        {
+            return TryGetTrue(percentageForSuccessResult);
         }
     }
 }

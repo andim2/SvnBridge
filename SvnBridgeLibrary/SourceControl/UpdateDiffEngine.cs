@@ -1,8 +1,10 @@
-﻿using System; // StringComparison , StringSplitOptions
+﻿using System; // InvalidOperationException , StringComparison , StringSplitOptions
 using System.Collections.Generic; // Dictionary , List
+using System.Diagnostics; // Debug.WriteLine()
 using CodePlex.TfsLibrary.ObjectModel; // SourceItemChange
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ChangeType , ItemType
 using SvnBridge.Infrastructure; // Configuration
+using SvnBridge.Utility; // DebugRandomActivator
 
 namespace SvnBridge.SourceControl
 {
@@ -16,6 +18,7 @@ namespace SvnBridge.SourceControl
         private readonly FolderMetaData _root;
         private readonly string _checkoutRootPath;
         private readonly int _targetVersion;
+        private readonly DebugRandomActivator debugRandomActivator;
 
         public UpdateDiffEngine(FolderMetaData root,
                     string checkoutRootPath,
@@ -29,6 +32,7 @@ namespace SvnBridge.SourceControl
             this._root = root;
             this._checkoutRootPath = checkoutRootPath;
             this._targetVersion = targetVersion;
+            this.debugRandomActivator = new DebugRandomActivator();
             this.sourceControlProvider = sourceControlProvider;
             this.clientExistingFiles = clientExistingFiles;
             this.clientMissingFiles = clientMissingFiles;
@@ -70,9 +74,7 @@ namespace SvnBridge.SourceControl
 
         public void Rename(SourceItemChange change, bool updatingForwardInTime)
         {
-            ItemMetaData oldItem = sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
-
-            string itemOldName = oldItem.Name;
+            string itemOldName = RenameDetermineItemOldName(change);
             string itemNewName = change.Item.RemoteName;
 
             // origin item not within (somewhere below) our checkout root? --> skip indication of Add or Delete!
@@ -128,6 +130,82 @@ namespace SvnBridge.SourceControl
             {
                 renamedItemsToBeCheckedForDeletedChildren.Add(itemNewNameIndicated);
             }
+        }
+
+        /// <summary>
+        /// Depending on change type, proceeds to determine old name via RenamedSourceItem members
+        /// or (if we can't help it) fetch that info via very expensive multi-request network activity.
+        /// </summary>
+        /// <param name="change">SourceItemChange to be analyzed</param>
+        /// <returns>Old name of the item</returns>
+        private string RenameDetermineItemOldName(SourceItemChange change)
+        {
+            string itemOldNameMember = null;
+            string itemOldNameQueried = null;
+            int itemOldRevMember = -1;
+            int itemOldRevQueried = -1;
+
+            bool haveMemberData = false, haveQueryData = false;
+            // Special handling - in case of a RenamedSourceItem,
+            // we're fortunately able to skip the very expensive GetPreviousVersionOfItems() requests call
+            // since the desired content is already provided by RenamedSourceItems members.
+            // This is very important and beneficial in the case of huge mass renames
+            // (moving content into another directory).
+            if (ChangeTypeAnalyzer.IsRenameOperation(change))
+            {
+                var renamedItem = (RenamedSourceItem)change.Item;
+                itemOldNameMember = renamedItem.OriginalRemoteName;
+                itemOldRevMember = renamedItem.OriginalRevision;
+                haveMemberData = true;
+            }
+
+            bool needQueryOldName = (!haveMemberData);
+            if (!needQueryOldName)
+            {
+                int doVerificationPercentage = 5; // do a verification in x% of random results.
+                bool wantQueryOldName = debugRandomActivator.YieldTrueOnPercentageOfCalls(doVerificationPercentage);
+
+                needQueryOldName = wantQueryOldName;
+            }
+            //needQueryOldName = true; // UNCOMMENT IN CASE OF TROUBLE!
+            if (needQueryOldName)
+            {
+                ItemMetaData oldItem = sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
+                itemOldNameQueried = oldItem.Name;
+                itemOldRevQueried = oldItem.Revision;
+                haveQueryData = true;
+            }
+
+            bool canCompareResults = (haveMemberData && haveQueryData);
+            if (canCompareResults)
+            {
+                // [performance: comparison of less complex objects first!]
+                bool isMatch = (
+                    (itemOldRevMember == itemOldRevQueried) &&
+                    (itemOldNameMember == itemOldNameQueried)
+                );
+                if (!(isMatch))
+                {
+                    // Repeat a query locally, to retain full debugging possibility/content here.
+                    ItemMetaData oldItem = sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
+
+                    string logMessage = string.Format("Mismatch: RenamedSourceItem member data (rev {0}, {1}) vs. queried data (rev {2}, {3}), please report!",
+                                                                        itemOldRevMember, itemOldNameMember, itemOldRevQueried, itemOldNameQueried);
+                    bool doThrowException = true;
+                    // doThrowException = false; // UNCOMMENT TO CONTINUE COLLECTING MISMATCHES
+                    if (doThrowException)
+                    {
+                        throw new InvalidOperationException(logMessage);
+                    }
+                    else
+                    {
+                        // It is said that to have output appear in VS Output window, we need to use Debug.WriteLine rather than Console.WriteLine.
+                        Debug.WriteLine(logMessage + "\n");
+                    }
+                }
+            }
+
+            return haveMemberData ? itemOldNameMember : itemOldNameQueried;
         }
 
         /// <remarks>
