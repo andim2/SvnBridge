@@ -191,6 +191,36 @@ namespace SvnBridge.SourceControl
             bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // CS0429 warning workaround
             return wantCaseSensitiveMatch ? nameOrig : nameOrig.ToLower();
         }
+
+        /// <summary>
+        /// Tweaks a path from full (prefix-prepended) syntax
+        /// to sub path syntax.
+        /// </summary>
+        /// <param name="prefixPath">The prefix to be stripped</param>
+        /// <param name="fullPath">Full (prefix-prepended) path string</param>
+        public static string PathPrefix_Checked_Strip(string prefixPath, string fullPath)
+        {
+            if (!fullPath.StartsWith(prefixPath))
+            {
+                throw new ArgumentException("Logic error: expected clean layer transition *from* full path *to* prefix-stripped path!");
+            }
+            return StripPrefix(prefixPath, fullPath);
+        }
+
+        /// <summary>
+        /// Tweaks a path from sub path syntax
+        /// to full (prefix-prepended) syntax.
+        /// </summary>
+        /// <param name="prefixPath">The prefix to be prepended</param>
+        /// <param name="subPath">Prefix-less sub path string</param>
+        public static string PathPrefix_Checked_Prepend(string prefixPath, string subPath)
+        {
+            if (subPath.StartsWith(prefixPath))
+            {
+                throw new ArgumentException("Logic error: expected clean layer transition *from* sub path *to* prefix-enhanced full path!");
+            }
+            return Helper.CombinePath(prefixPath, subPath);
+        }
     }
 
     /// <summary>
@@ -351,7 +381,7 @@ namespace SvnBridge.SourceControl
             }
 
             item.Id = sourceItem.ItemId;
-            item.Name = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
+            item.Name = FilesysHelpers.PathPrefix_Checked_Strip(rootPath, sourceItem.RemoteName);
 
             item.Author = author;
             item.LastModifiedDate = sourceItem.RemoteDate;
@@ -1501,7 +1531,7 @@ namespace SvnBridge.SourceControl
                                             bool bRenamed = (!newlyAdded);
                                             if (bRenamed)
                                             {
-                                                string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
+                                                string oldName = FilesysHelpers.PathPrefix_Checked_Strip(rootPath, branchItem.BranchFromItem.item);
                                                 // FIXME: decrement-by-1 might happen to just work, or actually be too hardcoded after all -
                                                 // so if things fail then we might need to replace it by a call to GetPreviousVersionOfItems().
                                                 int oldRevision = item.RemoteChangesetId - 1;
@@ -1533,7 +1563,7 @@ namespace SvnBridge.SourceControl
             // Tweaks a path from full TFS team project syntax ("$/some/path")
             // to project sub path syntax ("some/path").
             // HACK: actively modifying an *existing* member within an improper-layer object type.
-            sourceItem.RemoteName = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
+            sourceItem.RemoteName = FilesysHelpers.PathPrefix_Checked_Strip(rootPath, sourceItem.RemoteName);
         }
 
         private IEnumerable<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changesets)
@@ -3120,7 +3150,7 @@ namespace SvnBridge.SourceControl
         /// <returns>combined/full TFS path to item</returns>
         private string MakeTfsPath(string itemPath)
         {
-            return Helper.CombinePath(rootPath, itemPath);
+            return FilesysHelpers.PathPrefix_Checked_Prepend(rootPath, itemPath);
         }
 
         private static string GetLocalPath(string activityId, string path)
