@@ -69,17 +69,19 @@ namespace SvnBridge.SourceControl
         {
             ItemMetaData oldItem = sourceControlProvider.GetPreviousVersionOfItems(new SourceItem[] { change.Item }, change.Item.RemoteChangesetId)[0];
 
-            string itemOldName;
-            string itemNewName;
+            string itemOldName = oldItem.Name;
+            string itemNewName = change.Item.RemoteName;
+            string itemOldNameIndicated;
+            string itemNewNameIndicated;
             if (updatingForwardInTime)
             {
-                itemOldName = oldItem.Name;
-                itemNewName = change.Item.RemoteName;
+                itemOldNameIndicated = itemOldName;
+                itemNewNameIndicated = itemNewName;
             }
             else
             {
-                itemOldName = change.Item.RemoteName;
-                itemNewName = oldItem.Name;
+                itemOldNameIndicated = itemNewName;
+                itemNewNameIndicated = itemOldName;
             }
 
             // svn diff output of a real Subversion server
@@ -95,12 +97,12 @@ namespace SvnBridge.SourceControl
             // and not during ItemMetaData queueing here yet,
             // in case subsequent ItemMetaData handling
             // happened to expect a different order.
-            ProcessDeletedItem(itemOldName, change);
-            ProcessAddedOrUpdatedItem(itemNewName, change, false, false, updatingForwardInTime);
+            ProcessDeletedItem(itemOldNameIndicated, change);
+            ProcessAddedOrUpdatedItem(itemNewNameIndicated, change, false, false, updatingForwardInTime);
 
             if (change.Item.ItemType == ItemType.Folder)
             {
-                renamedItemsToBeCheckedForDeletedChildren.Add(itemNewName);
+                renamedItemsToBeCheckedForDeletedChildren.Add(itemNewNameIndicated);
             }
         }
 
