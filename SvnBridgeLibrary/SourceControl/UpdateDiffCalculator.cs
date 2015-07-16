@@ -5,7 +5,7 @@ using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
-using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.SortHistories()
+using SvnBridge.Utility; // Helper.SortHistories()
 
 namespace SvnBridge.SourceControl
 {
@@ -75,7 +75,7 @@ namespace SvnBridge.SourceControl
             }
             FlattenDeletedFolders(checkoutRoot);
             RemoveMissingItemsWhichAreChildrenOfRenamedItem(checkoutRoot);
-            VerifyNoMissingItemMetaDataRemained(checkoutRoot);
+            checkoutRoot.VerifyNoMissingItemMetaDataRemained();
         }
 
         private static string GetProjectRoot(string path)
@@ -84,21 +84,6 @@ namespace SvnBridge.SourceControl
             if (parts.Length == 0)
                 return "";
             return parts[0];
-        }
-
-        private static void VerifyNoMissingItemMetaDataRemained(FolderMetaData root)
-        {
-            foreach (ItemMetaData item in root.Items)
-            {
-                if (item is MissingItemMetaData)
-                {
-                    Helper.DebugUsefulBreakpointLocation();
-                    throw new InvalidOperationException("Found missing item:" + item +
-                                                        " but those should not be returned from UpdateDiffCalculator");
-                }
-                if (item is FolderMetaData)
-                    VerifyNoMissingItemMetaDataRemained((FolderMetaData)item);
-            }
         }
 
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)

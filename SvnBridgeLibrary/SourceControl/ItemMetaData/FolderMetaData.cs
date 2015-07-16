@@ -1,8 +1,9 @@
-using System; // StringComparison
+using System; // InvalidOperationException, StringComparison
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CodePlex.TfsLibrary;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.SourceControl
 {
@@ -50,6 +51,38 @@ namespace SvnBridge.SourceControl
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Helper to verify/check that no missing items (MissingItemMetaData)
+        /// remained in our item space hierarchy.
+        /// </summary>
+        /// <remarks>
+        /// While such a helper arguably
+        /// perhaps should not be provided
+        /// by such a container class,
+        /// currently I don't know where else best to put it,
+        /// so...
+        /// </remarks>
+        public void VerifyNoMissingItemMetaDataRemained()
+        {
+            VerifyNoMissingItemMetaDataRemained(this);
+        }
+
+        private static void VerifyNoMissingItemMetaDataRemained(
+            FolderMetaData root)
+        {
+            foreach (ItemMetaData item in root.Items)
+            {
+                if (item is MissingItemMetaData)
+                {
+                    Helper.DebugUsefulBreakpointLocation();
+                    throw new InvalidOperationException("Found missing item:" + item +
+                                                        " but those should not be returned from this final(ized) filesystem item hierarchy space");
+                }
+                if (item is FolderMetaData)
+                    VerifyNoMissingItemMetaDataRemained((FolderMetaData)item);
+            }
         }
 
         private class NoNullAllowedItemsCollection : Collection<ItemMetaData>
