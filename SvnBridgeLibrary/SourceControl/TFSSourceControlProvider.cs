@@ -787,6 +787,15 @@ namespace SvnBridge.SourceControl
 
                 // Either (usually) a folder or sometimes even single-item:
                 ItemMetaData root = folderMap.QueryRootItem();
+
+                // Make sure to invoke our VerifyNoMissingItemMetaDataRemained() helper here.
+                FolderMetaData folder = root as FolderMetaData;
+                bool isValidFolderItem = (null != folder);
+                if (isValidFolderItem)
+                {
+                    folder.VerifyNoMissingItemMetaDataRemained();
+                }
+
                 return root;
         }
 
