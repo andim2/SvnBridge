@@ -463,7 +463,9 @@ namespace SvnBridge.SourceControl
             else
             {
                 if (additionForPropertyChangeOnly.ContainsKey(item) == false)
+                {
                     additionForPropertyChangeOnly[item] = propertyChange;
+                }
             }
         }
 
