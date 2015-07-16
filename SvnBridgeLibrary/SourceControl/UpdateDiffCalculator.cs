@@ -86,14 +86,6 @@ namespace SvnBridge.SourceControl
             return parts[0];
         }
 
-        private void RemoveMissingItemsWhichAreChildrenOfRenamedItem(FolderMetaData root)
-        {
-            foreach (string item in renamedItemsToBeCheckedForDeletedChildren)
-            {
-                RemoveMissingItemsWhichAreChildrenOfRenamedItem(item, root);
-            }
-        }
-
         private static void VerifyNoMissingItemMetaDataRemained(FolderMetaData root)
         {
             foreach (ItemMetaData item in root.Items)
@@ -221,6 +213,14 @@ namespace SvnBridge.SourceControl
                 {
                     break;
                 }
+            }
+        }
+
+        private void RemoveMissingItemsWhichAreChildrenOfRenamedItem(FolderMetaData root)
+        {
+            foreach (string item in renamedItemsToBeCheckedForDeletedChildren)
+            {
+                RemoveMissingItemsWhichAreChildrenOfRenamedItem(item, root);
             }
         }
 
