@@ -87,7 +87,7 @@ namespace SvnBridge.SourceControl
         public void CalculateDiff(string checkoutRootPath, int versionTo, int versionFrom, FolderMetaData checkoutRoot, UpdateReportData updateReportData)
         {
             clientExistingFiles = GetClientExistingFiles(checkoutRootPath, updateReportData);
-            clientMissingFiles = GetClientDeletedFiles(checkoutRootPath, updateReportData);
+            clientMissingFiles = GetClientMissingFiles(checkoutRootPath, updateReportData);
             string projectRootPath = GetProjectRoot(checkoutRootPath);
 
             if (updateReportData.Entries != null)
@@ -515,18 +515,18 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private static Dictionary<string, string> GetClientDeletedFiles(string path, UpdateReportData reportData)
+        private static Dictionary<string, string> GetClientMissingFiles(string path, UpdateReportData reportData)
         {
-            Dictionary<string, string> clientDeletedFiles = new Dictionary<string, string>();
+            Dictionary<string, string> clientMissingFiles = new Dictionary<string, string>();
             if (reportData.Missing != null)
             {
                 string pathPrefix = MakePrefixPath(path);
                 foreach (string missingPath in reportData.Missing)
                 {
-                    clientDeletedFiles[pathPrefix + missingPath] = missingPath;
+                    clientMissingFiles[pathPrefix + missingPath] = missingPath;
                 }
             }
-            return clientDeletedFiles;
+            return clientMissingFiles;
         }
 
         private static Dictionary<string, int> GetClientExistingFiles(string path, UpdateReportData reportData)
