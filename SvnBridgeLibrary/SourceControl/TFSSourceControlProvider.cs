@@ -164,6 +164,14 @@ namespace SvnBridge.SourceControl
             return path.Split(repo_separator_c);
         }
 
+        /// <summary>
+        /// Appends a path element to a path.
+        /// </summary>
+        /// While FxCop emits DoNotPassTypesByReference warning,
+        /// I decided to keep it that way
+        /// rather than returning the extended path string,
+        /// since otherwise there may easily be confusion
+        /// between both non-reference same-type (string) method parameters.
         public static void PathAppendElem(ref string path, string pathElem)
         {
             if (path != "" && !path.EndsWith(repo_separator_s))
@@ -1415,6 +1423,10 @@ namespace SvnBridge.SourceControl
         /// While this helper actually might be completely specific to UpdateDiffCalculator,
         /// I guess it's currently(?) implemented in this class since it needs to make direct use
         /// of internal sourceControlService member. Hmm.
+        /// Warning: this handler is doing to-SVN post-processing
+        /// not completely unsimilar to what is being done at the end of QueryHistory(), too
+        /// (i.e. possibly we are talking about dirtily duplicate/redundant implementation
+        /// of common requirements).
         /// </remarks>
         /// <param name="histories">Array of histories to be tweaked</param>
         private void LogHistory_TweakIt_ForSVN(ref SourceItemHistory[] histories)
@@ -1601,6 +1613,14 @@ namespace SvnBridge.SourceControl
         private SourceItemHistory ConvertTFSChangesetToSVNCommit(
             Changeset changeset)
         {
+            // Warning: this handler is doing to-SVN post-processing
+            // not completely unsimilar to what is being done at the end of GetLog(), too.
+            // Possibly the *end result* of this currently disparate-call-hierarchy handling
+            // ought to become the *same* in all cases,
+            // since I'd expect SVN-side requirements to always be the same
+            // no matter which of the SVN protocol parts (REPORT, ...) we're getting called from
+            // (famous last words...).
+
             SourceItemHistory historyOfSVNCommit = ConstructSourceItemHistoryFromChangeset(
                 changeset);
 
