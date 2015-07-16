@@ -146,6 +146,17 @@ namespace SvnBridge.SourceControl
 
                 var historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
 
+                CalculateChangeViaSourceItemHistories(historiesSorted, checkoutRootPath, root, updatingForwardInTime, ref lastVersion);
+                // No change was made, break out
+                if (previousLoopLastVersion == lastVersion)
+                {
+                    break;
+                }
+            }
+        }
+
+        private void CalculateChangeViaSourceItemHistories(IList<SourceItemHistory> historiesSorted, string checkoutRootPath, FolderMetaData root, bool updatingForwardInTime, ref int lastVersion)
+        {
                 foreach (SourceItemHistory history in historiesSorted)
                 {
                     lastVersion = history.ChangeSetID;
@@ -172,12 +183,6 @@ namespace SvnBridge.SourceControl
                         ApplyChangeOps(engine, change, updatingForwardInTime);
                     }
                 }
-                // No change was made, break out
-                if (previousLoopLastVersion == lastVersion)
-                {
-                    break;
-                }
-            }
         }
 
         /// <summary>
