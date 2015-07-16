@@ -207,7 +207,7 @@ namespace SvnBridge.SourceControl
         {
             if (IsAddOperation(change, updatingForwardInTime))
             {
-                engine.Add(change);
+                engine.Add(change, updatingForwardInTime);
             }
             else if (IsDeleteOperation(change, updatingForwardInTime))
             {
@@ -222,6 +222,13 @@ namespace SvnBridge.SourceControl
                 }
                 if (updatingForwardInTime == false)
                 {
+                    // FIXME: rather than dirtily fumbling a member of *foreign* objects,
+                    // could we supply updatingForwardInTime param to Edit() as well,
+                    // and then simply pass that into internal methods?
+                    // But perhaps that's not equivalent
+                    // since maybe it's the *item*'s .RemoteChangesetId
+                    // which *needs* to be decremented to achieve the proper effect
+                    // for all related uses of this item...
                     change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
                 }
                 engine.Edit(change);

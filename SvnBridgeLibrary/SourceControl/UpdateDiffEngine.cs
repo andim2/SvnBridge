@@ -35,14 +35,22 @@ namespace SvnBridge.SourceControl
             this.renamedItemsToBeCheckedForDeletedChildren = renamedItemsToBeCheckedForDeletedChildren;
         }
 
+        public void Add(SourceItemChange change, bool updatingForwardInTime)
+        {
+            PerformAddOrUpdate(change, false, updatingForwardInTime);
+        }
+
+        /// <summary>
+        /// Small helper to retain interface backwards compat.
+        /// </summary>
         public void Add(SourceItemChange change)
         {
-            PerformAddOrUpdate(change, false);
+            Add(change, true);
         }
 
         public void Edit(SourceItemChange change)
         {
-            PerformAddOrUpdate(change, true);
+            PerformAddOrUpdate(change, true, true);
         }
 
         public void Delete(SourceItemChange change)
@@ -90,7 +98,7 @@ namespace SvnBridge.SourceControl
             // in case subsequent ItemMetaData handling
             // happened to expect a different order.
             ProcessDeletedItem(itemOldName, change);
-            ProcessAddedOrUpdatedItem(itemNewName, change, false, false);
+            ProcessAddedOrUpdatedItem(itemNewName, change, false, false, updatingForwardInTime);
 
             if (change.Item.ItemType == ItemType.Folder)
             {
@@ -98,7 +106,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private void PerformAddOrUpdate(SourceItemChange change, bool edit)
+        private void PerformAddOrUpdate(SourceItemChange change, bool edit, bool updatingForwardInTime)
         {
             string remoteName = change.Item.RemoteName;
 
@@ -115,7 +123,7 @@ namespace SvnBridge.SourceControl
                 remoteName = GetRemoteNameOfPropertyChange(change);
             }
 
-            ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit);
+            ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit, updatingForwardInTime);
         }
 
         private string GetRemoteNameOfPropertyChange(SourceItemChange change)
@@ -151,7 +159,7 @@ namespace SvnBridge.SourceControl
             return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
         }
 
-        private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit)
+        private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)
         {
             bool alreadyInClientCurrentState = IsChangeAlreadyCurrentInClientState(ChangeType.Add,
                                                                                    remoteName,
@@ -213,7 +221,8 @@ namespace SvnBridge.SourceControl
                         // ...and fetch the updated one
                         // for the currently processed version:
                         var processedVersion = _targetVersion;
-                        item = sourceControlProvider.GetItems(processedVersion, itemName, Recursion.None);
+                        Recursion recursionMode = GetRecursionModeForItemAdd(updatingForwardInTime);
+                        item = sourceControlProvider.GetItems(processedVersion, itemName, recursionMode);
                         if (item == null)
                         {
                             // THIS IS *NOT* TRUE!!
@@ -288,6 +297,8 @@ namespace SvnBridge.SourceControl
                               folder.Items.Add(item);
                           }
                         }
+                        // [section below was a temporary patch which should not be needed any more now that our processing is much better]
+#if false
                         // ...or _renames_ the (pseudo-deleted) item!
                         // (OBEY VERY SPECIAL CASE: _similar-name_ rename (EXISTING ITEM LOOKUP SUCCESSFUL ABOVE!!), i.e. filename-case-only change)
                         else if (IsRenameOperation(change))
@@ -302,6 +313,7 @@ namespace SvnBridge.SourceControl
                           item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
                           folder.Items.Add(item);
                         }
+#endif
                     }
                     if (lastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                     {
@@ -309,6 +321,15 @@ namespace SvnBridge.SourceControl
                     }
                 }
             }
+        }
+
+        /// <remarks>
+        /// In case of *backward*-adding a *forward*-deleted directory,
+        /// we also need to resurrect the entire deleted directory's hierarchy (sub files etc.).
+        /// </remarks>
+        private static Recursion GetRecursionModeForItemAdd(bool updatingForwardInTime)
+        {
+            return updatingForwardInTime ? Recursion.None : Recursion.Full;
         }
 
         private static bool IsAddOperation(SourceItemChange change)
