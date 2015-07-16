@@ -138,14 +138,7 @@ namespace SvnBridge.SourceControl
                 int previousLoopLastVersion = lastVersion;
                 int versionFrom = Math.Min(lastVersion, targetVersion) + 1;
                 int versionTo = Math.Max(lastVersion, targetVersion);
-                LogItem logItem = sourceControlProvider.GetLog(
-                    changePath,
-                    changeVersion,
-                    versionFrom, versionTo,
-                    Recursion.Full,
-                    256);
-
-                var historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
+                var historiesSorted = FetchSortedHistory(changePath, changeVersion, versionFrom, versionTo, updatingForwardInTime);
 
                 CalculateChangeViaSourceItemHistories(historiesSorted, checkoutRootPath, root, updatingForwardInTime, ref lastVersion);
                 // No change was made, break out
@@ -154,6 +147,22 @@ namespace SvnBridge.SourceControl
                     break;
                 }
             }
+        }
+
+        private IList<SourceItemHistory> FetchSortedHistory(string changePath, int changeVersion, int versionFrom, int versionTo, bool updatingForwardInTime)
+        {
+            IList<SourceItemHistory> historiesSorted = null;
+
+            LogItem logItem = sourceControlProvider.GetLog(
+                changePath,
+                changeVersion,
+                versionFrom, versionTo,
+                Recursion.Full,
+                256);
+
+            historiesSorted = Helper.SortHistories(updatingForwardInTime, logItem.History);
+
+            return historiesSorted;
         }
 
         private void CalculateChangeViaSourceItemHistories(IList<SourceItemHistory> historiesSorted, string checkoutRootPath, FolderMetaData root, bool updatingForwardInTime, ref int lastVersion)
