@@ -86,6 +86,15 @@ namespace SvnBridge.SourceControl
             // (that probably would be more imprecise/risky).
             for (var numElemsRemain = pathElemsCount; numElemsRemain > 0; --numElemsRemain)
             {
+                if (1 == numElemsRemain)
+                {
+                    bool haveHitRoot = (pathElemsToBeChecked[0] == "$");
+                    if (haveHitRoot)
+                    {
+                        break;
+                    }
+                }
+
                 string pathToBeChecked_Curr = PathJoin(
                     pathElemsToBeChecked,
                     numElemsRemain);
