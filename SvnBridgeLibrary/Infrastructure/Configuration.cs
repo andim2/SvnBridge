@@ -22,6 +22,8 @@ namespace SvnBridge.Infrastructure
             ProxyPort,
             ProxyUseDefaultCredentials,
             ProxyUsername,
+            // SvnPort should be _different_ from the TFS default port setting (8080),
+            // to try to minimize port conflicts.
             SvnPort,
             // Terrible misnomer: "TfsPort" does not end up as a "TFS port",
             // but the port that _we_ are offering for _our_ SvnBridge socket services
@@ -110,6 +112,9 @@ namespace SvnBridge.Infrastructure
         {
             get
             {
+                // DON'T fall back to 8080 since that is TFS default port setting
+                // (choose different setting - minimize conflicts).
+                // Hmm... temporarily do change back to 8080...
                 const int portDefault = 8080;
                 int port = ReadConfig<int>(ConfigSettings.SvnPort, -1);
                 // Maintain compatibility for users still using deprecated TfsPort name:
