@@ -535,15 +535,18 @@ namespace SvnBridge.SourceControl
         {
             DebugIntercept(change);
 
+            bool changed = false;
             // ATTENTION ORDER: IsEditOperation() branch internally checks IsRenameOperation(), TOO!
             // (in general, these comparisons work on a possibly combined multi-bit mask!!)
             if (ChangeTypeAnalyzer.IsAddOperation(change, updatingForwardInTime))
             {
                 engine.Add(change, updatingForwardInTime);
+                changed = true;
             }
             else if (ChangeTypeAnalyzer.IsDeleteOperation(change, updatingForwardInTime))
             {
                 engine.Delete(change);
+                changed = true;
             }
             else if (ChangeTypeAnalyzer.IsEditOperation(change))
             {
@@ -564,12 +567,15 @@ namespace SvnBridge.SourceControl
                     change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
                 }
                 engine.Edit(change);
+                changed = true;
             }
             else if (ChangeTypeAnalyzer.IsRenameOperation(change))
             {
                 engine.Rename(change, updatingForwardInTime);
+                changed = true;
             }
-            else
+
+            if (!changed) // catch weird/unsupported cases
             {
                 if (ChangeTypeAnalyzer.IsMergeOperation(change) && (change.Item.RemoteItemStatus == SourceItemStatus.Unmodified))
                 {
