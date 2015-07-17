@@ -211,18 +211,19 @@ namespace SvnBridge.SourceControl
             // might be configured to return partial history parts):
             while (lastVersion != targetVersion)
             {
-                int previousLoopLastVersion = lastVersion;
                 int versionFrom = Math.Min(lastVersion, targetVersion) + 1;
                 int versionTo = Math.Max(lastVersion, targetVersion);
                 var historiesSorted = FetchSortedHistory(changePath, changeVersion, versionFrom, versionTo, updatingForwardInTime);
 
+                bool madeProgress = false;
                 bool needProcessHistories = (null != historiesSorted); // shortcut
                 if (needProcessHistories)
                 {
+                    int previousLoopLastVersion = lastVersion;
                     CalculateChangeViaSourceItemHistories(historiesSorted, checkoutRootPath, root, updatingForwardInTime, ref lastVersion);
+                    madeProgress = (previousLoopLastVersion != lastVersion);
                 }
-                // No change was made, break out
-                if (previousLoopLastVersion == lastVersion)
+                if (!(madeProgress))
                 {
                     break;
                 }
