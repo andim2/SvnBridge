@@ -9,6 +9,49 @@ using SvnBridge.Utility; // Helper.SortHistories()
 
 namespace SvnBridge.SourceControl
 {
+    public class ChangeTypeAnalyzer
+    {
+        public static bool IsRenameOperation(SourceItemChange change)
+        {
+            return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
+        }
+
+        public static bool IsDeleteOperation(SourceItemChange change, bool updatingForwardInTime)
+        {
+            if (updatingForwardInTime == false)
+            {
+                return IsAddOperation(change, true);
+            }
+            return (change.ChangeType & ChangeType.Delete) == ChangeType.Delete;
+        }
+
+        public static bool IsAddOperation(SourceItemChange change, bool updatingForwardInTime)
+        {
+            if (updatingForwardInTime == false)
+            {
+                return IsDeleteOperation(change, true);
+            }
+            return ((change.ChangeType & ChangeType.Add) == ChangeType.Add) ||
+                   ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch) ||
+                   ((change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete);
+        }
+
+        public static bool IsEditOperation(SourceItemChange change)
+        {
+            return (change.ChangeType & ChangeType.Edit) == ChangeType.Edit;
+        }
+
+        /// <summary>
+        /// Simplistic (read: likely incorrect
+        /// due to insufficiently precise / incomplete parameterization) variant.
+        /// AVOID ITS USE.
+        /// </summary>
+        public static bool IsAddOperation(SourceItemChange change)
+        {
+            return IsAddOperation(change, true);
+        }
+    }
+
     public class UpdateDiffCalculator
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
@@ -198,25 +241,24 @@ namespace SvnBridge.SourceControl
         /// <summary>
         /// Temporary(?) helper. It probably should be refactored to become a method of UpdateDiffEngine instead.
         /// Well, no: that would mean having to move all Is*Operation() helpers into the engine as well,
-        /// which is a bad idea. Hmm, OTOH all uses of such helpers are exclusively for engine processing,
-        /// plus the engine has some identical (duplicated) helpers as well.........
+        /// which is a bad idea. Hmm, OTOH all uses of such helpers are exclusively for engine processing.
         /// Since engine impl *is* dependent on TfsLibrary-side SourceItemChange knowledge,
         /// perhaps this *is* the proper thing to do after all.
         /// </summary>
         private void ApplyChangeOps(UpdateDiffEngine engine, SourceItemChange change, bool updatingForwardInTime)
         {
-            if (IsAddOperation(change, updatingForwardInTime))
+            if (ChangeTypeAnalyzer.IsAddOperation(change, updatingForwardInTime))
             {
                 engine.Add(change, updatingForwardInTime);
             }
-            else if (IsDeleteOperation(change, updatingForwardInTime))
+            else if (ChangeTypeAnalyzer.IsDeleteOperation(change, updatingForwardInTime))
             {
                 engine.Delete(change);
             }
-            else if (IsEditOperation(change))
+            else if (ChangeTypeAnalyzer.IsEditOperation(change))
             {
                 // We may have edit & rename operations
-                if (IsRenameOperation(change))
+                if (ChangeTypeAnalyzer.IsRenameOperation(change))
                 {
                     engine.Rename(change, updatingForwardInTime);
                 }
@@ -233,7 +275,7 @@ namespace SvnBridge.SourceControl
                 }
                 engine.Edit(change);
             }
-            else if (IsRenameOperation(change))
+            else if (ChangeTypeAnalyzer.IsRenameOperation(change))
             {
                 engine.Rename(change, updatingForwardInTime);
             }
@@ -301,36 +343,6 @@ namespace SvnBridge.SourceControl
                     RemoveMissingItemsWhichAreChildrenOfRenamedItem(itemName, (FolderMetaData)data);
                 }
             }
-        }
-
-        private static bool IsRenameOperation(SourceItemChange change)
-        {
-            return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
-        }
-
-        private static bool IsDeleteOperation(SourceItemChange change, bool updatingForwardInTime)
-        {
-            if (updatingForwardInTime == false)
-            {
-                return IsAddOperation(change, true);
-            }
-            return (change.ChangeType & ChangeType.Delete) == ChangeType.Delete;
-        }
-
-        private static bool IsAddOperation(SourceItemChange change, bool updatingForwardInTime)
-        {
-            if (updatingForwardInTime == false)
-            {
-                return IsDeleteOperation(change, true);
-            }
-            return ((change.ChangeType & ChangeType.Add) == ChangeType.Add) ||
-                   ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch) ||
-                   ((change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete);
-        }
-
-        private static bool IsEditOperation(SourceItemChange change)
-        {
-            return (change.ChangeType & ChangeType.Edit) == ChangeType.Edit;
         }
 
         private static Dictionary<string, string> GetClientDeletedFiles(string path, UpdateReportData reportData)

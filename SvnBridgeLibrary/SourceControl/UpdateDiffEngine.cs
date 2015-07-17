@@ -261,7 +261,7 @@ namespace SvnBridge.SourceControl
                             // resolve each other
                             // in a nicely fully complementary manner.
 #if false
-                            if (IsRenameOperation(change))
+                            if (ChangeTypeAnalyzer.IsRenameOperation(change))
                             {
                                 // TFS will report renames even for deleted items -
                                 // since TFS reported above that this was renamed,
@@ -300,7 +300,7 @@ namespace SvnBridge.SourceControl
                     { // former item was a DELETE...
 
                         // ...and new one then _resurrects_ the (_actually_ deleted) item:
-                        if (IsAddOperation(change))
+                        if (ChangeTypeAnalyzer.IsAddOperation(change))
                         {
                           if (!propertyChange)
                           {
@@ -314,7 +314,7 @@ namespace SvnBridge.SourceControl
 //#if false
                         // ...or _renames_ the (pseudo-deleted) item!
                         // (OBEY VERY SPECIAL CASE: _similar-name_ rename (EXISTING ITEM LOOKUP SUCCESSFUL ABOVE!!), i.e. filename-case-only change)
-                        else if (IsRenameOperation(change))
+                        else if (ChangeTypeAnalyzer.IsRenameOperation(change))
                         {
                           // Such TFS-side renames need to be reflected
                           // as a SVN delete/add (achieve rename *with* history!) operation,
@@ -351,18 +351,6 @@ namespace SvnBridge.SourceControl
         {
             //return updatingForwardInTime ? Recursion.None : Recursion.Full;
             return Recursion.None;
-        }
-
-        private static bool IsRenameOperation(SourceItemChange change)
-        {
-            return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
-        }
-
-        private static bool IsAddOperation(SourceItemChange change)
-        {
-            return ((change.ChangeType & ChangeType.Add) == ChangeType.Add) ||
-                   ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch) ||
-                   ((change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete);
         }
 
         private void SetAdditionForPropertyChangeOnly(ItemMetaData item, bool propertyChange)
