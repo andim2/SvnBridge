@@ -232,26 +232,22 @@ namespace SvnBridge.Net
         {
             using (var networkStream = tcpClient.GetStream())
             {
-                try
-                {
-                    ProcessClientStream(
-                        networkStream);
-                }
-                catch(IOException ex)
-                {
-                    bool needSilenceException = NeedSilenceThisIOExceptionTypeForClientProcessing(
-                        ex);
-
-                    if (!(needSilenceException))
-                    {
-                        throw;
-                    }
-                }
+                ProcessClientStream(
+                    networkStream);
             }
         }
 
         /// <summary>
-        /// (Almost) comment-only helper.
+        /// We used to use this method
+        /// which compares against specific exception message,
+        /// however this is fatally incompatible with non-English thread locale
+        /// (to try to make this work sufficiently(?)
+        /// one could choose to start worker threads with locale tweaked to English,
+        /// but "somehow" I don't want that...),
+        /// thus choose to have exception handling scope much more specific
+        /// (and right at the place where we actually *are* able to properly evaluate
+        /// the "using Keep-Alive" boolean!), which enables us to not require
+        /// a check for a specific message text any more.
         /// </summary>
         /// <remarks>
         /// For the Keep-Alive case we have code to keep listening
@@ -347,15 +343,43 @@ namespace SvnBridge.Net
             ref bool requestedHttpKeepAlive,
             ref bool serveFurtherRequests)
         {
-            IHttpContext context = new ListenerContext(
-                networkStream,
-                logger);
+            IHttpContext context = null;
+            try
+            {
+                context = new ListenerContext(
+                    networkStream,
+                    logger);
 
-            bool isGoodHttpRequest = IsGoodHttpRequest(
-                context.Request);
+                bool isGoodHttpRequest = IsGoodHttpRequest(
+                    context.Request);
+
+                if (!(isGoodHttpRequest))
+                {
+                    context = null;
+                }
+            }
+            catch (IOException /* ex */)
+            {
+                // Unconditionally silencing this exception here
+                // near this construction-specific scope now
+                // (see comment at formerly used method).
+                //
+                // And I don't suppose one would want to add a Configuration.LogCancelErrors check here,
+                // since this is Keep-Alive here where cancelling likely is common-case.
+                //
+                // TODO: add breakpoint here to determine whether a specific sub type of IOException
+                // gets thrown, then either directly catch() it or use Exception.GetType() check(s).
+                //bool needSilenceException = NeedSilenceThisIOExceptionTypeForClientProcessing(ex);
+                bool needSilenceException = true;
+                if (!(needSilenceException))
+                {
+                    throw;
+                }
+            }
 
             bool canHandlePerHttpMethodRequestContext = false;
-            if (isGoodHttpRequest)
+            bool isValidContext = (null != context);
+            if (isValidContext)
             {
                 canHandlePerHttpMethodRequestContext = true;
             }

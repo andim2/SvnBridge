@@ -157,6 +157,13 @@ namespace SvnBridge.Net
             catch (HttpException ex)
             {
                 // Check if error caused by client cancelling operation under IIS 7
+
+                // FIXME: exception message content is dependent on thread locale!!
+                // Should probably fix this imprecise handling by moving ignore handling
+                // of a HttpException to the specific (or, "a more specific") scope
+                // where *this* particular HttpException *reason* happens within a call.
+                // OTOH this is not urgent since a message mismatch will merely lead to
+                // doing the same thing as the LogCancelErrors case below...
                 if (!ex.Message.StartsWith("An error occurred while communicating with the remote host.") &&
                     !ex.Message.StartsWith("The remote host closed the connection."))
                     throw;
