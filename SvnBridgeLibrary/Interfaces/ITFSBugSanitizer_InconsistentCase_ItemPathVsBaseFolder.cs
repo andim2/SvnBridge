@@ -80,7 +80,8 @@ namespace SvnBridge.Interfaces
         ///     string pathToBeChecked = dataItemToPotentiallyBeCorrected;
         ///     bool haveEncounteredAnyMismatch = MakeItemPathSanitized(
         ///         ref pathToBeChecked,
-        ///         versionSpec);
+        ///         versionSpec,
+        ///         itemType);
         ///     bool hadSanePath = !(haveEncounteredAnyMismatch);
         ///     if (!(hadSanePath))
         ///     {
@@ -125,9 +126,11 @@ namespace SvnBridge.Interfaces
         ///   helper types specific to that toolkit
         /// <param name="pathToBeChecked">Full SCM path of item - potentially tweaked (sanitized)</param>
         /// <param name="versionSpec">Version to query items of</param>
+        /// <param name="itemType">Type of item, at innermost (read: full) sub path location</param>
         /// <returns>bool which indicates whether the path string has been sanitized</returns>
         bool MakeItemPathSanitized(
             ref string pathToBeChecked,
-            VersionSpec versionSpec);
+            VersionSpec versionSpec,
+            ItemType itemType);
     }
 }

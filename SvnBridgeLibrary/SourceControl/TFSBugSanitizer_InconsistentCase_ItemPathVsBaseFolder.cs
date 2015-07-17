@@ -51,7 +51,8 @@ namespace SvnBridge.SourceControl
 
         public virtual bool MakeItemPathSanitized(
             ref string pathToBeChecked,
-            VersionSpec versionSpec)
+            VersionSpec versionSpec,
+            ItemType itemType)
         {
             bool haveEncounteredAnyMismatch = false;
 
@@ -82,6 +83,7 @@ namespace SvnBridge.SourceControl
             // rather than reducing string length
             // from the last separator each time
             // (that probably would be more imprecise/risky).
+            ItemType itemTypeCurr = itemType;
             for (var numElemsRemain = pathElemsCount; numElemsRemain > 0; --numElemsRemain)
             {
                 bool haveHitRoot = (1 == numElemsRemain);
@@ -90,13 +92,20 @@ namespace SvnBridge.SourceControl
                     // When doing a root-only request, TFS APIs would bail out...
                     break;
                 }
+                bool isLastPathElem = (pathElemsCount == numElemsRemain);
+                bool isFolder = (!isLastPathElem);
+                if (isFolder)
+                {
+                    itemTypeCurr = ItemType.Folder;
+                }
 
                 string pathToBeChecked_Curr = PathJoin(
                     pathElemsToBeChecked,
                     numElemsRemain);
                 SourceItem sourceItem = QueryItem(
                     pathToBeChecked_Curr,
-                    versionSpec);
+                    versionSpec,
+                    itemTypeCurr);
                 string pathResult = sourceItem.RemoteName;
                 bool isPathElemMatch = pathResult.Equals(pathToBeChecked_Curr);
                 if (!(isPathElemMatch))
@@ -130,14 +139,15 @@ namespace SvnBridge.SourceControl
 
         private SourceItem QueryItem(
             string pathToBeChecked,
-            VersionSpec versionSpec)
+            VersionSpec versionSpec,
+            ItemType itemType)
         {
             SourceItem[] sourceItems = sourceControlService.QueryItems(serverUrl, credentials,
                 pathToBeChecked,
                 RecursionType.None,
                 versionSpec,
                 DeletedState.Any, // This is ok, right?
-                ItemType.Any, // FIXME: really!?!? perhaps we could have a case of same-name .File and .Folder, where we would in fact do need to make this distinction!!!
+                itemType,
                 false, 0);
             bool isCorrectResultItemCount = (1 == sourceItems.Length);
             if (!(isCorrectResultItemCount))
@@ -217,11 +227,13 @@ namespace SvnBridge.SourceControl
         public static bool CheckNeededItemPathSanitized(
             TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer,
             ref string itemPathToBeSanitized,
-            VersionSpec versionSpecItem)
+            VersionSpec versionSpecItem,
+            ItemType itemType)
         {
             bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
                 ref itemPathToBeSanitized,
-                versionSpecItem);
+                versionSpecItem,
+                itemType);
             bool hadSanePath = !(haveEncounteredAnyMismatch);
 
             return !(hadSanePath);

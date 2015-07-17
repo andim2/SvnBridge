@@ -2054,7 +2054,8 @@ namespace SvnBridge.SourceControl
                         VersionSpec versionSpecItem = versionSpecChangeset;
                         bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
                             ref pathToBeChecked,
-                            versionSpecItem);
+                            versionSpecItem,
+                            change.Item.type);
                         bool hadSanePath = !(haveEncounteredAnyMismatch);
                         if (!(hadSanePath))
                         {
