@@ -49,11 +49,10 @@ namespace SvnBridge.SourceControl
                 count);
         }
 
-        public virtual string GetItemPathSanitized(
-            string pathToBeChecked,
+        public virtual bool MakeItemPathSanitized(
+            ref string pathToBeChecked,
             int revision)
         {
-            string pathSanitized;
             bool haveEncounteredAnyMismatch = false;
 
             EnsureServerRootSyntax(pathToBeChecked);
@@ -123,16 +122,13 @@ namespace SvnBridge.SourceControl
             bool hadSanePath = !(haveEncounteredAnyMismatch);
             if (!(hadSanePath))
             {
-                pathSanitized = PathJoin(
+                string pathSanitized = PathJoin(
                     pathElemsSanitized,
                     pathElemsSanitized.Length);
-            }
-            else
-            {
-                pathSanitized = pathToBeChecked;
+                pathToBeChecked = pathSanitized;
             }
 
-            return pathSanitized;
+            return haveEncounteredAnyMismatch;
         }
 
         private SourceItem QueryItem(
@@ -226,14 +222,10 @@ namespace SvnBridge.SourceControl
             ref string itemPathToBeSanitized,
             int itemRevision)
         {
-            string result = bugSanitizer.GetItemPathSanitized(
-                itemPathToBeSanitized,
+            bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
+                ref itemPathToBeSanitized,
                 itemRevision);
-            bool hadSanePath = (result.Equals(itemPathToBeSanitized));
-            if (!(hadSanePath))
-            {
-                itemPathToBeSanitized = result;
-            }
+            bool hadSanePath = !(haveEncounteredAnyMismatch);
 
             return !(hadSanePath);
         }

@@ -66,14 +66,24 @@ namespace SvnBridge.Interfaces
     public interface ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder
     {
         /// <summary>
-        /// Returns an item path
+        /// Results in an item path
         /// which has been verified to actually be properly correct -
-        /// the returned result may thus have been corrected
+        /// the result may thus have been corrected
         /// i.e. freed from certain TFS issues such as:
         /// - the TFS item invalid case sensitivity disease
         /// ,
         /// analyzed at exactly the item revision (version)
         /// which has been specified.
+        /// Recommended sample invocation pattern:
+        ///     string pathToBeChecked = dataItemToPotentiallyBeCorrected;
+        ///     bool haveEncounteredAnyMismatch = MakeItemPathSanitized(
+        ///         ref pathToBeChecked,
+        ///         revision);
+        ///     bool hadSanePath = !(haveEncounteredAnyMismatch);
+        ///     if (!(hadSanePath))
+        ///     {
+        ///         dataItemToPotentiallyBeCorrected = pathToBeChecked;
+        ///     }
         /// </summary>
         /// Performance-related implementation details:
         /// PLEASE NOTE that this API is as much of a *terrible* hotpath
@@ -82,11 +92,23 @@ namespace SvnBridge.Interfaces
         /// may easily be executed for thousands of items, at all times!!
         /// (IOW avoid any bloat whatsoever in your implementation!)
         ///
-        /// <param name="pathToBeChecked">Full SCM path of item</param>
+        /// I decided to provide this as bool result / string reference
+        /// (rather than returning a potentially modified string),
+        /// since that way the "strings mismatching" decision
+        /// can be carried out internally already
+        /// (i.e., does not need to be done manually *each time*
+        /// in user-side instruction cache layers) -
+        /// and in fact the decision
+        /// on whether values are to be considered mismatching or not
+        /// *can* definitely be seen as internal authority knowledge of the implementation side
+        /// (and of each [potentially differing] implementation variant also -
+        /// otherwise one could have a central helper here
+        /// which does the comparison centrally for all implementations).
+        /// <param name="pathToBeChecked">Full SCM path of item - potentially tweaked (sanitized)</param>
         /// <param name="revision">Revision to query items of</param>
-        /// <returns>Potentially corrected item path</returns>
-        string GetItemPathSanitized(
-            string pathToBeChecked,
+        /// <returns>bool which indicates whether the path string has been sanitized</returns>
+        bool MakeItemPathSanitized(
+            ref string pathToBeChecked,
             int revision);
     }
 }

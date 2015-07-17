@@ -2049,13 +2049,13 @@ namespace SvnBridge.SourceControl
                     bool needCheckPath = (pathToBeChecked.Contains("/display/"));
                     if (needCheckPath)
                     {
-                        string result = bugSanitizer.GetItemPathSanitized(
-                            pathToBeChecked,
+                        bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
+                            ref pathToBeChecked,
                             changeset.cset);
-                        bool hadSanePath = (result.Equals(pathToBeChecked));
+                        bool hadSanePath = !(haveEncounteredAnyMismatch);
                         if (!(hadSanePath))
                         {
-                            change.Item.item = result;
+                            change.Item.item = pathToBeChecked;
                         }
                     }
                     ++cg;
