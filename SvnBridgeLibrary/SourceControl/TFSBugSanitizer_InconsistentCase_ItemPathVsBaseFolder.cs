@@ -54,6 +54,17 @@ namespace SvnBridge.SourceControl
             VersionSpec versionSpec,
             ItemType itemType)
         {
+            CheckNeedItemPathSanitize_execute(
+                pathToBeChecked,
+                versionSpec,
+                itemType);
+        }
+
+        private void CheckNeedItemPathSanitize_execute(
+            string pathToBeChecked,
+            VersionSpec versionSpec,
+            ItemType itemType)
+        {
             bool haveEncounteredAnyMismatch = false;
 
             EnsureServerRootSyntax(pathToBeChecked);
