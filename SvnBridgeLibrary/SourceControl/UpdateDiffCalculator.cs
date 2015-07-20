@@ -9,6 +9,9 @@ using SvnBridge.Utility; // Helper.SortHistories()
 
 namespace SvnBridge.SourceControl
 {
+    using ClientExistingFiles = Dictionary<string, int>;
+    using ClientMissingFiles = Dictionary<string, string>;
+
     public class ChangeTypeAnalyzer
     {
         public static bool IsRenameOperation(SourceItemChange change)
@@ -102,8 +105,8 @@ namespace SvnBridge.SourceControl
     public class UpdateDiffCalculator
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
-        private Dictionary<string, int> clientExistingFiles;
-        private Dictionary<string, string> clientMissingFiles;
+        private ClientExistingFiles clientExistingFiles;
+        private ClientMissingFiles clientMissingFiles;
         private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
         private string debugInterceptCheck /* = null */ = null /* CS0649 */;
@@ -594,9 +597,9 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private static Dictionary<string, string> GetClientMissingFiles(string path, UpdateReportData reportData)
+        private static ClientMissingFiles GetClientMissingFiles(string path, UpdateReportData reportData)
         {
-            Dictionary<string, string> clientMissingFiles = new Dictionary<string, string>();
+            ClientMissingFiles clientMissingFiles = new ClientMissingFiles();
             if (reportData.Missing != null)
             {
                 string pathPrefix = MakePrefixPath(path);
@@ -608,9 +611,9 @@ namespace SvnBridge.SourceControl
             return clientMissingFiles;
         }
 
-        private static Dictionary<string, int> GetClientExistingFiles(string path, UpdateReportData reportData)
+        private static ClientExistingFiles GetClientExistingFiles(string path, UpdateReportData reportData)
         {
-            Dictionary<string, int> clientExistingFiles = new Dictionary<string, int>();
+            ClientExistingFiles clientExistingFiles = new ClientExistingFiles();
             if (reportData.Entries != null)
             {
                 string pathPrefix = MakePrefixPath(path);
