@@ -106,6 +106,55 @@ namespace SvnBridge.SourceControl
         }
     }
 
+    public sealed class SCMHelpers
+    {
+        // Marker string to be used for cases where the author of an SCM item
+        // can not be readily determined.
+        // FIXME: is the "unknown" string a *fixed*, "widely known", "magic" value
+        // by which SVN publicly indicates "unknown author",
+        // or could this be replaced by a *much* more suitable
+        // (think otherwise totally anonymous, context-free output logging)
+        // "UnknownAuthor" string?
+        // SVN source does not indicate any use of such a specific user string
+        // (except for already using the identical "unknown" word for the node kind),
+        // thus it would be possible.
+        private const string unknownAuthorMarker = "unknown";
+
+        public static string UnknownAuthorMarker
+        {
+            get { return unknownAuthorMarker; }
+        }
+
+        /// <remarks>
+        /// Forcing user to supply a sourceItem-related author ID here
+        /// rather than choosing (re-)assignment after the fact, since:
+        /// - author is the only "specially missing" attribute
+        /// during this otherwise 1:1 conversion
+        /// - construction-time assignment is "faster" / "much more elegant"
+        /// </remarks>
+        public static ItemMetaData ConvertSourceItem(SourceItem sourceItem, string rootPath, string author)
+        {
+            ItemMetaData item;
+            if (sourceItem.ItemType == ItemType.Folder)
+            {
+                item = new FolderMetaData();
+            }
+            else
+            {
+                item = new ItemMetaData();
+            }
+
+            item.Id = sourceItem.ItemId;
+            item.Name = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
+
+            item.Author = author;
+            item.LastModifiedDate = sourceItem.RemoteDate;
+            item.ItemRevision = sourceItem.RemoteChangesetId;
+            item.DownloadUrl = sourceItem.DownloadUrl;
+            return item;
+        }
+    }
+
     internal static class CollectionHelpers
     {
         /// <summary>
@@ -1416,7 +1465,7 @@ namespace SvnBridge.SourceControl
             Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
             foreach (SourceItem sourceItem in sourceItems)
             {
-                ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
+                ItemMetaData item = SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker);
                 bool isPropertyFile = IsPropertyFile(item.Name);
                 if (isPropertyFile && !returnPropertyFiles)
                 {
@@ -1663,7 +1712,7 @@ namespace SvnBridge.SourceControl
 
         private MergeActivityResponse GenerateMergeResponse(string activityId, int changesetId)
         {
-            MergeActivityResponse mergeResponse = new MergeActivityResponse(changesetId, DateTime.Now, "unknown");
+            MergeActivityResponse mergeResponse = new MergeActivityResponse(changesetId, DateTime.Now, SCMHelpers.UnknownAuthorMarker);
             List<string> baseFolders = new List<string>();
             List<string> sortedMergeResponse = new List<string>();
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -2250,7 +2299,7 @@ namespace SvnBridge.SourceControl
                 items,
                 changeset_Newer);
 
-            result = itemsPrev.Select(sourceItem => (null != sourceItem) ? ConvertSourceItem(sourceItem, rootPath) : null).ToArray();
+            result = itemsPrev.Select(sourceItem => (null != sourceItem) ? SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker) : null).ToArray();
 
             return result;
         }
@@ -2487,28 +2536,6 @@ namespace SvnBridge.SourceControl
                 serverUrl, credentials,
                 activityId, serverItems
             );
-        }
-
-        private ItemMetaData ConvertSourceItem(SourceItem sourceItem, string rootPath)
-        {
-            ItemMetaData item;
-            if (sourceItem.ItemType == ItemType.Folder)
-            {
-                item = new FolderMetaData();
-            }
-            else
-            {
-                item = new ItemMetaData();
-            }
-
-            item.Id = sourceItem.ItemId;
-            item.Name = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
-
-            item.Author = "unknown";
-            item.LastModifiedDate = sourceItem.RemoteDate;
-            item.ItemRevision = sourceItem.RemoteChangesetId;
-            item.DownloadUrl = sourceItem.DownloadUrl;
-            return item;
         }
     }
 }
