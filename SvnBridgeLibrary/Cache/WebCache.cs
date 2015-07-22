@@ -14,12 +14,12 @@ namespace SvnBridge.Cache
 
         public virtual CachedResult Get(string key)
         {
-            return (CachedResult)cache[key.ToLowerInvariant()];
+            return (CachedResult)cache[GetKeyCooked(key)];
         }
 
         public virtual void Set(string key, object obj)
         {
-            cache.Add(key.ToLowerInvariant(), 
+            cache.Add(GetKeyCooked(key),
                 new CachedResult(obj), 
                 null, 
                 System.Web.Caching.Cache.NoAbsoluteExpiration,
@@ -36,6 +36,11 @@ namespace SvnBridge.Cache
                 keys.Add((string)de.Key);
             }
             keys.ForEach(s => cache.Remove(s));
+        }
+
+        private static string GetKeyCooked(string key)
+        {
+            return key.ToLowerInvariant();
         }
     }
 }
