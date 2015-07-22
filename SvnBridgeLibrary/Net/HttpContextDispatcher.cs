@@ -72,7 +72,7 @@ namespace SvnBridge.Net
                     return;
                 }
 
-                NetworkCredential credential = GetCredential(connection);
+                NetworkCredential credential = GetCredential(request);
                 string tfsUrl = parser.GetServerUrl(request, credential);
                 if (string.IsNullOrEmpty(tfsUrl))
                 {
@@ -167,9 +167,9 @@ namespace SvnBridge.Net
             }
         }
 
-        private static NetworkCredential GetCredential(IHttpContext context)
+        private static NetworkCredential GetCredential(IHttpRequest request)
         {
-            string authorizationHeader = context.Request.Headers["Authorization"];
+            string authorizationHeader = request.Headers["Authorization"];
             if (!string.IsNullOrEmpty(authorizationHeader))
             {
                 if (authorizationHeader.StartsWith("Digest"))
