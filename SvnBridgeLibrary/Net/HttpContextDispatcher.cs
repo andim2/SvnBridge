@@ -60,6 +60,14 @@ namespace SvnBridge.Net
             }
         }
 
+        public sealed class InvalidServerUrlException : ArgumentException
+        {
+            public InvalidServerUrlException(string url)
+                : base(string.Format("Invalid server URL \"{0}\"", url))
+            {
+            }
+        }
+
         public void Dispatch(IHttpContext connection)
         {
             try
@@ -71,21 +79,16 @@ namespace SvnBridge.Net
                     return;
                 }
 
-                NetworkCredential credential = GetCredential(request);
-                string tfsUrl = parser.GetServerUrl(request, credential);
-                if (string.IsNullOrEmpty(tfsUrl))
+                NetworkCredential credential = null;
+                try
+                {
+                    credential = SetupPerRequestEnvironment(request);
+                }
+                catch (InvalidServerUrlException)
                 {
                     SendFileNotFoundResponse(connection);
                     return;
                 }
-
-                if (credential != null)
-                {
-                    TweakCredential(ref credential, tfsUrl);
-                }
-                RequestCache.Items["serverUrl"] = tfsUrl;
-                RequestCache.Items["projectName"] = parser.GetProjectName(request);
-                RequestCache.Items["credentials"] = credential;
 
                 HandleRequest(
                     connection,
@@ -131,6 +134,31 @@ namespace SvnBridge.Net
                 if (Configuration.LogCancelErrors)
                     throw;
             }
+        }
+
+        /// <summary>
+        /// Figures out credentials-related (whole-?)session attributes
+        /// that are to be used for this particular HTTP request
+        /// and assigns them to the strictly per-request-scoped RequestCache.
+        /// </summary>
+        private NetworkCredential SetupPerRequestEnvironment(IHttpRequest request)
+        {
+            NetworkCredential credential = GetCredential(request);
+            string tfsUrl = parser.GetServerUrl(request, credential);
+            if (string.IsNullOrEmpty(tfsUrl))
+            {
+                throw new InvalidServerUrlException(tfsUrl);
+            }
+
+            if (credential != null)
+            {
+                TweakCredential(ref credential, tfsUrl);
+            }
+            RequestCache.Items["serverUrl"] = tfsUrl;
+            RequestCache.Items["projectName"] = parser.GetProjectName(request);
+            RequestCache.Items["credentials"] = credential;
+
+            return credential;
         }
 
         private static NetworkCredential GetCredential(IHttpRequest request)
