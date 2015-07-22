@@ -4,9 +4,12 @@ namespace SvnBridge.SourceControl
     using System.Collections.Generic; // List
     using System.Diagnostics; // Conditional
     using System.Net; // ICredentials
+    using System.Text; // StringBuilder
     using CodePlex.TfsLibrary; // NetworkAccessDeniedException
     using CodePlex.TfsLibrary.ObjectModel; // SourceItem
     using CodePlex.TfsLibrary.RepositoryWebSvc; // DeletedState, ItemType, VersionSpec
+    using Cache; // WebCache
+    using Infrastructure; // Container
     using Interfaces; // ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder
     using Utility; // Helper.DebugUsefulBreakpointLocation()
 
@@ -24,6 +27,13 @@ namespace SvnBridge.SourceControl
         private readonly ITFSSourceControlService sourceControlService;
         private readonly string serverUrl;
         private readonly ICredentials credentials;
+        // We don't need <see cref="MemoryBasedPersistentCache"/> type
+        // since in our case I believe
+        // we *can* (i.e. it's not a critical error) and *should*
+        // live with the restriction of <see cref="WebCache"/> type
+        // of values getting expired at any time.
+        private readonly WebCache cache;
+        private readonly string cacheScopePrefix;
 
         public TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder(
             ITFSSourceControlService sourceControlService,
@@ -32,6 +42,43 @@ namespace SvnBridge.SourceControl
             this.sourceControlService = sourceControlService;
             this.serverUrl = serverUrl;
             this.credentials = credentials;
+            this.cache = GetGloballySharedInstanceOfWebCache();
+            string scopeType = GetType().Name;
+            string scopeAuthSessionSpecific = GetServerAuthSessionCacheKey(
+                serverUrl,
+                credentials);
+            this.cacheScopePrefix = scopeType + "_" + scopeAuthSessionSpecific;
+        }
+
+        /// <summary>
+        /// Gets the global <see cref="WebCache"/> instance
+        /// where results created by *any* objects of this class are stored.
+        /// </summary>
+        private WebCache GetGloballySharedInstanceOfWebCache()
+        {
+            return Container.Resolve<WebCache>();
+        }
+
+        // XXX move to more public location!
+        private static string GetServerAuthSessionCacheKey(
+            string serverUrl,
+            ICredentials credentials)
+        {
+            return serverUrl + GetCredentialsHashCode(
+                credentials);
+        }
+
+        /// <summary>
+        /// Returns a string representation of *hash code specifics*
+        /// (IOW, either numeric or "(null)").
+        /// Credentials might have ended up null
+        /// in cases such as
+        /// HttpWebRequest..UnsafeAuthenticatedConnectionSharing = true;
+        /// </summary>
+        private static string GetCredentialsHashCode(
+            ICredentials credentials)
+        {
+            return (null != credentials) ? credentials.GetHashCode().ToString() : "(null)";
         }
 
         private static string[] PathSplit(
@@ -96,10 +143,170 @@ namespace SvnBridge.SourceControl
             VersionSpec versionSpec,
             ItemType itemType)
         {
-            CheckNeedItemPathSanitize_execute(
+            string cacheKey = GetCacheKey(
                 pathToBeChecked,
                 versionSpec,
                 itemType);
+            // Note: in case of cache-existing mismatch record,
+            // method will simply directly "re-play" exception.
+            bool haveCacheEntry = RecallCacheEntry(
+                cacheKey,
+                pathToBeChecked);
+            bool needActiveQuery = !(haveCacheEntry);
+            if (needActiveQuery)
+            {
+                // Prefer to keep this sub scope directly visible here (inlined)
+                // due to too many symmetry restrictions:
+                // - symmetry RecallCacheEntry() vs. AddCacheEntry()
+                // - (related:) symmetry of cacheKey use
+                string pathSanitized = null;
+                try
+                {
+                    CheckNeedItemPathSanitize_execute(
+                        pathToBeChecked,
+                        versionSpec,
+                        itemType);
+                    pathSanitized = pathToBeChecked;
+                }
+                catch(ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+                {
+                    pathSanitized = e.PathSanitized;
+                    throw;
+                }
+                finally
+                {
+                    bool haveResult = (null != pathSanitized);
+                    if (haveResult)
+                    {
+                        AddCacheEntry(
+                            cacheKey,
+                            pathSanitized);
+                    }
+                }
+            }
+        }
+
+        private string GetCacheKey(
+            string pathToBeChecked,
+            VersionSpec versionSpec,
+            ItemType itemType)
+        {
+            // Since SCM lookup supports several different kinds of "version specification",
+            // we will somehow have to deal with decoding/labeling them properly, *here*.
+            string versionSpecDescription = TfsLibraryHelpers.GetVersionSpecDescription(
+                versionSpec);
+            return GetCacheKeyConcat(
+                this.cacheScopePrefix,
+                pathToBeChecked,
+                versionSpecDescription,
+                itemType.ToString());
+        }
+
+        private static string GetCacheKeyConcat(
+            string cacheScopePrefix,
+            string pathToBeChecked,
+            string versionSpecDescription,
+            string itemTypeString)
+        {
+            string cacheKey =
+                cacheScopePrefix +
+                "_" +
+                "path:" + pathToBeChecked +
+                "_" +
+                versionSpecDescription +
+                "_" +
+                "type:" + itemTypeString;
+            return cacheKey;
+        }
+
+        /// <remarks>
+        /// StringBuilder is said to be starting to get useful from ~ > 600 strings only!
+        /// </remarks>
+        private static string GetCacheKeySB(
+            string cacheScopePrefix,
+            string pathToBeChecked,
+            string versionSpecDescription,
+            string itemTypeString)
+        {
+            var sb = new StringBuilder();
+            sb.Append(cacheScopePrefix);
+            sb.Append("_");
+            sb.Append("path:");
+            sb.Append(pathToBeChecked);
+            sb.Append("_");
+            sb.Append(versionSpecDescription);
+            sb.Append("_");
+            sb.Append("type:");
+            sb.Append(itemTypeString);
+            string res = sb.ToString(); // debug helper
+            return res;
+        }
+
+        private bool RecallCacheEntry(
+            string cacheKey,
+            string pathToBeChecked)
+        {
+            bool haveCacheEntry = false;
+
+            string pathResult;
+            haveCacheEntry = (GetCacheEntry(cacheKey, out pathResult));
+            if (haveCacheEntry)
+            {
+                CheckReportMismatch(
+                    pathToBeChecked,
+                    pathResult);
+            }
+
+            return haveCacheEntry;
+        }
+
+        private static void CheckReportMismatch(
+            string pathToBeChecked,
+            string pathCorrected)
+        {
+            bool isMatch = pathToBeChecked.Equals(pathCorrected);
+            if (!(isMatch))
+            {
+                ReportSanitizedPath(
+                    pathCorrected);
+            }
+        }
+
+        private bool GetCacheEntry(
+            string cacheKey,
+            out string pathResult)
+        {
+            bool haveCacheEntry = false;
+
+            CachedResult result = cache.Get(cacheKey);
+            if (null != result)
+            {
+                pathResult = (string)result.Value;
+                haveCacheEntry = true;
+            }
+            else
+            {
+                pathResult = "";
+            }
+
+            return haveCacheEntry;
+        }
+
+        private void AddCacheEntry(
+            string cacheKey,
+            string pathSanitized)
+        {
+            // Side note: unfortunately the amount of cache additions here adds up,
+            // resulting in (semi-)persistent memory use increases
+            // of sometimes ~ 100MB during only one prolonged client session,
+            // which may be a bit much
+            // since excessive cases
+            // might manage to exceed system resources.
+            // To keep resource use down reliably,
+            // cache size limiting
+            // (via Clear()ing once having exceeded a limit)
+            // is needed somewhere in central areas.
+            cache.Set(cacheKey, pathSanitized);
         }
 
         private void CheckNeedItemPathSanitize_execute(

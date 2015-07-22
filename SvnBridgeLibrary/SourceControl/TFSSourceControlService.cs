@@ -1013,19 +1013,33 @@ namespace SvnBridge.SourceControl
     /// contain the same path / revision pair even *multiple* times
     /// (especially in the QueryBranches_sanitize() case).
     /// To try to improve the situation,
-    /// one should likely introduce a cache class
+    /// we now use a cache class
     /// which provides/keeps mappings
     /// from the potentially-wrong-path / revision pair
     /// to case-verified result path,
     /// and keep this cache as a maximally globally available object,
     /// i.e. for use during at least one filter class session,
     /// or ideally much more (e.g. for all same-credential same-server-url session scopes).
-    /// Initially one could introduce the cache object
-    /// for within-class-session use only,
-    /// and once it works to a satisfying extent,
-    /// one could add infrastructure
-    /// to be able to share that cache object
-    /// within a much larger (yet still compatible) session scope.
+    /// Unfortunately for sufficiently involved operations
+    /// even the current implementation
+    /// in combination with this quite efficient caching mechanism
+    /// is not fast enough.
+    /// One could think of doing even further optimisations,
+    /// however this will likely necessitate very invasive changes:
+    /// One could first collect *all* items to be checked
+    /// for a certain SCM operation (e.g. QueryItems()),
+    /// then sort these items according to their revision,
+    /// then submit web service queries
+    /// for each revision
+    /// (thereby querying many items at the same time,
+    /// rather than only ~ 5 items each
+    /// for every complete sub folder path
+    /// to be checked).
+    /// Finally, given the "global" result set,
+    /// one would then do the actual verification run
+    /// (via another iteration over the whole set)
+    /// where one would throw the exception
+    /// for every item which turns out to be mismatching.
     /// </remarks>
     internal class TFSSourceControlService_BugSanitizerCaseSensitivityInconsistentCommitRecords : ITFSSourceControlService_wrapper
     {
@@ -2056,6 +2070,41 @@ namespace SvnBridge.SourceControl
             }
 
             return isRename;
+        }
+
+        /// <summary>
+        /// Since the various VersionSpec derivatives
+        /// do not seem to have
+        /// a fully usable "string-typed description" mechanism
+        /// (perhaps via .ToString() or so),
+        /// we'll have to provide this here.
+        /// </summary>
+        public static string GetVersionSpecDescription(
+            VersionSpec versionSpec)
+        {
+            string description;
+
+            ChangesetVersionSpec changesetVersionSpec = versionSpec as ChangesetVersionSpec;
+            if (null != changesetVersionSpec)
+            {
+                description = "cs" + changesetVersionSpec.cs.ToString();
+            }
+            else
+            {
+                throw new UnsupportedVersionSpecTypeException(
+                    versionSpec);
+            }
+
+            return description;
+        }
+
+        public sealed class UnsupportedVersionSpecTypeException : InvalidOperationException
+        {
+            public UnsupportedVersionSpecTypeException(VersionSpec versionSpec)
+                :base(string.Format("Creating description string of type {0} not supported yet", versionSpec.GetType().Name))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
         }
     }
 }
