@@ -34,7 +34,7 @@ namespace SvnBridge.Infrastructure
         private delegate object Creator();
 
         private readonly Dictionary<Type, Creator> typeToCreator = new Dictionary<Type, Creator>();
-        private readonly Dictionary<Type, bool> performedValidation = new Dictionary<Type, bool>();
+        //private readonly Dictionary<Type, bool> performedValidation = new Dictionary<Type, bool>();
 
         public void RegisterType(Type service, Type impl)
         {
