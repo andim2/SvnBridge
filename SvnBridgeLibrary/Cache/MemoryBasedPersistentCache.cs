@@ -199,14 +199,19 @@ namespace SvnBridge.Cache
             }
         }
 
+        /// XXX Clears an entire somewhat globally shared cache!
         public static void Clear()
         {
             RequestCache.Items.Clear();
         }
 
-        private static string MakeSessionKey(string key)
+        /// RequestCache is a somewhat globally shared cache,
+        /// thus perhaps there may occur key conflicts
+        /// between different sessions.
+        /// FIXME actually do provide per-session mangling of the key.
+        private static string MakeSessionKey(string userKey)
         {
-            return key;
+            return userKey;
         }
     }
 }
