@@ -40,7 +40,29 @@ namespace SvnBridge.Cache
 
         private static string GetKeyCooked(string key)
         {
-            return key.ToLowerInvariant();
+            // Disabled case damaging here
+            // since doing *internal* case damaging
+            // of externally bona fide supplied keys
+            // within a **GENERIC** web cache class
+            // is very harmful
+            // (for those several potential users
+            // of the global WebCache
+            // which do NOT want case corruption) -
+            // thus definitely prefer
+            // having to laboriously try re-fetching unretrievable content
+            // in case of case mismatches!
+            //
+            // If case damaging turns out to nevertheless be required
+            // for a sizeable part of users,
+            // then it would likely be advisable
+            // to also offer case-mangling versions
+            // of Get()/Set() (~CaseMangled()?).
+            // If instead only few users require that,
+            // then it ought to be their own decision
+            // to apply key case mangling prior to Get()/Set().
+
+            //return key.ToLowerInvariant();
+            return key;
         }
     }
 }
