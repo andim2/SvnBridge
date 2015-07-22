@@ -506,7 +506,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void WriteMultiStatusStart(TextWriter writer, List<XmlElement> properties)
+        private static void WriteMultiStatusStart(TextWriter writer, List<XmlElement> properties)
         {
             if (properties.Count > 1 ||
                (properties.Count == 1 && properties[0].LocalName == "deadprop-count") ||
@@ -590,7 +590,7 @@ namespace SvnBridge.Handlers
             return false;
         }
 
-        private bool IsSvnRequestForProjectCreation(string requestPath, int version, TFSSourceControlProvider sourceControlProvider)
+        private static bool IsSvnRequestForProjectCreation(string requestPath, int version, TFSSourceControlProvider sourceControlProvider)
         {
             requestPath = Helper.Decode(requestPath);
 

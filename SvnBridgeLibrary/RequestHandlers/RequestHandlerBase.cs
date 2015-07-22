@@ -209,7 +209,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        public void WriteLog(string logMessage)
+        public static void WriteLog(string logMessage)
         {
             string pathLogFile = Path.Combine(LogBasePath, "requestlog.txt");
             using (StreamWriter w = File.AppendText(pathLogFile))

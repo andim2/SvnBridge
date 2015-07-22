@@ -136,7 +136,7 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-        private string GetSetWorkItemStatusToFixedMessage()
+        private static string GetSetWorkItemStatusToFixedMessage()
         {
             string custom = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SetWorkItemStatusToFixedMessage.xml");
             if (File.Exists(custom))
@@ -144,7 +144,7 @@ namespace SvnBridge.Infrastructure
             return setWorkItemStatusToFixedMessage;
         }
 
-        private string GetAssociateWorkItemWithChangeSetMessage()
+        private static string GetAssociateWorkItemWithChangeSetMessage()
         {
             string custom = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AssociateWorkItemWithChangeSetMessage.xml");
             if (File.Exists(custom))
@@ -200,7 +200,7 @@ namespace SvnBridge.Infrastructure
             public int Revision;
         }
 
-        private int GetIndexOfColumn(XmlNamespaceManager nsMgr, XmlNode node, string columnName)
+        private static int GetIndexOfColumn(XmlNamespaceManager nsMgr, XmlNode node, string columnName)
         {
             int index = 0;
             foreach (XmlNode xmlNode in node.SelectNodes("wi:columns/wi:c/wi:n", nsMgr))

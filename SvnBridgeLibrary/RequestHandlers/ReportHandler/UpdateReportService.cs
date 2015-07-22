@@ -212,7 +212,7 @@ namespace SvnBridge.Infrastructure
 			return path.Substring(slashIndex + 1);
 		}
 
-        private string StripBasePath(ItemMetaData item, string basePath)
+        private static string StripBasePath(ItemMetaData item, string basePath)
         {
             string name = item.Name;
 
@@ -230,7 +230,7 @@ namespace SvnBridge.Infrastructure
             return name;
         }
 
-        private int GetClientRevisionFor(List<EntryData> entries, string name)
+        private static int GetClientRevisionFor(List<EntryData> entries, string name)
         {
             EntryData bestMatch = entries[0];
 
@@ -257,7 +257,7 @@ namespace SvnBridge.Infrastructure
             return int.Parse(bestMatch.Rev);
         }
 
-        private bool IsMissing(UpdateReportData data, string localPath, string name)
+        private static bool IsMissing(UpdateReportData data, string localPath, string name)
         {
             if (data.Missing == null || data.Missing.Count == 0)
                 return false;

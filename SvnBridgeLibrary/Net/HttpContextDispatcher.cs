@@ -257,7 +257,7 @@ namespace SvnBridge.Net
             response.OutputStream.Write(buffer, 0, buffer.Length);
         }
 
-        protected void SendFileNotFoundResponse(IHttpContext connection)
+        protected static void SendFileNotFoundResponse(IHttpContext connection)
         {
             IHttpResponse response = connection.Response;
             response.StatusCode = (int)HttpStatusCode.NotFound;

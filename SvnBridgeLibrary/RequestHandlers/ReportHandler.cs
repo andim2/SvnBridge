@@ -186,7 +186,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void SendUnknownReportResponse(IHttpResponse response)
+        private static void SendUnknownReportResponse(IHttpResponse response)
         {
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.NotImplemented);
             response.AppendHeader("Connection", "close");
@@ -198,7 +198,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void SendTargetDoesNotExistResponse(IHttpResponse response)
+        private static void SendTargetDoesNotExistResponse(IHttpResponse response)
         {
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.InternalServerError);
             response.AppendHeader("Connection", "close");
@@ -410,7 +410,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void GetDatedRevReport(TFSSourceControlProvider sourceControlProvider, DatedRevReportData data, TextWriter output)
+        private static void GetDatedRevReport(TFSSourceControlProvider sourceControlProvider, DatedRevReportData data, TextWriter output)
         {
             int targetRevision = sourceControlProvider.GetVersionForDate(data.CreationDate);
 
@@ -428,7 +428,7 @@ namespace SvnBridge.Handlers
             writer.Write("</S:get-locks-report>\n");
         }
 
-        private void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string requestPath, StreamWriter output)
+        private static void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string requestPath, StreamWriter output)
         {
             string serverPath = GetServerSidePath(requestPath);
 

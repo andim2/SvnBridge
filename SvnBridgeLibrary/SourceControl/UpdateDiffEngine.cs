@@ -187,7 +187,7 @@ namespace SvnBridge.SourceControl
             ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit, updatingForwardInTime);
         }
 
-        private string GetRemoteNameOfPropertyChange(SourceItemChange change)
+        private static string GetRemoteNameOfPropertyChange(SourceItemChange change)
         {
             string remoteName = change.Item.RemoteName;
             if (remoteName.Contains("/" + Constants.PropFolder + "/"))

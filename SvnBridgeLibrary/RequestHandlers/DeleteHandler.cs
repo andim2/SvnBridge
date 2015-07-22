@@ -42,8 +42,8 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private bool Delete(TFSSourceControlProvider sourceControlProvider,
-                            string requestPath)
+        private static bool Delete(TFSSourceControlProvider sourceControlProvider,
+                                   string requestPath)
         {
             if (requestPath.StartsWith("/!svn/act/"))
             {

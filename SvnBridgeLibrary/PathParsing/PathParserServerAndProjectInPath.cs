@@ -56,7 +56,7 @@ namespace SvnBridge.PathParsing
             return c_strHTTP + url;
 		}
 
-		private string GetUrlFromRequest(Uri requestUrl)
+		private static string GetUrlFromRequest(Uri requestUrl)
 		{
 			string path = requestUrl.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
             
@@ -136,7 +136,7 @@ namespace SvnBridge.PathParsing
 			return GetLocalPath(url);
 		}
 
-		private string GetLocalPath(string url)
+		private static string GetLocalPath(string url)
 		{
             // If a relative url has been provided, make it an absolute URL so we can still
             // get the same unescaped path from it.

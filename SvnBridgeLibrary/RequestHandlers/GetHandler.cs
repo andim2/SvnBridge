@@ -122,7 +122,7 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private void RenderFolder(IHttpContext context, TFSSourceControlProvider sourceControlProvider, FolderMetaData folder)
+        private static void RenderFolder(IHttpContext context, TFSSourceControlProvider sourceControlProvider, FolderMetaData folder)
         {
             int latestVersion = sourceControlProvider.GetLatestVersion();
             IHttpResponse response = context.Response;

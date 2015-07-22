@@ -1374,7 +1374,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private bool IsDeleted(string activityId, string path)
+        private static bool IsDeleted(string activityId, string path)
         {
             bool result = false;
             ActivityRepository.Use(activityId, delegate(Activity activity)

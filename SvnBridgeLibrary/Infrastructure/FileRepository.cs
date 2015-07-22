@@ -47,7 +47,7 @@ namespace SvnBridge.Infrastructure
             item.DataLoaded = true;
         }
 
-        private string GetDownloadUrl(string downloadUrl, Guid repositoryUuid)
+        private static string GetDownloadUrl(string downloadUrl, Guid repositoryUuid)
         {
             string newDownloadUrl = downloadUrl;
             if (!string.IsNullOrEmpty(Configuration.TfsProxyUrl))
