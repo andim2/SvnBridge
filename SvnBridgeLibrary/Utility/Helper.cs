@@ -328,7 +328,8 @@ namespace SvnBridge.Utility
 					urlTfsService = url + "/Services/v1.0/Registration.asmx";
 					output_expected = "Team Foundation Registration web service";
 				}
-				WebRequest request = WebRequest.Create(urlTfsService);
+				Uri uriTfsService = new Uri(urlTfsService);
+				WebRequest request = WebRequest.Create(uriTfsService);
 				request.Credentials = credentials;
 				request.Proxy = CreateProxy(proxyInformation);
 				request.Timeout = 60000;
