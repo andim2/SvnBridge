@@ -16,12 +16,10 @@ namespace SvnBridge.SourceControl
 	public class TFSSourceControlService : SourceControlService
 	{
         private readonly DefaultLogger logger;
-        private readonly IRepositoryWebSvcFactory webSvcFactory;
 
         public TFSSourceControlService(IRegistrationService registrationService, IRepositoryWebSvcFactory webSvcFactory, IWebTransferService webTransferService, IFileSystem fileSystem, DefaultLogger logger)
 			: base(registrationService, webSvcFactory, webTransferService, fileSystem)
 		{
-			this.webSvcFactory = webSvcFactory;
 			this.logger = logger;
 		}
 
