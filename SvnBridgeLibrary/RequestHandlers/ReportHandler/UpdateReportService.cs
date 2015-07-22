@@ -74,9 +74,11 @@ namespace SvnBridge.Infrastructure
 
 				foreach (ItemMetaData item in folder.Items)
 				{
-					if (item.ItemType == ItemType.Folder)
+          FolderMetaData subFolder = item as FolderMetaData;
+          bool isFolder = (null != subFolder);
+					if (isFolder)
 					{
-						ProcessUpdateReportForDirectory(updateReportRequest, (FolderMetaData)item, output, false, folderWasDeleted);
+						ProcessUpdateReportForDirectory(updateReportRequest, subFolder, output, false, folderWasDeleted);
 					}
 					else
 					{

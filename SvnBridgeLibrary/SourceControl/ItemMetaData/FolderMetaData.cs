@@ -126,8 +126,10 @@ namespace SvnBridge.SourceControl
                     throw new InvalidOperationException("Found missing item:" + item +
                                                         " but those should not be returned from this final(ized) filesystem item hierarchy space");
                 }
-                if (item is FolderMetaData)
-                    VerifyNoMissingItemMetaDataRemained((FolderMetaData)item);
+                FolderMetaData folder = item as FolderMetaData;
+                bool isFolder = (null != folder);
+                if (isFolder)
+                    VerifyNoMissingItemMetaDataRemained(folder);
             }
         }
 

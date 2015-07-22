@@ -505,9 +505,11 @@ namespace SvnBridge.SourceControl
                         continue;
                     }
                 }
-                if (data is FolderMetaData)
+                FolderMetaData folder = data as FolderMetaData;
+                bool isFolder = (null != folder);
+                if (isFolder)
                 {
-                    RemoveMissingItemsWhichAreChildrenOfRenamedItem(itemName, (FolderMetaData)data);
+                    RemoveMissingItemsWhichAreChildrenOfRenamedItem(itemName, folder);
                 }
             }
         }
