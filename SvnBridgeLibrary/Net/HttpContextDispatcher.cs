@@ -328,7 +328,7 @@ namespace SvnBridge.Net
                 {
                     username += "_cp";
                 }
-                if (domain == "")
+                if (string.IsNullOrEmpty(domain))
                 {
                     domain = "snd";
                 }
