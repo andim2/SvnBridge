@@ -78,11 +78,11 @@ namespace SvnBridge.Net
                 Equals(other.tfsProxyUrl, tfsProxyUrl);
 		}
 
-		public override bool Equals(object other)
+		public override bool Equals(object obj)
 		{
-			if (ReferenceEquals(null, other)) return false;
-			if (ReferenceEquals(this, other)) return true;
-			return Equals(other as ProxyInformation);
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			return Equals(obj as ProxyInformation);
 		}
 
 		public override int GetHashCode()
