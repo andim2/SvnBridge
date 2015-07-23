@@ -136,6 +136,9 @@ namespace SvnBridge.PathParsing
 			return GetLocalPath(url);
 		}
 
+        /// <summary>
+        /// Deprecated variant (URL string rather than proper Uri object).
+        /// </summary>
 		private static string GetLocalPath(string url)
 		{
             // If a relative url has been provided, make it an absolute URL so we can still
@@ -146,7 +149,12 @@ namespace SvnBridge.PathParsing
             }
 
 			Uri urlAsUri = new Uri(url);
-			string path = urlAsUri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
+            return GetLocalPath(urlAsUri);
+        }
+
+        private static string GetLocalPath(Uri uri)
+        {
+			string path = uri.GetComponents(UriComponents.Path, UriFormat.SafeUnescaped);
       string authorityPlusTfsServiceBasePath;
       string tfsTeamProjPath;
       SplitTFSServiceAndTeamProjParts(path, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
