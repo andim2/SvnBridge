@@ -20,6 +20,7 @@ namespace SvnBridge.Net
     {
         protected readonly IPathParser parser;
         protected readonly ActionTrackingViaPerfCounter actionTracking;
+        private ICredentials sessionCredentials; // whole-session credentials as possibly cached over all individual HTTP requests
 
         public HttpContextDispatcher(IPathParser parser, ActionTrackingViaPerfCounter actionTracking)
         {
@@ -218,6 +219,35 @@ namespace SvnBridge.Net
 
             string projectName = parser.GetProjectName(request);
 
+            // NOTE: certain areas which maintain a per-whole-session cache
+            // establish their properly client-session-distinct cache scope
+            // (by using the hash code of the ICredentials object
+            // as passed to their server interface APIs
+            // as a scope prefix for the cache elements).
+            // Since it is desirable to have good caching efficiency,
+            // I implement the following measures:
+            // - joining of client sessions
+            //   in case authentication
+            //   of separate HTTP requests
+            //   has been determined to be "identical"
+            //   This is to be done
+            //   by keeping the credential as same-object
+            //   in order to retain the same hash code
+            bool wantNewSession = true;
+
+            bool doSessionCombineWhenAuthIdentical = false;
+            if (doSessionCombineWhenAuthIdentical)
+            {
+                wantNewSession = WantNewHttpSession(
+                    credential);
+            }
+
+            bool updateCredential = (wantNewSession);
+            if (updateCredential)
+            {
+                sessionCredentials = credential;
+            }
+
             /// Remembering a username value here in more global scope,
             /// since a specific username identification unfortunately is required
             /// for certain services (e.g. IWorkItemModifier)
@@ -255,7 +285,7 @@ namespace SvnBridge.Net
 
             RequestCache.Items["serverUrl"] = tfsUrl;
             RequestCache.Items["projectName"] = projectName;
-            RequestCache.Items["credentials"] = credential;
+            RequestCache.Items["credentials"] = sessionCredentials;
 
             // Decided to use more specific naming here
             // ("sessionUserDomain" rather than "domain")
@@ -445,6 +475,72 @@ namespace SvnBridge.Net
                 domain = "";
                 username = domainAndUser;
             }
+        }
+
+        private NetworkCredential GetCredential_Current()
+        {
+            NetworkCredential credential = null;
+
+            credential = sessionCredentials as NetworkCredential;
+
+            return credential;
+        }
+
+        private bool WantNewHttpSession(
+            NetworkCredential credentialNew)
+        {
+            bool wantNewSession = true;
+
+            NetworkCredential credentialOld = GetCredential_Current();
+            bool haveCredentialEquality = DetermineCredentialsSessionEquality(
+                credentialNew,
+                credentialOld);
+            bool haveNewCredential = !(haveCredentialEquality);
+            wantNewSession = (haveNewCredential);
+
+            return wantNewSession;
+        }
+
+        private static bool DetermineCredentialsSessionEquality(
+            NetworkCredential credentialNew,
+            NetworkCredential credentialOld)
+        {
+            bool haveCredentialEquality = false;
+
+            if (
+                (null != credentialNew) &&
+                (null != credentialOld))
+            {
+                haveCredentialEquality = DetermineCredentialsSessionEquality_Do(
+                    credentialNew,
+                    credentialOld);
+            }
+            else
+            {
+                if (
+                    (null == credentialNew) &&
+                    (null == credentialOld))
+                {
+                    haveCredentialEquality = true;
+                }
+            }
+
+            return haveCredentialEquality;
+        }
+
+        private static bool DetermineCredentialsSessionEquality_Do(
+            NetworkCredential credentialNew,
+            NetworkCredential credentialOld)
+        {
+            bool haveCredentialEquality;
+
+            // Performance: start comparison at the least-likely-equal attribute!
+            haveCredentialEquality = (
+                (credentialNew.Password.Equals(credentialOld.Password)) &&
+                (credentialNew.UserName.Equals(credentialOld.UserName)) &&
+                (credentialNew.Domain.Equals(credentialOld.Domain)));
+
+            return haveCredentialEquality;
         }
 
         private void HandleRequest(
