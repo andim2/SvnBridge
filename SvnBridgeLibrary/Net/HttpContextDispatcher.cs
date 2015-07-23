@@ -11,6 +11,7 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl; // CredentialsHelper
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 using System.Web;
 
 namespace SvnBridge.Net
@@ -374,10 +375,19 @@ namespace SvnBridge.Net
                 }
                 else
                 {
-                    throw new Exception("Unrecognized authorization header: " + authorizationHeader.StartsWith("Basic"));
+                    throw new UnrecognizedAuthorizationHeaderException(authorizationHeader);
                 }
             }
             return CredentialsHelper.NullCredentials;
+        }
+
+        public sealed class UnrecognizedAuthorizationHeaderException : Exception
+        {
+            public UnrecognizedAuthorizationHeaderException(string authorizationHeader)
+                : base("Unrecognized authorization header: " + authorizationHeader.StartsWith("Basic"))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
         }
 
         /// <summary>
