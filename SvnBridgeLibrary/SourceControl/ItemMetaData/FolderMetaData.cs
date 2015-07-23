@@ -120,7 +120,9 @@ namespace SvnBridge.SourceControl
                     continue;
                 }
 
-                if (item is MissingItemMetaData)
+                bool isMissingItem = (item is MissingItemMetaData);
+                bool isOK = !(isMissingItem);
+                if (!(isOK))
                 {
                     Helper.DebugUsefulBreakpointLocation();
                     throw new InvalidOperationException("Found missing item:" + item +
