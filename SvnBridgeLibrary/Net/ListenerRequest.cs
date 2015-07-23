@@ -100,7 +100,6 @@ namespace SvnBridge.Net
 			{
 				long position = buffer.Position;
 				buffer.Position = 0;
-				byte[] bytes = new byte[position];
 				StreamReader reader = new StreamReader(buffer);
 				string message = reader.ReadToEnd();
 				if (message.Contains("\0"))
