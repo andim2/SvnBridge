@@ -1816,7 +1816,7 @@ namespace SvnBridge.SourceControl
         /// Since call hierarchy of history handling is a multitude of private calls,
         /// it might be useful to move all this class-bloating handling
         /// into a separate properly isolated class specifically for this purpose.
-        private List<SourceItemHistory> QueryHistory(
+        private List<Changeset> QueryChangesets_TFS_sanitize_querylimit_etc(
             string serverPath,
             VersionSpec itemVersion,
             int versionFrom,
@@ -1825,7 +1825,7 @@ namespace SvnBridge.SourceControl
             int maxCount,
             bool sortAscending)
         {
-            List<SourceItemHistory> histories;
+            List<Changeset> changesetsTotal = new List<Changeset>();
 
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
             VersionSpec versionSpecFrom = VersionSpec.FromChangeset(versionFrom);
@@ -1841,6 +1841,7 @@ namespace SvnBridge.SourceControl
                     versionSpecFrom, versionSpecTo,
                     maxCount_Allowed,
                     sortAscending);
+                changesetsTotal.AddRange(changesets);
             }
             catch (SoapException ex)
             {
@@ -1849,7 +1850,7 @@ namespace SvnBridge.SourceControl
                     // Workaround for bug in TFS2008sp1
                     int latestVersion = GetLatestVersion();
                     // WARNING: TFS08 QueryHistory() is very problematic! (see comments here and in next inner layer)
-                    List<SourceItemHistory> tempHistories = QueryHistory(
+                    List<Changeset> tempChangesets = QueryChangesets_TFS_sanitize_querylimit_etc(
                         serverPath,
                         itemVersion,
                         1,
@@ -1857,20 +1858,20 @@ namespace SvnBridge.SourceControl
                         RecursionType.None,
                         2,
                         sortAscending /* is this the value to pass to have this workaround still work properly? */);
-                    if (tempHistories[0].Changes[0].ChangeType == ChangeType.Delete && tempHistories.Count == 2)
-                        latestVersion = tempHistories[1].ChangeSetID;
+                    if (tempChangesets[0].Changes[0].type == ChangeType.Delete && tempChangesets.Count == 2)
+                        latestVersion = tempChangesets[1].cset;
 
                     if (versionTo == latestVersion)
                     {
                         // in this case, there are only 2 revisions in TFS
                         // the first being the initial checkin, and the second
                         // being the deletion, there is no need to query further
-                        histories = tempHistories;
+                        changesetsTotal = tempChangesets;
                     }
                     else
                     {
-                        string itemFirstPath = tempHistories[0].Changes[0].Item.RemoteName; // debug helper
-                        histories = QueryHistory(
+                        string itemFirstPath = tempChangesets[0].Changes[0].Item.item; // debug helper
+                        changesetsTotal = QueryChangesets_TFS_sanitize_querylimit_etc(
                             itemFirstPath,
                             VersionSpec.FromChangeset(latestVersion),
                             1,
@@ -1884,20 +1885,17 @@ namespace SvnBridge.SourceControl
                     // perhaps it would be possible to simply restrict the queries above up to versionTo,
                     // but perhaps these queries were being done this way since perhaps e.g. for merge operations
                     // (nonlinear history) version ranges of a query do need to be specified in full.
-                    Histories_RestrictToRangeWindow(
-                        ref histories,
+                    Changesets_RestrictToRangeWindow(
+                        ref changesetsTotal,
                         versionTo,
                         maxCount,
                         false);
 
-                    return histories;
+                    return changesetsTotal;
                 }
                 else
                     throw;
             }
-            List<Changeset> changesetsTotal = new List<Changeset>();
-
-            changesetsTotal.AddRange(changesets);
 
             int logItemsCount_ThisRun = changesets.Length;
 
@@ -1943,7 +1941,27 @@ namespace SvnBridge.SourceControl
                 }
             }
 
-            histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray()).ToList();
+            return changesetsTotal;
+        }
+
+        private List<SourceItemHistory> QueryHistory(
+            string serverPath,
+            VersionSpec itemVersion,
+            int versionFrom, int versionTo,
+            RecursionType recursionType,
+            int maxCount,
+            bool sortAscending)
+        {
+            List<SourceItemHistory> histories;
+
+            Changeset[] changesets = QueryChangesets_TFS_sanitize_querylimit_etc(
+                serverPath,
+                itemVersion,
+                versionFrom, versionTo,
+                recursionType,
+                maxCount,
+                sortAscending).ToArray();
+            histories = ConvertChangesetsToSourceItemHistory(changesets).ToList();
 
             return histories;
         }
@@ -1979,7 +1997,7 @@ namespace SvnBridge.SourceControl
         /// by passing a maximum version to be listed,
         /// and by subsequently restricting the number of entries to maxCount.
         /// </summary>
-        /// <param name="histories">List of changesets to be modified</param>
+        /// <param name="changesets">List of changesets to be modified</param>
         /// <param name="versionTo">maximum version to keep listing</param>
         /// <param name="maxCount">maximum number of entries allowed</param>
         /// <param name="whenOverflowDiscardNewest">when true: remove newest version entries, otherwise remove oldest.
@@ -1987,17 +2005,17 @@ namespace SvnBridge.SourceControl
         /// perhaps the user should always expect discarding at a certain end and thus _always_
         /// have loop handling for missing parts...
         /// </param>
-        private static void Histories_RestrictToRangeWindow(
-            ref List<SourceItemHistory> histories,
+        private static void Changesets_RestrictToRangeWindow(
+            ref List<Changeset> changesets,
             int versionTo,
             int maxCount,
             bool whenOverflowDiscardNewest)
         {
-            while ((histories.Count > 0) && (histories[0].ChangeSetID > versionTo))
+            while ((changesets.Count > 0) && (changesets[0].cset > versionTo))
             {
-                histories.RemoveAt(0);
+                changesets.RemoveAt(0);
             }
-            var numElemsExceeding = histories.Count - maxCount;
+            var numElemsExceeding = changesets.Count - maxCount;
             bool isCountWithinRequestedLimit = (0 >= numElemsExceeding);
             if (!(isCountWithinRequestedLimit))
             {
@@ -2006,7 +2024,7 @@ namespace SvnBridge.SourceControl
                 // else end range.
                 var numElemsRemove = numElemsExceeding;
                 int startIndex = whenOverflowDiscardNewest ? 0 : maxCount;
-                histories.RemoveRange(startIndex, numElemsRemove);
+                changesets.RemoveRange(startIndex, numElemsRemove);
             }
         }
 
