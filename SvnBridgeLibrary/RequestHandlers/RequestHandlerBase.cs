@@ -55,9 +55,9 @@ namespace SvnBridge.Handlers
 		private IHttpContext httpContext;
 	    private ICredentials credentials;
 
-        public void SetSourceControlProvider(TFSSourceControlProvider value)
+        public void SetSourceControlProvider(TFSSourceControlProvider sourceControlProvider)
 	    {
-	        sourceControlProvider = value;
+	        this.sourceControlProvider = sourceControlProvider;
 	    }
 
         TFSSourceControlProvider sourceControlProvider;

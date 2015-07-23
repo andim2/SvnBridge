@@ -994,7 +994,7 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        public virtual void SetProperty(string activityId, string path, string property, string value)
+        public virtual void SetProperty(string activityId, string path, string propName, string propValue)
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
@@ -1003,11 +1003,11 @@ namespace SvnBridge.SourceControl
                     activity.Properties[path] = new Properties();
                 }
 
-                activity.Properties[path].Added[property] = value;
+                activity.Properties[path].Added[propName] = propValue;
             });
         }
 
-        public virtual void RemoveProperty(string activityId, string path, string property)
+        public virtual void RemoveProperty(string activityId, string path, string propName)
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
@@ -1015,7 +1015,7 @@ namespace SvnBridge.SourceControl
                 {
                     activity.Properties[path] = new Properties();
                 }
-                activity.Properties[path].Removed.Add(property);
+                activity.Properties[path].Removed.Add(propName);
             });
         }
 

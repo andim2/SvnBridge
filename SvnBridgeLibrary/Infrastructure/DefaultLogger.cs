@@ -97,13 +97,14 @@ namespace SvnBridge.Infrastructure
             output.AppendFormat("\r\nException:\r\n   {0}\r\n", exception);
             output.AppendFormat("\r\nStack Trace:\r\n{0}\r\n", exception.StackTrace);
             output.Append("\r\nHeaders:\r\n\r\n");
-            foreach (string name in context.Request.Headers)
+            foreach (string headerName in context.Request.Headers)
             {
-                foreach (string value in context.Request.Headers[name].Split(','))
+                foreach (string headerValueRaw in context.Request.Headers[headerName].Split(','))
                 {
-                    output.Append(name);
+                    string headerValue = headerValueRaw.TrimStart();
+                    output.Append(headerName);
                     output.Append(": ");
-                    output.Append(value.TrimStart());
+                    output.Append(headerValue);
                     output.Append("\r\n");
                 }
             }

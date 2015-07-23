@@ -152,7 +152,7 @@ namespace SvnBridge.Utility
             targetIndex += (int) instruction.Length;
         }
 
-        public static SvnDiff CreateReplaceDiff(byte[] bytes, int index, int length)
+        public static SvnDiff CreateReplaceDiff(byte[] data, int index, int length)
         {
             SvnDiff svnDiff = null;
             if (length > 0)
@@ -166,7 +166,7 @@ namespace SvnBridge.Utility
                 MemoryStream dataStream = new Utility.MemoryStreamLOHSanitized();
                 using (BinaryWriter dataWriter = new BinaryWriter(dataStream))
                 {
-                    dataWriter.Write(bytes, index, length);
+                    dataWriter.Write(data, index, length);
                     // Flush() (and Close()) guaranteed by "using"
                 }
                 svnDiff.DataSectionBytes = dataStream.ToArray();
@@ -186,9 +186,9 @@ namespace SvnBridge.Utility
             return svnDiff;
         }
 
-        public static SvnDiff[] ParseSvnDiff(byte[] bytes)
+        public static SvnDiff[] ParseSvnDiff(byte[] data)
         {
-            MemoryStream stream = new MemoryStream(bytes);
+            MemoryStream stream = new MemoryStream(data);
             return ParseSvnDiff(stream);
         }
 
@@ -345,10 +345,10 @@ namespace SvnBridge.Utility
             return value;
         }
 
-        private static void WriteInt(BinaryWriter writer, ulong value, out int bytesWritten)
+        private static void WriteInt(BinaryWriter writer, ulong intValue, out int bytesWritten)
         {
             int count = 1;
-            ulong temp = value >> 7;
+            ulong temp = intValue >> 7;
             while (temp > 0)
             {
                 temp = temp >> 7;
@@ -358,7 +358,7 @@ namespace SvnBridge.Utility
             bytesWritten = count;
             while (--count >= 0)
             {
-                byte b = (byte)((byte)(value >> ((byte)count * 7)) & 0x7F);
+                byte b = (byte)((byte)(intValue >> ((byte)count * 7)) & 0x7F);
                 if (count > 0)
                 {
                     b |= 0x80;
