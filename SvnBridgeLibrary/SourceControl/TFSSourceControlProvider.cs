@@ -574,10 +574,15 @@ namespace SvnBridge.SourceControl
                             InsertFolderInMap((FolderMetaData)item);
                         }
                     }
-                    else if ((item is StubFolderMetaData) && isLastPathElem)
+                    else if (isLastPathElem)
                     {
-                        item = ItemHelpers.FolderOps_UnwrapStubFolder(folder, (StubFolderMetaData)item);
-                        InsertFolderInMap((FolderMetaData)item); // update map to contain new folder item
+                        StubFolderMetaData itemFolderStub = item as StubFolderMetaData;
+                        bool isItemStubFolder = (null != itemFolderStub);
+                        if (isItemStubFolder)
+                        {
+                            item = ItemHelpers.FolderOps_UnwrapStubFolder(folder, itemFolderStub);
+                            InsertFolderInMap((FolderMetaData)item); // update map to contain new folder item
+                        }
                     }
 
                     return item;
