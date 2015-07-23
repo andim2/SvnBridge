@@ -583,6 +583,37 @@ namespace SvnBridge.SourceControl
     {
         private readonly TFSSourceControlService_Statistics_CountRequests_Stats stats;
 
+        /// <summary>
+        /// Debugging helper to be able to quickly determine
+        /// which APIs had any activity at all.
+        /// </summary>
+        [Flags]
+        protected enum ReqActivity
+        {
+            AddWorkspaceMapping = 0x0001,
+            Commit = 0x0002,
+            CreateWorkspace = 0x0004,
+            DeleteWorkspace = 0x0008,
+            GetRepositoryId = 0x0010,
+            GetLatestChangeset = 0x0020,
+            GetWorkspaces = 0x0040,
+            PendChanges = 0x0080,
+            QueryItems_SourceItem_paths = 0x0100,
+            QueryItems_SourceItem_ids = 0x0200,
+            QueryLog = 0x0400,
+            UndoPendingChanges = 0x0800,
+            UpdateLocalVersions = 0x1000,
+            UploadFile = 0x2000,
+            UploadFileFromBytes = 0x4000,
+            UploadFileFromStream = 0x8000,
+            QueryBranches = 0x10000,
+            QueryBranches_workspace = 0x20000,
+            QueryHistory = 0x40000,
+            QueryItems_ItemSet = 0x80000,
+            QueryItemsExtended = 0x100000
+        }
+        protected ReqActivity reqActivity; // Debugger use: remember to switch to "Hexadecimal Display" (nope, now that we properly have FlagsAttribute it's not necessary any more)
+
         public TFSSourceControlService_Statistics_CountRequests(ITFSSourceControlService scsWrapped)
             : base(scsWrapped)
         {
@@ -607,6 +638,7 @@ namespace SvnBridge.SourceControl
                                  int supportedFeatures)
         {
             ++stats.AddWorkspaceMapping;
+            reqActivity |= ReqActivity.AddWorkspaceMapping;
             base.AddWorkspaceMapping(tfsUrl, credentials,
                 workspaceName,
                 serverPath,
@@ -623,6 +655,7 @@ namespace SvnBridge.SourceControl
                    int checkInTicket)
         {
             ++stats.Commit;
+            reqActivity |= ReqActivity.Commit;
             return base.Commit(tfsUrl, credentials,
                 workspaceName,
                 comment,
@@ -637,6 +670,7 @@ namespace SvnBridge.SourceControl
                              string workspaceComment)
         {
             ++stats.CreateWorkspace;
+            reqActivity |= ReqActivity.CreateWorkspace;
             base.CreateWorkspace(tfsUrl, credentials,
                 workspaceName,
                 workspaceComment);
@@ -647,6 +681,7 @@ namespace SvnBridge.SourceControl
                              string workspaceName)
         {
             ++stats.DeleteWorkspace;
+            reqActivity |= ReqActivity.DeleteWorkspace;
             base.DeleteWorkspace(tfsUrl, credentials,
                 workspaceName);
         }
@@ -656,6 +691,7 @@ namespace SvnBridge.SourceControl
 							   ICredentials credentials)
         {
             ++stats.GetRepositoryId;
+            reqActivity |= ReqActivity.GetRepositoryId;
             return base.GetRepositoryId(tfsUrl, credentials);
         }
 
@@ -664,6 +700,7 @@ namespace SvnBridge.SourceControl
                                ICredentials credentials)
         {
             ++stats.GetLatestChangeset;
+            reqActivity |= ReqActivity.GetLatestChangeset;
             return base.GetLatestChangeset(tfsUrl, credentials);
         }
 
@@ -673,6 +710,7 @@ namespace SvnBridge.SourceControl
                                       int permissionsFilter)
         {
             ++stats.GetWorkspaces;
+            reqActivity |= ReqActivity.GetWorkspaces;
             return base.GetWorkspaces(tfsUrl, credentials,
                 computers,
                 permissionsFilter);
@@ -686,6 +724,7 @@ namespace SvnBridge.SourceControl
                          int supportedFeatures)
         {
             ++stats.PendChanges;
+            reqActivity |= ReqActivity.PendChanges;
             base.PendChanges(tfsUrl, credentials,
                 workspaceName,
                 requests,
@@ -704,6 +743,7 @@ namespace SvnBridge.SourceControl
                                 int options)
         {
             ++stats.QueryItems_SourceItem_paths;
+            reqActivity |= ReqActivity.QueryItems_SourceItem_paths;
             return base.QueryItems(tfsUrl, credentials,
                 serverPath,
                 recursion,
@@ -721,6 +761,7 @@ namespace SvnBridge.SourceControl
                                 int options)
         {
             ++stats.QueryItems_SourceItem_ids;
+            reqActivity |= ReqActivity.QueryItems_SourceItem_ids;
             return base.QueryItems(tfsUrl, credentials,
                 itemIds,
                 changeSet,
@@ -737,6 +778,7 @@ namespace SvnBridge.SourceControl
                          bool sortAscending)
         {
             ++stats.QueryLog;
+            reqActivity |= ReqActivity.QueryLog;
             return base.QueryLog(tfsUrl, credentials,
                 serverPath,
                 versionFrom,
@@ -752,6 +794,7 @@ namespace SvnBridge.SourceControl
                                 IEnumerable<string> serverItems)
         {
             ++stats.UndoPendingChanges;
+            reqActivity |= ReqActivity.UndoPendingChanges;
             base.UndoPendingChanges(tfsUrl, credentials,
                 workspaceName,
                 serverItems);
@@ -763,6 +806,7 @@ namespace SvnBridge.SourceControl
                                  IEnumerable<LocalUpdate> updates)
         {
             ++stats.UpdateLocalVersions;
+            reqActivity |= ReqActivity.UpdateLocalVersions;
             base.UpdateLocalVersions(tfsUrl, credentials,
                 workspaceName,
                 updates);
@@ -775,6 +819,7 @@ namespace SvnBridge.SourceControl
                         string serverPath)
         {
             ++stats.UploadFile;
+            reqActivity |= ReqActivity.UploadFile;
             base.UploadFile(tfsUrl, credentials,
                 workspaceName,
                 localPath,
@@ -788,6 +833,7 @@ namespace SvnBridge.SourceControl
                                  string serverPath)
         {
             ++stats.UploadFileFromBytes;
+            reqActivity |= ReqActivity.UploadFileFromBytes;
             base.UploadFileFromBytes(tfsUrl, credentials,
                 workspaceName,
                 localContents,
@@ -801,6 +847,7 @@ namespace SvnBridge.SourceControl
                                   string serverPath)
         {
             ++stats.UploadFileFromStream;
+            reqActivity |= ReqActivity.UploadFileFromStream;
             base.UploadFileFromStream(tfsUrl, credentials,
                 workspaceName,
                 localContents,
@@ -816,6 +863,7 @@ namespace SvnBridge.SourceControl
                                      VersionSpec version)
         {
             ++stats.QueryBranches;
+            reqActivity |= ReqActivity.QueryBranches;
             return base.QueryBranches(tfsUrl, credentials,
                 items,
                 version);
@@ -827,6 +875,7 @@ namespace SvnBridge.SourceControl
         public override BranchRelative[][] QueryBranches(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, VersionSpec version)
         {
             ++stats.QueryBranches_workspace;
+            reqActivity |= ReqActivity.QueryBranches_workspace;
             return base.QueryBranches(tfsUrl, credentials,
                 workspaceName,
                 items,
@@ -839,6 +888,7 @@ namespace SvnBridge.SourceControl
         )
         {
             ++stats.QueryHistory;
+            reqActivity |= ReqActivity.QueryHistory;
             return base.QueryHistory(tfsUrl, credentials,
                 workspaceName,
                 workspaceOwner,
@@ -857,6 +907,7 @@ namespace SvnBridge.SourceControl
         public override ItemSet[] QueryItems(string tfsUrl, ICredentials credentials, VersionSpec version, ItemSpec[] items, int options)
         {
             ++stats.QueryItems_ItemSet;
+            reqActivity |= ReqActivity.QueryItems_ItemSet;
             return base.QueryItems(tfsUrl, credentials,
                 version,
                 items,
@@ -866,6 +917,7 @@ namespace SvnBridge.SourceControl
         public override ExtendedItem[][] QueryItemsExtended(string tfsUrl, ICredentials credentials, string workspaceName, ItemSpec[] items, DeletedState deletedState, ItemType itemType, int options)
         {
             ++stats.QueryItemsExtended;
+            reqActivity |= ReqActivity.QueryItemsExtended;
             return base.QueryItemsExtended(tfsUrl, credentials,
                 workspaceName,
                 items,
