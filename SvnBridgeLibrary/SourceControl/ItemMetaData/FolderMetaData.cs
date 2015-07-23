@@ -121,6 +121,18 @@ namespace SvnBridge.SourceControl
                 }
 
                 bool isMissingItem = (item is MissingItemMetaData);
+                if (!isMissingItem)
+                {
+                    StubFolderMetaData stub = item as StubFolderMetaData;
+                    if (null != stub)
+                    {
+                        if (stub.RealFolder is MissingItemMetaData)
+                        {
+                            isMissingItem = true;
+                        }
+                    }
+                }
+
                 bool isOK = !(isMissingItem);
                 if (!(isOK))
                 {
