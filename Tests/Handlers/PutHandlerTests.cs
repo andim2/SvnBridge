@@ -86,8 +86,8 @@ namespace UnitTests
 
             Exception result = Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
 
-            Assert.IsType(typeof(Exception), result);
-            Assert.Equal("Checksum mismatch with base file", result.Message);
+            AssertChecksumMismatchException(
+                result);
         }
 
         [Fact]
@@ -101,6 +101,13 @@ namespace UnitTests
 
 			Exception result = Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
 
+            AssertChecksumMismatchException(
+                result);
+        }
+
+        private static void AssertChecksumMismatchException(
+            Exception result)
+        {
             Assert.IsType(typeof(Exception), result);
             Assert.Equal("Checksum mismatch with base file", result.Message);
         }

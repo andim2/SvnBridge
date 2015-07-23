@@ -60,7 +60,7 @@ namespace SvnBridge.Handlers
                 sourceData = sourceControlProvider.ReadFile(item);
                 if (ChecksumMismatch(baseHash, sourceData))
                 {
-                    throw new Exception("Checksum mismatch with base file");
+                    ReportErrorChecksumMismatch("with base file");
                 }
             }
             byte[] fileData = SvnDiffParser.ApplySvnDiffsFromStream(inputStream, sourceData);
@@ -68,7 +68,7 @@ namespace SvnBridge.Handlers
             {
                 if (ChecksumMismatch(resultHash, fileData))
                 {
-                    throw new Exception("Checksum mismatch with new file");
+                    ReportErrorChecksumMismatch("with new file");
                 }
             }
             return sourceControlProvider.WriteFile(activityId, serverPath, fileData);
@@ -81,6 +81,11 @@ namespace SvnBridge.Handlers
             if(hash==null)
                 return false;
             return Helper.GetMd5Checksum(data) != hash;
+        }
+
+        private static void ReportErrorChecksumMismatch(string details)
+        {
+            throw new Exception("Checksum mismatch " + details);
         }
     }
 }
