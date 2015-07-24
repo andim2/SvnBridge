@@ -63,11 +63,11 @@ namespace SvnBridge.SourceControl
             });
 		}
 
-		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemIds, int changeSet, int options)
+		public SourceItem QueryItems(string tfsUrl, ICredentials credentials, int itemId, int changeSet, int options)
 		{
             return WrapWebException<SourceItem>(delegate
             {
-                SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemIds }, changeSet, options);
+                SourceItem[] items = QueryItems(tfsUrl, credentials, new int[] { itemId }, changeSet, options);
                 if (items.Length == 0)
                     return null;
                 return items[0];

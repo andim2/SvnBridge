@@ -34,7 +34,7 @@ namespace SvnBridge.Views
 
         public bool UseDefaultCredentials
         {
-            get { return useDefaultCredetialsCheckBox.Checked; }
+            get { return useDefaultCredentialsCheckBox.Checked; }
         }
 
         public int Port
@@ -46,9 +46,9 @@ namespace SvnBridge.Views
         {
             InitializeComponent();
 
-            useDefaultCredetialsCheckBox.CheckedChanged += delegate
+            useDefaultCredentialsCheckBox.CheckedChanged += delegate
             {
-                bool needManualCredentials = useDefaultCredetialsCheckBox.Checked == false;
+                bool needManualCredentials = useDefaultCredentialsCheckBox.Checked == false;
                 usernameTxtBox.Enabled = passwordTxtBox.Enabled = needManualCredentials;
                 if(needManualCredentials==false)
                 {
@@ -90,7 +90,7 @@ namespace SvnBridge.Views
         {
             portTxtBox.Text = information.Port.ToString();
             usernameTxtBox.Text = information.Username;
-            useDefaultCredetialsCheckBox.Checked = information.UseDefaultCredentails;
+            useDefaultCredentialsCheckBox.Checked = information.UseDefaultCredentials;
             passwordTxtBox.Text = information.Password;
             proxyUrlTxtBox.Text = information.Url;
             tfsProxyUrlTxtBox.Text = information.TfsProxyUrl;

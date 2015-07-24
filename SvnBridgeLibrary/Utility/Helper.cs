@@ -316,7 +316,7 @@ namespace SvnBridge.Utility
 				return null;
 			IWebProxy proxy = new WebProxy(proxyInformation.Url, proxyInformation.Port);
 			ICredentials credential;
-			if (proxyInformation.UseDefaultCredentails)
+			if (proxyInformation.UseDefaultCredentials)
 			{
 				credential = CredentialCache.DefaultNetworkCredentials;
 			}
@@ -356,7 +356,7 @@ namespace SvnBridge.Utility
 			return folderName;
 		}
 
-		public static string UrlEncodeIfNeccesary(string href)
+		public static string UrlEncodeIfNecessary(string href)
 		{
 			StringBuilder sb = new StringBuilder();
 			foreach (char c in href)

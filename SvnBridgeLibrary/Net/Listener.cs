@@ -24,7 +24,7 @@ namespace SvnBridge.Net
             this.actionTracking = actionTracking;
         }
 
-        private static event EventHandler<ListenErrorEventArgs> ErrorOccured = delegate { };
+        private static event EventHandler<ListenErrorEventArgs> ErrorOccurred = delegate { };
 
         public virtual event EventHandler<ListenErrorEventArgs> ListenError = delegate { };
         public virtual event EventHandler<FinishedHandlingEventArgs> FinishedHandling = delegate { };
@@ -49,7 +49,7 @@ namespace SvnBridge.Net
             {
                 throw new InvalidOperationException("A port must be specified before starting the listener.");
             }
-            ErrorOccured += OnErrorOccured;
+            ErrorOccurred += OnErrorOccurred;
             dispatcher = new HttpContextDispatcher(parser, actionTracking);
 
             isListening = true;
@@ -87,7 +87,7 @@ namespace SvnBridge.Net
             return ipAddressToBindTo;
         }
 
-        private void OnErrorOccured(object sender, ListenErrorEventArgs e)
+        private void OnErrorOccurred(object sender, ListenErrorEventArgs e)
         {
             OnListenException(e.Exception);
         }
@@ -95,7 +95,7 @@ namespace SvnBridge.Net
         public virtual void Stop()
         {
             listener.Stop();
-            ErrorOccured -= OnErrorOccured;
+            ErrorOccurred -= OnErrorOccurred;
 			
             isListening = false;
         }

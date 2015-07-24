@@ -24,7 +24,7 @@ namespace SvnBridge.Handlers
                 SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
                 response.AppendHeader("Cache-Control", "no-cache");
                 string locationUrl = "http://" + request.Headers["Host"] + Helper.EncodeC(location);
-                response.AppendHeader("Location", Helper.UrlEncodeIfNeccesary(locationUrl));
+                response.AppendHeader("Location", Helper.UrlEncodeIfNecessary(locationUrl));
                 string responseContent =
                     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
                     "<html><head>\n" +

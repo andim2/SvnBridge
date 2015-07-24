@@ -36,7 +36,7 @@ namespace SvnBridge.Net
 			set { password = value; }
 		}
 
-		public bool UseDefaultCredentails
+		public bool UseDefaultCredentials
 		{
 			get { return useDefaultCredentails; }
 			set { useDefaultCredentails = value; }

@@ -32,7 +32,7 @@ namespace SvnBridge.Views
             this.proxyUrlTxtBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.portTxtBox = new System.Windows.Forms.TextBox();
-            this.useDefaultCredetialsCheckBox = new System.Windows.Forms.CheckBox();
+            this.useDefaultCredentialsCheckBox = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.usernameTxtBox = new System.Windows.Forms.TextBox();
             this.passwordLabel = new System.Windows.Forms.Label();
@@ -75,17 +75,17 @@ namespace SvnBridge.Views
             this.portTxtBox.Size = new System.Drawing.Size(65, 20);
             this.portTxtBox.TabIndex = 5;
             // 
-            // useDefaultCredetialsCheckBox
+            // useDefaultCredentialsCheckBox
             // 
-            this.useDefaultCredetialsCheckBox.AutoSize = true;
-            this.useDefaultCredetialsCheckBox.Checked = true;
-            this.useDefaultCredetialsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.useDefaultCredetialsCheckBox.Location = new System.Drawing.Point(16, 87);
-            this.useDefaultCredetialsCheckBox.Name = "useDefaultCredetialsCheckBox";
-            this.useDefaultCredetialsCheckBox.Size = new System.Drawing.Size(137, 17);
-            this.useDefaultCredetialsCheckBox.TabIndex = 6;
-            this.useDefaultCredetialsCheckBox.Text = "Use Default Credentials";
-            this.useDefaultCredetialsCheckBox.UseVisualStyleBackColor = true;
+            this.useDefaultCredentialsCheckBox.AutoSize = true;
+            this.useDefaultCredentialsCheckBox.Checked = true;
+            this.useDefaultCredentialsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.useDefaultCredentialsCheckBox.Location = new System.Drawing.Point(16, 87);
+            this.useDefaultCredentialsCheckBox.Name = "useDefaultCredentialsCheckBox";
+            this.useDefaultCredentialsCheckBox.Size = new System.Drawing.Size(137, 17);
+            this.useDefaultCredentialsCheckBox.TabIndex = 6;
+            this.useDefaultCredentialsCheckBox.Text = "Use Default Credentials";
+            this.useDefaultCredentialsCheckBox.UseVisualStyleBackColor = true;
             // 
             // label3
             // 
@@ -171,7 +171,7 @@ namespace SvnBridge.Views
             this.Controls.Add(this.passwordLabel);
             this.Controls.Add(this.usernameTxtBox);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.useDefaultCredetialsCheckBox);
+            this.Controls.Add(this.useDefaultCredentialsCheckBox);
             this.Controls.Add(this.portTxtBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.proxyUrlTxtBox);
@@ -193,7 +193,7 @@ namespace SvnBridge.Views
         private System.Windows.Forms.TextBox proxyUrlTxtBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox portTxtBox;
-        private System.Windows.Forms.CheckBox useDefaultCredetialsCheckBox;
+        private System.Windows.Forms.CheckBox useDefaultCredentialsCheckBox;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox usernameTxtBox;
         private System.Windows.Forms.Label passwordLabel;

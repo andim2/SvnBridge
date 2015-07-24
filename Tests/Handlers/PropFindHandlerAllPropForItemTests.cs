@@ -180,7 +180,7 @@ namespace UnitTests
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
-            Assert.True(result.Contains("<D:href>" + Helper.UrlEncodeIfNeccesary("/!svn/bc/1234/Foo/שלום.txt") + "</D:href>"));
+            Assert.True(result.Contains("<D:href>" + Helper.UrlEncodeIfNecessary("/!svn/bc/1234/Foo/שלום.txt") + "</D:href>"));
         }
 
         [Fact]

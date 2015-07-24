@@ -90,7 +90,7 @@ namespace SvnBridge.Infrastructure
                 using (Stream stream = we.Response.GetResponseStream())
                 using (StreamReader reader = new StreamReader(stream))
                 {
-                    throw new InvalidOperationException("Failed to associated work item " + workItemId + " with changeset " + changeSetId + Environment.NewLine + reader.ReadToEnd(), we);
+                    throw new InvalidOperationException("Failed to associate work item " + workItemId + " with changeset " + changeSetId + Environment.NewLine + reader.ReadToEnd(), we);
                 }
             }
         }

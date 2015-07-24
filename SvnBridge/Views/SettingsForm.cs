@@ -40,7 +40,7 @@ namespace SvnBridge.Views
 			presenter.ProxyInformation.Port = proxySettings.Port;
 			presenter.ProxyInformation.Username = proxySettings.Username;
 			presenter.ProxyInformation.Password = proxySettings.Password;
-			presenter.ProxyInformation.UseDefaultCredentails = proxySettings.UseDefaultCredentials;
+			presenter.ProxyInformation.UseDefaultCredentials = proxySettings.UseDefaultCredentials;
             presenter.ProxyInformation.TfsProxyUrl = proxySettings.TfsProxyUrl;
 			presenter.UpdatedProxyInformation();
 		}

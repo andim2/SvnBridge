@@ -136,7 +136,7 @@ namespace SvnBridge.Nodes
         {
             string href = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
             return
-                "<lp1:checked-in><D:href>" + Helper.UrlEncodeIfNeccesary(href) +
+                "<lp1:checked-in><D:href>" + Helper.UrlEncodeIfNecessary(href) +
                 "</D:href></lp1:checked-in>";
         }
 

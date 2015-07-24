@@ -13,7 +13,7 @@ namespace SvnBridge.PerfCounter.Installer
                 //if (PerformanceCounterCategory.Exists("SvnBridge"))
                 //    PerformanceCounterCategory.Delete("SvnBridge");
                 ActionTrackingViaPerfCounter.CreatePerfCounters();
-                Console.WriteLine("Succesfully create SvnBridge performance counters");
+                Console.WriteLine("Successfully created SvnBridge performance counters");
             }
             catch (Exception e)
             {

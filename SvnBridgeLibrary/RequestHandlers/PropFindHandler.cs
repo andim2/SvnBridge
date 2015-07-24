@@ -204,8 +204,8 @@ namespace SvnBridge.Handlers
             writer.Write("<lp1:getetag>W/\"" + item.Revision + "//" + Helper.EncodeB(item.Name) + "\"</lp1:getetag>\n");
             writer.Write("<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate) + "</lp1:creationdate>\n");
             writer.Write("<lp1:getlastmodified>" + Helper.FormatDateB(item.LastModifiedDate) + "</lp1:getlastmodified>\n");
-            string svrVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
-            writer.Write("<lp1:checked-in><D:href>" + svrVerLocalPath + "</D:href></lp1:checked-in>\n");
+            string svnVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
+            writer.Write("<lp1:checked-in><D:href>" + svnVerLocalPath + "</D:href></lp1:checked-in>\n");
             writer.Write("<lp1:version-controlled-configuration><D:href>" + VccPath + "</D:href></lp1:version-controlled-configuration>\n");
             writer.Write("<lp1:version-name>" + item.Revision + "</lp1:version-name>\n");
             writer.Write("<lp1:creator-displayname>" + item.Author + "</lp1:creator-displayname>\n");
@@ -428,7 +428,7 @@ namespace SvnBridge.Handlers
         {
             if (!sourceControlProvider.ItemExists(Helper.Decode(requestPath), -1))
             {
-                throw new FileNotFoundException("Unable to find file '" + requestPath + "'in the source control repository",
+                throw new FileNotFoundException("Unable to find file '" + requestPath + "' in the source control repository",
                                                 requestPath);
             }
 
@@ -467,7 +467,7 @@ namespace SvnBridge.Handlers
 
             if (item == null)
             {
-                throw new FileNotFoundException("Unable to find file '" + path + "'in the specified activity", path);
+                throw new FileNotFoundException("Unable to find file '" + path + "' in the specified activity", path);
             }
 
             using (StreamWriter writer = new StreamWriter(outputStream))
@@ -513,7 +513,7 @@ namespace SvnBridge.Handlers
                 output.Write(" xmlns:g0=\"DAV:\"");
             }
             output.Write(">\n");
-			output.Write("<D:href>" + Helper.UrlEncodeIfNeccesary(node.Href(this)) + "</D:href>\n");
+			output.Write("<D:href>" + Helper.UrlEncodeIfNecessary(node.Href(this)) + "</D:href>\n");
 
             XmlDocument doc = new XmlDocument();
             List<string> propertyResults = new List<string>();

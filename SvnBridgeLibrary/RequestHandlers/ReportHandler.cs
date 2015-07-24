@@ -62,8 +62,8 @@ namespace SvnBridge.Handlers
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "replay-report")
                     {
-                        var relayReport = Helper.DeserializeXml<ReplayReportData>(reader);
-                        ReplayReport(request, response, sourceControlProvider, relayReport);
+                        var replayReport = Helper.DeserializeXml<ReplayReportData>(reader);
+                        ReplayReport(request, response, sourceControlProvider, replayReport);
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "log-report")
                     {
@@ -320,8 +320,8 @@ namespace SvnBridge.Handlers
                 {
                     foreach (SourceItemChange change in history.Changes)
                     {
-                        ItemMetaData items = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, change.Item.RemoteName, Recursion.None);
-                        byte[] itemData = sourceControlProvider.ReadFile(items);
+                        ItemMetaData item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, change.Item.RemoteName, Recursion.None);
+                        byte[] itemData = sourceControlProvider.ReadFile(item);
                         string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
 
                         output.Write(@"<S:file-rev path=""" + change.Item.RemoteName + @""" rev=""" +

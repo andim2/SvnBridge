@@ -73,7 +73,7 @@ namespace SvnBridge
             proxyInfo.TfsProxyUrl = Configuration.TfsProxyUrl;
             proxyInfo.Url = Configuration.ProxyUrl;
             proxyInfo.Port = Configuration.ProxyPort;
-            proxyInfo.UseDefaultCredentails = Configuration.ProxyUseDefaultCredentials;
+            proxyInfo.UseDefaultCredentials = Configuration.ProxyUseDefaultCredentials;
             proxyInfo.Username = Configuration.ProxyUsername;
 
             if (Configuration.ProxyEncryptedPassword != null)
@@ -120,7 +120,7 @@ namespace SvnBridge
             Configuration.UseProxy = proxyInfo.UseProxy;
             Configuration.ProxyUrl = proxyInfo.Url;
             Configuration.ProxyPort = proxyInfo.Port;
-            Configuration.ProxyUseDefaultCredentials = proxyInfo.UseDefaultCredentails;
+            Configuration.ProxyUseDefaultCredentials = proxyInfo.UseDefaultCredentials;
             Configuration.ProxyUsername = proxyInfo.Username;
             Configuration.ProxyEncryptedPassword = password;
             Configuration.Save();

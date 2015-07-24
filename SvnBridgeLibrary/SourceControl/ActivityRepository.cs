@@ -51,14 +51,14 @@ namespace SvnBridge.SourceControl
 
 		public static void Delete(string activityId)
 		{
-			bool upgradedToWriterLcok = false;
+			bool upgradedToWriterLock = false;
 			var writerLock = new LockCookie();
 			try
 			{
 				if (rwLock.IsReaderLockHeld)
 				{
 					writerLock = rwLock.UpgradeToWriterLock(Timeout.Infinite);
-					upgradedToWriterLcok = true;
+					upgradedToWriterLock = true;
 				}
 				else
 				{
@@ -70,7 +70,7 @@ namespace SvnBridge.SourceControl
 			}
 			finally
 			{
-				if(upgradedToWriterLcok)
+				if(upgradedToWriterLock)
 					rwLock.DowngradeFromWriterLock(ref writerLock);
 				else
 					rwLock.ReleaseWriterLock();
