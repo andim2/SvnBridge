@@ -78,7 +78,7 @@ namespace SvnBridge.Infrastructure
             }
 
             string config = xml.InnerXml.Replace("><", ">\r\n<");
-            File.WriteAllText(Path.Combine(userConfigFolder, "user.config"), config);
+            File.WriteAllText(GetUserConfigFilePath(), config);
         }
 
         public static bool CacheEnabled
@@ -291,7 +291,7 @@ namespace SvnBridge.Infrastructure
 
         private static void ReadUserConfig()
         {
-            string configFile = Path.Combine(userConfigFolder, "user.config");
+            string configFile = GetUserConfigFilePath();
             if (File.Exists(configFile))
             {
                 XmlDocument xml = new XmlDocument();
@@ -301,6 +301,11 @@ namespace SvnBridge.Infrastructure
                     userConfig[node.Attributes["name"].Value] = node.Attributes["value"].Value;
                 }
             }
+        }
+
+        private static string GetUserConfigFilePath()
+        {
+            return Path.Combine(userConfigFolder, "user.config");
         }
 
         private static T ReadConfig<T>(ConfigSettings setting, T defaultValue)
