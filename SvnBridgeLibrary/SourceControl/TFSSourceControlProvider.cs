@@ -972,7 +972,7 @@ namespace SvnBridge.SourceControl
             RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
         private const char c_workItemChar = '#';
 
-        private readonly TFSSourceControlService sourceControlService;
+        private readonly ITFSSourceControlService sourceControlService;
         private readonly string serverUrl;
         private readonly ICredentials credentials;
         private readonly string rootPath;
@@ -993,7 +993,7 @@ namespace SvnBridge.SourceControl
         private WebDAVPropertyStorageAdaptor propsSerializer;
 
         public TFSSourceControlProvider(
-            TFSSourceControlService sourceControlService,
+            ITFSSourceControlService sourceControlService,
             string serverUrl,
             ICredentials credentials,
             string projectName,

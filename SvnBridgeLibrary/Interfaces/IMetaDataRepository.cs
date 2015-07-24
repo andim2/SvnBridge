@@ -36,14 +36,14 @@ namespace SvnBridge.Infrastructure
     [Interceptor(typeof(TracingInterceptor))]
     public abstract class MetaDataRepositoryBase : IMetaDataRepository
     {
-        protected readonly TFSSourceControlService sourceControlService;
+        protected readonly ITFSSourceControlService sourceControlService;
         protected readonly string serverUrl;
         protected readonly ICredentials credentials;
         protected readonly string rootPath;
         protected readonly bool wantCaseSensitiveMatch;
 
         protected MetaDataRepositoryBase(
-            TFSSourceControlService sourceControlService,
+            ITFSSourceControlService sourceControlService,
             string serverUrl,
             ICredentials credentials,
             string rootPath)

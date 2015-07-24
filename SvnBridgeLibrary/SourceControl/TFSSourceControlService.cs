@@ -9,7 +9,7 @@ using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
 
 namespace SvnBridge.SourceControl
 {
-	public class TFSSourceControlService : SourceControlService
+	public class TFSSourceControlService : SourceControlService /* concrete foreign class implementing *parts* of the interface */, ITFSSourceControlService
 	{
         private readonly DefaultLogger logger;
 
@@ -51,7 +51,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-		public ExtendedItem[][] QueryItemsExtended(
+		public virtual ExtendedItem[][] QueryItemsExtended(
             string tfsUrl,
             ICredentials credentials,
             string workspaceName,
@@ -76,7 +76,7 @@ namespace SvnBridge.SourceControl
             });
 		}
 
-		public BranchRelative[][] QueryBranches(
+		public virtual BranchRelative[][] QueryBranches(
             string tfsUrl,
             ICredentials credentials,
             string workspaceName,
@@ -243,9 +243,8 @@ namespace SvnBridge.SourceControl
         // do wrap things yet *other* *public* methods of the *base* service class
         // quite obviously *don't*.
         // The correct way to do things would probably be to correct TFSSourceControlService
-        // to be an ISourceControlService-compatible *wrapper*(!)
+        // to be an interface-compatible *wrapper*(!)
         // around an internal SourceControlService *member*
-        // (hmm, probably to be done via IInterceptor mechanism instead).
         static T WrapWebException<T>(WrapWebExceptionDelegate<T> function)
         {
             try
@@ -262,6 +261,82 @@ namespace SvnBridge.SourceControl
                 throw;
             }
         }
+    }
+
+    /// <summary>
+    /// Honest-to-God interface
+    /// which is being offered by any TFSSourceControlService* classes.
+    /// Currently consists of both
+    /// a TfsLibrary-side ISourceControlService interface
+    /// *and* additional methods.
+    /// </summary>
+    public interface ITFSSourceControlService : ISourceControlService, ISourceControlService_interface_breakage_missing_methods, ITFSSourceControlService_parts
+    {
+    }
+
+    /// <summary>
+    ///  Provides the "interface parts"
+    ///  which are provided by the TfsLibrary SourceControlService implementation class *only*
+    ///  rather than actually being provided
+    ///  by TfsLibrary ISourceControlService interface definition proper already. Ugh.
+    /// </summary>
+    public interface ISourceControlService_interface_breakage_missing_methods
+    {
+        BranchItem[][] QueryBranches(
+            string tfsUrl,
+            ICredentials credentials,
+            ItemSpec[] items,
+            VersionSpec version);
+    }
+
+    /// <summary>
+    /// Internal (UPDATE: not internal, since that would yield a
+    /// "base interface" "is less accessible than interface" error)
+    /// component, for the sole purpose
+    /// of providing (listing)
+    /// local interface extensions/additions
+    /// in a cleanly isolated separated manner.
+    /// </summary>
+    public interface ITFSSourceControlService_parts
+    {
+        BranchRelative[][] QueryBranches(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            VersionSpec version);
+
+        Changeset[] QueryHistory(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string workspaceOwner,
+            ItemSpec itemSpec,
+            VersionSpec versionItem,
+            string user,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
+            bool sortAscending);
+
+        ItemSet[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            VersionSpec version,
+            ItemSpec[] items,
+            int options);
+
+        ExtendedItem[][] QueryItemsExtended(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            DeletedState deletedState,
+            ItemType itemType,
+            int options);
     }
 
     /// <summary>

@@ -16,7 +16,7 @@ namespace SvnBridge.Infrastructure
         private string downloadUrlPrefix;
 
         public MetaDataRepositoryNoCache(
-            TFSSourceControlService sourceControlService,
+            ITFSSourceControlService sourceControlService,
             string serverUrl,
             ICredentials credentials,
             string rootPath,

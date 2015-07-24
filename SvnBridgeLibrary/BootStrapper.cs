@@ -1,6 +1,7 @@
 using System.Net; // ServicePointManager
 using CodePlex.TfsLibrary.ObjectModel; // IRegistrationService, IWebTransferService
 using SvnBridge.Infrastructure; // Container, *WorkItemModifier, Configuration
+using SvnBridge.SourceControl; // TFSSourceControlService
 using CodePlex.TfsLibrary.RegistrationWebSvc;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary.Utility; // IFileSystem
@@ -20,6 +21,7 @@ namespace SvnBridge
             Container.Register(typeof(IRegistrationWebSvcFactory), typeof(RegistrationWebSvcFactory));
             Container.Register(typeof(IRepositoryWebSvcFactory), typeof(RepositoryWebSvcFactory));
             Container.Register(typeof(IFileSystem), typeof(FileSystem));
+            Container.Register(typeof(ITFSSourceControlService), typeof(TFSSourceControlService));
             Container.Register(typeof (IWorkItemModifier),
                                string.IsNullOrEmpty(Configuration.CodePlexWorkItemUrl)
                                    ? typeof (TfsWorkItemModifier)

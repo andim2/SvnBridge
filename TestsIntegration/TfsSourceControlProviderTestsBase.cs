@@ -83,7 +83,7 @@ namespace IntegrationTests
 			RegistrationService service = new RegistrationService(factory);
 			RepositoryWebSvcFactory factory1 = new RepositoryWebSvcFactory(factory, 60000);
 			WebTransferService webTransferService = new WebTransferService(system);
-			TFSSourceControlService tfsSourceControlService = new TFSSourceControlService(
+			ITFSSourceControlService tfsSourceControlService = new TFSSourceControlService(
 				service,
 				factory1,
 				webTransferService,

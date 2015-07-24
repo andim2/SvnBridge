@@ -17,7 +17,7 @@ namespace SvnBridge.Infrastructure
         private readonly MemoryBasedPersistentCache persistentCache;
 
         public MetaDataRepositoryCache(
-            TFSSourceControlService sourceControlService,
+            ITFSSourceControlService sourceControlService,
             string serverUrl,
             ICredentials credentials,
             string rootPath,
