@@ -364,6 +364,12 @@ namespace SvnBridge.Infrastructure
 
         private static int GetClientRevisionFor(List<EntryData> entries, string name)
         {
+            EntryData bestMatch = GetBestMatchingEntry(entries, name);
+            return int.Parse(bestMatch.Rev);
+        }
+
+        private static EntryData GetBestMatchingEntry(List<EntryData> entries, string name)
+        {
             EntryData bestMatch = entries[0];
 
             StringComparison stringCompareMode =
@@ -386,7 +392,7 @@ namespace SvnBridge.Infrastructure
                 if (bestMatch.path == null || bestMatch.path.Length < entry.path.Length)
                     bestMatch = entry;
             }
-            return int.Parse(bestMatch.Rev);
+            return bestMatch;
         }
 
         /// <summary>
