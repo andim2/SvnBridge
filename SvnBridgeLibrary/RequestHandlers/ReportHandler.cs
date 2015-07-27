@@ -88,7 +88,7 @@ namespace SvnBridge.Handlers
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
-            string path = GetPath(request);
+            string requestPath = GetPath(request);
 
             using (XmlReader reader = XmlReader.Create(request.InputStream, Helper.InitializeNewXmlReaderSettings()))
             {
@@ -137,7 +137,7 @@ namespace SvnBridge.Handlers
                         response.BufferOutput = false;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
-                            LogReport(sourceControlProvider, (LogReportData)data, path, output);
+                            LogReport(sourceControlProvider, (LogReportData)data, requestPath, output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "get-locations")
@@ -147,7 +147,7 @@ namespace SvnBridge.Handlers
                         response.SendChunked = true;
                         using (var output = CreateStreamWriter(response.OutputStream))
                         {
-                            GetLocationsReport(sourceControlProvider, (GetLocationsReportData)data, path, output);
+                            GetLocationsReport(sourceControlProvider, (GetLocationsReportData)data, requestPath, output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "dated-rev-report")
@@ -163,7 +163,7 @@ namespace SvnBridge.Handlers
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "file-revs-report")
                     {
                         data = Helper.DeserializeXml<FileRevsReportData>(reader);
-                        string serverPath = GetServerSidePath(path);
+                        string serverPath = GetServerSidePath(requestPath);
                         SendBlameResponse(request, response, sourceControlProvider, serverPath, (FileRevsReportData)data);
                         return;
                     }
@@ -428,18 +428,18 @@ namespace SvnBridge.Handlers
             writer.Write("</S:get-locks-report>\n");
         }
 
-        private void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string path, StreamWriter output)
+        private void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string requestPath, StreamWriter output)
         {
-            path = GetServerSidePath(path);
+            requestPath = GetServerSidePath(requestPath);
 
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
             foreach (string locationRevision in getLocationsReport.LocationRevision)
             {
-                ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(int.Parse(locationRevision), path, Recursion.None);
+                ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(int.Parse(locationRevision), requestPath, Recursion.None);
                 if (item != null)
                 {
-                    output.Write("<S:location rev=\"" + locationRevision + "\" path=\"" + path + "\"/>\n");
+                    output.Write("<S:location rev=\"" + locationRevision + "\" path=\"" + requestPath + "\"/>\n");
                 }
             }
 
@@ -498,9 +498,9 @@ namespace SvnBridge.Handlers
             base.Cancel();
         }
 
-        private static void LogReport(TFSSourceControlProvider sourceControlProvider, LogReportData logreport, string path, TextWriter output)
+        private static void LogReport(TFSSourceControlProvider sourceControlProvider, LogReportData logreport, string requestPath, TextWriter output)
         {
-            string serverPath = GetServerSidePath(path);
+            string serverPath = GetServerSidePath(requestPath);
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);

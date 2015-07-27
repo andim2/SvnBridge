@@ -16,21 +16,21 @@ namespace SvnBridge.Handlers
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
 
-            string path = GetPath(request);
-            bool created = Put(sourceControlProvider, path, request.InputStream, request.Headers["X-SVN-Base-Fulltext-MD5"], request.Headers["X-SVN-Result-Fulltext-MD5"]);
+            string requestPath = GetPath(request);
+            bool created = Put(sourceControlProvider, requestPath, request.InputStream, request.Headers["X-SVN-Base-Fulltext-MD5"], request.Headers["X-SVN-Result-Fulltext-MD5"]);
 
             if (created)
             {
                 SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
 
-                response.AppendHeader("Location", "http://" + request.Headers["Host"] + "/" + Helper.Decode(path));
+                response.AppendHeader("Location", "http://" + request.Headers["Host"] + "/" + Helper.Decode(requestPath));
 
                 string responseContent = "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
                                          "<html><head>\n" +
                                          "<title>201 Created</title>\n" +
                                          "</head><body>\n" +
                                          "<h1>Created</h1>\n" +
-                                         "<p>Resource /" + Helper.EncodeB(Helper.Decode(path)) +
+                                         "<p>Resource /" + Helper.EncodeB(Helper.Decode(requestPath)) +
                                          " has been created.</p>\n" +
                                          "<hr />\n" +
                                          "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host +
@@ -45,20 +45,20 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private bool Put(TFSSourceControlProvider sourceControlProvider, string path, Stream inputStream, string baseHash, string resultHash)
+        private bool Put(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream inputStream, string baseHash, string resultHash)
         {
             // Hmm, is this part really necessary??
             // See also MkColHandler where it's being fed into a regex match...
-            if (!path.StartsWith("//"))
+            if (!requestPath.StartsWith("//"))
             {
-                path = "/" + path;
+                requestPath = "/" + requestPath;
             }
 
             // FIXME: should be using BasePathParser (GetActivityId() or some such)
             // rather than doing this dirt-ugly open-coded something:
             const int startIndex = 11;
-            string activityId = path.Substring(startIndex, path.IndexOf('/', startIndex) - startIndex);
-            string serverPath = Helper.Decode(path.Substring(startIndex + activityId.Length));
+            string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
+            string serverPath = Helper.Decode(requestPath.Substring(startIndex + activityId.Length));
             byte[] sourceData = new byte[0];
             if (baseHash != null)
             {

@@ -14,9 +14,9 @@ namespace SvnBridge.Handlers
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
 
-            string path = GetPath(request);
+            string requestPath = GetPath(request);
 
-            bool fileDeleted = Delete(sourceControlProvider, path);
+            bool fileDeleted = Delete(sourceControlProvider, requestPath);
 
             if (fileDeleted)
             {
@@ -32,7 +32,7 @@ namespace SvnBridge.Handlers
                     "<title>404 Not Found</title>\n" +
                     "</head><body>\n" +
                     "<h1>Not Found</h1>\n" +
-                    "<p>The requested URL /" + Helper.Decode(path) + " was not found on this server.</p>\n" +
+                    "<p>The requested URL /" + Helper.Decode(requestPath) + " was not found on this server.</p>\n" +
                     "<hr>\n" +
                     "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host + " Port " +
                     request.Url.Port + "</address>\n" +
@@ -43,18 +43,18 @@ namespace SvnBridge.Handlers
         }
 
         private bool Delete(TFSSourceControlProvider sourceControlProvider,
-                            string path)
+                            string requestPath)
         {
-            if (path.StartsWith("/!svn/act/"))
+            if (requestPath.StartsWith("/!svn/act/"))
             {
-                string activityId = path.Substring(10);
+                string activityId = requestPath.Substring(10);
                 sourceControlProvider.DeleteActivity(activityId);
             }
-            else if (path.StartsWith("/!svn/wrk/"))
+            else if (requestPath.StartsWith("/!svn/wrk/"))
             {
                 const int startIndex = 10;
-                string activityId = path.Substring(startIndex, path.IndexOf('/', startIndex) - startIndex);
-                string filePath = path.Substring(path.IndexOf('/', startIndex));
+                string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
+                string filePath = requestPath.Substring(requestPath.IndexOf('/', startIndex));
                 return sourceControlProvider.DeleteItem(activityId, Helper.Decode(filePath));
             }
             return true;

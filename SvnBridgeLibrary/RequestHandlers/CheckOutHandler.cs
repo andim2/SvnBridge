@@ -21,8 +21,8 @@ namespace SvnBridge.Handlers
 
             try
             {
-                string path = GetPath(request);
-                string location = CheckOut(sourceControlProvider, data, path);
+                string requestPath = GetPath(request);
+                string location = CheckOut(sourceControlProvider, data, requestPath);
                 SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
                 response.AppendHeader("Cache-Control", "no-cache");
                 string locationUrl = "http://" + request.Headers["Host"] + Helper.EncodeC(location);
@@ -66,31 +66,31 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private string CheckOut(TFSSourceControlProvider sourceControlProvider, CheckoutData request, string path)
+        private string CheckOut(TFSSourceControlProvider sourceControlProvider, CheckoutData request, string requestPath)
         {
             string activityId = PathParser.GetActivityId(request.ActivitySet.href);
 
-            if (path.Contains("/bln"))
-                return GetLocalPath("//!svn/wbl/" + activityId + path.Substring(9));
+            if (requestPath.Contains("/bln"))
+                return GetLocalPath("//!svn/wbl/" + activityId + requestPath.Substring(9));
 
-            if (path == "/!svn/vcc/default")
+            if (requestPath == "/!svn/vcc/default")
             {
                 int latestVersion = sourceControlProvider.GetLatestVersion();
                 return GetLocalPath("//!svn/wbl/" + activityId + "/" + latestVersion.ToString());
             }
 
-            int revisionStart = path.IndexOf("/ver/") + 5;
+            int revisionStart = requestPath.IndexOf("/ver/") + 5;
             int version;
             string itemPath;
-            if (path.IndexOf('/', revisionStart + 1) != -1)
+            if (requestPath.IndexOf('/', revisionStart + 1) != -1)
             {
-                int revisionEnd = path.IndexOf('/', revisionStart + 1);
-                version = int.Parse(path.Substring(revisionStart, revisionEnd - revisionStart));
-                itemPath = path.Substring(revisionEnd);
+                int revisionEnd = requestPath.IndexOf('/', revisionStart + 1);
+                version = int.Parse(requestPath.Substring(revisionStart, revisionEnd - revisionStart));
+                itemPath = requestPath.Substring(revisionEnd);
             }
             else
             {
-                version = int.Parse(path.Substring(revisionStart));
+                version = int.Parse(requestPath.Substring(revisionStart));
                 itemPath = "/";
             }
 

@@ -18,12 +18,12 @@ namespace SvnBridge.Handlers
 
             string activityId = PathParser.GetActivityIdFromDestination(request.Headers["Destination"]);
 
-            string path = GetPath(request);
-            path = GetServerSidePath(path);
+            string requestPath = GetPath(request);
+            requestPath = GetServerSidePath(requestPath);
 
             string destination = PathParser.GetPathFromDestination(Helper.DecodeC(request.Headers["Destination"]));
             string targetPath = destination.Substring(destination.IndexOf('/', 12));
-            sourceControlProvider.CopyItem(activityId, path, targetPath);
+            sourceControlProvider.CopyItem(activityId, requestPath, targetPath);
 
             response.AppendHeader("Location", Helper.DecodeC(request.Headers["Destination"]));
 
