@@ -1,12 +1,10 @@
-using System; // Exception
-using System.Xml; // XmlElement
 using SvnBridge.Handlers; // RequestHandlerBase
 using SvnBridge.SourceControl; // TFSSourceControlProvider
 
 namespace SvnBridge.Nodes
 {
     // Node: <server>/!svn/vcc/default
-    public class SvnVccDefaultNode : INode
+    public class SvnVccDefaultNode : NodeBase
     {
         private string label;
         private string path;
@@ -23,7 +21,7 @@ namespace SvnBridge.Nodes
 
         #region INode Members
 
-        public string Href(RequestHandlerBase handler)
+        public override string Href(RequestHandlerBase handler)
         {
             if (label == null)
             {
@@ -35,20 +33,20 @@ namespace SvnBridge.Nodes
             }
         }
 
-        public string GetProperty(RequestHandlerBase handler, XmlElement property)
+        protected override string GetProperty_Core(RequestHandlerBase handler, string propertyName)
         {
-            switch (property.LocalName)
+            switch (propertyName)
             {
                 case "checked-in":
                     return GetCheckedIn(handler);
                 case "baseline-collection":
                     return GetBaselineCollection(handler);
                 case "version-name":
-                    return GetVersionName(property);
+                    return GetVersionName();
                 case "auto-version":
                     return "";
                 default:
-                    throw new Exception("Property not found: " + property.LocalName);
+                    return null;
             }
         }
 
@@ -65,7 +63,7 @@ namespace SvnBridge.Nodes
             return "<lp1:baseline-collection><D:href>" + handler.GetLocalPath("/!svn/bc/" + label) + "/</D:href></lp1:baseline-collection>";
         }
 
-        private string GetVersionName(XmlElement property)
+        private string GetVersionName()
         {
             return "<lp1:version-name>" + label + "</lp1:version-name>";
         }

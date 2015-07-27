@@ -1,4 +1,3 @@
-using System.Xml; // XmlElement
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ItemType
 using SvnBridge.Handlers; // RequestHandlerBase
 using SvnBridge.SourceControl; // ItemMetaData, TFSSourceControlProvider
@@ -6,7 +5,7 @@ using SvnBridge.Utility; // Helper.Encode()
 
 namespace SvnBridge.Nodes
 {
-    public class BcFileNode : INode
+    public class BcFileNode : NodeBase
     {
         private readonly ItemMetaData item;
         private readonly FileNode node;
@@ -23,7 +22,7 @@ namespace SvnBridge.Nodes
 
         #region INode Members
 
-        public string Href(RequestHandlerBase handler)
+        public override string Href(RequestHandlerBase handler)
         {
             string path = item.Name;
 
@@ -42,9 +41,9 @@ namespace SvnBridge.Nodes
             return handler.GetLocalPath(Helper.Encode(href));
         }
 
-        public string GetProperty(RequestHandlerBase handler, XmlElement property)
+        protected override string GetProperty_Core(RequestHandlerBase handler, string propertyName)
         {
-            return node.GetProperty(handler, property);
+            return node.GetProperty(handler, propertyName);
         }
 
         #endregion

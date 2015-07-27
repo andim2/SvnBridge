@@ -1,10 +1,8 @@
-using System; // Exception
-using System.Xml; // XmlElement
 using SvnBridge.Handlers; // RequestHandlerBase
 
 namespace SvnBridge.Nodes
 {
-	public class SvnBlnNode : INode
+	public class SvnBlnNode : NodeBase
 	{
 		private string path;
 		private int version;
@@ -18,21 +16,21 @@ namespace SvnBridge.Nodes
 
 		#region INode Members
 
-		public string Href(RequestHandlerBase handler)
+		public override string Href(RequestHandlerBase handler)
 		{
 			return handler.GetLocalPath(path);
 		}
 
-		public string GetProperty(RequestHandlerBase handler, XmlElement property)
+		protected override string GetProperty_Core(RequestHandlerBase handler, string propertyName)
 		{
-			switch (property.LocalName)
+			switch (propertyName)
 			{
 				case "baseline-collection":
 					return GetBaselineCollection(handler);
 				case "version-name":
-					return GetVersionName(property);
+					return GetVersionName();
 				default:
-					throw new Exception("Property not found: " + property.LocalName);
+					return null;
 			}
 		}
 
@@ -45,7 +43,7 @@ namespace SvnBridge.Nodes
                 "/</D:href></lp1:baseline-collection>";
         }
 
-		private string GetVersionName(XmlElement property)
+		private string GetVersionName()
 		{
 			return "<lp1:version-name>" + version.ToString() + "</lp1:version-name>";
 		}

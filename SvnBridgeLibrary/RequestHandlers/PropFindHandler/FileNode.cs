@@ -1,5 +1,3 @@
-using System; // Exception
-using System.Xml; // XmlElement
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ItemType
 using SvnBridge.Handlers; // RequestHandlerBase
 using SvnBridge.SourceControl; // ItemMetaData, TFSSourceControlProvider
@@ -7,7 +5,7 @@ using SvnBridge.Utility; // Helper.Encode()
 
 namespace SvnBridge.Nodes
 {
-    public class FileNode : INode
+    public class FileNode : NodeBase
     {
         private readonly ItemMetaData item;
         private readonly TFSSourceControlProvider sourceControlProvider;
@@ -20,7 +18,7 @@ namespace SvnBridge.Nodes
 
         #region INode Members
 
-        public string Href(RequestHandlerBase handler)
+        public override string Href(RequestHandlerBase handler)
         {
             string href = item.Name;
 
@@ -37,9 +35,9 @@ namespace SvnBridge.Nodes
             return handler.GetLocalPath(Helper.Encode(href));
         }
 
-        public string GetProperty(RequestHandlerBase handler, XmlElement property)
+        protected override string GetProperty_Core(RequestHandlerBase handler, string propertyName)
         {
-            switch (property.LocalName)
+            switch (propertyName)
             {
                 case "version-controlled-configuration":
                     return GetVersionControlledConfiguration(handler);
@@ -66,7 +64,7 @@ namespace SvnBridge.Nodes
                 case "md5-checksum":
                     return GetMd5Checksum();
                 default:
-                    throw new Exception("Property not found: " + property.LocalName);
+                    return null;
             }
         }
 
