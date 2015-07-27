@@ -430,16 +430,16 @@ namespace SvnBridge.Handlers
 
         private void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string requestPath, StreamWriter output)
         {
-            requestPath = GetServerSidePath(requestPath);
+            string serverPath = GetServerSidePath(requestPath);
 
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
             foreach (string locationRevision in getLocationsReport.LocationRevision)
             {
-                ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(int.Parse(locationRevision), requestPath, Recursion.None);
+                ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(int.Parse(locationRevision), serverPath, Recursion.None);
                 if (item != null)
                 {
-                    output.Write("<S:location rev=\"" + locationRevision + "\" path=\"" + requestPath + "\"/>\n");
+                    output.Write("<S:location rev=\"" + locationRevision + "\" path=\"" + serverPath + "\"/>\n");
                 }
             }
 
