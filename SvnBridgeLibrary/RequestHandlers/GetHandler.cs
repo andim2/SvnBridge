@@ -69,7 +69,7 @@ namespace SvnBridge.Handlers
 				    if (parts.Length >= 3)
 					    int.TryParse(parts[3], out itemVersion);
 
-				    itemPath = Helper.Decode(requestPath.Substring(9 + itemVersion.ToString().Length));
+				    itemPath = Helper.Decode(requestPath.Substring("/!svn/bc/".Length + itemVersion.ToString().Length));
 			    }
                 else if (requestPath.StartsWith("/!svn/ver/"))
                 {
@@ -77,7 +77,7 @@ namespace SvnBridge.Handlers
                     if (parts.Length >= 3)
                         int.TryParse(parts[3], out itemVersion);
 
-                    itemPath = Helper.Decode(requestPath.Substring(10 + itemVersion.ToString().Length));
+                    itemPath = Helper.Decode(requestPath.Substring("/!svn/ver/".Length + itemVersion.ToString().Length));
                 }
                 else
                 {

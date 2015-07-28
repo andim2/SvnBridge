@@ -57,6 +57,10 @@ namespace SvnBridge.Handlers
                 string filePath = requestPath.Substring(requestPath.IndexOf('/', startIndex));
                 return sourceControlProvider.DeleteItem(activityId, Helper.Decode(filePath));
             }
+            else
+            {
+                ReportUnsupportedSVNRequestPath(requestPath);
+            }
             return true;
         }
     }

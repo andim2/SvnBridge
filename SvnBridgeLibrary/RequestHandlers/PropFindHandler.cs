@@ -141,11 +141,27 @@ namespace SvnBridge.Handlers
             // Also, this section is semi-duplicated (and thus fragile)
             // in <see cref="GetHandler"/> and <see cref="PropFindHandler"/>
             // (should likely be provided by a method in request base class).
-            if (requestPath.StartsWith("/!svn/bc"))
+            if (requestPath.StartsWith("/!svn/"))
             {
-                bcPath = true;
-                revision = int.Parse(requestPath.Split('/')[3]);
-                path = requestPath.Substring("/!svn/bc/".Length + revision.ToString().Length);
+                if (requestPath.StartsWith("/!svn/bc"))
+                {
+                    bcPath = true;
+                    revision = int.Parse(requestPath.Split('/')[3]);
+                    path = requestPath.Substring("/!svn/bc/".Length + revision.ToString().Length);
+                }
+                else
+                if (requestPath.StartsWith("/!svn/ver"))
+                {
+                    revision = int.Parse(requestPath.Split('/')[3]);
+                    path = requestPath.Substring("/!svn/ver/".Length + revision.ToString().Length);
+                }
+                else
+                {
+                    ReportUnsupportedSVNRequestPath(requestPath);
+                    // Exception dummies:
+                    path = requestPath;
+                    revision = 0;
+                }
             }
             else
             {
@@ -347,6 +363,10 @@ namespace SvnBridge.Handlers
                 {
                     WriteWrkResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
                     requestHandled = true;
+                }
+                else
+                {
+                    ReportUnsupportedSVNRequestPath(requestPath);
                 }
             }
             if (!requestHandled)
