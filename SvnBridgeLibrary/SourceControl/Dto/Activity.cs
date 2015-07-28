@@ -5,7 +5,7 @@ namespace SvnBridge.SourceControl.Dto
 {
     public class Activity
     {
-		public readonly Dictionary<string, Properties> Properties = new Dictionary<string, Properties>();
+		public readonly Dictionary<string, DAVPropertiesChanges> Properties = new Dictionary<string, DAVPropertiesChanges>();
 
         public readonly List<string> Collections = new List<string>();
         public readonly List<CopyAction> CopiedItems = new List<CopyAction>();

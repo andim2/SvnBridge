@@ -1484,8 +1484,8 @@ namespace SvnBridge.SourceControl
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                Properties props = FetchPathProperties(activity.Properties, path);
-                props.Added[propName] = propValue;
+                DAVPropertiesChanges propsChanges = FetchPathProperties(activity.Properties, path);
+                propsChanges.Added[propName] = propValue;
             });
         }
 
@@ -1493,24 +1493,24 @@ namespace SvnBridge.SourceControl
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                Properties props = FetchPathProperties(activity.Properties, path);
-                props.Removed.Add(propName);
+                DAVPropertiesChanges propsChanges = FetchPathProperties(activity.Properties, path);
+                propsChanges.Removed.Add(propName);
             });
         }
 
-        private static Properties FetchPathProperties(IDictionary<string, Properties> dict, string path)
+        private static DAVPropertiesChanges FetchPathProperties(IDictionary<string, DAVPropertiesChanges> dict, string path)
         {
-            Properties props;
+            DAVPropertiesChanges propsChanges;
             if (dict.ContainsKey(path))
             {
-                props = dict[path];
+                propsChanges = dict[path];
             }
             else
             {
-                props = new Properties();
-                dict[path] = props;
+                propsChanges = new DAVPropertiesChanges();
+                dict[path] = propsChanges;
             }
-            return props;
+            return propsChanges;
         }
 
         /// <summary>
