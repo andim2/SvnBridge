@@ -22,11 +22,13 @@ namespace SvnBridge.Net
         protected readonly IPathParser parser;
         protected readonly ActionTrackingViaPerfCounter actionTracking;
         private ICredentials sessionCredentials; // whole-session credentials as possibly cached over all individual HTTP requests
+        private readonly bool doSessionCombineWhenAuthIdentical /* = false */;
 
         public HttpContextDispatcher(IPathParser parser, ActionTrackingViaPerfCounter actionTracking)
         {
             this.parser = parser;
             this.actionTracking = actionTracking;
+            this.doSessionCombineWhenAuthIdentical = Configuration.SessionCombineWhenAuthIdentical;
         }
 
         /// <remarks>
@@ -236,7 +238,6 @@ namespace SvnBridge.Net
             //   in order to retain the same hash code
             bool wantNewSession = true;
 
-            bool doSessionCombineWhenAuthIdentical = false;
             if (doSessionCombineWhenAuthIdentical)
             {
                 wantNewSession = WantNewHttpSession(

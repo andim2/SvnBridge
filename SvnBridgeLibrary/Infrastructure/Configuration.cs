@@ -44,6 +44,7 @@ namespace SvnBridge.Infrastructure
             TfsProxyUrl,
             TfsCorrectCaseSensitivityInconsistentCommitRecords,
             SCMWantCaseSensitiveItemMatch,
+            SessionCombineWhenAuthIdentical,
             TraceEnabled,
             UseCodePlexServers,
             UseProxy,
@@ -247,6 +248,31 @@ namespace SvnBridge.Infrastructure
         public static bool SCMWantCaseSensitiveItemMatch
         {
             get { return ReadConfig<bool>(ConfigSettings.SCMWantCaseSensitiveItemMatch, true); }
+        }
+
+        /// <summary>
+        /// If enabled, network implementation will combine/merge/join client sessions
+        /// once successfully having detected
+        /// a same-auth (same-credential) condition
+        /// of network authentication.
+        /// This is very useful
+        /// since it achieves remaining within (reusing) the same cache scope
+        /// as a previous newly authenticated connection,
+        /// thereby being able to share large amounts of cached content
+        /// for any re-attempted requests of the same client ID.
+        /// WARNING SECURITY HAMPERING:
+        /// this obviously will share previously gathered (and cached) state
+        /// with new connection attempts,
+        /// which may e.g. result in information leaks in case of bugs.
+        /// Note that AFAIR there are also certain attributes in socket-related classes
+        /// which do similar things.
+        /// While this setting is very helpful,
+        /// definitely default to disabled (false),
+        /// since it has far-reaching security (or also correctness) implications.
+        /// </summary>
+        public static bool SessionCombineWhenAuthIdentical
+        {
+            get { return ReadConfig<bool>(ConfigSettings.SessionCombineWhenAuthIdentical, false); }
         }
 
         public static bool TraceEnabled
