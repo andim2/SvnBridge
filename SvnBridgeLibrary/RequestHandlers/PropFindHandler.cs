@@ -600,7 +600,8 @@ namespace SvnBridge.Handlers
                 XmlElement property = doc.CreateElement(prop.LocalName, prop.NamespaceURI);
                 if (!(isFolder && IsPropertyName(prop, "getcontentlength")))
                 {
-                    propertyResults.Add(node.GetProperty(this, property.LocalName));
+                    string propertyResult = node.GetProperty(this, property.LocalName); // debug helper var
+                    propertyResults.Add(propertyResult);
                 }
             }
 
