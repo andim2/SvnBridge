@@ -12,7 +12,7 @@ using SvnBridge.Interfaces;
 using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.EncodeB() etc.
+using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.EncodeB() etc.
 
 namespace SvnBridge.Handlers
 {
@@ -273,7 +273,7 @@ namespace SvnBridge.Handlers
                     }
 
                     while (item.DataLoaded == false)
-                        Thread.Sleep(100);
+                        Helper.CooperativeSleep(100);
 
                     var base64DiffData = item.Base64DiffData;
                     // Immediately release data memory from item's reach

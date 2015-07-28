@@ -1,7 +1,7 @@
 using System; // IntPtr.Size
-using System.Threading; // Thread.Sleep()
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;
+using SvnBridge.Utility; // Helper.CooperativeSleep()
 
 namespace SvnBridge.Infrastructure
 {
@@ -43,7 +43,7 @@ namespace SvnBridge.Infrastructure
                     if (cancelOperation)
                         break;
 
-                    Thread.Sleep(1000);
+                    Helper.CooperativeSleep(1000);
                 }
 
                 if (cancelOperation)
