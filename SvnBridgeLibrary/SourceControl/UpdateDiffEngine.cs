@@ -261,16 +261,15 @@ namespace SvnBridge.SourceControl
                 if (sourceControlProvider.IsPropertyFile(remoteName))
                 {
                     propertyChange = true;
-                    remoteName = GetRemoteNameOfPropertyChange(change);
+                    remoteName = GetRemoteNameOfPropertyChange(remoteName);
                 }
             }
 
             ProcessAddedOrUpdatedItem(remoteName, change, propertyChange, edit, updatingForwardInTime);
         }
 
-        private static string GetRemoteNameOfPropertyChange(SourceItemChange change)
+        private static string GetRemoteNameOfPropertyChange(string remoteName)
         {
-            string remoteName = change.Item.RemoteName;
             string propFolderPlusSlash = Constants.PropFolder + "/";
             string propFolderSlashPrefix = "/" + propFolderPlusSlash;
             if (remoteName.Contains(propFolderSlashPrefix))
