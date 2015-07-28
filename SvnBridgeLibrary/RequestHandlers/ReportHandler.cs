@@ -132,8 +132,9 @@ namespace SvnBridge.Handlers
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "replay-report")
                     {
-                        var replayReport = Helper.DeserializeXml<ReplayReportData>(reader);
-                        ReplayReport(request, response, sourceControlProvider, replayReport);
+                        ReplayReportData data_ReplayReport = Helper.DeserializeXml<ReplayReportData>(reader);
+                        data = data_ReplayReport;
+                        ReplayReport(request, response, sourceControlProvider, data_ReplayReport);
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "log-report")
                     {
