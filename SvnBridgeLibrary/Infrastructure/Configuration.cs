@@ -11,6 +11,7 @@ namespace SvnBridge.Infrastructure
         private enum ConfigSettings
         {
             CacheEnabled,
+            CacheHttpRuntimeCacheMaxSizeMB,
             CodePlexWorkItemUrl,
             DomainIncludesProjectName,
             DAVPropertiesIsAllowedRead,
@@ -90,6 +91,11 @@ namespace SvnBridge.Infrastructure
         public static bool CacheEnabled
         {
             get { return ReadConfig<bool>(ConfigSettings.CacheEnabled, false); }
+        }
+
+        public static int CacheHttpRuntimeCacheMaxSizeMB
+        {
+            get { return ReadConfig<int>(ConfigSettings.CacheHttpRuntimeCacheMaxSizeMB, 100); }
         }
 
         public static string CodePlexWorkItemUrl

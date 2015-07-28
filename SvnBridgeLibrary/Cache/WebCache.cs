@@ -3,6 +3,7 @@ using System.Collections; // DictionaryEntry
 using System.Collections.Generic; // List
 using System.Web; // HttpRuntime.Cache
 using System.Web.Caching; // CacheItemPriority
+using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Interfaces; // CachedResult
 
 namespace SvnBridge.Cache
@@ -17,7 +18,7 @@ namespace SvnBridge.Cache
         // of the resources of a small system,
         // thus we should not exceed that.
         private readonly int maxEntriesLimit = MemoryUseToMaxEntriesLimit(
-            100
+            Configuration.CacheHttpRuntimeCacheMaxSizeMB
         );
 
         private static int MemoryUseToMaxEntriesLimit(int sizeInMB)
