@@ -68,6 +68,8 @@ namespace SvnBridge.Handlers
 
         private string CheckOut(TFSSourceControlProvider sourceControlProvider, CheckoutData request, string requestPath)
         {
+            string location;
+
             string activityId = PathParser.GetActivityId(request.ActivitySet.href);
 
             if (requestPath.Contains("/bln"))
@@ -95,7 +97,6 @@ namespace SvnBridge.Handlers
             }
 
             itemPath = itemPath.Replace("//", "/");
-            string location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
 
             ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(TFSSourceControlProvider.LATEST_VERSION, Helper.Decode(itemPath), Recursion.None);
             // Possibly technically a NULL item shouldn't happen here
@@ -109,6 +110,8 @@ namespace SvnBridge.Handlers
             {
                 throw new ConflictException();
             }
+
+            location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
 
             return location;
         }
