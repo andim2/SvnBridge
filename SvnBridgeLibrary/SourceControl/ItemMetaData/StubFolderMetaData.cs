@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace SvnBridge.SourceControl
 {
-	public class StubFolderMetaData : FolderMetaData
+	public sealed class StubFolderMetaData : FolderMetaData
 	{
 		FolderMetaData realFolder;
 

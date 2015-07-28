@@ -40,7 +40,7 @@ namespace SvnBridge.Utility
         }
     }
 
-    public class SvnDiffEngine
+    public sealed class SvnDiffEngine
     {
         private const int BUFFER_EXPAND_SIZE = Constants.AllocSize_AvoidLOHCatastrophy;
 

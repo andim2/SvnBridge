@@ -5,7 +5,7 @@ using SvnBridge.Interfaces;
 
 namespace SvnBridge.Net
 {
-    public class ListenerResponse : IHttpResponse
+    public sealed class ListenerResponse : IHttpResponse
     {
         private readonly List<KeyValuePair<string, string>> headers;
         // XXX: FxCop complains that this class ought to implement IDisposable mechanisms

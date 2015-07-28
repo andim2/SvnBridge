@@ -1,6 +1,6 @@
 namespace SvnBridge.SourceControl
 {
-    public class DeleteFolderMetaData : FolderMetaData
+    public sealed class DeleteFolderMetaData : FolderMetaData
     {
         public override string ToString()
         {

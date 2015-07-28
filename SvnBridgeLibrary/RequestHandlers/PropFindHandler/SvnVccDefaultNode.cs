@@ -4,7 +4,7 @@ using SvnBridge.SourceControl; // TFSSourceControlProvider
 namespace SvnBridge.Nodes
 {
     // Node: <server>/!svn/vcc/default
-    public class SvnVccDefaultNode : NodeBase
+    public sealed class SvnVccDefaultNode : NodeBase
     {
         private string label;
         private string path;

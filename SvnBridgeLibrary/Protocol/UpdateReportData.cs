@@ -8,7 +8,7 @@ using SvnBridge.Net;
 namespace SvnBridge.Protocol
 {
     [XmlRoot("update-report", Namespace = WebDav.Namespaces.SVN)]
-    public class UpdateReportData
+    public sealed class UpdateReportData
     {
         [XmlElement("entry", Namespace = WebDav.Namespaces.SVN)]
         public List<EntryData> Entries /* = null */;

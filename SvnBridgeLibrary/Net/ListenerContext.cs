@@ -4,7 +4,7 @@ using SvnBridge.Interfaces;
 
 namespace SvnBridge.Net
 {
-    public class ListenerContext : IHttpContext
+    public sealed class ListenerContext : IHttpContext
     {
         private readonly ListenerRequest request;
         private readonly ListenerResponse response;

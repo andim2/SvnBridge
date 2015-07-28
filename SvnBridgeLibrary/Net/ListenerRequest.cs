@@ -9,7 +9,7 @@ using SvnBridge.Utility; // Utility.MemoryStreamLOHSanitized
 
 namespace SvnBridge.Net
 {
-	public class ListenerRequest : IHttpRequest
+	public sealed class ListenerRequest : IHttpRequest
 	{
 		private readonly NameValueCollection headers;
 		private string httpMethod;

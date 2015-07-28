@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 
 namespace SvnBridge.Protocol
 {
-    public class EntryData
+    public sealed class EntryData
     {
         [XmlText()] public string path;
 

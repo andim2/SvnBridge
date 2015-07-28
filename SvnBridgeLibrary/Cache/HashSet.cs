@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace SvnBridge.Cache
 {
 	[Serializable]
-    public class HashSet<T> : IEnumerable<T>
+    public sealed class HashSet<T> : IEnumerable<T>
 	{
 		private readonly Dictionary<T, object> inner = new Dictionary<T, object>();
 

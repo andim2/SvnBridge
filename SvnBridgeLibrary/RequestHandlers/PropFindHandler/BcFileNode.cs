@@ -5,7 +5,7 @@ using SvnBridge.Utility; // Helper.Encode()
 
 namespace SvnBridge.Nodes
 {
-    public class BcFileNode : NodeBase
+    public sealed class BcFileNode : NodeBase
     {
         private readonly ItemMetaData item;
         private readonly FileNode node;

@@ -7,7 +7,7 @@ namespace SvnBridge.Utility
         CopyFromNewData = 2
     }
 
-    public class SvnDiffInstruction
+    public sealed class SvnDiffInstruction
     {
         public ulong Length;
         public ulong Offset;

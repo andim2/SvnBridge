@@ -5,7 +5,7 @@ using SvnBridge.Utility; // Helper.CooperativeSleep()
 
 namespace SvnBridge.Infrastructure
 {
-    public class AsyncItemLoader
+    public /* no "sealed" here (class subsequently derived by Tests) */ class AsyncItemLoader
     {
         private readonly FolderMetaData folderInfo;
         private readonly TFSSourceControlProvider sourceControlProvider;

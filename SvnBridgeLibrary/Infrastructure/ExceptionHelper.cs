@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace SvnBridge.Infrastructure
 {
-    public class ExceptionHelper
+    public sealed class ExceptionHelper
     {
         private static readonly MethodInfo preserveStackTrace = typeof(Exception).GetMethod("InternalPreserveStackTrace",
                                                                                    BindingFlags.NonPublic | BindingFlags.Instance);

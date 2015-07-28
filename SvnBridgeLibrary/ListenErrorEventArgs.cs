@@ -2,7 +2,7 @@ using System;
 
 namespace SvnBridge.Net
 {
-    public class ListenErrorEventArgs : EventArgs
+    public sealed class ListenErrorEventArgs : EventArgs
     {
         private readonly Exception exception;
 

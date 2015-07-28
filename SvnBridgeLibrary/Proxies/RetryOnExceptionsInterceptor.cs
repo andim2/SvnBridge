@@ -7,7 +7,7 @@ using SvnBridge.Interfaces;
 namespace SvnBridge.Proxies
 {
 	[DebuggerStepThrough]
-	public class RetryOnExceptionsInterceptor<TException> : IInterceptor
+	public sealed class RetryOnExceptionsInterceptor<TException> : IInterceptor
 	   where TException : Exception
 	{
         private readonly DefaultLogger logger;

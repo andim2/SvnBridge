@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 namespace SvnBridge.Protocol
 {
     [Serializable]
-    public class PropStatData
+    public sealed class PropStatData
     {
         [XmlElement("prop", Namespace = WebDav.Namespaces.DAV)] public PropData Prop /* = null */;
 

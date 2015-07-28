@@ -1,6 +1,6 @@
                 namespace SvnBridge.SourceControl.Dto
 {
-    public class Property
+    public sealed class Property
     {
         public string Name /* = null */;
         public string Value /* = null */;

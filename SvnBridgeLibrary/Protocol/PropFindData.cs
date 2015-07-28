@@ -5,7 +5,7 @@ namespace SvnBridge.Protocol
 {
     [Serializable]
     [XmlRoot("propfind", Namespace = WebDav.Namespaces.DAV)]
-    public class PropFindData
+    public sealed class PropFindData
     {
         [XmlElement("allprop", Namespace = WebDav.Namespaces.DAV)] public AllPropData AllProp /* = null */;
 

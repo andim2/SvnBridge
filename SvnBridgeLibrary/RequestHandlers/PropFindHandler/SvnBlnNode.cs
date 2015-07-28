@@ -2,7 +2,7 @@ using SvnBridge.Handlers; // RequestHandlerBase
 
 namespace SvnBridge.Nodes
 {
-	public class SvnBlnNode : NodeBase
+	public sealed class SvnBlnNode : NodeBase
 	{
 		private string path;
 		private int version;

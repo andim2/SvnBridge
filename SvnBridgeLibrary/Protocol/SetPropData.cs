@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 
 namespace SvnBridge.Protocol
 {
-    public class SetPropData
+    public sealed class SetPropData
     {
         [XmlAttribute("name", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Name /* = null */;
 
