@@ -171,37 +171,37 @@ namespace SvnBridge.Net
         private void HandleOneHttpRequest(
             IHttpContext connection)
         {
-                DateTime start = DateTime.Now;
+            DateTime start = DateTime.Now;
+            try
+            {
+                RequestCache.Init();
+                dispatcher.Dispatch(connection);
+            }
+            catch (Exception exception)
+            {
                 try
                 {
-					RequestCache.Init();
-                    dispatcher.Dispatch(connection);
+                    SendHandlerErrorResponse(
+                        exception,
+                        connection.Response);
                 }
-                catch (Exception exception)
+                catch
                 {
-                	try
-                	{
-                      SendHandlerErrorResponse(
-                          exception,
-                          connection.Response);
-                	}
-                	catch 
-                	{
-						// we explicitly ignore all exceptions here, we don't really have
-						// much to do if the error handling code failed to work, after all.
-                	}
-					// we still raise the original exception, though.
-                    throw;
+                    // we explicitly ignore all exceptions here, we don't really have
+                    // much to do if the error handling code failed to work, after all.
                 }
-                finally
-                {
-                    RequestCache.Dispose();
-                    FlushConnection(connection);
-                    TimeSpan duration = DateTime.Now - start;
-                    FinishedHandling(this, new FinishedHandlingEventArgs(duration,
-                        connection.Request.HttpMethod,
-                        connection.Request.Url.AbsoluteUri));
-                }
+                // we still raise the original exception, though.
+                throw;
+            }
+            finally
+            {
+                RequestCache.Dispose();
+                FlushConnection(connection);
+                TimeSpan duration = DateTime.Now - start;
+                FinishedHandling(this, new FinishedHandlingEventArgs(duration,
+                    connection.Request.HttpMethod,
+                    connection.Request.Url.AbsoluteUri));
+            }
         }
 
         /// <summary>
