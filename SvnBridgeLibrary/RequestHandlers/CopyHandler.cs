@@ -16,16 +16,18 @@ namespace SvnBridge.Handlers
 
             SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
 
-            string activityId = PathParser.GetActivityIdFromDestination(request.Headers["Destination"]);
+            string destinationHeader = request.Headers["Destination"];
+            string activityId = PathParser.GetActivityIdFromDestination(destinationHeader);
 
             string requestPath = GetPath(request);
             string serverPath = GetServerSidePath(requestPath);
 
-            string destination = PathParser.GetPathFromDestination(Helper.DecodeC(request.Headers["Destination"]));
+            string destinationHeaderDecoded = Helper.DecodeC(destinationHeader);
+            string destination = PathParser.GetPathFromDestination(destinationHeaderDecoded);
             string targetPath = destination.Substring(destination.IndexOf('/', 12));
             sourceControlProvider.CopyItem(activityId, serverPath, targetPath);
 
-            response.AppendHeader("Location", Helper.DecodeC(request.Headers["Destination"]));
+            response.AppendHeader("Location", destinationHeaderDecoded);
 
             string responseContent = GetResourceCreatedResponse(
                 WebDAVResourceType.Copy,
