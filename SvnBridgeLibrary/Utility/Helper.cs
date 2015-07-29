@@ -94,7 +94,10 @@ namespace SvnBridge.Utility
 			try
 			{
 				WebRequest request = WebRequest.Create(url + "/Services/v1.0/Registration.asmx");
-				request.Credentials = CredentialCache.DefaultNetworkCredentials;
+				// For the simple purpose of checking whether a web service exists,
+				// using an unsafe credential ought to be ok
+				// (actual use should then be properly using a client-provided credential).
+				request.Credentials = GetUnsafeNetworkCredential();
 				request.Proxy = CreateProxy(proxyInformation);
 				request.Timeout = 60000;
 
@@ -136,6 +139,24 @@ namespace SvnBridge.Utility
 			{
 				return false;
 			}
+		}
+
+		/// <summary>
+		/// Comment-only helper:
+		///
+		/// WARNING SECURITY NOTE!! whenever using DefaultNetworkCredentials,
+		/// we end up using credentials
+		/// of the *current* (*application-side*) security context,
+		/// i.e. ones that did *not* get supplied by the SVN *client* user
+		/// (who may or may not have been able to authenticate properly!).
+		/// </summary>
+		/// I had intended to use the more appropriate naming of
+		/// "insecure" rather than "unsafe",
+		/// but then there is
+		/// HttpWebRequest.UnsafeAuthenticatedConnectionSharing, so...
+		public static NetworkCredential GetUnsafeNetworkCredential()
+		{
+			return CredentialCache.DefaultNetworkCredentials;
 		}
 
 		public static byte[] SerializeXml<T>(T request)

@@ -1,12 +1,13 @@
 using System;
 using System.Net;
 using SvnBridge.Infrastructure;
+using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
 
 namespace SvnBridge.SourceControl
 {
     public static class CredentialsHelper
     {
-        public static NetworkCredential DefaultCredentials = CredentialCache.DefaultNetworkCredentials;
+        public static NetworkCredential DefaultCredentials = Helper.GetUnsafeNetworkCredential();
         public static NetworkCredential NullCredentials;
 
         public static ICredentials GetCredentialsForServer(string tfsUrl, ICredentials credentials)

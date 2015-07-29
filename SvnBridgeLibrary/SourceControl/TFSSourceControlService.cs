@@ -9,6 +9,7 @@ using System.Text;
 using System.IO;
 using SvnBridge.Interfaces;
 using SvnBridge.Infrastructure;
+using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
 using CodePlex.TfsLibrary;
 
 namespace SvnBridge.SourceControl
@@ -87,7 +88,7 @@ namespace SvnBridge.SourceControl
                     // Check if no items returned due to no permissions.
                     var invalidPath = false;
 
-                    NetworkCredential readAllCredentials = CredentialCache.DefaultNetworkCredentials;
+                    NetworkCredential readAllCredentials = Helper.GetUnsafeNetworkCredential();
                     if (!string.IsNullOrEmpty(Configuration.ReadAllUserName))
                     {
                         readAllCredentials = new NetworkCredential(Configuration.ReadAllUserName, Configuration.ReadAllUserPassword, Configuration.ReadAllUserDomain);
