@@ -98,7 +98,14 @@ namespace SvnBridge.Handlers
             string location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
 
             ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(TFSSourceControlProvider.LATEST_VERSION, Helper.Decode(itemPath), Recursion.None);
-            if (item.ItemRevision > version || item.PropertyRevision > version)
+            // Possibly technically a NULL item shouldn't happen here
+            // (this probably indicates client-side WC state out of sync with repository,
+            // since the client shouldn't be doing requests on non-existing items?
+            // E.g. in case of a repo-deleted locally non-deleted file).
+            // Anyway, we'll handle this with a ConflictException as well,
+            // since it's much better than crashing on NULL item access.
+            if ((item == null) || // [deleted?]
+                (item.ItemRevision > version || item.PropertyRevision > version))
             {
                 throw new ConflictException();
             }
