@@ -252,13 +252,41 @@ namespace SvnBridge.SourceControl
             folders[folderNameMangled] = folder;
         }
 
-        private FolderMetaData FetchContainerFolderForItem(ItemMetaData item)
+        /// <remarks>
+        /// Future rework idea:
+        /// Rather than storing folders in a folders map,
+        /// one could have metadata-only hierarchy lookup.
+        /// For case insensitive lookup, we currently insensitive-compare the *whole*
+        /// multi-directory string, whereas it would be more precise if we managed to
+        /// do lookup on each hierarchy level and then on each level chose insensitive lookup
+        /// *only* in case sensitive lookup failed.
+        /// Or, IOW, currently the following case fails:
+        /// Location1: /PROJECT/myFolder/
+        /// Location2: /project/MyFolder/
+        /// Query: /project/myFolder/
+        /// This would return Location1, despite Location2 arguably being more relevant
+        /// (the root entry is precise, and only the sub dir is different).
+        /// </remarks>
+        public FolderMetaData TryGetFolder(string key)
         {
             FolderMetaData folder;
+            // http://stackoverflow.com/questions/9382681/what-is-more-efficient-dictionary-trygetvalue-or-containskeyitem
+            folders.TryGetValue(key, out folder);
+            return folder;
+        }
+
+        /// <summary>
+        /// *Guarantees* returning a (not necessarily having pre-existed) folder item.
+        /// </summary>
+        /// <param name="item">The item (file, folder) to return a base folder for</param>
+        /// <returns>Base folder item which may be used to contain the item</returns>
+        private FolderMetaData FetchContainerFolderForItem(ItemMetaData item)
+        {
             string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
             string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
 
-            if (!folders.TryGetValue(folderNameMangled, out folder))
+            FolderMetaData folder = TryGetFolder(folderNameMangled);
+            if (null == folder)
             {
                 // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
                 // Try very special algo to detect likely candidate folder.
@@ -349,31 +377,34 @@ namespace SvnBridge.SourceControl
                 // and the two sub functions have an empty-skip of their loops anyway...
                 // (this sadly is a relatively common case though since not many items
                 // are property-related).
-                UpdatePropertiesOfItems(folderMap.folders, dictPropertiesOfItems);
-                UpdatePropertiesRevisionOfItems(folderMap.folders, dictPropertiesRevisionOfItems);
+                UpdatePropertiesOfItems(folderMap, dictPropertiesOfItems);
+                UpdatePropertiesRevisionOfItems(folderMap, dictPropertiesRevisionOfItems);
 
                 // Either (usually) a folder or sometimes even single-item:
                 ItemMetaData root = folderMap.QueryRootItem();
                 return root;
         }
 
-        private void UpdatePropertiesOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
+        private static void UpdatePropertiesOfItems(FolderMap folderMap, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
         {
             foreach (KeyValuePair<string, ItemProperties> pairItemProperties in properties)
             {
+                string itemPath = pairItemProperties.Key;
                 ItemMetaData item = null;
-                string key = pairItemProperties.Key.ToLowerInvariant();
-                if (folders.ContainsKey(key))
+                string itemPathMangled = itemPath.ToLowerInvariant();
+                FolderMetaData itemFolder = folderMap.TryGetFolder(itemPathMangled);
+                if (null != itemFolder)
                 {
-                    item = folders[key];
+                    item = itemFolder;
                 }
                 else
                 {
-                    string folderName = FilesysHelpers.GetFolderPathPart(pairItemProperties.Key)
+                    string folderNameMangled = FilesysHelpers.GetFolderPathPart(itemPath)
                         .ToLowerInvariant();
-                    if (folders.ContainsKey(folderName))
+                    itemFolder = folderMap.TryGetFolder(folderNameMangled);
+                    if (null != itemFolder)
                     {
-                        item = folders[folderName].FindItem(pairItemProperties.Key);
+                        item = itemFolder.FindItem(itemPath);
                     }
                 }
                 if (item != null)
@@ -386,27 +417,28 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private static void UpdatePropertiesRevisionOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> pairsPropertiesRevisionOfItems)
+        private static void UpdatePropertiesRevisionOfItems(FolderMap folderMap, IEnumerable<KeyValuePair<string, int>> pairsPropertiesRevisionOfItems)
         {
             foreach (KeyValuePair<string, int> pairItemPropertiesRevision in pairsPropertiesRevisionOfItems)
             {
                 string itemPath = pairItemPropertiesRevision.Key;
 
                 string itemPathMangled = itemPath.ToLower();
-                if (folders.ContainsKey(itemPathMangled))
+                FolderMetaData itemFolder = folderMap.TryGetFolder(itemPathMangled);
+                if (null != itemFolder)
                 {
-                    ItemMetaData item = folders[itemPathMangled];
+                    ItemMetaData item = itemFolder;
                     item.PropertyRevision = pairItemPropertiesRevision.Value;
                 }
                 else
                 {
                     string baseFolderNameMangled = FilesysHelpers.GetFolderPathPart(itemPath).ToLowerInvariant();
 
-                    FolderMetaData folder;
-                    if (folders.TryGetValue(baseFolderNameMangled, out folder) == false)
+                    itemFolder = folderMap.TryGetFolder(baseFolderNameMangled);
+                    if (null == itemFolder)
                         continue;
 
-                    foreach (ItemMetaData item in folder.Items)
+                    foreach (ItemMetaData item in itemFolder.Items)
                     {
                         if (item.Name == itemPath)
                         {
