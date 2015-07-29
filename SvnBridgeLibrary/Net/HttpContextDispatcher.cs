@@ -170,6 +170,11 @@ namespace SvnBridge.Net
         private static NetworkCredential GetCredential(IHttpRequest request)
         {
             string authorizationHeader = request.Headers["Authorization"];
+            return GetCredential(authorizationHeader);
+        }
+
+        private static NetworkCredential GetCredential(string authorizationHeader)
+        {
             if (!string.IsNullOrEmpty(authorizationHeader))
             {
                 if (authorizationHeader.StartsWith("Digest"))
