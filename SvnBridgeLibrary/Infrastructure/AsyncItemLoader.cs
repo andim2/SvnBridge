@@ -180,6 +180,12 @@ namespace SvnBridge.Infrastructure
                     break;
                 }
 
+                // FIXME!! race window *here*:
+                // if producer happens to be doing [set .DataLoaded true] *right here*,
+                // then prior .DataLoaded false check will have failed
+                // and we're about to wait on an actually successful load
+                // (and having missed the signal event).
+
                 // Since we don't have a wait handle here,
                 // need to use fixed short intervals
                 // to ensure that we notice changes sufficiently quickly:

@@ -343,6 +343,12 @@ namespace SvnBridge.SourceControl
                         folderMap.Insert(item);
                     }
                 }
+                // Could have added an expensive(?)/extraneous "need properties update" bool calculation here
+                // to skip handling when possible,
+                // but such semi-direct logic would be quite risky,
+                // and the two sub functions have an empty-skip of their loops anyway...
+                // (this sadly is a relatively common case though since not many items
+                // are property-related).
                 UpdatePropertiesOfItems(folderMap.folders, dictPropertiesOfItems);
                 UpdatePropertiesRevisionOfItems(folderMap.folders, dictPropertiesRevisionOfItems);
 
@@ -1067,6 +1073,21 @@ namespace SvnBridge.SourceControl
         {
             IEnumerable<SourceItemHistory> commits;
 
+            // Attention: .Select() has the opportunity
+            // of getting executed dynamically i.e. once index requested by user only!
+            // Thus make sure to avoid flattening conversions
+            // ("materializing" content) right until outer users,
+            // which in the ideal situation
+            // will enable us to (web-service-)request only
+            // the particular subset of container indices
+            // which is actually being requested by the API user.
+            // However given that TfsLibrary-side infrastructure
+            // already uses List members (e.g. SourceItemHistory.Changes),
+            // IEnumerable.Select() won't really help all that much anyway...
+            // (not to mention that that would perhaps mean
+            // doing web service requests for each individual container index
+            // rather than efficiently fetching one entire semi-large container
+            // in one go).
             commits = changesets.Select(changeset => ConvertTFSChangesetToSVNCommit(changeset));
 
             return commits;
