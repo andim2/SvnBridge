@@ -256,7 +256,7 @@ namespace SvnBridge.SourceControl
                 {
                     bool isLastPathElem = (i == pathElemsCount - 1);
 
-                    PathAppendElem(ref itemPath, pathElems[i]);
+                    FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
 
                     // Detect our possibly pre-existing record of this item within the changeset version range
                     // that we're in the process of analyzing/collecting...
@@ -457,7 +457,7 @@ namespace SvnBridge.SourceControl
             {
                 bool isLastPathElem = (i == pathElemsCount - 1);
 
-                PathAppendElem(ref itemPath, pathElems[i]);
+                FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
 
                 bool isFullyHandled = HandleDeleteItem(remoteName, change, itemPath, ref folder, isLastPathElem);
                 if (isFullyHandled)
@@ -569,14 +569,6 @@ namespace SvnBridge.SourceControl
             }
             folder = (item as FolderMetaData) ?? folder;
             return false;
-        }
-
-        public static void PathAppendElem(ref string path, string pathElem)
-        {
-            if (path != "" && !path.EndsWith("/"))
-                path += "/" + pathElem;
-            else
-                path += pathElem;
         }
 
         private static bool IsChangeAlreadyCurrentInClientState(ChangeType changeType,

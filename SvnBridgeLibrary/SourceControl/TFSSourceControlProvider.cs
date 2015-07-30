@@ -75,6 +75,14 @@ namespace SvnBridge.SourceControl
             return res;
         }
 
+        public static void PathAppendElem(ref string path, string pathElem)
+        {
+            if (path != "" && !path.EndsWith(repo_separator_s))
+                path += repo_separator_s + pathElem;
+            else
+                path += pathElem;
+        }
+
         /// <summary>
         /// Helper to abstract/hide away the *internal* decision
         /// on whether names of filesystem items ought to be case-mangled

@@ -161,7 +161,7 @@ namespace SvnBridge.SourceControl
             {
                 bool isLastPathElem = (i == pathElemsCount - 1);
 
-                UpdateDiffEngine.PathAppendElem(ref itemPath, pathElems[i]);
+                FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
 
                 item = folder.FindItem(itemPath);
                 if (item == null)
