@@ -70,7 +70,7 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
 
-            Assert.True(response.Output.Contains("<S:added-path>/filename</S:added-path>"));
+            Assert.True(response.Output.Contains("<S:added-path node-kind=\"unknown\">/filename</S:added-path>"));
         }
 
         [Fact]

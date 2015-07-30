@@ -55,13 +55,13 @@ namespace UnitTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-07-25T00:13:14.466022Z</S:date>\n" +
                 "<D:comment>1234</D:comment>\n" +
-                "<S:added-path>/newFolder4</S:added-path>\n" +
-                "<S:added-path>/newFolder4/A!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
-                "<S:modified-path>/newFolder4/B!@#$%^&amp;()~`_-+={[}];',.txt</S:modified-path>\n" +
-                "<S:deleted-path>/newFolder4/C!@#$%^&amp;()~`_-+={[}];',.txt</S:deleted-path>\n" +
-                "<S:added-path copyfrom-path=\"/newFolder4/D!@#$%^&amp;()~`_-+={[}];',.txt\" copyfrom-rev=\"5531\">/newFolder4/E!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
-                "<S:deleted-path>/newFolder4/D!@#$%^&amp;()~`_-+={[}];',.txt</S:deleted-path>\n" +
-                "<S:added-path copyfrom-path=\"/newFolder4/F!@#$%^&amp;()~`_-+={[}];',.txt\" copyfrom-rev=\"5531\">/newFolder4/G!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder4</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder4/A!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/newFolder4/B!@#$%^&amp;()~`_-+={[}];',.txt</S:modified-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/newFolder4/C!@#$%^&amp;()~`_-+={[}];',.txt</S:deleted-path>\n" +
+                "<S:added-path copyfrom-path=\"/newFolder4/D!@#$%^&amp;()~`_-+={[}];',.txt\" copyfrom-rev=\"5531\" node-kind=\"dir\">/newFolder4/E!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/newFolder4/D!@#$%^&amp;()~`_-+={[}];',.txt</S:deleted-path>\n" +
+                "<S:added-path copyfrom-path=\"/newFolder4/F!@#$%^&amp;()~`_-+={[}];',.txt\" copyfrom-rev=\"5531\" node-kind=\"dir\">/newFolder4/G!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
             Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
@@ -90,7 +90,7 @@ namespace UnitTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-08-20T03:23:41.054140Z</S:date>\n" +
                 "<D:comment>1234</D:comment>\n" +
-                "<S:deleted-path>/Folder9</S:deleted-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/Folder9</S:deleted-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
             Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
@@ -116,6 +116,9 @@ namespace UnitTests
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
+            // Hmm, why node-kind="dir" rather than "file"?
+            // Probably because the Change initially got registered as directory-type,
+            // but one should investigate that...
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<S:log-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n" +
@@ -124,7 +127,7 @@ namespace UnitTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-08-17T21:47:11.400569Z</S:date>\n" +
                 "<D:comment>made a copy</D:comment>\n" +
-                "<S:added-path copyfrom-path=\"/Test3.txt\" copyfrom-rev=\"5678\">/Test3Branch.txt</S:added-path>\n" +
+                "<S:added-path copyfrom-path=\"/Test3.txt\" copyfrom-rev=\"5678\" node-kind=\"dir\">/Test3Branch.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
 
@@ -159,8 +162,8 @@ namespace UnitTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-07-24T07:46:20.635845Z</S:date>\n" +
                 "<D:comment>Renamed file</D:comment>\n" +
-                "<S:added-path copyfrom-path=\"/newFolder3/NewFile.txt\" copyfrom-rev=\"5530\">/newFolder3/NewFileRename.txt</S:added-path>\n" +
-                "<S:deleted-path>/newFolder3/NewFile.txt</S:deleted-path>\n" +
+                "<S:added-path copyfrom-path=\"/newFolder3/NewFile.txt\" copyfrom-rev=\"5530\" node-kind=\"dir\">/newFolder3/NewFileRename.txt</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/newFolder3/NewFile.txt</S:deleted-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
 
@@ -200,7 +203,7 @@ namespace UnitTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-07-24T07:46:20.635845Z</S:date>\n" +
                 "<D:comment>Merged file</D:comment>\n" +
-                "<S:modified-path>/newFolder3/NewFile.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/newFolder3/NewFile.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
 

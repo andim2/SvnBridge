@@ -375,7 +375,7 @@ namespace ProtocolTests
                 "}\n" +
                 "}}\n" +
                 "</D:comment>\n" +
-                "<S:added-path>/newFolder2</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder2</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +

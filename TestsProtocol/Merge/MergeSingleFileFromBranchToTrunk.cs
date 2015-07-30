@@ -1223,19 +1223,19 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:55:15.931705Z</S:date>\n" +
                 "<D:comment>Merged from branch</D:comment>\n" +
-                "<S:modified-path>/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5769</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:22:14.541080Z</S:date>\n" +
                 "<D:comment>Updated</D:comment>\n" +
-                "<S:deleted-path>/A !@#$%^&amp;()_-+={[}];',.~`</S:deleted-path>\n" +
-                "<S:added-path>/trunk</S:added-path>\n" +
-                "<S:added-path>/trunk/A !@#$%^&amp;()_-+={[}];',.~`</S:added-path>\n" +
-                "<S:deleted-path>/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:deleted-path>\n" +
-                "<S:added-path>/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:added-path>\n" +
-                "<S:added-path>/branch</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/A !@#$%^&amp;()_-+={[}];',.~`</S:deleted-path>\n" +
+                "<S:added-path node-kind=\"dir\">/trunk</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/trunk/A !@#$%^&amp;()_-+={[}];',.~`</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:deleted-path>\n" +
+                "<S:added-path node-kind=\"dir\">/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/branch</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +
@@ -2007,33 +2007,33 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T08:17:28.228580Z</S:date>\n" +
                 "<D:comment>a</D:comment>\n" +
-                "<S:modified-path>/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5773</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:26:57.197330Z</S:date>\n" +
                 "<D:comment>update</D:comment>\n" +
-                "<S:modified-path>/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5772</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:25:26.572330Z</S:date>\n" +
                 "<D:comment>branch</D:comment>\n" +
-                "<S:added-path copyfrom-path=\"/trunk\" copyfrom-rev=\"5771\">/branch/test</S:added-path>\n" +
+                "<S:added-path copyfrom-path=\"/trunk\" copyfrom-rev=\"5771\" node-kind=\"dir\">/branch/test</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5769</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:22:14.541080Z</S:date>\n" +
                 "<D:comment>Updated</D:comment>\n" +
-                "<S:deleted-path>/A !@#$%^&amp;()_-+={[}];',.~`</S:deleted-path>\n" +
-                "<S:added-path>/trunk</S:added-path>\n" +
-                "<S:added-path>/trunk/A !@#$%^&amp;()_-+={[}];',.~`</S:added-path>\n" +
-                "<S:deleted-path>/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:deleted-path>\n" +
-                "<S:added-path>/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:added-path>\n" +
-                "<S:added-path>/branch</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/A !@#$%^&amp;()_-+={[}];',.~`</S:deleted-path>\n" +
+                "<S:added-path node-kind=\"dir\">/trunk</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/trunk/A !@#$%^&amp;()_-+={[}];',.~`</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:deleted-path>\n" +
+                "<S:added-path node-kind=\"dir\">/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/branch</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +
@@ -2478,7 +2478,7 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:55:15.931705Z</S:date>\n" +
                 "<D:comment>Merged from branch</D:comment>\n" +
-                "<S:modified-path>/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +
@@ -2929,21 +2929,21 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T08:17:28.228580Z</S:date>\n" +
                 "<D:comment>a</D:comment>\n" +
-                "<S:modified-path>/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5773</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:26:57.197330Z</S:date>\n" +
                 "<D:comment>update</D:comment>\n" +
-                "<S:modified-path>/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/branch/test/H !@#$%^&amp;()_-+={[}];',.~`.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5772</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2008-09-24T07:25:26.572330Z</S:date>\n" +
                 "<D:comment>branch</D:comment>\n" +
-                "<S:added-path copyfrom-path=\"/trunk\" copyfrom-rev=\"5771\">/branch/test</S:added-path>\n" +
+                "<S:added-path copyfrom-path=\"/trunk\" copyfrom-rev=\"5771\" node-kind=\"dir\">/branch/test</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +

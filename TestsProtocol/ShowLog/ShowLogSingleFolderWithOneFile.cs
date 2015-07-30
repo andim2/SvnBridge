@@ -707,9 +707,9 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-04-09T03:54:04.385945Z</S:date>\n" +
                 "<D:comment>Added another folder and two files</D:comment>\n" +
-                "<S:added-path>/Spikes/SvnFacade/trunk/New Folder</S:added-path>\n" +
-                "<S:added-path>/Spikes/SvnFacade/trunk/Test1.txt</S:added-path>\n" +
-                "<S:added-path>/Spikes/SvnFacade/trunk/New Folder/Test2.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/Spikes/SvnFacade/trunk/New Folder</S:added-path>\n" +
+                "<S:added-path node-kind=\"file\">/Spikes/SvnFacade/trunk/Test1.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"file\">/Spikes/SvnFacade/trunk/New Folder/Test2.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +

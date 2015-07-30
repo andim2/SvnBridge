@@ -16,6 +16,68 @@ using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.EncodeB() etc.
 
 namespace SvnBridge.Handlers
 {
+    /// <remarks>
+    /// TODO: should possibly be developed into a class hierarchy for various item operations.
+    /// </remarks>
+    public class SvnReportHelpers
+    {
+        public static string FormatNodeKindAttribute(
+            SourceItem item)
+        {
+            return FormatQuotedAttribute(
+                "node-kind",
+                GetNodeKind(
+                    item));
+        }
+        public static string FormatQuotedAttribute(
+            string attr_key,
+            string attr_val)
+        {
+            return attr_key + "=\"" + attr_val + "\"";
+        }
+
+        public static string FormatAbsolutePathString(
+            string path)
+        {
+            return "/" + Helper.EncodeB(
+                path);
+        }
+
+        private static string GetNodeKind(
+            SourceItem item)
+        {
+            return GetNodeKind(
+                item.ItemType);
+        }
+
+        /// <remarks>
+        /// Node kind choices seem to be:
+        /// "node" / "file" / "dir" / "symlink" / "unknown"
+        /// (gathered from subversion/libsvn_subr/types.c).
+        /// </remarks>
+        private static string GetNodeKind(
+            ItemType itemType)
+        {
+            string svn_node_kind = "none"; // hmm... where to use "none" and where "unknown"?
+
+            switch(itemType)
+            {
+              case ItemType.Folder:
+                  svn_node_kind = "dir";
+                  break;
+              case ItemType.File:
+                  svn_node_kind = "file";
+                  break;
+              case ItemType.Any:
+              default:
+                  svn_node_kind = "unknown";
+                  break;
+            }
+
+            return svn_node_kind;
+        }
+    }
+
     public class ReportHandler : RequestHandlerBase
     {
         protected AsyncItemLoader loader;
@@ -627,31 +689,64 @@ namespace SvnBridge.Handlers
                 if ((change.ChangeType & ChangeType.Add) == ChangeType.Add ||
                     (change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete)
                 {
-                    output.Write("<S:added-path>/" + Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
+                    output.Write("<S:added-path " +
+                    SvnReportHelpers.FormatNodeKindAttribute(item) +
+                    ">" +
+                    SvnReportHelpers.FormatAbsolutePathString(item.RemoteName) +
+                    "</S:added-path>\n");
                 }
                 else if ((change.ChangeType & ChangeType.Edit) == ChangeType.Edit)
                 {
-                    output.Write("<S:modified-path>/" + Helper.EncodeB(item.RemoteName) + "</S:modified-path>\n");
+                    output.Write("<S:modified-path " +
+                    SvnReportHelpers.FormatNodeKindAttribute(item) +
+                    ">" +
+                    SvnReportHelpers.FormatAbsolutePathString(item.RemoteName) +
+                    "</S:modified-path>\n");
                 }
                 else if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
                 {
-                    output.Write("<S:deleted-path>/" + Helper.EncodeB(item.RemoteName) + "</S:deleted-path>\n");
+                    output.Write("<S:deleted-path " +
+                    SvnReportHelpers.FormatNodeKindAttribute(item) +
+                    ">" +
+                    SvnReportHelpers.FormatAbsolutePathString(item.RemoteName) +
+                    "</S:deleted-path>\n");
                 }
                 else if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
                 {
                     var renamedItem = (RenamedSourceItem)item;
-                    output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
-                                 "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
-                                 Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
-                    output.Write("<S:deleted-path>/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
+                    output.Write(
+                        "<S:added-path " +
+                        SvnReportHelpers.FormatQuotedAttribute(
+                          "copyfrom-path",
+                          SvnReportHelpers.FormatAbsolutePathString(renamedItem.OriginalRemoteName)) + " " +
+                        SvnReportHelpers.FormatQuotedAttribute(
+                          "copyfrom-rev",
+                          renamedItem.OriginalRevision.ToString()) + " " +
+                        SvnReportHelpers.FormatNodeKindAttribute(renamedItem) +
+                        ">" +
+                        SvnReportHelpers.FormatAbsolutePathString(item.RemoteName) +
+                        "</S:added-path>\n");
+                    output.Write("<S:deleted-path " +
+                        SvnReportHelpers.FormatNodeKindAttribute(renamedItem) +
+                        ">" +
+                        SvnReportHelpers.FormatAbsolutePathString(renamedItem.OriginalRemoteName) +
                                  "</S:deleted-path>\n");
                 }
                 else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
                 {
                     var renamedItem = (RenamedSourceItem)item;
-                    output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
-                                 "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
-                                 Helper.EncodeB(item.RemoteName) + "</S:added-path>\n");
+                    output.Write(
+                        "<S:added-path " +
+                        SvnReportHelpers.FormatQuotedAttribute(
+                          "copyfrom-path",
+                          SvnReportHelpers.FormatAbsolutePathString(renamedItem.OriginalRemoteName)) + " " +
+                        SvnReportHelpers.FormatQuotedAttribute(
+                          "copyfrom-rev",
+                          renamedItem.OriginalRevision.ToString()) + " " +
+                        SvnReportHelpers.FormatNodeKindAttribute(renamedItem) +
+                        ">" +
+                        SvnReportHelpers.FormatAbsolutePathString(item.RemoteName) +
+                        "</S:added-path>\n");
                 }
                 else if (change.ChangeType == ChangeType.Merge)
                 {

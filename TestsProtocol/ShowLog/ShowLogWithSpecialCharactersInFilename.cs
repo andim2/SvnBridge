@@ -289,8 +289,8 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-07-25T00:13:14.466022Z</S:date>\n" +
                 "<D:comment>1234</D:comment>\n" +
-                "<S:added-path>/newFolder4</S:added-path>\n" +
-                "<S:added-path>/newFolder4/A!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder4</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder4/A!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +

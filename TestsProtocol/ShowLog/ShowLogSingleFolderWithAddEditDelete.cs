@@ -315,35 +315,35 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-05-16T05:21:26.302105Z</S:date>\n" +
                 "<D:comment>Deleted a file</D:comment>\n" +
-                "<S:deleted-path>/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:deleted-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:deleted-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5394</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-05-16T04:37:37.958355Z</S:date>\n" +
                 "<D:comment>Added another line</D:comment>\n" +
-                "<S:modified-path>/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5393</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-05-16T04:17:42.098980Z</S:date>\n" +
                 "<D:comment>Updated a file</D:comment>\n" +
-                "<S:modified-path>/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:modified-path>\n" +
+                "<S:modified-path node-kind=\"dir\">/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:modified-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5392</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-05-16T04:16:43.911480Z</S:date>\n" +
                 "<D:comment>Added new file</D:comment>\n" +
-                "<S:added-path>/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/Spikes/SvnFacade/trunk/New Folder 5/Test1.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5390</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-05-14T00:05:54.910225Z</S:date>\n" +
                 "<D:comment>Adding New Folder 5</D:comment>\n" +
-                "<S:added-path>/Spikes/SvnFacade/trunk/New Folder 5</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/Spikes/SvnFacade/trunk/New Folder 5</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +

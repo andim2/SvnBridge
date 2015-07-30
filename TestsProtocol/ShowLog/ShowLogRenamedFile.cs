@@ -290,16 +290,16 @@ namespace ProtocolTests
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-07-24T07:46:20.635845Z</S:date>\n" +
                 "<D:comment>Renamed file</D:comment>\n" +
-                "<S:added-path copyfrom-path=\"/newFolder3/NewFile.txt\" copyfrom-rev=\"5530\">/newFolder3/NewFileRename.txt</S:added-path>\n" +
-                "<S:deleted-path>/newFolder3/NewFile.txt</S:deleted-path>\n" +
+                "<S:added-path copyfrom-path=\"/newFolder3/NewFile.txt\" copyfrom-rev=\"5530\" node-kind=\"dir\">/newFolder3/NewFileRename.txt</S:added-path>\n" +
+                "<S:deleted-path node-kind=\"dir\">/newFolder3/NewFile.txt</S:deleted-path>\n" +
                 "</S:log-item>\n" +
                 "<S:log-item>\n" +
                 "<D:version-name>5530</D:version-name>\n" +
                 "<D:creator-displayname>jwanagel</D:creator-displayname>\n" +
                 "<S:date>2007-07-24T07:45:44.995448Z</S:date>\n" +
                 "<D:comment>1234</D:comment>\n" +
-                "<S:added-path>/newFolder3</S:added-path>\n" +
-                "<S:added-path>/newFolder3/NewFile.txt</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder3</S:added-path>\n" +
+                "<S:added-path node-kind=\"dir\">/newFolder3/NewFile.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n" +
                 "\r\n" +
