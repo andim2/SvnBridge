@@ -4,7 +4,6 @@ using SvnBridge.Interfaces;
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
-using SvnBridge.Infrastructure; // DefaultLogger
 
 namespace SvnBridge.Handlers
 {
@@ -36,8 +35,7 @@ namespace SvnBridge.Handlers
             catch (ConflictException ex)
             {
                 OnErrorRetainRequestInfo_RequestBody(data);
-                DefaultLogger logger = Container.Resolve<DefaultLogger>();
-                logger.ErrorFullDetails(ex, context);
+                GetDefaultLogger().ErrorFullDetails(ex, context);
 
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 409);
                 string responseContent =

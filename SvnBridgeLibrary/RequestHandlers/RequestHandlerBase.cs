@@ -59,6 +59,11 @@ namespace SvnBridge.Handlers
 			}
 		}
 
+        protected DefaultLogger GetDefaultLogger()
+        {
+            return Container.Resolve<DefaultLogger>();
+        }
+
         /// <summary>
         /// Central (and possibly comment-only) helper
         /// to store RequestBody payload in case of certain errors.
