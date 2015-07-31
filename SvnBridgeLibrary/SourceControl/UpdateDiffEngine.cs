@@ -1,4 +1,4 @@
-﻿using System; // InvalidOperationException , StringComparison , StringSplitOptions
+﻿using System; // InvalidOperationException , StringComparison
 using System.Collections.Generic; // Dictionary , List
 using System.Diagnostics; // Debug.WriteLine()
 using CodePlex.TfsLibrary.ObjectModel; // SourceItemChange
@@ -326,13 +326,11 @@ namespace SvnBridge.SourceControl
             else // standard case (other items)
             {
                 FolderMetaData folder = _root;
-                string itemPath = _checkoutRootPath;
-                string[] pathElems;
-                if (_checkoutRootPath != "")
-                    pathElems = remoteName.Substring(_checkoutRootPath.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                else
-                    pathElems = remoteName.Split('/');
+                string remoteNameStart = _checkoutRootPath;
+                string itemPath = remoteNameStart;
 
+                string pathSub = GetSubPath_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
+                string[] pathElems = pathSub.Split('/');
                 int pathElemsCount = pathElems.Length;
                 for (int i = 0; i < pathElemsCount; i++)
                 {
@@ -527,13 +525,13 @@ namespace SvnBridge.SourceControl
             }
 
             FolderMetaData folder = _root;
-            string itemPath = _checkoutRootPath;
             // deactivated [well... that turned out to be the SAME value!! Perhaps it was either deprecated or future handling...]:
             //string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemPath;
-            string remoteNameStart = itemPath;
+            string remoteNameStart = _checkoutRootPath;
+            string itemPath = remoteNameStart;
 
-            string[] pathElems = remoteName.Substring(remoteNameStart.Length).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-
+            string pathSub = GetSubPath_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
+            string[] pathElems = pathSub.Split('/');
             int pathElemsCount = pathElems.Length;
             for (int i = 0; i < pathElemsCount; i++)
             {
@@ -651,6 +649,22 @@ namespace SvnBridge.SourceControl
             }
             folder = (item as FolderMetaData) ?? folder;
             return false;
+        }
+
+        private static string GetSubPath_PossiblyBelowSpecificRoot(string root, string path)
+        {
+            string subPath;
+
+            // NOTE: former duplicated code locations seem to have been *buggy*:
+            // one did .Length + 1 and the other .Length only!
+            // This is why I also believe that the StringSplitOptions.RemoveEmptyEntries
+            // was a workaround against one initial '/' not getting removed due to missing "+ 1".
+            // So, for now on the user side try doing .Split() without .RemoveEmptyEntries...
+            //   pathElems = path.Substring(root.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            bool isRootSpecified = (root != "");
+            subPath = isRootSpecified ? path.Substring(root.Length + 1) : path;
+
+            return subPath;
         }
 
         private static bool IsChangeAlreadyCurrentInClientState(ChangeType changeType,
