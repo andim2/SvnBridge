@@ -324,8 +324,8 @@ namespace SvnBridge.SourceControl
         public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
         {
                 FolderMap folderMap = new FolderMap();
-                Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
-                Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
+                Dictionary<string, ItemProperties> dictPropertiesOfItems = new Dictionary<string, ItemProperties>();
+                Dictionary<string, int> dictPropertiesRevisionOfItems = new Dictionary<string, int>();
                 WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
                 foreach (ItemMetaData item in items)
                 {
@@ -334,8 +334,8 @@ namespace SvnBridge.SourceControl
                     if (wantReadPropertyData)
                     {
                         string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
-                        itemPropertyRevision[itemPath] = item.Revision;
-                        properties[itemPath] = propsSerializer.PropertiesRead(item);
+                        dictPropertiesRevisionOfItems[itemPath] = item.Revision;
+                        dictPropertiesOfItems[itemPath] = propsSerializer.PropertiesRead(item);
                     }
                     bool wantQueueItem = ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles);
                     if (wantQueueItem)
@@ -343,15 +343,15 @@ namespace SvnBridge.SourceControl
                         folderMap.Insert(item);
                     }
                 }
-                SetItemProperties(folderMap.folders, properties);
-                UpdateItemRevisionsBasedOnPropertyItemRevisions(folderMap.folders, itemPropertyRevision);
+                UpdatePropertiesOfItems(folderMap.folders, dictPropertiesOfItems);
+                UpdatePropertiesRevisionOfItems(folderMap.folders, dictPropertiesRevisionOfItems);
 
                 // Either (usually) a folder or sometimes even single-item:
                 ItemMetaData root = folderMap.QueryRootItem();
                 return root;
         }
 
-        private void SetItemProperties(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
+        private void UpdatePropertiesOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
         {
             foreach (KeyValuePair<string, ItemProperties> itemProperties in properties)
             {
@@ -380,7 +380,7 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private static void UpdateItemRevisionsBasedOnPropertyItemRevisions(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
+        private static void UpdatePropertiesRevisionOfItems(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
         {
             foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)
             {
