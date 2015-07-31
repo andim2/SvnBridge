@@ -171,7 +171,7 @@ namespace UnitTests
             Assert.True(result.Contains("<D:href>/!svn/bc/1234/Foo/Bar.txt</D:href>"));
         }
 
-        [Fact(Skip="Temporary disable")]
+        //[Fact(Skip="Temporary disable")] // reenabled since it does not fail and I cannot see why it has been disabled...
         public void TestHref_WithUnicode()
         {
             ArrangeRequest();
