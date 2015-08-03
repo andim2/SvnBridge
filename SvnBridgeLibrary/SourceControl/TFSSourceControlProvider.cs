@@ -428,10 +428,7 @@ namespace SvnBridge.SourceControl
 
                 foreach (SourceItemChange change in history.Changes)
                 {
-                    if (change.Item.RemoteName.Length > rootPath.Length)
-                        change.Item.RemoteName = change.Item.RemoteName.Substring(rootPath.Length);
-                    else
-                        change.Item.RemoteName = "";
+                    change.Item.RemoteName = StripPrefix(rootPath, change.Item.RemoteName);
 
                     if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
                     {
@@ -2146,6 +2143,12 @@ namespace SvnBridge.SourceControl
             return log.History[log.History.Length - 1].ChangeSetID;
         }
 
+        private static string StripPrefix(string prefix, string full)
+        {
+            string res = (full.Length > prefix.Length) ? full.Substring(prefix.Length) : "";
+            return res;
+        }
+
         // TODO: these helpers should perhaps eventually be moved
         // into a helper class (SourceControlSession?)
         // which encapsulates sourceControlService, serverUrl, credentials members,
@@ -2224,14 +2227,7 @@ namespace SvnBridge.SourceControl
             }
 
             item.Id = sourceItem.ItemId;
-            if (sourceItem.RemoteName.Length > rootPath.Length)
-            {
-                item.Name = sourceItem.RemoteName.Substring(rootPath.Length);
-            }
-            else
-            {
-                item.Name = "";
-            }
+            item.Name = StripPrefix(rootPath, sourceItem.RemoteName);
 
             item.Author = "unknown";
             item.LastModifiedDate = sourceItem.RemoteDate;
