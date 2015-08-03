@@ -531,6 +531,14 @@ namespace SvnBridge.SourceControl
                 }
                 if (renamedItems.Count > 0)
                 {
+                    // Keep using the query method variant that's providing *ItemMetaData*-based results here -
+                    // this generically SVN-side handling (after all we're shuffling things according to expressly SVN-side protocol requirements!)
+                    // should avoid keeping messing with TfsLibrary-side API dependency types *as much as possible*,
+                    // thus getting SourceItem-typed array results is undesirable.
+                    // [with the problem remaining
+                    // that we then keep working on TfsLibrary-side types
+                    // such as SourceItemHistory... oh well].
+                    //
                     // I had pondered "improving" naming of variables old* to preRename*,
                     // however that might be imprecise
                     // since it's possibly not only in a _rename_ change
@@ -2191,6 +2199,32 @@ namespace SvnBridge.SourceControl
         {
             ItemMetaData[] result;
 
+            SourceItem[] itemsPrev = QueryPreviousVersionOfSourceItems(
+                items,
+                changeset_Newer);
+
+            result = itemsPrev.Select(sourceItem => (null != sourceItem) ? ConvertSourceItem(sourceItem, rootPath) : null).ToArray();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Helper to figure out the previous version of a list of source items,
+        /// properly symmetric within the same implementation layer!
+        /// (*from* SourceItem-typed input *to* SourceItem-typed output).
+        /// </summary>
+        ///
+        /// References:
+        /// http://stackoverflow.com/questions/8946508/tfs-2010-api-get-old-name-location-of-renamed-moved-item
+        /// <param name="items">List of items to be queried</param>
+        /// <param name="changeset_Newer">The changeset that is newer than the result that we're supposed to determine</param>
+        /// <returns>Container of items at the older changeset revision</returns>
+        private SourceItem[] QueryPreviousVersionOfSourceItems(
+            SourceItem[] items,
+            int changeset_Newer)
+        {
+            SourceItem[] result;
+
             // Processing steps:
             // - given the this-changeset source items,
             //   figure out the corresponding maximally-authoritative representation (numeric IDs) of these items
@@ -2207,10 +2241,10 @@ namespace SvnBridge.SourceControl
                 var previousSourceItems = metaDataRepository.QueryItems(
                     previousRevision,
                     previousSourceItemIds);
-                return previousSourceItems.Select(sourceItem => ConvertSourceItem(sourceItem, rootPath)).ToArray();
+                return previousSourceItems;
             }
 
-            var previousItems = new List<ItemMetaData>();
+            var previousItems = new List<SourceItem>();
             for (var i = 0; i < renamedItems.Length; i++)
             {
                 var renamedItem = renamedItems[i];
@@ -2220,7 +2254,7 @@ namespace SvnBridge.SourceControl
                     previousSourceItemId);
                 // Yes, do actively append this slot even if no result
                 // (caller requires index-consistent behaviour of input vs. result storage)
-                previousItems.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
+                previousItems.Add(previousSourceItems.Length > 0 ? previousSourceItems[0] : null);
             }
             result = previousItems.ToArray();
 
