@@ -1,6 +1,7 @@
 namespace SvnBridge.SourceControl
 {
     using System; // StringSplitOptions
+    using System.Collections.Generic; // List
     using System.Net; // ICredentials
     using CodePlex.TfsLibrary; // NetworkAccessDeniedException
     using CodePlex.TfsLibrary.ObjectModel; // SourceItem
@@ -105,8 +106,6 @@ namespace SvnBridge.SourceControl
             VersionSpec versionSpec,
             ItemType itemType)
         {
-            bool haveEncounteredAnyMismatch = false;
-
             EnsureServerRootSyntax(pathToBeChecked);
 
             string[] pathElemsOrig = PathSplit(pathToBeChecked);
@@ -116,6 +115,113 @@ namespace SvnBridge.SourceControl
             {
                 throw new InvalidPathException(pathToBeChecked);
             }
+
+            //DoCheckNeedItemPathSanitize_slow_single_queries(pathElemsOrig, versionSpec, itemType);
+            try
+            {
+                DoCheckNeedItemPathSanitize_batched(pathElemsOrig, versionSpec, itemType);
+            }
+            // Definitely need to have our specific notification exception type
+            // passed on unfiltered...
+            catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize)
+            {
+                throw;
+            }
+            catch
+            {
+                // Hmm, batched mode failed
+                // (e.g. a NetworkAccessDeniedException may occur) -
+                // let's give single-query mode a chance to succeed...
+                // (even if only partially
+                // for *some* sub items in the path hierarchy!)
+                DoCheckNeedItemPathSanitize_slow_single_queries(pathElemsOrig, versionSpec, itemType);
+            }
+        }
+
+        private static ItemSpec[] PathHierarchyToItemSpecs(string[] pathElems)
+        {
+            var pathElemsCount = pathElems.Length;
+
+            List<ItemSpec> itemSpecs = new List<ItemSpec>(pathElemsCount - 1);
+            for (var numElemsRemain = pathElemsCount; numElemsRemain > 1; --numElemsRemain)
+            {
+                string path = PathJoin(pathElems, numElemsRemain);
+                ItemSpec itemSpec = new ItemSpec { item = path, recurse = RecursionType.None };
+                itemSpecs.Add(itemSpec);
+            }
+
+            return itemSpecs.ToArray();
+        }
+
+        private static bool SanitizePathElemsViaItemSet(ref string[] pathElemsToBeChecked, ItemType itemType, ItemSet[] itemSetsHierarchical)
+        {
+            bool haveEncounteredAnyMismatch = false;
+
+            int pathElemsCount = pathElemsToBeChecked.Length;
+
+            int numElemsRemain = pathElemsCount;
+            foreach (var itemSet in itemSetsHierarchical)
+            {
+                bool isRoot = (1 == numElemsRemain);
+                if (isRoot)
+                {
+                    break;
+                }
+
+                string pathToBeChecked = PathJoin(pathElemsToBeChecked, numElemsRemain);
+
+                foreach (var item in itemSet.Items)
+                {
+                    bool isItemTypeCompatible = (itemType == item.type);
+                    if (isItemTypeCompatible)
+                    {
+                        string pathResult = item.item;
+                        bool isPathMatch = pathResult.Equals(pathToBeChecked);
+                        if (!(isPathMatch))
+                        {
+                            haveEncounteredAnyMismatch = true;
+                            var idxPathElemToBeCorrected = numElemsRemain - 1;
+                            HandlePathElemMismatch(ref pathElemsToBeChecked, idxPathElemToBeCorrected, pathResult);
+                        }
+                    }
+                }
+                --numElemsRemain;
+                itemType = ItemType.Folder; // any item other than FQPN *must* be a parent folder
+            }
+
+            return haveEncounteredAnyMismatch;
+        }
+
+        private void DoCheckNeedItemPathSanitize_batched(string[] pathElemsOrig,
+                                                                VersionSpec versionSpec,
+                                                                ItemType itemType)
+        {
+            bool haveEncounteredAnyMismatch = false;
+
+            string[] pathElemsSanitized = pathElemsOrig;
+
+            ItemSpec[] itemSpecs = PathHierarchyToItemSpecs(pathElemsOrig);
+
+            ItemSet[] itemSets = sourceControlService.QueryItems(serverUrl, credentials,
+                versionSpec,
+                itemSpecs,
+                0);
+
+            haveEncounteredAnyMismatch = SanitizePathElemsViaItemSet(ref pathElemsSanitized, itemType, itemSets);
+            bool hadSanePath = !(haveEncounteredAnyMismatch);
+            if (!(hadSanePath))
+            {
+                ReportSanitizedPathFromElems(pathElemsSanitized);
+            }
+        }
+
+        private void DoCheckNeedItemPathSanitize_slow_single_queries(string[] pathElemsOrig,
+                                                                     VersionSpec versionSpec,
+                                                                     ItemType itemType)
+        {
+            bool haveEncounteredAnyMismatch = false;
+
+            int pathElemsCount = pathElemsOrig.Length;
 
             string[] pathElemsToBeChecked = pathElemsOrig;
             string[] pathElemsSanitized = pathElemsOrig;
