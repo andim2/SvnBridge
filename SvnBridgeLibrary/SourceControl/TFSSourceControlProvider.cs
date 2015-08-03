@@ -2224,7 +2224,7 @@ namespace SvnBridge.SourceControl
             }
 
             item.Id = sourceItem.ItemId;
-            if (rootPath.Length <= sourceItem.RemoteName.Length)
+            if (sourceItem.RemoteName.Length >= rootPath.Length)
             {
                 item.Name = sourceItem.RemoteName.Substring(rootPath.Length);
             }
