@@ -56,8 +56,8 @@ namespace SvnBridge.Infrastructure
 					output.Write("<S:add-file name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\">\n");
 				}
 
-				string localPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
-				output.Write("<D:checked-in><D:href>" + localPath + "</D:href></D:checked-in>\n");
+				string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
+				output.Write("<D:checked-in><D:href>" + svnVerLocalPath + "</D:href></D:checked-in>\n");
 				output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + item.Revision + "</S:set-prop>\n");
 				output.Write("<S:set-prop name=\"svn:entry:committed-date\">" + Helper.FormatDate(item.LastModifiedDate) + "</S:set-prop>\n");
 				output.Write("<S:set-prop name=\"svn:entry:last-author\">" + item.Author + "</S:set-prop>\n");
@@ -154,8 +154,8 @@ namespace SvnBridge.Infrastructure
 				}
 				if (!rootFolder || updateReportRequest.UpdateTarget == null)
 				{
-					string svnVer = handler.GetLocalPath("/!svn/ver/" + folder.Revision + "/" + Helper.Encode(folder.Name, true));
-					output.Write("<D:checked-in><D:href>" + svnVer + "</D:href></D:checked-in>\n");
+					string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + folder.Revision + "/" + Helper.Encode(folder.Name, true));
+					output.Write("<D:checked-in><D:href>" + svnVerLocalPath + "</D:href></D:checked-in>\n");
 					output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + folder.Revision +
 								 "</S:set-prop>\n");
 					output.Write("<S:set-prop name=\"svn:entry:committed-date\">" +

@@ -1,11 +1,11 @@
 using System;
 using System.Net;
+using CodePlex.TfsLibrary;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary.Utility;
 using SvnBridge.Infrastructure; // DefaultLogger
 using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
-using CodePlex.TfsLibrary;
 
 namespace SvnBridge.SourceControl
 {

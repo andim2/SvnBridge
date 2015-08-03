@@ -30,7 +30,7 @@ namespace SvnBridge.Infrastructure
         {
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(serverUrl, credentials);
-            username = this.credentials.GetCredential(new Uri(serverUrl), "basic").UserName;
+            this.username = this.credentials.GetCredential(new Uri(serverUrl), "basic").UserName;
         }
 
         static TfsWorkItemModifier()

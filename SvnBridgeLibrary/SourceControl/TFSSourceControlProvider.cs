@@ -551,7 +551,7 @@ namespace SvnBridge.SourceControl
 
         public virtual bool ItemExists(int itemId, int version)
         {
-            if (itemId == 0)
+            if (0 == itemId)
                 throw new ArgumentException("item id cannot be zero", "itemId");
             var items = metaDataRepository.QueryItems(version, itemId, Recursion.None);
             return (items.Length != 0);
@@ -1676,7 +1676,7 @@ namespace SvnBridge.SourceControl
             return result.ToArray();
         }
 
-        static ItemSpec CreateItemSpec(string item, RecursionType recurse)
+        private static ItemSpec CreateItemSpec(string item, RecursionType recurse)
         {
             return new ItemSpec { item = item, recurse = recurse };
         }

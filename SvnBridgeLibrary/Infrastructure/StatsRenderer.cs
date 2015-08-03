@@ -15,7 +15,7 @@ namespace SvnBridge.Handlers.Renderers
 
         public void Render(IHttpContext context)
         {
-            using (TextWriter writer = new StreamWriter(context.Response.OutputStream))
+            using (var writer = new StreamWriter(context.Response.OutputStream))
             {
                 writer.Write("<html><head><title>SvnBridge Stats</title></head>");
                 writer.Write("<h1>Statistics</h1>");

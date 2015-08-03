@@ -9,8 +9,8 @@ namespace SvnBridge.SourceControl
     	private FolderMetaData parent;
 
         public string Author;
-        public bool DataLoaded = false;
         public bool OriginallyDeleted = false;
+        public bool DataLoaded = false;
         public string Base64DiffData = null;
         public string Md5Hash = null;
         public Exception DataLoadedError;

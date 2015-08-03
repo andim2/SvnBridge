@@ -11,10 +11,10 @@ namespace SvnBridge.Net
     {
         protected bool flushed = false;
         protected bool headerWritten = false;
-        protected int maxKeepAliveConnections;
         protected ListenerRequest request;
         protected ListenerResponse response;
         protected Stream stream;
+        protected int maxKeepAliveConnections;
         protected MemoryStream streamBuffer = new MemoryStream();
 
         public ListenerResponseStream(ListenerRequest request,
@@ -27,7 +27,7 @@ namespace SvnBridge.Net
             this.stream = stream;
             this.maxKeepAliveConnections = maxKeepAliveConnections;
 
-            streamBuffer = new MemoryStream();
+            this.streamBuffer = new MemoryStream();
         }
 
         public override bool CanRead
