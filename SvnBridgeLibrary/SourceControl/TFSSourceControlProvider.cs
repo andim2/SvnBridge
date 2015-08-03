@@ -2329,6 +2329,8 @@ namespace SvnBridge.SourceControl
 
             BranchItem[] renamedItems = GetRenamedItems(items, changeset_Newer);
 
+            var numRenamedItems = renamedItems.Length;
+
             var previousRevision = changeset_Newer - 1;
 
             // Rather than the prior hard if/else skipping of branches,
@@ -2371,7 +2373,7 @@ namespace SvnBridge.SourceControl
             if (wantMultiRequestMode)
             {
                 List<SourceItem> resultMulti_List = new List<SourceItem>();
-                for (var i = 0; i < renamedItems.Length; i++)
+                for (var i = 0; i < numRenamedItems; i++)
                 {
                     var renamedItem = renamedItems[i];
                     var previousSourceItemId = GetItemIdOfRenamedItem(renamedItem, items[i]);
