@@ -223,14 +223,11 @@ namespace SvnBridge.Handlers
             writer.Write("<D:prop>\n");
             foreach (var prop in item.Properties)
             {
-                if (prop.Key.StartsWith("svn:"))
-                {
-                    writer.Write("<S:" + prop.Key.Substring(4) + ">" + prop.Value + "</S:" + prop.Key.Substring(4) + ">\n");
-                }
-                else
-                {
-                    writer.Write("<C:" + prop.Key + ">" + prop.Value + "</C:" + prop.Key + ">\n");
-                }
+                string elemname = prop.Key.StartsWith("svn:") ?
+                    "S:" + prop.Key.Substring(4) :
+                    "C:" + prop.Key;
+
+                writer.Write("<" + elemname + ">" + prop.Value + "</" + elemname + ">\n");
             }
             string svnVerLocalPath = GetSvnVerLocalPath(item);
 
