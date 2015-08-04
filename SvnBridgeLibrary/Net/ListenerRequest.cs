@@ -124,9 +124,11 @@ namespace SvnBridge.Net
         private void TraceRequest(DefaultLogger logger, Stream stream)
         {
             string message = SnitchStringFromStream(stream);
-            if (message.Contains("\0"))
+            var idxZero = message.IndexOf("\0");
+            bool containsZero = (-1 != idxZero);
+            if (containsZero)
             {
-                message = message.Substring(0, message.IndexOf("\0"));
+                message = message.Substring(0, idxZero);
             }
             logger.TraceMessage(message);
         }
