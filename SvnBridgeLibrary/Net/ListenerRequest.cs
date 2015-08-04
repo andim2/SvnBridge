@@ -98,18 +98,24 @@ namespace SvnBridge.Net
 			ReadMessageBody(stream, buffer);
 			if(Logging.TraceEnabled)
 			{
-				long position = buffer.Position;
-				buffer.Position = 0;
-				StreamReader reader = new StreamReader(buffer);
-				string message = reader.ReadToEnd();
+                string message = SnitchStringFromStream(buffer);
 				if (message.Contains("\0"))
 				{
 					message = message.Substring(0, message.IndexOf("\0"));
 				}
 				logger.TraceMessage(message);
-				buffer.Position = position;
 			}
 		}
+
+        private static string SnitchStringFromStream(Stream stream)
+        {
+            long position = stream.Position;
+            stream.Position = 0;
+            StreamReader reader = new StreamReader(stream);
+            string content = reader.ReadToEnd();
+            stream.Position = position;
+            return content;
+        }
 
 		private static string ReadLine(Stream stream,
 									   MemoryStream buffer)
