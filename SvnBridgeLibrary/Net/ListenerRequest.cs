@@ -100,11 +100,15 @@ namespace SvnBridge.Net
 			string startLine = ReadLine(stream, buffer);
 			ParseStartLine(startLine);
 
-			string headerLine = ReadLine(stream, buffer);
-			while (headerLine != String.Empty)
-			{
+            for (; ; )
+            {
+                string headerLine = ReadLine(stream, buffer);
+                bool finished = (String.Empty == headerLine);
+                if (finished)
+                {
+                    break;
+                }
 				ParseHeaderLine(headerLine);
-				headerLine = ReadLine(stream, buffer);
 			}
 
 			ReadMessageBody(stream, buffer);
@@ -227,13 +231,16 @@ namespace SvnBridge.Net
 		{
 			int contentLength = GetContentLength();
 
-			bool finished = ((buffer.Length - buffer.Position) >= contentLength);
-
-			while (!finished)
+			for (; ; )
 			{
-				ReadToBuffer(stream, buffer);
+				bool finished = ((buffer.Length - buffer.Position) >= contentLength);
 
-				finished = ((buffer.Length - buffer.Position) >= contentLength);
+				if (finished)
+				{
+					break;
+				}
+
+				ReadToBuffer(stream, buffer);
 			}
 
       // Optimized(?) handling details:
