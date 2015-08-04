@@ -113,14 +113,19 @@ namespace SvnBridge.Net
             // we're finally able to have it trace logged if requested:
 			if(Logging.TraceEnabled)
 			{
-                string message = SnitchStringFromStream(buffer);
-				if (message.Contains("\0"))
-				{
-					message = message.Substring(0, message.IndexOf("\0"));
-				}
-				logger.TraceMessage(message);
+                TraceRequest(logger, buffer);
 			}
 		}
+
+        private void TraceRequest(DefaultLogger logger, Stream stream)
+        {
+            string message = SnitchStringFromStream(stream);
+            if (message.Contains("\0"))
+            {
+                message = message.Substring(0, message.IndexOf("\0"));
+            }
+            logger.TraceMessage(message);
+        }
 
         private static string SnitchStringFromStream(Stream stream)
         {
