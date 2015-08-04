@@ -199,6 +199,12 @@ namespace SvnBridge.Handlers
             if (requestPath.StartsWith("/!svn/"))
             {
                 string itemPathUndecoded;
+                if (requestPath.StartsWith("/!svn/bln"))
+                {
+                    revision = int.Parse(requestPath.Split('/')[3]);
+                    itemPathUndecoded = requestPath.Substring("/!svn/bln/".Length + revision.ToString().Length);
+                }
+                else
                 if (requestPath.StartsWith("/!svn/bc"))
                 {
                     bcPath = true;
