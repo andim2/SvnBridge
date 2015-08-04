@@ -62,9 +62,11 @@ namespace SvnBridge.SourceControl
         public static string GetFolderPathPart(string path)
         {
             string folderName = "";
-            if (path.Contains(repo_separator_s))
+            var idxLastSep = path.LastIndexOf(repo_separator_c);
+            bool haveLastSep = (-1 != idxLastSep);
+            if (haveLastSep)
             {
-                folderName = path.Substring(0, path.LastIndexOf(repo_separator_c));
+                folderName = path.Substring(0, idxLastSep);
             }
             return folderName;
         }
