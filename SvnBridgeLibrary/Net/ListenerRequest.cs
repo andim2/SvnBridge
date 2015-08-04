@@ -103,7 +103,7 @@ namespace SvnBridge.Net
             for (; ; )
             {
                 string headerLine = ReadLine(stream, buffer);
-                bool finished = (String.Empty == headerLine);
+                bool finished = (0 == headerLine.Length);
                 if (finished)
                 {
                     break;
