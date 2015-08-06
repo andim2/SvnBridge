@@ -26,7 +26,12 @@ namespace SvnBridge.Handlers
             response.AppendHeader("Allow", "OPTIONS,GET,HEAD,POST,DELETE,TRACE,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,CHECKOUT");
             string itemPathUndecoded = requestPath;
             string itemPath = Helper.Decode(itemPathUndecoded);
-            VerifyPermissionsToItemPath(itemPath);
+            bool wantDetermineServerCapacitiesInGeneral = (itemPath.Equals("*")); // RFC2616 "9.2 OPTIONS"
+            bool isRequestOfSpecificPath = (!wantDetermineServerCapacitiesInGeneral);
+            if (isRequestOfSpecificPath)
+            {
+                VerifyPermissionsToItemPath(itemPath);
+            }
 
             if (request.InputStream.Length != 0)
             {
