@@ -103,13 +103,13 @@ namespace SvnBridge.PathParsing
         // by only PE:ing the part which *we* need to compare against,
         // rather than dangerously PU:ing (--> potentially corrupting!!)
         // the entire incoming URI's path part!
-        string delimTFSTeamProjectRootPrefixMagic = TFSTeamProjectRootPrefixMagic;
-        string delimTfsTeamProjPart = "/" + delimTFSTeamProjectRootPrefixMagic;
+        string delimTFSTeamProject = TFSTeamProjectSeparator;
+        string delimTfsTeamProjPart = "/" + delimTFSTeamProject;
         int serverDelimIndex = SplitString(path, delimTfsTeamProjPart, out authorityPlusTfsServiceBasePath, out tfsTeamProjPath);
         bool foundDelim = (-1 != serverDelimIndex);
         if (!foundDelim)
         {
-            // Hmm, we CANNOT PE TFSTeamProjectRootPrefixMagic in its entirety,
+            // Hmm, we CANNOT PE TFSTeamProjectSeparator in its entirety,
             // since that would PE its '/' part, too!!
             // (which the incoming path does *NOT* have PE:d, IOW we would not find a match!)
             // Thus, let's PE the '$' only (and avoid implicit knowledge of specific TFS magic parts
@@ -171,7 +171,7 @@ namespace SvnBridge.PathParsing
 			if (path.EndsWith("/") == false)
 				path = path + '/';
             if (path.Contains(c_strTfs))
-                path += TFSTeamProjectRootPrefixMagic;
+                path += TFSTeamProjectSeparator;
 			return path;
 		}
 

@@ -91,11 +91,16 @@ namespace SvnBridge.PathParsing
 			return applicationPath + href;
 		}
 
-    protected static string TFSTeamProjectRootPrefixMagic
+    protected static string TFSTeamProjectSeparator
     {
         get
         {
-            return Constants.ServerRootPath;
+            // NOPE - *must* be '$' (element separator) *only*!!
+            // (certain server path requests are known to occur
+            // which have their Team Project path part completely empty
+            // i.e. it does not even include any path element separator slash
+            // i.e. not even the project's root slash)
+            return /* Constants.ServerRootPath */ "$";
         }
     }
 	}
