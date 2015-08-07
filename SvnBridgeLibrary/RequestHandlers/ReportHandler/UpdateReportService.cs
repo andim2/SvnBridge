@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Threading; // Thread.Sleep()
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Handlers;
-using SvnBridge.Interfaces;
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility;
+using SvnBridge.Utility; // Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {

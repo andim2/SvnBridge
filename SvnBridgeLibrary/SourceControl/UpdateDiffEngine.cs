@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using CodePlex.TfsLibrary.ObjectModel;
-using SvnBridge.Protocol;
-using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Utility;
-using System.IO;
+﻿using System; // StringComparison , StringSplitOptions
+using System.Collections.Generic; // Dictionary , List
+using CodePlex.TfsLibrary.ObjectModel; // SourceItemChange
+using CodePlex.TfsLibrary.RepositoryWebSvc; // ChangeType , ItemType
 
 namespace SvnBridge.SourceControl
 {

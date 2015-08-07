@@ -1,12 +1,10 @@
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
 using SvnBridge.SourceControl;
 using System.Net;
 using System;
-using SvnBridge.Infrastructure;
 using System.Collections.Generic;
-using CodePlex.TfsLibrary.ObjectModel;
-using CodePlex.TfsLibrary.RepositoryWebSvc;
+using CodePlex.TfsLibrary.ObjectModel; // SourceItem
+using CodePlex.TfsLibrary.RepositoryWebSvc; // DeletedState, ItemType, RecursionType, VersionSpec
 
 namespace SvnBridge.PathParsing
 {

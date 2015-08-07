@@ -1,5 +1,5 @@
-using System.Xml;
-using SvnBridge.Handlers;
+using System.Xml; // XmlElement
+using SvnBridge.Handlers; // RequestHandlerBase
 
 namespace SvnBridge.Nodes
 {

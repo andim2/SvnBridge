@@ -1,9 +1,9 @@
-using System.Net;
-using CodePlex.TfsLibrary.ObjectModel;
-using SvnBridge.Infrastructure;
+using System.Net; // ServicePointManager
+using CodePlex.TfsLibrary.ObjectModel; // IRegistrationService, IWebTransferService
+using SvnBridge.Infrastructure; // Container, *WorkItemModifier, Configuration
 using CodePlex.TfsLibrary.RegistrationWebSvc;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using CodePlex.TfsLibrary.Utility;
+using CodePlex.TfsLibrary.Utility; // IFileSystem
 
 namespace SvnBridge
 {

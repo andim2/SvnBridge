@@ -3,13 +3,13 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using CodePlex.TfsLibrary;
+using CodePlex.TfsLibrary; // NetworkAccessDeniedException
 using SvnBridge.Handlers;
 using SvnBridge.Handlers.Renderers;
 using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;
-using SvnBridge.SourceControl;
+using SvnBridge.SourceControl; // CredentialsHelper
 using System.Web;
 
 namespace SvnBridge.Net

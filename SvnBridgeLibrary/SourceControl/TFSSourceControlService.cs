@@ -1,14 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Web.Services.Protocols;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary.Utility;
-using System.Text;
-using System.IO;
-using SvnBridge.Interfaces;
-using SvnBridge.Infrastructure;
+using SvnBridge.Infrastructure; // DefaultLogger
 using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
 using CodePlex.TfsLibrary;
 

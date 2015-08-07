@@ -1,8 +1,6 @@
 using System;
 using System.Net;
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
-using SvnBridge.SourceControl;
 
 namespace SvnBridge.PathParsing
 {

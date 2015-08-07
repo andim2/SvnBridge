@@ -1,12 +1,9 @@
-using System;
-using System.Text;
-using System.Web;
-using System.Xml;
-using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Handlers;
-using SvnBridge.Interfaces;
-using SvnBridge.SourceControl;
-using SvnBridge.Utility;
+using System; // Exception
+using System.Xml; // XmlElement
+using CodePlex.TfsLibrary.RepositoryWebSvc; // ItemType
+using SvnBridge.Handlers; // RequestHandlerBase
+using SvnBridge.SourceControl; // ItemMetaData, TFSSourceControlProvider
+using SvnBridge.Utility; // Helper.Encode()
 
 namespace SvnBridge.Nodes
 {

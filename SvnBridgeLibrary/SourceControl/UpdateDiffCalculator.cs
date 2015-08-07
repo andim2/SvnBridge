@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO; // Path.GetFileName()
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces;
 using SvnBridge.Protocol;
-using SvnBridge.Utility;
-using SvnBridge.Infrastructure;
+using SvnBridge.Utility; // Helper.SortHistories()
 
 namespace SvnBridge.SourceControl
 {

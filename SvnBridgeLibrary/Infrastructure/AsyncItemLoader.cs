@@ -1,4 +1,4 @@
-using System.Threading;
+using System.Threading; // Thread.Sleep()
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;
 

@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.IO; // Path.Combine()
-using System.Net;
+using System.IO; // Path.Combine(), Stream
 using System.Text;
-using System.Web;
 using System.Xml;
-using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces;
-using SvnBridge.Net;
-using SvnBridge.Nodes;
-using SvnBridge.Protocol;
+using CodePlex.TfsLibrary.RepositoryWebSvc; // TFS's ItemType only (layer violation)
+using SvnBridge.Interfaces; // IHttpContext, IHttpRequest
+using SvnBridge.Net; // RequestCache
+using SvnBridge.Nodes; // INode
+using SvnBridge.Protocol; // PropData only
 using SvnBridge.SourceControl;
-using SvnBridge.Utility;
+using SvnBridge.Utility; // Helper.*
 
 namespace SvnBridge.Handlers
 {

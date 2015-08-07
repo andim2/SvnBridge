@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
-using System.Security;
 using SvnBridge.Handlers;
 
 namespace SvnBridge.Infrastructure.Statistics

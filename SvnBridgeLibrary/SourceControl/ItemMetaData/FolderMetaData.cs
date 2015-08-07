@@ -1,4 +1,4 @@
-using System;
+using System; // StringComparison
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CodePlex.TfsLibrary;

@@ -2,7 +2,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using SvnBridge.Exceptions;
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
 using SvnBridge.Utility;
 using SvnBridge.SourceControl;
 

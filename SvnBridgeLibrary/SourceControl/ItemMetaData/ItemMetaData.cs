@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using CodePlex.TfsLibrary;
-using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 
 namespace SvnBridge.SourceControl

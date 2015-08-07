@@ -1,7 +1,5 @@
-using System;
-using System.Net;
-using SvnBridge.Interfaces;
-using SvnBridge.Net;
+using System.Net; // ICredentials
+using SvnBridge.Interfaces; // IHttpRequest, IPathParser
 
 namespace SvnBridge.PathParsing
 {

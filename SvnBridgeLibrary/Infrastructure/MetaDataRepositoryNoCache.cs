@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Net;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces;
-using SvnBridge.Net;
-using SvnBridge.Proxies;
+using SvnBridge.Interfaces; // IMetaDataRepository
+using SvnBridge.Proxies; // TracingInterceptor
 using SvnBridge.SourceControl;
-using System.Configuration;
-using SvnBridge.Cache;
 
 namespace SvnBridge.Infrastructure
 {

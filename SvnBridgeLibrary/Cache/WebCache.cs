@@ -1,9 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Web;
-using System.Web.Caching;
-using SvnBridge.Interfaces;
+using System; // TimeSpan
+using System.Collections; // DictionaryEntry
+using System.Collections.Generic; // List
+using System.Web; // HttpRuntime.Cache
+using System.Web.Caching; // CacheItemPriority
+using SvnBridge.Interfaces; // CachedResult
 
 namespace SvnBridge.Cache
 {

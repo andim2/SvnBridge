@@ -1,16 +1,11 @@
 using System;
-using System.IO; // Path.Combine()
-using System.Net;
-using System.Security.Principal;
-using System.Text;
-using System.Threading;
+using System.IO; // Path.Combine(), Stream, StreamWriter, TextWriter
+using System.Net; // ICredentials
+using System.Text; // Encoding
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility;
+using SvnBridge.Utility; // Helper.EncodeB()
 using SvnBridge.Infrastructure;
-using System.Collections;
-using SvnBridge.Cache;
 
 namespace SvnBridge.Handlers
 {

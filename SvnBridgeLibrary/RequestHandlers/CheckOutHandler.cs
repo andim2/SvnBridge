@@ -1,11 +1,11 @@
 using System.Text;
 using SvnBridge.Exceptions;
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
+using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
-using SvnBridge.Infrastructure;
+using SvnBridge.Infrastructure; // DefaultLogger
 
 namespace SvnBridge.Handlers
 {

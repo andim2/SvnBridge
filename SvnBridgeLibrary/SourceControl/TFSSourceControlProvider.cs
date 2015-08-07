@@ -1,26 +1,26 @@
-using System.Net.Sockets;
+using System.Net.Sockets; // SocketException
 using CodePlex.TfsLibrary;
-using SvnBridge.Net;
+using SvnBridge.Net; // RequestCache
 
 namespace SvnBridge.SourceControl
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Net;
-    using System.Text.RegularExpressions;
+    using System.IO; // FileNotFoundException only
+    using System.Net; // ICredentials
+    using System.Text.RegularExpressions; // Regex
     using CodePlex.TfsLibrary.ObjectModel;
     using CodePlex.TfsLibrary.RepositoryWebSvc;
     using Dto;
-    using Exceptions;
+    using Exceptions; // FolderAlreadyExistsException
     using Infrastructure;
-    using Interfaces;
-    using Protocol;
-    using Proxies;
+    using Interfaces; // IMetaDataRepository
+    using Protocol; // UpdateReportData only (layer violation?)
+    using Proxies; // TracingInterceptor, RetryOnExceptionsInterceptor
     using Utility;
     using SvnBridge.Cache;
-    using System.Web.Services.Protocols;
-    using System.Linq;
+    using System.Web.Services.Protocols; // SoapException
+    using System.Linq; // System.Array extensions
 
     [Interceptor(typeof(TracingInterceptor))]
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]

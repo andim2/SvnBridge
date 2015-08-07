@@ -3,7 +3,7 @@ using System.Text;
 using System.Xml;
 using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
+using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.Utility;
 using SvnBridge.SourceControl;

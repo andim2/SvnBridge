@@ -1,8 +1,7 @@
-using System;
-using System.Xml;
-using SvnBridge.Handlers;
-using SvnBridge.Interfaces;
-using SvnBridge.SourceControl;
+using System; // Exception
+using System.Xml; // XmlElement
+using SvnBridge.Handlers; // RequestHandlerBase
+using SvnBridge.SourceControl; // TFSSourceControlProvider
 
 namespace SvnBridge.Nodes
 {

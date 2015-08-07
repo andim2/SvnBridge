@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using SvnBridge.SourceControl;
 using System.Net;
-using SvnBridge.Interfaces;
 using CodePlex.TfsLibrary.ObjectModel;
-using System.Threading;
-using SvnBridge.Exceptions;
-using SvnBridge.Net;
-using SvnBridge.Utility;
-using SvnBridge.Cache;
+using SvnBridge.Utility; // SvnDiffParser, Helper
 
 namespace SvnBridge.Infrastructure
 {

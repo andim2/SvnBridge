@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
-using SvnBridge.Interfaces;
+using SvnBridge.Interfaces; // CachedResult, IMetaDataRepository
 using SvnBridge.Net;
 using SvnBridge.Proxies;
 using SvnBridge.SourceControl;

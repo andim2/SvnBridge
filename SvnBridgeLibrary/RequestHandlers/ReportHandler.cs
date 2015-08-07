@@ -5,14 +5,14 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Xml;
-using CodePlex.TfsLibrary.ObjectModel;
-using CodePlex.TfsLibrary.RepositoryWebSvc;
+using CodePlex.TfsLibrary.ObjectModel; // LogItem, SourceItem, SourceItemChange
+using CodePlex.TfsLibrary.RepositoryWebSvc; // ChangeType, ItemType
 using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
-using SvnBridge.Net;
+using SvnBridge.Net; // RequestCache
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility;
+using SvnBridge.Utility; // Helper.EncodeB() etc.
 
 namespace SvnBridge.Handlers
 {
