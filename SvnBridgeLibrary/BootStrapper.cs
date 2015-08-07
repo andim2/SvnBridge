@@ -13,6 +13,7 @@ namespace SvnBridge
         public static void Start()
         {
             ServicePointManager.DefaultConnectionLimit = 5000;
+            //ServicePointManager.MaxServicePoints = 0; // default value: 0 (unlimited)
             ServicePointManagerConfigureTcpKeepAlive();
             TfsUtil.OnSetupWebRequest = WebRequestSetup.OnWebRequest;
 

@@ -161,6 +161,13 @@ namespace SvnBridge.Utility
             AppendToStream(stream, data, data.Length);
         }
 
+        /// <summary>
+        /// Will append a certain number of data bytes
+        /// to the *end* of a *resizeable* MemoryStream
+        /// in a controlled manner, i.e.:
+        /// - preserving current (i.e. restoring original) stream position (i.e. it will NOT have changed .Position after Write()!)
+        /// - resize (enlarge) stream if needed (avoid .Write() out-of-range ArgumentException)
+        /// </summary>
         public static void AppendToStream(MemoryStream stream, byte[] data, int dataCountToBeWritten)
         {
             var streamLengthOrig = stream.Length;
@@ -175,8 +182,14 @@ namespace SvnBridge.Utility
             StreamEnsureCapacity(stream, requiredMinimumCapacity);
 
             var positionBackup = stream.Position;
+            // http://stackoverflow.com/a/7239011
+            //stream.Seek(0, SeekOrigin.End);
             stream.Position = positionWriteStart;
             int dataOffset = 0;
+            // MSDN MemoryStream.Write():
+            // "If the write operation is successful,
+            // the current position within the stream
+            // is advanced by the number of bytes written."
             stream.Write(data, dataOffset, numToBeWritten);
             stream.Position = positionBackup;
         }
@@ -187,6 +200,15 @@ namespace SvnBridge.Utility
         /// </remarks>
         public static void StreamEnsureCapacity(MemoryStream stream, long requiredMinimumCapacity)
         {
+            // Hmm, MSDN MemoryStream.Write() says:
+            // "Except for a MemoryStream constructed with a byte[] parameter,
+            // write operations at the end of a MemoryStream expand the MemoryStream." -
+            // but what exactly does that mean?? I'm rather sure
+            // that I did get out-of-range ArgumentException:s
+            // for *non*-fixed-array MemoryStream
+            // when trying to Write() beyond existing .Capacity...
+            // So I'm quite sure that I do need this handling in here.
+            // Maximum Confusion Galore...
             bool needEnlargeCapacity = (stream.Capacity < requiredMinimumCapacity);
             if (needEnlargeCapacity)
             {
