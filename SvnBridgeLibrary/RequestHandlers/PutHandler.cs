@@ -47,6 +47,8 @@ namespace SvnBridge.Handlers
 
         private bool Put(TFSSourceControlProvider sourceControlProvider, string path, Stream inputStream, string baseHash, string resultHash)
         {
+            // Hmm, is this part really necessary??
+            // See also MkColHandler where it's being fed into a regex match...
             if (!path.StartsWith("//"))
             {
                 path = "/" + path;

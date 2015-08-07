@@ -24,6 +24,10 @@ namespace SvnBridge.Infrastructure
             ProxyUsername,
             // SvnPort should be _different_ from the TFS default port setting (8080),
             // to try to minimize port conflicts.
+            // Side note: having chosen the wrong port setting here
+            // may easily end up the fatally simple reason
+            // for getting the client message
+            // "could not connect to server".
             SvnPort,
             // Terrible misnomer: "TfsPort" does not end up as a "TFS port",
             // but the port that _we_ are offering for _our_ SvnBridge socket services

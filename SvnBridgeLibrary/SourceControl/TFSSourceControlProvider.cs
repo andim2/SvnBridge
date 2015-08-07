@@ -544,9 +544,14 @@ namespace SvnBridge.SourceControl
 
             // TFS QueryHistory API won't return more than 256 items,
             // so need to call multiple times if more requested
+            // IMPLEMENTATION WARNING: since the 256 items limit
+            // clearly is a *TFS-side* limitation,
+            // make sure to always keep this correction handling code
+            // situated within inner TFS-side handling layers!!
             const int TFS_QUERY_LIMIT = 256;
             if (maxCount > TFS_QUERY_LIMIT)
             {
+                // Query container to be sure whether we actually hit the limit:
                 int logItemsCount_ThisRun = changesets.Count();
                 while (logItemsCount_ThisRun == TFS_QUERY_LIMIT)
                 {
@@ -691,6 +696,12 @@ namespace SvnBridge.SourceControl
 
         }
 
+        /// <summary>
+        /// The main public interface handler for WebDAV MERGE request.
+        /// Commits the recorded transaction contents on the server.
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
+        /// <returns>MergeActivityResponse object</returns>
         public virtual MergeActivityResponse MergeActivity(string activityId)
         {
             MergeActivityResponse response = null;
@@ -1768,6 +1779,11 @@ namespace SvnBridge.SourceControl
 
         public virtual ItemMetaData[] GetPreviousVersionOfItems(SourceItem[] items, int changeset)
         {
+            // Processing steps:
+            // - given the this-changeset source items,
+            //   figure out the corresponding maximally-authoritative representation (numeric IDs) of these items
+            // - do a QueryItems() with these IDs, on the *previous* changeset
+
             var branchQueries = sourceControlService.QueryBranches(serverUrl, 
                                                                    credentials,
                                                                    items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(), 

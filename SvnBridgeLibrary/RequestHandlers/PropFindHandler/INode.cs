@@ -30,6 +30,11 @@ namespace SvnBridge.Nodes
 
         private static void ReportErrorPropertyNotFound(string propertyName)
         {
+            // Note that throwing an exception here whenever there's an unsupported property requested by a client
+            // probably means that we disrupt the response and the request fails to get served at least partially.
+            // But since any unsupported property request
+            // may lead to questionable/problematic quality of service anyway,
+            // we better fail hard, for developers to notice.
             throw new Exception("Property not found: " + propertyName);
         }
     }

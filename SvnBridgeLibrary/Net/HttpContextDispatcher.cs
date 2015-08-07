@@ -120,6 +120,11 @@ namespace SvnBridge.Net
                     throw e.InnerException;
                 }
             }
+            // IMPORTANT: I assume that this series of catch()es
+            // is generally intended
+            // to catch *any* net access issues
+            // occurring *anywhere* within the *multiple* topically related parts
+            // in the try scope above:
             catch (WebException ex)
             {
                 actionTracking.Error();

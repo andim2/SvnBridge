@@ -129,6 +129,10 @@ namespace SvnBridge.Net
             }
         }
 
+        /// <summary>
+        /// Processes the TcpClient.
+        /// </summary>
+        /// <param name="tcpClient">The TCP client to be processed</param>
         private void Process(TcpClient tcpClient)
         {
             IHttpContext connection = new ListenerContext(tcpClient.GetStream(), logger);
@@ -187,6 +191,15 @@ namespace SvnBridge.Net
             }
         }
 
+        /// <summary>
+        /// I guess that this "dirty" (non-using-scoped) handler
+        /// was intentionally added this way
+        /// since right upon Flush()ing
+        /// there may be this corresponding IOException occurring
+        /// which needs to be ignored at this very scope -
+        /// otherwise scope of catching (various unknown-reason) IOException:s
+        /// would be way too imprecise...
+        /// </summary>
         private static void FlushConnection(IHttpContext connection)
         {
             try

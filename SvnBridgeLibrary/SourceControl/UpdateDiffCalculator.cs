@@ -205,6 +205,9 @@ namespace SvnBridge.SourceControl
                 changeVersion,
                 versionFrom, versionTo,
                 Recursion.Full,
+                // FIXME: why only 256 *here*?? This would match <see cref="TFSSourceControlProvider"/> TFS_QUERY_LIMIT
+                // (which is being worked around over there),
+                // thus I don't think we want to artificially specify it here as a constraint...
                 256);
 
             var numHistories = logItem.History.Length;
@@ -255,8 +258,21 @@ namespace SvnBridge.SourceControl
         /// Since engine impl *is* dependent on TfsLibrary-side SourceItemChange knowledge,
         /// perhaps this *is* the proper thing to do after all.
         /// </summary>
+        /// Certain combinations of change operations
+        /// to be executed at this point (applying SVN-style changes)
+        /// should possibly already have been resolved into sweet nothingness
+        /// by earlier filtering in case they are complementary
+        /// (e.g. a combined Rename | Delete change).
+        /// Anyway, even if prior filtering ain't the case
+        /// (perhaps the code does not do it, or we decided to not do it, ...),
+        /// cleanly incremental/complementary handling
+        /// as intended to be implemented here
+        /// always ought to be able to come
+        /// to the same final item status conclusion...
         private void ApplyChangeOps(UpdateDiffEngine engine, SourceItemChange change, bool updatingForwardInTime)
         {
+            // ATTENTION ORDER: IsEditOperation() branch internally checks IsRenameOperation(), TOO!
+            // (in general, these comparisons work on a possibly combined multi-bit mask!!)
             if (ChangeTypeAnalyzer.IsAddOperation(change, updatingForwardInTime))
             {
                 engine.Add(change, updatingForwardInTime);

@@ -205,6 +205,10 @@ namespace SvnBridge.Net
             return statusCodeDescription;
         }
 
+        /// <remarks>
+        /// See also
+        /// http://stackoverflow.com/questions/2595460/how-can-i-set-transfer-encoding-to-chunked-explicitly-or-implicitly-in-an-asp#comment2744849_2711405
+        /// </remarks>
         protected void WriteHeaderIfNotAlreadyWritten()
         {
             if (!headerWritten)

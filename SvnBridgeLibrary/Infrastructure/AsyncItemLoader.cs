@@ -43,6 +43,8 @@ namespace SvnBridge.Infrastructure
                     if (cancelOperation)
                         break;
 
+                    // Do some waiting until hopefully parts of totalLoadedItemsSize
+                    // got consumed (by consumer side, obviously).
                     Helper.CooperativeSleep(1000);
                 }
 

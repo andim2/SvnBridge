@@ -173,6 +173,13 @@ namespace SvnBridge.Net
 			return Encoding.ASCII.GetString(buffer.GetBuffer(), offset, (int)buffer.Position - offset - 2);
 		}
 
+        /// <summary>
+        /// Reads network stream data to a buffer.
+        /// References:
+        /// http://stackoverflow.com/questions/13097269/what-is-the-correct-way-to-read-from-networkstream-in-net
+        /// </summary>
+        /// <param name="stream">Stream to be read</param>
+        /// <param name="buffer">MemoryStream to be written to</param>
 		private static void ReadToBuffer(Stream stream,
 										 MemoryStream buffer)
 		{
@@ -210,6 +217,12 @@ namespace SvnBridge.Net
 				finished = ((buffer.Length - buffer.Position) >= contentLength);
 			}
 
+      // Optimized(?) handling details:
+      // Create a buffer precisely sized to content length,
+      // to be directly placed into a newly constructed
+      // precisely sized *readonly* output stream,
+      // while actively accessing
+      // only a minor *part* of a potentially largish source stream.
 			byte[] messageBody = new byte[contentLength];
 
 			buffer.Read(messageBody, 0, messageBody.Length);
