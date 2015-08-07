@@ -258,7 +258,9 @@ namespace SvnBridge.Net
 
 			for (; ; )
 			{
-				bool finished = ((buffer.Length - buffer.Position) >= contentLength);
+                var contentLengthRead = buffer.Length - buffer.Position;
+                var contentLengthMissing = contentLength - contentLengthRead;
+				bool finished = (0 >= contentLengthMissing);
 
 				if (finished)
 				{
