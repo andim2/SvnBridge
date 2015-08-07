@@ -520,13 +520,28 @@ namespace SvnBridge.SourceControl
 
                 foreach (SourceItemChange change in history.Changes)
                 {
-                    change.Item.RemoteName = FilesysHelpers.StripPrefix(rootPath, change.Item.RemoteName);
+                    bool isRename = ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename);
+                    bool isBranch = ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch);
 
-                    if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
+                    // WARNING: I wanted to add this check here to skip doing string handling
+                    // for non-relevant entries, however that's a problem - see the comment below...
+                    //                    bool relevantChange = (isRename || isBranch);
+                    //                    if (!relevantChange)
+                    //                        continue;
+
+                    // Tweak/bend TfsLibrary SourceItem into SVN-side syntax via a grave HACK,
+                    // and for *all* items, not just rename or branch!
+                    // As long as TFS <-> SVN layering remains this unclean,
+                    // please take great care when changing this call, since the exact place (i.e., here)
+                    // to do it might be critical - if there are subsequent path comparisons,
+                    // they might be done with the full expectation of non-TFS path syntax.
+                    SourceItem_TFStoSVNsyntaxHACK(ref change.Item);
+
+                    if (isRename)
                     {
                         renamedItems.Add(change.Item);
                     }
-                    else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
+                    else if (isBranch)
                     {
                         branchedItems.Add(change.Item);
                     }
@@ -621,6 +636,25 @@ namespace SvnBridge.SourceControl
             LogItem logItem = new LogItem(null, serverPath, histories);
 
             return logItem;
+        }
+
+        /// <summary>
+        /// GRAVE WARNING: this is an active tweaking of SourceItem.RemoteName conventions
+        /// from TeamProject "$/PROJ/..." syntax to "PROJ/..." syntax.
+        /// IMHO this is a rather ILLEGAL operation here since it changes syntax expectations
+        /// in a manner that's incompatible with usual TFS SourceItem protocol,
+        /// *while remaining in / re-using original object type space of those parts*!!
+        /// However subsequent handling of course currently relies on the current behaviour,
+        /// thus we should not skip it! (FIXME perhaps gradually move away from such questionable
+        /// ad-hoc tweaking, by providing some switchable helper methods)
+        /// </summary>
+        /// <param name="sourceItem">TFS source item object to be tweaked</param>
+        private void SourceItem_TFStoSVNsyntaxHACK(ref SourceItem sourceItem)
+        {
+            // Tweaks a path from full TFS team project syntax ("$/some/path")
+            // to project sub path syntax ("some/path").
+            // HACK: actively modifying an *existing* member within an improper-layer object type.
+            sourceItem.RemoteName = FilesysHelpers.StripPrefix(rootPath, sourceItem.RemoteName);
         }
 
         private List<SourceItemHistory> ConvertChangesetsToSourceItemHistory(Changeset[] changesets)
