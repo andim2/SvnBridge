@@ -109,16 +109,25 @@ namespace SvnBridge.SourceControl
         {
             foreach (ItemMetaData item in root.Items)
             {
+                FolderMetaData folder = item as FolderMetaData;
+                bool isFolder_BaseOrDerivedClassType = (null != folder);
+                bool isIrrelevantItemType = !(isFolder_BaseOrDerivedClassType);
+                bool isIrrelevantCondition = (isIrrelevantItemType);
+
+                // performance shortcut (for the frequent case of non-folder items).
+                if (isIrrelevantCondition)
+                {
+                    continue;
+                }
+
                 if (item is MissingItemMetaData)
                 {
                     Helper.DebugUsefulBreakpointLocation();
                     throw new InvalidOperationException("Found missing item:" + item +
                                                         " but those should not be returned from this final(ized) filesystem item hierarchy space");
                 }
-                FolderMetaData folder = item as FolderMetaData;
-                bool isFolder = (null != folder);
-                if (isFolder)
-                    VerifyNoMissingItemMetaDataRemained(folder);
+
+                VerifyNoMissingItemMetaDataRemained(folder);
             }
         }
 
