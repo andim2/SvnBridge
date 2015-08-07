@@ -13,7 +13,7 @@ namespace UnitTests
         {
             byte[] source = new byte[5002];
             source[5001] = 1;
-            SvnDiff svnDiff = new SvnDiff();
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[0];
             byte[] instructions = new byte[4] {0x00 | 0, 0xA7, 0x0A, 0}; // 10100111 00001010
             svnDiff.DataSectionBytes = data;
@@ -28,7 +28,7 @@ namespace UnitTests
         [Fact]
         public void ApplySvnDiff_WhereCopyFromTargetOverlapsWithDestination()
         {
-            SvnDiff svnDiff = new SvnDiff();
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[2] {1, 2};
             byte[] instructions = new byte[3] {0x80 | 2, 0x40 | 4, 0};
             svnDiff.DataSectionBytes = data;
@@ -43,7 +43,7 @@ namespace UnitTests
         public void ApplySvnDiff_WithCopyFromData()
         {
             byte[] source = new byte[0];
-            SvnDiff svnDiff = new SvnDiff();
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[2] {1, 2};
             byte[] instructions = new byte[1] {0x80 | 2};
             svnDiff.DataSectionBytes = data;
@@ -58,7 +58,7 @@ namespace UnitTests
         public void ApplySvnDiff_WithCopyFromSource()
         {
             byte[] source = new byte[4] {1, 2, 3, 4};
-            SvnDiff svnDiff = new SvnDiff();
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[0];
             byte[] instructions = new byte[2] {0x00 | 2, 2};
             svnDiff.DataSectionBytes = data;
@@ -72,7 +72,7 @@ namespace UnitTests
         [Fact]
         public void ApplySvnDiff_WithCopyFromTarget()
         {
-            SvnDiff svnDiff = new SvnDiff();
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[1] {5};
             byte[] instructions = new byte[3] {0x80 | 1, 0x40 | 1, 0};
             svnDiff.DataSectionBytes = data;
@@ -87,7 +87,7 @@ namespace UnitTests
         public void ApplySvnDiff_WithSourceDataIndex()
         {
             byte[] source = new byte[4] {1, 2, 3, 4};
-            SvnDiff svnDiff = new SvnDiff();
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[0];
             byte[] opCodeAndLength = new byte[2] {2, 1};
             svnDiff.DataSectionBytes = data;
@@ -103,7 +103,7 @@ namespace UnitTests
         {
             byte[] source = new byte[4] { 1, 2, 3, 4 };
 
-            SvnDiff diff = SvnDiffEngine.CreateReplaceDiff(source, 0, source.Length);
+            SvnDiffWindow diff = SvnDiffEngine.CreateReplaceDiff(source, 0, source.Length);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(diff, null, 1);
             Assert.Equal(source, resultBytes);
@@ -114,7 +114,7 @@ namespace UnitTests
         {
             byte[] source = new byte[] {};
 
-            SvnDiff diff = SvnDiffEngine.CreateReplaceDiff(source, 0, source.Length);
+            SvnDiffWindow diff = SvnDiffEngine.CreateReplaceDiff(source, 0, source.Length);
 
             Assert.Null(diff);
         }
@@ -124,7 +124,7 @@ namespace UnitTests
         {
             byte[] source = new byte[4] { 1, 2, 3, 4 };
 
-            SvnDiff diff = SvnDiffEngine.CreateReplaceDiff(source, 1, 2);
+            SvnDiffWindow diff = SvnDiffEngine.CreateReplaceDiff(source, 1, 2);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(diff, null, 1);
             Assert.Equal(new byte[] { 2, 3 }, resultBytes);
@@ -166,7 +166,7 @@ namespace UnitTests
             string diff = SvnDiffParser.GetBase64SvnDiffData(source);
 
             MemoryStream diffStream = new MemoryStream(Convert.FromBase64String(diff));
-            SvnDiff[] diffs = SvnDiffEngine.ParseSvnDiff(diffStream);
+            SvnDiffWindow[] diffs = SvnDiffEngine.ParseSvnDiff(diffStream);
 
             Assert.Equal(2, diffs.Length);
             // Depending on platform type (32/64bit), limit is either 100000
@@ -191,7 +191,7 @@ namespace UnitTests
         public void ApplySvnDiffsFromStream()
         {
             byte[] source = new byte[] { 1, 2, 3, 4 };
-            List<SvnDiff> diffs = new List<SvnDiff>();
+            List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             diffs.Add(SvnDiffEngine.CreateReplaceDiff(source, 0, source.Length));
             MemoryStream stream = new MemoryStream(Convert.FromBase64String(SvnDiffParser.GetBase64SvnDiffData(source)));
 
@@ -204,7 +204,7 @@ namespace UnitTests
         public void ApplySvnDiffsFromStream_WithMultipleDiffWindows()
         {
             byte[] source = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-            List<SvnDiff> diffs = new List<SvnDiff>();
+            List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             diffs.Add(SvnDiffEngine.CreateReplaceDiff(source, 0, 4));
             diffs.Add(SvnDiffEngine.CreateReplaceDiff(source, 4, 4));
             MemoryStream stream = new MemoryStream(Convert.FromBase64String(SvnDiffParser.GetBase64SvnDiffData(source)));
@@ -218,7 +218,7 @@ namespace UnitTests
         public void ApplySvnDiffsFromStream_WithNoDiffWindows()
         {
             byte[] source = new byte[] { };
-            List<SvnDiff> diffs = new List<SvnDiff>();
+            List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             MemoryStream stream = new MemoryStream(Convert.FromBase64String(SvnDiffParser.GetBase64SvnDiffData(source)));
 
             byte[] result = SvnDiffParser.ApplySvnDiffsFromStream(stream, new byte[0]);

@@ -20,7 +20,7 @@ namespace SvnBridge.Utility
 
         public static byte[] ApplySvnDiffsFromStream(Stream inputStream, byte[] sourceData)
         {
-            SvnDiff[] diffs = SvnDiffEngine.ParseSvnDiff(inputStream);
+            SvnDiffWindow[] diffs = SvnDiffEngine.ParseSvnDiff(inputStream);
             byte[] fileData = new byte[0];
             // FIXME BUG!?: failing this check (i.e. if there were no diffs to be processed) will cause *empty* file data to be returned
             // (unless this is exactly the behaviour that is expected by the protocol when not encountering any svndiffs -
@@ -30,7 +30,7 @@ namespace SvnBridge.Utility
             if (diffs.Length > 0)
             {
                 int sourceDataStartIndex = 0;
-                foreach (SvnDiff diff in diffs)
+                foreach (SvnDiffWindow diff in diffs)
                 {
                     byte[] newData = SvnDiffEngine.ApplySvnDiff(diff, sourceData, sourceDataStartIndex);
                     sourceDataStartIndex += newData.Length;
@@ -67,8 +67,8 @@ namespace SvnBridge.Utility
                     if (length > diff_chunk_size_max)
                         length = diff_chunk_size_max;
 
-                    SvnDiff svnDiff = SvnDiffEngine.CreateReplaceDiff(data, index, length);
-                    SvnDiffEngine.WriteSvnDiff(svnDiff, svnDiffWriter);
+                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(data, index, length);
+                    SvnDiffEngine.WriteSvnDiffWindow(svnDiff, svnDiffWriter);
 
                     index += length;
                 }

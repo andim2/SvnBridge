@@ -1,6 +1,6 @@
 namespace SvnBridge.Utility
 {
-    public class SvnDiff
+    public class SvnDiffWindow
     {
         public byte[] DataSectionBytes;
         public byte[] InstructionSectionBytes;

@@ -44,10 +44,10 @@ namespace SvnBridge.Utility
     {
         private const int BUFFER_EXPAND_SIZE = Constants.AllocSize_AvoidLOHCatastrophy;
 
-        public static byte[] ApplySvnDiff(SvnDiff svnDiff, byte[] source, int sourceDataStartIndex)
+        public static byte[] ApplySvnDiff(SvnDiffWindow svnDiffWindow, byte[] source, int sourceDataStartIndex)
         {
-            MemoryStream instructionStream = new MemoryStream(svnDiff.InstructionSectionBytes);
-            MemoryStream dataStream = new MemoryStream(svnDiff.DataSectionBytes);
+            MemoryStream instructionStream = new MemoryStream(svnDiffWindow.InstructionSectionBytes);
+            MemoryStream dataStream = new MemoryStream(svnDiffWindow.DataSectionBytes);
             BinaryReader dataReader = new BinaryReader(dataStream);
 
             //BinaryReaderSvnDiff instructionReader = new BinaryReaderSvnDiff(instructionStream);
@@ -152,12 +152,12 @@ namespace SvnBridge.Utility
             targetIndex += (int) instruction.Length;
         }
 
-        public static SvnDiff CreateReplaceDiff(byte[] data, int index, int length)
+        public static SvnDiffWindow CreateReplaceDiff(byte[] data, int index, int length)
         {
-            SvnDiff svnDiff = null;
+            SvnDiffWindow svnDiff = null;
             if (length > 0)
             {
-                svnDiff = new SvnDiff();
+                svnDiff = new SvnDiffWindow();
 
                 svnDiff.SourceViewOffset = 0;
                 svnDiff.SourceViewLength = 0;
@@ -186,13 +186,13 @@ namespace SvnBridge.Utility
             return svnDiff;
         }
 
-        public static SvnDiff[] ParseSvnDiff(byte[] data)
+        public static SvnDiffWindow[] ParseSvnDiff(byte[] data)
         {
             MemoryStream stream = new MemoryStream(data);
             return ParseSvnDiff(stream);
         }
 
-        public static SvnDiff[] ParseSvnDiff(Stream inputStream)
+        public static SvnDiffWindow[] ParseSvnDiff(Stream inputStream)
         {
             BinaryReaderSvnDiff reader = new BinaryReaderSvnDiff(inputStream);
 
@@ -208,10 +208,10 @@ namespace SvnBridge.Utility
                 throw new Exception("Unsupported SVN diff version");
             }
 
-            List<SvnDiff> diffs = new List<SvnDiff>();
+            List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             while (!EOF(reader))
             {
-                SvnDiff diff = new SvnDiff();
+                SvnDiffWindow diff = new SvnDiffWindow();
 
                 diff.SourceViewOffset = ReadInt(reader);
                 diff.SourceViewLength = ReadInt(reader);
@@ -235,7 +235,7 @@ namespace SvnBridge.Utility
             writer.Write(version);
         }
 
-        public static void WriteSvnDiff(SvnDiff svnDiff, BinaryWriter writer)
+        public static void WriteSvnDiffWindow(SvnDiffWindow svnDiff, BinaryWriter writer)
         {
             if (svnDiff != null)
             {
