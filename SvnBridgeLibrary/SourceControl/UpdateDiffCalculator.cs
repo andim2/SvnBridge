@@ -156,11 +156,12 @@ namespace SvnBridge.SourceControl
                     // all the files first, and build the folder hierarchy that way
                     for (int i = history.Changes.Count - 1; i >= 0; i--)
                     {
-                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
                         SourceItemChange change = history.Changes[i];
 
                         if (ShouldBeIgnored(change.Item.RemoteName))
                             continue;
+
+                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
 
                         ApplyChangeOps(engine, change, updatingForwardInTime);
                     }
