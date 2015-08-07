@@ -203,7 +203,9 @@ namespace SvnBridge.Utility
                 // --> use .SetLength() API
                 // since it internally calculates (whenever needed)
                 // the next suitable .Capacity value.
+                var lengthBackup = stream.Length;
                 stream.SetLength(requiredMinimumCapacity);
+                stream.SetLength(lengthBackup); // ...yet for now keep .Length compatible with prior value
             }
         }
 
