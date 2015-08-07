@@ -28,18 +28,15 @@ namespace SvnBridge.Net
     {
         protected bool flushed /* = false */;
         protected bool headerWritten /* = false */;
-        protected ListenerRequest request; // actually unused now (and it probably should be!)
         protected ListenerResponse response;
         protected Stream stream;
         protected MemoryStream streamBuffer;
         protected static readonly byte[] chunkFooterChunk = Encoding.UTF8.GetBytes("\r\n");
         protected static readonly byte[] chunkFooterFinalZeroChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
 
-        public ListenerResponseStream(ListenerRequest request,
-                                      ListenerResponse response,
+        public ListenerResponseStream(ListenerResponse response,
                                       Stream stream)
         {
-            this.request = request;
             this.response = response;
             this.stream = stream;
 

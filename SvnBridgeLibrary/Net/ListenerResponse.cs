@@ -16,11 +16,10 @@ namespace SvnBridge.Net
         private bool sendChunked;
         private int statusCode;
 
-        public ListenerResponse(ListenerRequest request,
-                                Stream stream)
+        public ListenerResponse(Stream stream)
         {
             headers = new List<KeyValuePair<string, string>>();
-            outputStream = new ListenerResponseStream(request, this, stream);
+            outputStream = new ListenerResponseStream(this, stream);
         }
 
         internal List<KeyValuePair<string, string>> Headers

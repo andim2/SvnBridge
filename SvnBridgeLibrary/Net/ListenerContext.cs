@@ -12,7 +12,7 @@ namespace SvnBridge.Net
         public ListenerContext(Stream stream, DefaultLogger logger)
         {
             request = new ListenerRequest(stream, logger);
-            response = new ListenerResponse(request, stream);
+            response = new ListenerResponse(stream);
         }
 
         #region IHttpContext Members
