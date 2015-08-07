@@ -152,29 +152,29 @@ namespace SvnBridge.SourceControl
             ItemMetaData item = null;
 
             FolderMetaData folder = root;
-            string itemName = pathRoot;
+            string itemPath = pathRoot;
             string[] pathElems = path.Split('/');
 
             for (int i = 0; i < pathElems.Length; i++)
             {
                 bool isLastPathElem = (i == pathElems.Length - 1);
 
-                UpdateDiffEngine.PathAppendElem(ref itemName, pathElems[i]);
+                UpdateDiffEngine.PathAppendElem(ref itemPath, pathElems[i]);
 
-                item = folder.FindItem(itemName);
+                item = folder.FindItem(itemPath);
                 if (item == null)
                 {
                     if (isLastPathElem)
                     {
-                        item = sourceControlProvider.GetItems(targetVersion, itemName, recursion);
+                        item = sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
                     }
                     else
                     {
                         FolderMetaData subFolder =
-                            (FolderMetaData)sourceControlProvider.GetItems(targetVersion, itemName, recursion);
+                            (FolderMetaData)sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
                         item = subFolder;
                     }
-                    item = item ?? new MissingItemMetaData(itemName, targetVersion, false);
+                    item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
                     folder.Items.Add(item);
                 }
                 if (isLastPathElem == false)
@@ -488,9 +488,9 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        private static void RemoveMissingItemsWhichAreChildrenOfRenamedItem(string itemName, FolderMetaData root)
+        private static void RemoveMissingItemsWhichAreChildrenOfRenamedItem(string itemPath, FolderMetaData root)
         {
-            FilesysHelpers.StripRootSlash(ref itemName);
+            FilesysHelpers.StripRootSlash(ref itemPath);
 
             StringComparison stringCompareMode =
                 Configuration.SCMWantCaseSensitiveItemMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
@@ -503,7 +503,7 @@ namespace SvnBridge.SourceControl
                     string nameMatchingSourceItemConvention = data.Name;
                     FilesysHelpers.StripRootSlash(ref nameMatchingSourceItemConvention);
 
-                    if (nameMatchingSourceItemConvention.StartsWith(itemName, stringCompareMode))
+                    if (nameMatchingSourceItemConvention.StartsWith(itemPath, stringCompareMode))
                     {
                         root.Items.Remove(data);
                         continue;
@@ -513,7 +513,7 @@ namespace SvnBridge.SourceControl
                 bool isFolder = (null != folder);
                 if (isFolder)
                 {
-                    RemoveMissingItemsWhichAreChildrenOfRenamedItem(itemName, folder);
+                    RemoveMissingItemsWhichAreChildrenOfRenamedItem(itemPath, folder);
                 }
             }
         }

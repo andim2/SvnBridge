@@ -240,7 +240,7 @@ namespace SvnBridge.SourceControl
             else // standard case (other items)
             {
                 FolderMetaData folder = _root;
-                string itemName = _checkoutRootPath;
+                string itemPath = _checkoutRootPath;
                 string[] pathElems;
                 if (_checkoutRootPath != "")
                     pathElems = remoteName.Substring(_checkoutRootPath.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -251,12 +251,12 @@ namespace SvnBridge.SourceControl
                 {
                     bool isLastPathElem = (i == pathElems.Length - 1);
 
-                    PathAppendElem(ref itemName, pathElems[i]);
+                    PathAppendElem(ref itemPath, pathElems[i]);
 
                     // Detect our possibly pre-existing record of this item within the changeset version range
                     // that we're in the process of analyzing/collecting...
                     // This existing item may possibly be a placeholder (stub folder).
-                    ItemMetaData item = folder.FindItem(itemName);
+                    ItemMetaData item = folder.FindItem(itemPath);
                     bool doReplaceByNewItem = (item == null);
                     if (!doReplaceByNewItem) // further checks...
                     {
@@ -292,7 +292,7 @@ namespace SvnBridge.SourceControl
                         // for the currently processed version:
                         var processedVersion = _targetVersion;
                         Recursion recursionMode = GetRecursionModeForItemAdd(updatingForwardInTime);
-                        item = sourceControlProvider.GetItems(processedVersion, itemName, recursionMode);
+                        item = sourceControlProvider.GetItems(processedVersion, itemPath, recursionMode);
                         if (item == null)
                         {
                             // THIS IS *NOT* TRUE!!
@@ -332,7 +332,7 @@ namespace SvnBridge.SourceControl
                             {
                                 return;
                             }
-                            item = new MissingItemMetaData(itemName, processedVersion, edit);
+                            item = new MissingItemMetaData(itemPath, processedVersion, edit);
                         }
                         if (!isLastPathElem)
                         {
@@ -362,7 +362,7 @@ namespace SvnBridge.SourceControl
                           if (!propertyChange)
                           {
                               folder.Items.Remove(item);
-                              item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
+                              item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
                               item.OriginallyDeleted = true;
                               folder.Items.Add(item);
                           }
@@ -380,7 +380,7 @@ namespace SvnBridge.SourceControl
                           // upon "svn diff" requests
                           // SvnBridge does generate both delete and add diffs,
                           // whereas for similar-name renames it previously did not -> buggy!]
-                          item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
+                          item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
                           folder.Items.Add(item);
                         }
 //#endif
@@ -440,10 +440,10 @@ namespace SvnBridge.SourceControl
             }
 
             FolderMetaData folder = _root;
-            string itemName = _checkoutRootPath;
+            string itemPath = _checkoutRootPath;
             // deactivated [well... that turned out to be the SAME value!! Perhaps it was either deprecated or future handling...]:
-            //string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemName;
-            string remoteNameStart = itemName;
+            //string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemPath;
+            string remoteNameStart = itemPath;
 
             string[] pathElems = remoteName.Substring(remoteNameStart.Length).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -451,21 +451,21 @@ namespace SvnBridge.SourceControl
             {
                 bool isLastPathElem = (i == pathElems.Length - 1);
 
-                PathAppendElem(ref itemName, pathElems[i]);
+                PathAppendElem(ref itemPath, pathElems[i]);
 
-                bool fullyHandled = HandleDeleteItem(remoteName, change, itemName, ref folder, isLastPathElem);
+                bool fullyHandled = HandleDeleteItem(remoteName, change, itemPath, ref folder, isLastPathElem);
                 if (fullyHandled)
                     break;
             }
             if (pathElems.Length == 0)//we have to delete the checkout root itself
             {
-                HandleDeleteItem(remoteName, change, itemName, ref folder, true);
+                HandleDeleteItem(remoteName, change, itemPath, ref folder, true);
             }
         }
 
-        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemName, ref FolderMetaData folder, bool isLastPathElem)
+        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemPath, ref FolderMetaData folder, bool isLastPathElem)
         {
-            ItemMetaData item = folder.FindItem(itemName);
+            ItemMetaData item = folder.FindItem(itemPath);
             // Shortcut: valid item in our cache, and it's a delete already? We're done :)
             if (IsDeleteMetaDataKind(item))
                 return true;
@@ -485,14 +485,14 @@ namespace SvnBridge.SourceControl
                 else
                 {
                     var processedVersion = _targetVersion;
-                    item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, itemName, Recursion.None);
+                    item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, itemPath, Recursion.None);
                     if (item == null)
                     {
                         // FIXME: hmm, are we really supposed to actively Delete a non-isLastPathElem item
                         // rather than indicating a MissingItemMetaData!?
                         // After all the actual delete operation is expected to be carried out (possibly later) properly, too...
                         item = new DeleteFolderMetaData();
-                        item.Name = itemName;
+                        item.Name = itemPath;
                         item.ItemRevision = processedVersion;
                     }
                     else
