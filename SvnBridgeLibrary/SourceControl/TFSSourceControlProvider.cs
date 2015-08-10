@@ -2030,7 +2030,7 @@ namespace SvnBridge.SourceControl
 
         public virtual bool IsDirectory(int version, string path)
         {
-            ItemMetaData item = GetItemsWithoutProperties(version, path, Recursion.None);
+            ItemMetaData item = ItemExists_get(path, version, false);
             // Hmm, no null check here!?
             // But which result to indicate in case of failure? (hint: then it's not really a "file"...).
             // And IsDirectory() is not really being used (stubbed by tests only) anyway...
@@ -2084,7 +2084,13 @@ namespace SvnBridge.SourceControl
         private bool ItemExists(string path, int version, bool returnPropertyFiles)
         {
             bool itemExists = false;
+            ItemMetaData item = ItemExists_get(path, version, returnPropertyFiles);
+            itemExists = (null != item);
+            return itemExists;
+        }
 
+        private ItemMetaData ItemExists_get(string path, int version, bool returnPropertyFiles)
+        {
             // Decide to do strip-slash at the very top, since otherwise it would be
             // done *both* by GetItems() internally (its inner copy of the variable)
             // *and* below, by ItemMetaData implementation.
@@ -2092,7 +2098,6 @@ namespace SvnBridge.SourceControl
             ItemMetaData item = GetItems(version, path, Recursion.None, returnPropertyFiles);
             if (item != null)
             {
-                itemExists = true;
                 bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
                 // FIXME: one could say that this case sensitivity check here
                 // shouldn't be at this layer
@@ -2108,6 +2113,7 @@ namespace SvnBridge.SourceControl
                 // with potentially *full* recursion parm.
                 if (needCheckCaseSensitiveItemMatch)
                 {
+                    bool itemExists = true;
                     // If the result item is a folder,
                     // then we'll have to do a hierarchy lookup,
                     // otherwise (single file), then we can do a direct compare.
@@ -2148,7 +2154,7 @@ namespace SvnBridge.SourceControl
                     }
                 }
             }
-            return itemExists;
+            return item;
         }
 
         public sealed class ItemCaseMismatchException : Exception
@@ -2161,10 +2167,63 @@ namespace SvnBridge.SourceControl
 
         public virtual bool ItemExists(int itemId, int version)
         {
+            return ItemExists(itemId, null, version);
+        }
+
+        /// <summary>
+        /// Determines whether an item exists which has both this ID and (if not null) a specific path,
+        /// at a specific version.
+        /// Note that it will properly return null
+        /// for items with deleted state,
+        /// as opposed to some TFS APIs.
+        /// </summary>
+        /// <param name="itemId">ID of the item to query the existence of</param>
+        /// <param name="path">Path of the item to query the existence of, else null</param>
+        /// <param name="version">Version to query item existence at</param>
+        /// <returns>true if non-deleted item exists, else false</returns>
+        public virtual bool ItemExists(int itemId, string path, int version)
+        {
+            bool item_exists = false;
             if (0 == itemId)
                 throw new ArgumentException("item id cannot be zero", "itemId");
-            var items = metaDataRepository.QueryItems(version, itemId);
-            return (items.Length != 0);
+
+            if (null == path)
+            {
+                // If ID-only query, we need to determine a path
+                // to be able to subsequently do the path-based query
+                // (in order to determine whether an item was deleted!).
+                SourceItem[] sourceItems = metaDataRepository.QueryItems(version, itemId);
+                if (sourceItems.Length != 0)
+                {
+                    string serverPath = sourceItems[0].RemoteName;
+                    path = FilesysHelpers.PathPrefix_Checked_Strip(rootPath, serverPath);
+                }
+            }
+            else
+            {
+                SVNPathStripLeadingSlash(ref path);
+            }
+
+            if (null != path)
+            {
+                // Doing SVN existence checking via ID-only TFS QueryItems() is NOT a good idea:
+                // The item will get delivered, even if it has deleted state
+                // (IOW, items will persist beyond deletion and simply carry a deletion state
+                // [which cannot be determined with the SourceItem result members, though!!]).
+                // Thus, since we do want to ignore deleted items on SVN side,
+                // we need to do a path-based query
+                // since that one actually does not return any deleted items.
+                // And _then_ we also need to verify that the result's item id matches the one that was requested.
+                ItemMetaData item = ItemExists_get(path, version, false);
+
+                if (null != item)
+                {
+                    // Performance: first int-based compare, then string-based.
+                    bool item_matches = ((itemId == item.Id) && (path == item.Name));
+                    item_exists = item_matches;
+                }
+            }
+            return item_exists;
         }
 
         /// <summary>
