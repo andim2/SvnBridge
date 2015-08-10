@@ -386,7 +386,8 @@ namespace SvnBridge.SourceControl
 
             foreach (Changeset changeset in changes)
             {
-                SourceItemHistory sourceItemHistory = new SourceItemHistory(changeset.Changes[0].Item.cs, changeset.cmtr, changeset.date, changeset.Comment);
+                SourceItemHistory sourceItemHistory = ConstructSourceItemHistoryFromChangeset(
+                    changeset);
                 foreach (Change change in changeset.Changes)
                 {
                     if (!IsPropertyFolder(change.Item.item))
@@ -428,6 +429,16 @@ namespace SvnBridge.SourceControl
             }
 
             return history;
+        }
+
+        private static SourceItemHistory ConstructSourceItemHistoryFromChangeset(
+            Changeset changeset)
+        {
+            return new SourceItemHistory(
+                changeset.Changes[0].Item.cs,
+                changeset.cmtr,
+                changeset.date,
+                changeset.Comment);
         }
 
         private LogItem GetLogItem(string serverPath, VersionSpec itemVersion, int versionFrom, int versionTo, RecursionType recursionType, int maxCount, bool sortAscending)
