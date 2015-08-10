@@ -2504,7 +2504,7 @@ namespace SvnBridge.SourceControl
         {
             ItemProperties properties = null;
             {
-                ItemMetaData item;
+                ItemMetaData itemForItemProperties;
                 {
                     string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
                     string cacheKey = "ReadPropertiesForItem_" + propertiesPath;
@@ -2512,18 +2512,18 @@ namespace SvnBridge.SourceControl
 
                     if (cachedResult == null)
                     {
-                        item = GetItems(LATEST_VERSION, propertiesPath, Recursion.None, true);
-                        cache.Set(cacheKey, item);
+                        itemForItemProperties = GetItems(LATEST_VERSION, propertiesPath, Recursion.None, true);
+                        cache.Set(cacheKey, itemForItemProperties);
                     }
                     else
                     {
-                        item = (ItemMetaData)cachedResult.Value;
+                        itemForItemProperties = (ItemMetaData)cachedResult.Value;
                     }
                 }
 
-                if (item != null)
+                if (itemForItemProperties != null)
                 {
-                    properties = WebDAVPropsSerializer.PropertiesRead(item);
+                    properties = WebDAVPropsSerializer.PropertiesRead(itemForItemProperties);
                 }
             }
             return properties;
