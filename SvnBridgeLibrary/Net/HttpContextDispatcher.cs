@@ -79,20 +79,8 @@ namespace SvnBridge.Net
                     return;
                 }
 
-                NetworkCredential credential = null;
-                try
-                {
-                    credential = SetupPerRequestEnvironment(request);
-                }
-                catch (InvalidServerUrlException)
-                {
-                    SendFileNotFoundResponse(connection);
-                    return;
-                }
-
-                HandleRequest(
-                    connection,
-                    credential);
+                SetupAndHandleRequest(
+                    connection);
             }
             // IMPORTANT: I assume that this series of catch()es
             // is generally intended
@@ -134,6 +122,25 @@ namespace SvnBridge.Net
                 if (Configuration.LogCancelErrors)
                     throw;
             }
+        }
+
+        private void SetupAndHandleRequest(
+            IHttpContext connection)
+        {
+            NetworkCredential credential = null;
+            try
+            {
+                credential = SetupPerRequestEnvironment(connection.Request);
+            }
+            catch (InvalidServerUrlException)
+            {
+                SendFileNotFoundResponse(connection);
+                return;
+            }
+
+            HandleRequest(
+                connection,
+                credential);
         }
 
         /// <summary>
