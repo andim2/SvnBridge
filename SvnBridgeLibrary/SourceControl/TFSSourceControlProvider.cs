@@ -822,21 +822,15 @@ namespace SvnBridge.SourceControl
                     changeset);
                 foreach (Change change in changeset.Changes)
                 {
-                    if (WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item))
+                    bool isChangeRelevantForSVNHistory = !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item);
+
+                    if (!(isChangeRelevantForSVNHistory))
                     {
                         continue;
                     }
 
-                    if (!WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item))
-                    {
-                        SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
-                        ChangeType changeType = change.type;
-                        if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
-                            (changeType == (ChangeType.Add | ChangeType.Encoding)))
-                            changeType = ChangeType.Add;
-                        sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType));
-                    }
-                    else
+                    bool isChangeOfAnSVNProperty = WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item);
+                    if (isChangeOfAnSVNProperty)
                     {
                         string item = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(change.Item.item);
                         bool itemFileIncludedInChanges = false;
@@ -855,6 +849,15 @@ namespace SvnBridge.SourceControl
 
                             sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Edit));
                         }
+                    }
+                    else // change of a standard source control item
+                    {
+                        SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
+                        ChangeType changeType = change.type;
+                        if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
+                            (changeType == (ChangeType.Add | ChangeType.Encoding)))
+                            changeType = ChangeType.Add;
+                        sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType));
                     }
                 }
                 history.Add(sourceItemHistory);
