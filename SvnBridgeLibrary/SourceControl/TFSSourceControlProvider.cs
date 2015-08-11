@@ -156,14 +156,95 @@ namespace SvnBridge.SourceControl
         }
     }
 
-    internal static class CollectionHelpers
+    public class ItemQueryCollector
     {
+        private readonly TFSSourceControlProvider sourceControlProvider;
+
+        public ItemQueryCollector(TFSSourceControlProvider sourceControlProvider)
+        {
+            this.sourceControlProvider = sourceControlProvider;
+        }
+
+        public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
+        {
+                ItemMetaData firstItem = null;
+
+                Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
+                Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
+                Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
+                WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
+                foreach (ItemMetaData item in items)
+                {
+                    bool isPropertyFile = WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Name);
+                    bool wantReadPropertyData = (isPropertyFile && !returnPropertyFiles);
+                    if (wantReadPropertyData)
+                    {
+                        string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
+                        itemPropertyRevision[itemPath] = item.Revision;
+                        properties[itemPath] = propsSerializer.PropertiesRead(item);
+                    }
+                    bool wantQueueItem = ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles);
+                    if (wantQueueItem)
+                    {
+                        // FIXME: this optimistic handling relies on a folder-type item always being listed
+                        // prior to its file-type sub content, which may sometimes not be the case.
+                        // Might need to rearrange things more flexibly (by using the usual
+                        // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
+                        if (item.ItemType == ItemType.Folder)
+                        {
+                            string folderNameMangled = FilesysHelpers.GetCaseMangledName(item.Name);
+                            folders[folderNameMangled] = (FolderMetaData)item;
+                        }
+                        if (firstItem == null)
+                        {
+                            firstItem = item;
+                            if (item.ItemType == ItemType.File)
+                            {
+                                string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
+                                string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
+                                FolderMetaData folder = new FolderMetaData();
+                                folder.Items.Add(item);
+                                folders[folderNameMangled] = folder;
+                            }
+                        }
+                        else
+                        {
+                            string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
+                            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
+                            FolderMetaData folder = null;
+                            if (!folders.TryGetValue(folderNameMangled, out folder))
+                            {
+                                // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
+                                // Try very special algo to detect likely candidate folder.
+
+                                // This problem has been observed with a Changeset
+                                // where a whopping 50 files were correctly named
+                                // yet 2 lone others (the elsewhere case-infamous resource.h sisters)
+                                // had *DIFFERENT* folder case.
+                                // Thus call this helper to (try to) locate the actually matching
+                                // *pre-registered* folder via a case-insensitive lookup.
+                                bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // workaround for CS0162 unreachable code
+                                bool acceptingCaseInsensitiveResults = !wantCaseSensitiveMatch;
+
+                                folder = (acceptingCaseInsensitiveResults) ?
+                                    FindMatchingExistingFolderCandidate_CaseInsensitive(folders, folderNameMangled) : null;
+                            }
+                            folder.Items.Add(item);
+                        }
+                    }
+                }
+                SetItemProperties(folders, properties);
+                UpdateItemRevisionsBasedOnPropertyItemRevisions(folders, itemPropertyRevision);
+
+                return firstItem;
+        }
+
         /// <summary>
         /// Helper method for case-*insensitive* comparison of paths:
         /// manually iterate through the folder map
         /// and do an insensitive string compare to figure out the likely candidate folder.
         /// </summary>
-        public static FolderMetaData FindMatchingExistingFolderCandidate_CaseInsensitive(Dictionary<string, FolderMetaData> dict, string folderName)
+        private static FolderMetaData FindMatchingExistingFolderCandidate_CaseInsensitive(Dictionary<string, FolderMetaData> dict, string folderName)
         {
             // To achieve a case-insensitive comparison, we
             // unfortunately need to manually *iterate* over all hash entries:
@@ -183,6 +264,66 @@ namespace SvnBridge.SourceControl
                     return pair.Value;
             }
             return null;
+        }
+
+        private void SetItemProperties(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
+        {
+            foreach (KeyValuePair<string, ItemProperties> itemProperties in properties)
+            {
+                ItemMetaData item = null;
+                string key = itemProperties.Key.ToLowerInvariant();
+                if (folders.ContainsKey(key))
+                {
+                    item = folders[key];
+                }
+                else
+                {
+                    string folderName = FilesysHelpers.GetFolderPathPart(itemProperties.Key)
+                        .ToLowerInvariant();
+                    if (folders.ContainsKey(folderName))
+                    {
+                        item = folders[folderName].FindItem(itemProperties.Key);
+                    }
+                }
+                if (item != null)
+                {
+                    foreach (Property property in itemProperties.Value.Properties)
+                    {
+                        item.Properties[property.Name] = property.Value;
+                    }
+                }
+            }
+        }
+
+        private static void UpdateItemRevisionsBasedOnPropertyItemRevisions(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
+        {
+            foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)
+            {
+                string propertyKey = propertyRevision.Key;
+
+                string propertyKeyMangled = propertyKey.ToLower();
+                if (folders.ContainsKey(propertyKeyMangled))
+                {
+                    ItemMetaData item = folders[propertyKeyMangled];
+                    item.PropertyRevision = propertyRevision.Value;
+                }
+                else
+                {
+                    string folderName = FilesysHelpers.GetFolderPathPart(propertyKey).ToLowerInvariant();
+
+                    FolderMetaData folder;
+                    if (folders.TryGetValue(folderName, out folder) == false)
+                        continue;
+
+                    foreach (ItemMetaData folderItem in folder.Items)
+                    {
+                        if (folderItem.Name == propertyKey)
+                        {
+                            folderItem.PropertyRevision = propertyRevision.Value;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1611,107 +1752,41 @@ namespace SvnBridge.SourceControl
                 recursion);
 
             SourceItem[] sourceItems = metaDataRepository.QueryItems(version, itemPathsToBeQueried.ToArray(), recursion);
-
-            // Shortcut (possible to skip entire sub handling)
             if (sourceItems.Length > 0)
             {
-                firstItem = PopulateItemProperties(sourceItems, version, recursion, returnPropertyFiles);
-            }
-
-            return firstItem;
-       }
-
-       private ItemMetaData PopulateItemProperties(SourceItem[] sourceItems, int version, Recursion recursion, bool returnPropertyFiles)
-       {
-            ItemMetaData firstItem = null;
-
-            if (recursion == Recursion.OneLevel)
-            {
-                if (sourceItems.Length > 0 && sourceItems[0].ItemType == ItemType.Folder)
+                if (recursion == Recursion.OneLevel)
                 {
-                    List<string> propertiesForSubFolders = new List<string>();
-                    foreach (SourceItem item in sourceItems)
+                    if (sourceItems.Length > 0 && sourceItems[0].ItemType == ItemType.Folder)
                     {
-                        if (item.ItemType == ItemType.Folder && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.RemoteName))
+                        List<string> propertiesForSubFolders = new List<string>();
+                        foreach (SourceItem item in sourceItems)
                         {
-                            string propertiesForFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(item.RemoteName, ItemType.Folder);
-                            if (propertiesForFolder.Length <= maxLengthFromRootPath)
-                                propertiesForSubFolders.Add(propertiesForFolder);
+                            if (item.ItemType == ItemType.Folder && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.RemoteName))
+                            {
+                                string propertiesForFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(item.RemoteName, ItemType.Folder);
+                                if (propertiesForFolder.Length <= maxLengthFromRootPath)
+                                    propertiesForSubFolders.Add(propertiesForFolder);
+                            }
                         }
-                    }
-                    SourceItem[] subFolderProperties = metaDataRepository.QueryItems(version, propertiesForSubFolders.ToArray(), Recursion.None);
-                    sourceItems = Helper.ArrayCombine(sourceItems, subFolderProperties);
-                }
-            }
-
-            Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
-            Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
-            Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
-            foreach (SourceItem sourceItem in sourceItems)
-            {
-                ItemMetaData item = SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker);
-                bool isPropertyFile = WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Name);
-                if (isPropertyFile && !returnPropertyFiles)
-                {
-                    string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
-                    itemPropertyRevision[itemPath] = item.Revision;
-                    properties[itemPath] = WebDAVPropsSerializer.PropertiesRead(item);
-                }
-                else if ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles)
-                {
-                    // FIXME: this optimistic handling relies on a folder-type item always being listed
-                    // prior to its file-type content, which may sometimes not be the case.
-                    // Might need to rearrange things more flexibly (by using the usual
-                    // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
-                    if (item.ItemType == ItemType.Folder)
-                    {
-                        string folderNameMangled = FilesysHelpers.GetCaseMangledName(item.Name);
-                        folders[folderNameMangled] = (FolderMetaData)item;
-                    }
-                    if (firstItem == null)
-                    {
-                        firstItem = item;
-                        if (item.ItemType == ItemType.File)
-                        {
-                            string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
-                            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
-                            FolderMetaData folder = new FolderMetaData();
-                            folder.Items.Add(item);
-                            folders[folderNameMangled] = folder;
-                        }
-                    }
-                    else
-                    {
-                        string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
-                        string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
-                        FolderMetaData folder = null;
-                        if (!folders.TryGetValue(folderNameMangled, out folder))
-                        {
-                            // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
-                            // Try very special algo to detect likely candidate folder.
-
-                            // This problem has been observed with a Changeset
-                            // where a whopping 50 files were correctly named
-                            // yet 2 lone others (the elsewhere case-infamous resource.h sisters)
-                            // had *DIFFERENT* folder case.
-                            // Thus call this helper to (try to) locate the actually matching
-                            // *pre-registered* folder via a case-insensitive lookup.
-                            bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // workaround for CS0162 unreachable code
-                            bool acceptingCaseInsensitiveResults = !wantCaseSensitiveMatch;
-
-                            folder = (acceptingCaseInsensitiveResults) ?
-                                CollectionHelpers.FindMatchingExistingFolderCandidate_CaseInsensitive(folders, folderNameMangled) : null;
-                        }
-                        folder.Items.Add(item);
+                        SourceItem[] subFolderProperties = metaDataRepository.QueryItems(version, propertiesForSubFolders.ToArray(), Recursion.None);
+                        sourceItems = Helper.ArrayCombine(sourceItems, subFolderProperties);
                     }
                 }
-            }
-            SetItemProperties(folders, properties);
-            UpdateItemRevisionsBasedOnPropertyItemRevisions(folders, itemPropertyRevision);
-            if (!returnPropertyFiles)
-            {
-                UpdateFolderRevisions(firstItem, version, recursion);
-            }
+
+                {
+                    var itemCollector = new ItemQueryCollector(this);
+                    ItemMetaData[] items = sourceItems.Select(sourceItem => SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker)).ToArray();
+                    firstItem = itemCollector.process(items, returnPropertyFiles);
+
+                    if (!returnPropertyFiles)
+                    {
+                        if (null != firstItem)
+                        {
+                            UpdateFolderRevisions(firstItem, version, recursion);
+                        }
+                    }
+                }
+            } // sourceItems.Length > 0
 
             return firstItem;
         }
@@ -1958,37 +2033,6 @@ namespace SvnBridge.SourceControl
         public bool IsPropertyFolderElement(string path)
         {
             return WebDAVPropertyStorageAdaptor.IsPropertyFolderElement(path);
-        }
-
-        private static void UpdateItemRevisionsBasedOnPropertyItemRevisions(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
-        {
-            foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)
-            {
-                string propertyKey = propertyRevision.Key;
-
-                string propertyKeyMangled = propertyKey.ToLower();
-                if (folders.ContainsKey(propertyKeyMangled))
-                {
-                    ItemMetaData item = folders[propertyKeyMangled];
-                    item.PropertyRevision = propertyRevision.Value;
-                }
-                else
-                {
-                    string folderName = FilesysHelpers.GetFolderPathPart(propertyKey).ToLowerInvariant();
-
-                    FolderMetaData folder;
-                    if (folders.TryGetValue(folderName, out folder) == false)
-                        continue;
-
-                    foreach (ItemMetaData folderItem in folder.Items)
-                    {
-                        if (folderItem.Name == propertyKey)
-                        {
-                            folderItem.PropertyRevision = propertyRevision.Value;
-                        }
-                    }
-                }
-            }
         }
 
         private static bool IsDeleted(string activityId, string path)
@@ -2569,35 +2613,6 @@ namespace SvnBridge.SourceControl
             pendingItem.Id = items[0][0].itemid;
             pendingItem.ItemRevision = items[0][0].latest;
             return pendingItem;
-        }
-
-        private void SetItemProperties(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
-        {
-            foreach (KeyValuePair<string, ItemProperties> itemProperties in properties)
-            {
-                ItemMetaData item = null;
-                string key = itemProperties.Key.ToLowerInvariant();
-                if (folders.ContainsKey(key))
-                {
-                    item = folders[key];
-                }
-                else
-                {
-                    string folderName = FilesysHelpers.GetFolderPathPart(itemProperties.Key)
-                        .ToLowerInvariant();
-                    if (folders.ContainsKey(folderName))
-                    {
-                        item = folders[folderName].FindItem(itemProperties.Key);
-                    }
-                }
-                if (item != null)
-                {
-                    foreach (Property property in itemProperties.Value.Properties)
-                    {
-                        item.Properties[property.Name] = property.Value;
-                    }
-                }
-            }
         }
 
         public virtual ItemMetaData[] GetPreviousVersionOfItems(SourceItem[] items, int changeset_Newer)
