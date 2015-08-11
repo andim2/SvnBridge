@@ -2467,6 +2467,8 @@ namespace SvnBridge.SourceControl
                     {
                         propertiesToAdd.Remove(removedProperty);
                     }
+                    properties.Properties.AddRange(propertiesToAdd.Values);
+
                     string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
                     string propertiesFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFolderName(path, itemType);
                     ItemMetaData propertiesFolderItem = GetItems(LATEST_VERSION, propertiesFolder, Recursion.None, true);
@@ -2474,8 +2476,6 @@ namespace SvnBridge.SourceControl
                     {
                         MakeCollection(activityId, propertiesFolder);
                     }
-
-                    properties.Properties.AddRange(propertiesToAdd.Values);
 
                     bool reportUpdatedFile = (null != item);
                     WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, properties, reportUpdatedFile);
