@@ -3018,16 +3018,17 @@ namespace SvnBridge.SourceControl
                 Dictionary<string, Property> propertiesToAdd = new Dictionary<string, Property>();
                 foreach (string path in activity.Properties.Keys)
                 {
+                    DAVPropertiesChanges propsChangesOfPath = activity.Properties[path];
                     ItemProperties properties = GetItemProperties(activity, path, out item, out itemType);
                     foreach (Property property in properties.Properties)
                     {
                         propertiesToAdd[property.Name] = property;
                     }
-                    foreach (KeyValuePair<string, string> property in activity.Properties[path].Added)
+                    foreach (KeyValuePair<string, string> property in propsChangesOfPath.Added)
                     {
                         propertiesToAdd[property.Key] = new Property(property.Key, property.Value);
                     }
-                    foreach (string removedProperty in activity.Properties[path].Removed)
+                    foreach (string removedProperty in propsChangesOfPath.Removed)
                     {
                         propertiesToAdd.Remove(removedProperty);
                     }
