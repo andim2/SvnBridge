@@ -3032,6 +3032,12 @@ namespace SvnBridge.SourceControl
 
         private void UpdateDAVPropertiesOfItem(string activityId, Activity activity, string path, DAVPropertiesChanges propsChangesOfPath)
         {
+            // NOTE: I believe the prior item prop implementation here to have been highly buggy:
+            // - did an **AddRange()** to *existing* properties.Properties, of propertiesToAdd
+            //   that the prior properties.Properties content has already been added to!!
+            // - propertiesToAdd got instantiated *out-of-loop*, whereas most likely it's
+            //   supposed to be per-item only values, *within-loop*.
+
             bool isAllowedAccess = DAVPropertiesIsAllowedWrite;
             // Keep this check located right before access layer implementation:
             if (!(isAllowedAccess))
@@ -3084,14 +3090,23 @@ namespace SvnBridge.SourceControl
             ItemProperties newProperties = new ItemProperties();
 
             Dictionary<string, Property> newSetOfProperties = new Dictionary<string, Property>();
+
+            // In order to calculate the new total set of properties for an item:
+            // first take into account the existing/old/prior properties...
             foreach (Property priorProperty in priorProperties.Properties)
             {
                 newSetOfProperties[priorProperty.Name] = priorProperty;
             }
+            // ...then add the Added ones...
             foreach (KeyValuePair<string, string> addedProperty in propsChangesOfPath.Added)
             {
                 newSetOfProperties[addedProperty.Key] = new Property(addedProperty.Key, addedProperty.Value);
             }
+            // ...and it's probably best to *then* remove the Removed ones
+            // (XXX - or perhaps it *should* be Remove *prior* to Add?
+            // - the props mechanism might be such
+            // that we end up having an *updated* value to be added
+            // with an *outdated* value to be removed!!):
             foreach (string removedProperty in propsChangesOfPath.Removed)
             {
                 newSetOfProperties.Remove(removedProperty);
