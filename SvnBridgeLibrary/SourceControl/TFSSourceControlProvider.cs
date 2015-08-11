@@ -3012,27 +3012,32 @@ namespace SvnBridge.SourceControl
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
             {
-                ItemMetaData item;
-                ItemType itemType;
-
                 foreach (string path in activity.Properties.Keys)
                 {
                     DAVPropertiesChanges propsChangesOfPath = activity.Properties[path];
-                    ItemProperties priorItemProperties = GetItemProperties(activity, path, out item, out itemType);
-                    ItemProperties newItemProperties = CalculateNewSetOfDAVProperties(priorItemProperties, propsChangesOfPath);
-
-                    string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
-                    string propertiesFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFolderName(path, itemType);
-                    ItemMetaData propertiesFolderItem = GetItems(LATEST_VERSION, propertiesFolder, Recursion.None, true);
-                    if ((propertiesFolderItem == null) && !activity.Collections.Contains(propertiesFolder))
-                    {
-                        MakeCollection(activityId, propertiesFolder);
-                    }
-
-                    bool reportUpdatedFile = (null != item);
-                    WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, newItemProperties, reportUpdatedFile);
+                    UpdateDAVPropertiesOfItem(activityId, activity, path, propsChangesOfPath);
                 }
             });
+        }
+
+        private void UpdateDAVPropertiesOfItem(string activityId, Activity activity, string path, DAVPropertiesChanges propsChangesOfPath)
+        {
+            ItemMetaData item;
+            ItemType itemType;
+
+            ItemProperties priorItemProperties = GetItemProperties(activity, path, out item, out itemType);
+            ItemProperties newItemProperties = CalculateNewSetOfDAVProperties(priorItemProperties, propsChangesOfPath);
+
+            string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
+            string propertiesFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFolderName(path, itemType);
+            ItemMetaData propertiesFolderItem = GetItems(LATEST_VERSION, propertiesFolder, Recursion.None, true);
+            if ((propertiesFolderItem == null) && !activity.Collections.Contains(propertiesFolder))
+            {
+                MakeCollection(activityId, propertiesFolder);
+            }
+
+            bool reportUpdatedFile = (null != item);
+            WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, newItemProperties, reportUpdatedFile);
         }
 
         private static ItemProperties CalculateNewSetOfDAVProperties(ItemProperties priorProperties, DAVPropertiesChanges propsChangesOfPath)
