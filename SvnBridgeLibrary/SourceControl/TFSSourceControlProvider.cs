@@ -3081,7 +3081,7 @@ namespace SvnBridge.SourceControl
 
         private static ItemProperties CalculateNewSetOfDAVProperties(ItemProperties priorProperties, DAVPropertiesChanges propsChangesOfPath)
         {
-            ItemProperties newProperties = priorProperties;
+            ItemProperties newProperties = new ItemProperties();
 
             Dictionary<string, Property> newSetOfProperties = new Dictionary<string, Property>();
             foreach (Property priorProperty in priorProperties.Properties)
@@ -3096,7 +3096,7 @@ namespace SvnBridge.SourceControl
             {
                 newSetOfProperties.Remove(removedProperty);
             }
-            newProperties.Properties.AddRange(newSetOfProperties.Values);
+            newProperties.Properties = newSetOfProperties.Values.ToList();
 
             return newProperties;
         }
