@@ -156,88 +156,126 @@ namespace SvnBridge.SourceControl
         }
     }
 
-    public class ItemQueryCollector
-    {
-        private readonly TFSSourceControlProvider sourceControlProvider;
+    // TODO: this class (or parts of it, perhaps via a base class)
+    // perhaps should be used outside of TFSSourceControlProvider, too
+    // (UpdateDiffEngine.cs).
 
-        public ItemQueryCollector(TFSSourceControlProvider sourceControlProvider)
+    /// <summary>
+    /// This class will manage a filesystem item space (files, folders).
+    /// Given newly inserted items, it will arrange them within the pre-existing content
+    /// and/or create helper items (parent folders, etc.) as necessary.
+    /// Also, it will maintain a root item member which always points
+    /// at the topmost root item of the filesystem space tree.
+    /// Additionally, all folder-type items will be added to a map,
+    /// for efficient lookup of items at specific locations.
+    ///
+    /// Exhaustive list of example situations that this class will have to handle correctly
+    /// (revisit proper handling from time to time, or rather TODO:
+    /// write sufficiently abstract yet precise unit tests for these cases):
+    /// - single non-folder item only: rootItem needs to point at that item
+    /// - insert item at one location, then item at another: rootItem needs to be a common parent folder
+    ///   of both locations, with intermediate folder items being StubFolderMetaData
+    /// - insert folder at a location which previously had to be created as a StubFolderMetaData helper:
+    ///   properly replace by real folder item:
+    ///   - possibly existing parent folder needs to contain this real folder now
+    ///   - new real folder needs to be made to contain all items that the former stub folder had
+    ///     (OTOH since the former stub-real-folder originates from the same provider query than
+    ///     the current insertion candidate, "inserting" the new item translates to a simple
+    ///     transform-stub-to-real operation instead)
+    ///   - add new folder to folder map (i.e., need to ensure update of existing map entry)
+    /// - insert two items at one folder location: order needs to remain in insertion order
+    /// </summary>
+    public class FolderMap
+    {
+        public Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
+        /// <summary>
+        /// The item which currently sits at the root of the filesystem space tree.
+        /// May be either a folder item or also a non-folder item in case of the filesystem space
+        /// simply having item-only content.
+        /// Please note that rootItem should only be populated once we *do* have a valid item,
+        /// i.e. it should *never* be a stub item type (external users implement item existence checks by querying it!).
+        /// </summary>
+        private ItemMetaData rootItem;
+        public FolderMap()
         {
-            this.sourceControlProvider = sourceControlProvider;
         }
 
-        public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
+        public ItemMetaData QueryRootItem()
         {
-                ItemMetaData rootItem = null;
+            return rootItem;
+        }
 
-                Dictionary<string, FolderMetaData> folders = new Dictionary<string, FolderMetaData>();
-                Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
-                Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
-                WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
-                foreach (ItemMetaData item in items)
+        /// <summary>
+        /// Inserts an item into our filesystem hierarchy space,
+        /// fully hooking up items via possibly temporary intermediate folders.
+        /// Please note that users usually pass correctly ordered lists of items
+        /// into this function, thus usually we will not encounter any missing intermediate
+        /// directories, thus there won't be too many extra TFS queries
+        /// which would be the case when Insert()ing the actual item at a later time.
+        /// And even if there are, these will be marked as temporary stub folders,
+        /// to be unwrapped into real folders once these get Insert()ed for real.
+        /// </summary>
+        /// <param name="newItem">The item to be inserted</param>
+        public void Insert(ItemMetaData newItem)
+        {
+            // FIXME: this optimistic handling relies on a folder-type item always being listed
+            // prior to its file-type sub content, which may sometimes not be the case.
+            // Might need to rearrange things more flexibly (by using the usual
+            // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
+            if (newItem.ItemType == ItemType.Folder)
+            {
+                InsertFolder(newItem.Name, (FolderMetaData)newItem);
+            }
+            if (rootItem == null)
+            {
+                rootItem = newItem;
+                if (newItem.ItemType == ItemType.File)
                 {
-                    bool isPropertyFile = WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Name);
-                    bool wantReadPropertyData = (isPropertyFile && !returnPropertyFiles);
-                    if (wantReadPropertyData)
-                    {
-                        string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
-                        itemPropertyRevision[itemPath] = item.Revision;
-                        properties[itemPath] = propsSerializer.PropertiesRead(item);
-                    }
-                    bool wantQueueItem = ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles);
-                    if (wantQueueItem)
-                    {
-                        // FIXME: this optimistic handling relies on a folder-type item always being listed
-                        // prior to its file-type sub content, which may sometimes not be the case.
-                        // Might need to rearrange things more flexibly (by using the usual
-                        // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
-                        if (item.ItemType == ItemType.Folder)
-                        {
-                            string folderNameMangled = FilesysHelpers.GetCaseMangledName(item.Name);
-                            folders[folderNameMangled] = (FolderMetaData)item;
-                        }
-                        if (rootItem == null)
-                        {
-                            rootItem = item;
-                            if (item.ItemType == ItemType.File)
-                            {
-                                string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
-                                string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
-                                FolderMetaData folder = new FolderMetaData();
-                                folder.Items.Add(item);
-                                folders[folderNameMangled] = folder;
-                            }
-                        }
-                        else
-                        {
-                            string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
-                            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
-                            FolderMetaData folder = null;
-                            if (!folders.TryGetValue(folderNameMangled, out folder))
-                            {
-                                // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
-                                // Try very special algo to detect likely candidate folder.
-
-                                // This problem has been observed with a Changeset
-                                // where a whopping 50 files were correctly named
-                                // yet 2 lone others (the elsewhere case-infamous resource.h sisters)
-                                // had *DIFFERENT* folder case.
-                                // Thus call this helper to (try to) locate the actually matching
-                                // *pre-registered* folder via a case-insensitive lookup.
-                                bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // workaround for CS0162 unreachable code
-                                bool acceptingCaseInsensitiveResults = !wantCaseSensitiveMatch;
-
-                                folder = (acceptingCaseInsensitiveResults) ?
-                                    FindMatchingExistingFolderCandidate_CaseInsensitive(folders, folderNameMangled) : null;
-                            }
-                            folder.Items.Add(item);
-                        }
-                    }
+                    string folderName = FilesysHelpers.GetFolderPathPart(newItem.Name);
+                    FolderMetaData folder = new FolderMetaData();
+                    folder.Items.Add(newItem);
+                    InsertFolder(folderName, folder);
                 }
-                SetItemProperties(folders, properties);
-                UpdateItemRevisionsBasedOnPropertyItemRevisions(folders, itemPropertyRevision);
+            }
+            else
+            {
+                FolderMetaData folder = FetchContainerFolderForItem(newItem);
+                // NO null check here - I'm not quite certain about the rootItem mechanism yet,
+                // thus if it crashes, then it does, which ensures that we'll be able to notice it.
+                folder.Items.Add(newItem);
+            }
+        }
 
-                // Either (usually) a folder or sometimes even single-item:
-                return rootItem;
+        private void InsertFolder(string folderNameUnmangled, FolderMetaData folder)
+        {
+            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderNameUnmangled);
+            folders[folderNameMangled] = folder;
+        }
+
+        private FolderMetaData FetchContainerFolderForItem(ItemMetaData item)
+        {
+            FolderMetaData folder;
+            string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
+            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
+
+            if (!folders.TryGetValue(folderNameMangled, out folder))
+            {
+                // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
+                // Try very special algo to detect likely candidate folder.
+
+                // This problem has been observed with a Changeset
+                // where a whopping 50 files were correctly named
+                // yet 2 lone others (the elsewhere case-infamous resource.h sisters)
+                // had *DIFFERENT* folder case.
+                // Thus call this helper to (try to) locate the actually matching
+                // *pre-registered* folder via a case-insensitive lookup.
+                bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // workaround for CS0162 unreachable code
+                bool acceptingCaseInsensitiveResults = !wantCaseSensitiveMatch;
+
+                folder = (acceptingCaseInsensitiveResults) ?
+                    FindMatchingExistingFolderCandidate_CaseInsensitive(folders, folderNameMangled) : null;
+            }
+            return folder;
         }
 
         /// <summary>
@@ -271,6 +309,46 @@ namespace SvnBridge.SourceControl
             }
 
             return folderResult;
+        }
+    }
+
+    public class ItemQueryCollector
+    {
+        private readonly TFSSourceControlProvider sourceControlProvider;
+
+        public ItemQueryCollector(TFSSourceControlProvider sourceControlProvider)
+        {
+            this.sourceControlProvider = sourceControlProvider;
+        }
+
+        public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
+        {
+                FolderMap folderMap = new FolderMap();
+                Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
+                Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
+                WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
+                foreach (ItemMetaData item in items)
+                {
+                    bool isPropertyFile = WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Name);
+                    bool wantReadPropertyData = (isPropertyFile && !returnPropertyFiles);
+                    if (wantReadPropertyData)
+                    {
+                        string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
+                        itemPropertyRevision[itemPath] = item.Revision;
+                        properties[itemPath] = propsSerializer.PropertiesRead(item);
+                    }
+                    bool wantQueueItem = ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles);
+                    if (wantQueueItem)
+                    {
+                        folderMap.Insert(item);
+                    }
+                }
+                SetItemProperties(folderMap.folders, properties);
+                UpdateItemRevisionsBasedOnPropertyItemRevisions(folderMap.folders, itemPropertyRevision);
+
+                // Either (usually) a folder or sometimes even single-item:
+                ItemMetaData root = folderMap.QueryRootItem();
+                return root;
         }
 
         private void SetItemProperties(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, ItemProperties>> properties)
