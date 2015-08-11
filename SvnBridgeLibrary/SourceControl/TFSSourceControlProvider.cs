@@ -3018,21 +3018,8 @@ namespace SvnBridge.SourceControl
                 foreach (string path in activity.Properties.Keys)
                 {
                     DAVPropertiesChanges propsChangesOfPath = activity.Properties[path];
-                    ItemProperties properties = GetItemProperties(activity, path, out item, out itemType);
-                    Dictionary<string, Property> propertiesToAdd = new Dictionary<string, Property>();
-                    foreach (Property property in properties.Properties)
-                    {
-                        propertiesToAdd[property.Name] = property;
-                    }
-                    foreach (KeyValuePair<string, string> property in propsChangesOfPath.Added)
-                    {
-                        propertiesToAdd[property.Key] = new Property(property.Key, property.Value);
-                    }
-                    foreach (string removedProperty in propsChangesOfPath.Removed)
-                    {
-                        propertiesToAdd.Remove(removedProperty);
-                    }
-                    properties.Properties.AddRange(propertiesToAdd.Values);
+                    ItemProperties priorItemProperties = GetItemProperties(activity, path, out item, out itemType);
+                    ItemProperties newItemProperties = CalculateNewSetOfDAVProperties(priorItemProperties, propsChangesOfPath);
 
                     string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
                     string propertiesFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFolderName(path, itemType);
@@ -3043,9 +3030,31 @@ namespace SvnBridge.SourceControl
                     }
 
                     bool reportUpdatedFile = (null != item);
-                    WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, properties, reportUpdatedFile);
+                    WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, newItemProperties, reportUpdatedFile);
                 }
             });
+        }
+
+        private static ItemProperties CalculateNewSetOfDAVProperties(ItemProperties priorProperties, DAVPropertiesChanges propsChangesOfPath)
+        {
+            ItemProperties newProperties = priorProperties;
+
+            Dictionary<string, Property> newSetOfProperties = new Dictionary<string, Property>();
+            foreach (Property priorProperty in priorProperties.Properties)
+            {
+                newSetOfProperties[priorProperty.Name] = priorProperty;
+            }
+            foreach (KeyValuePair<string, string> addedProperty in propsChangesOfPath.Added)
+            {
+                newSetOfProperties[addedProperty.Key] = new Property(addedProperty.Key, addedProperty.Value);
+            }
+            foreach (string removedProperty in propsChangesOfPath.Removed)
+            {
+                newSetOfProperties.Remove(removedProperty);
+            }
+            newProperties.Properties.AddRange(newSetOfProperties.Values);
+
+            return newProperties;
         }
 
 
