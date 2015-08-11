@@ -3015,11 +3015,11 @@ namespace SvnBridge.SourceControl
                 ItemMetaData item;
                 ItemType itemType;
 
-                Dictionary<string, Property> propertiesToAdd = new Dictionary<string, Property>();
                 foreach (string path in activity.Properties.Keys)
                 {
                     DAVPropertiesChanges propsChangesOfPath = activity.Properties[path];
                     ItemProperties properties = GetItemProperties(activity, path, out item, out itemType);
+                    Dictionary<string, Property> propertiesToAdd = new Dictionary<string, Property>();
                     foreach (Property property in properties.Properties)
                     {
                         propertiesToAdd[property.Name] = property;
