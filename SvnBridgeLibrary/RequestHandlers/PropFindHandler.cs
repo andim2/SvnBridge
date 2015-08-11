@@ -109,15 +109,15 @@ namespace SvnBridge.Handlers
             Recursion recursion = ConvertDepthHeaderToRecursion(depthHeader);
             var versionToFetch = version.HasValue ? version.Value : TFSSourceControlProvider.LATEST_VERSION;
             if (recursion == Recursion.OneLevel)
-                return (FolderMetaData)GetItems(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+                return (FolderMetaData)GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
 
             FolderMetaData folderInfo = new FolderMetaData();
-            ItemMetaData item = GetItems(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
+            ItemMetaData item = GetItemsForProps(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
             ItemHelpers.FolderOps_AddItem(folderInfo, item);
             return folderInfo;
         }
 
-        private static ItemMetaData GetItems(TFSSourceControlProvider sourceControlProvider,
+        private static ItemMetaData GetItemsForProps(TFSSourceControlProvider sourceControlProvider,
                                              int version,
                                              string itemPath,
                                              Recursion recursion,
@@ -182,13 +182,13 @@ namespace SvnBridge.Handlers
                 itemPath = requestPath;
             }
 
-            ItemMetaData item = GetItems(sourceControlProvider, revision, itemPath, Recursion.None, true);
+            ItemMetaData item = GetItemsForProps(sourceControlProvider, revision, itemPath, Recursion.None, true);
 
             if (item == null)
             {
                 if (IsSvnRequestForProjectCreation(itemPath, revision, sourceControlProvider))
                 {
-                    item = GetItems(sourceControlProvider, revision, "", Recursion.None, true);
+                    item = GetItemsForProps(sourceControlProvider, revision, "", Recursion.None, true);
                     item.Name = "trunk";
                 }
 
