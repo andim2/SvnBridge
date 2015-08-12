@@ -18,12 +18,39 @@ namespace SvnBridge.Utility
 	public static class Helper
 	{
 		private static readonly byte[] _emptyBuffer = new byte[0];
-		private static readonly string[] DECODED = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`", "&" };
-		private static readonly string[] DECODED_B = new string[] { "&", "<", ">" };
-		private static readonly string[] DECODED_C = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`" };
 
+    // For information on URI encoding (e.g. D:href element),
+    // see http://tools.ietf.org/html/rfc3986 .
+    // Please also see
+    // "HTTP Extensions for Web Distributed Authoring and Versioning (WebDAV)"
+    //   http://tools.ietf.org/html/rfc4918#section-8.3.1
+    //
+    // Percent-encoding as upper-case: RFC3986 notes that percent-encoded strings
+    // should be normalized to *upper-case* values (capitalize currently done
+    // programmatically below, but it might be done wrongly for URIs
+    // and perhaps should have a static coding set for upper-case things).
+    // Also, it notes "In addition to the case normalization issue noted above,
+    // some URI producers percent-encode octets that do not
+    // require percent-encoding, resulting in URIs that
+    // are equivalent to their non-encoded counterparts.
+    // These URIs should be normalized by decoding any percent-encoded octet
+    // that corresponds to an unreserved character"
+    // Note that percent-encoding is something different
+    // from Punycode-encoding as used by IRI (RFC3987).
+
+    // Note that in SvnBridge client case, a /tfsserver:8080/ string part
+    // is *NOT* a RFC3986 ABNF "authority" (i.e., hostname) URI part -
+    // it's the initial part of the "hier-part" (i.e. "path-absolute")
+    // part, with potentially different encoding requirements
+    // (when used for D:href element etc.).
+
+		private static readonly string[] DECODED = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`", "&" };
 		private static readonly string[] ENCODED = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60", "&amp;" };
+
+		private static readonly string[] DECODED_B = new string[] { "&", "<", ">" };
 		private static readonly string[] ENCODED_B = new string[] { "&amp;", "&lt;", "&gt;" };
+
+		private static readonly string[] DECODED_C = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`" };
 		private static readonly string[] ENCODED_C = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60" };
 
         public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
@@ -330,11 +357,13 @@ namespace SvnBridge.Utility
 			return Decode(value, false);
 		}
 
+    // Capitalizing encode.
 		public static string EncodeC(string value)
 		{
 			return Encode(ENCODED_C, DECODED_C, value, true);
 		}
 
+    // Capitalizing decode.
 		public static string DecodeC(string value)
 		{
 			return Decode(value, true);
