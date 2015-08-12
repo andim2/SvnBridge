@@ -374,7 +374,8 @@ namespace SvnBridge.Handlers
                     @"<?xml version=""1.0"" encoding=""utf-8""?>
 <S:file-revs-report xmlns:S=""svn:"" xmlns:D=""DAV:"">");
 
-                foreach (SourceItemHistory history in Helper.SortHistories(true, log.History))
+                var historySorted = Helper.SortHistories(true, log.History);
+                foreach (SourceItemHistory history in historySorted)
                 {
                     foreach (SourceItemChange change in history.Changes)
                     {
