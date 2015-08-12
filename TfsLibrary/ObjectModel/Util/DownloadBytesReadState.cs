@@ -38,7 +38,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 				int read = Stream.EndRead(ar);
 				if (downloadedBytes.Capacity < downloadedBytes.Count + read)
 					downloadedBytes.Capacity = downloadedBytes.Count + read;
-				for (int i = 0; i < read; i++)
+				for (int i = 0; i < read; ++i)
 				{
 					downloadedBytes.Add(buffer[i]);
 				}
