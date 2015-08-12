@@ -750,6 +750,28 @@ namespace SvnBridge.Utility
 			return path1 + "/" + path2;
 		}
 
+        /// <summary>
+        /// Detects the case where input strings are exactly equal for a
+        /// case-insensitive compare yet non-equal for a subsequent case-sensitive one,
+        /// as e.g. in the case of same-length strings "root/MyPath" vs. "root/MyPATH",
+        /// *without* bogusly indicating a mismatch due to simply having different-length strings.
+        /// </summary>
+        public static bool IsStringsPreciseCaseSensitivityMismatch(string arg1, string arg2)
+        {
+            bool isPreciseMismatch = false;
+            // We better don't do an initial shortcut via Length mismatch compare,
+            // since then we might end up with a case strings are in fact "equal"
+            // according to locale-specific expectations, yet do have slightly different length.
+
+            bool isCaseInsensitiveMatch = string.Equals(arg1, arg2, StringComparison.InvariantCultureIgnoreCase);
+            if (isCaseInsensitiveMatch)
+            {
+                bool isCaseSensitiveMatch = string.Equals(arg1, arg2, StringComparison.InvariantCulture);
+                isPreciseMismatch = !(isCaseSensitiveMatch);
+            }
+            return isPreciseMismatch;
+        }
+
         public static void CooperativeSleep(int millisecondsTimeout)
         {
             // We will NOT use Thread.Sleep(), since that one is strictly blocking.
