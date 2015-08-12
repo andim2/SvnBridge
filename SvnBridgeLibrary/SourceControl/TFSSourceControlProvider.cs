@@ -1064,21 +1064,36 @@ namespace SvnBridge.SourceControl
             }
         }
 
+        /// <summary>
+        /// Hotpath performance tweak helper [user code first calls this fast unspecific check,
+        /// then iff(!) found (rarely) does more specific ones, whether property file/folder...]
+        /// </summary>
+        /// <param name="path">item path</param>
+        /// <returns>true in case path seems to be a path used for storage of SVN properties, else false</returns>
+        private static bool IsSuspectedPropertyStuff(string name)
+        {
+            return (name.Contains(Constants.PropFolder));
+        }
+
         public bool IsPropertyFile(string name)
         {
-            const string propFolderPlusSlash = Constants.PropFolder + "/";
-            if (name.StartsWith(propFolderPlusSlash) || name.Contains("/" + propFolderPlusSlash))
-                return true;
-            else
-                return false;
+            if (IsSuspectedPropertyStuff(name))
+            { // found!? --> do precise checks.
+                const string propFolderPlusSlash = Constants.PropFolder + "/";
+                if (name.StartsWith(propFolderPlusSlash) || name.Contains("/" + propFolderPlusSlash))
+                    return true;
+            }
+            return false;
         }
 
         public bool IsPropertyFolder(string name)
         {
-            if (name == Constants.PropFolder || name.EndsWith("/" + Constants.PropFolder))
-                return true;
-            else
-                return false;
+            if (IsSuspectedPropertyStuff(name))
+            { // found!? --> do precise checks.
+                if (name == Constants.PropFolder || name.EndsWith("/" + Constants.PropFolder))
+                    return true;
+            }
+            return false;
         }
 
         private static void UpdateItemRevisionsBasedOnPropertyItemRevisions(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
