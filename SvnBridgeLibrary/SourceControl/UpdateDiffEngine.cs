@@ -296,7 +296,7 @@ namespace SvnBridge.SourceControl
 
                 string[] pathElems = GetSubPathElems_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
                 int pathElemsCount = pathElems.Length;
-                for (int i = 0; i < pathElemsCount; i++)
+                for (int i = 0; i < pathElemsCount; ++i)
                 {
                     bool isLastPathElem = (i == pathElemsCount - 1);
 
@@ -501,7 +501,7 @@ namespace SvnBridge.SourceControl
 
             string[] pathElems = GetSubPathElems_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
             int pathElemsCount = pathElems.Length;
-            for (int i = 0; i < pathElemsCount; i++)
+            for (int i = 0; i < pathElemsCount; ++i)
             {
                 bool isLastPathElem = (i == pathElemsCount - 1);
 

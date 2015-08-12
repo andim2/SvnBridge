@@ -283,7 +283,7 @@ namespace SvnBridge.SourceControl
             string[] pathElems = FilesysHelpers.GetPathElems(pathSub);
 
             int pathElemsCount = pathElems.Length;
-            for (int i = 0; i < pathElemsCount; i++)
+            for (int i = 0; i < pathElemsCount; ++i)
             {
                 bool isLastPathElem = (i == pathElemsCount - 1);
 
