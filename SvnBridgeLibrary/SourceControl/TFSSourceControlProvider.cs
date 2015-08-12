@@ -961,6 +961,18 @@ namespace SvnBridge.SourceControl
                 // were already committed to the source control provider;
                 // since we consider associating with work items nice but not essential,
                 // we will log the error and ignore it.
+                // In many cases this errored out
+                // due to not having provided an XML template file with correct content
+                // (thus it's using often unsupported default CodePlex-specific tags in web request
+                // rather than properly supported plain TFS-only parts).
+                // FIXME: forcing a manual template config on unsuspecting users is rather cumbersome -
+                // this should be handled as automatically as possible.
+                // For helpful resources, see
+                // http://svnbridge.codeplex.com/wikipage?title=Work Items Integration
+                // "Work Item Association doesn't work"
+                //   http://svnbridge.codeplex.com/workitem/9889?ProjectName=svnbridge
+                // "Work Item Associations"
+                //   http://svnbridge.codeplex.com/workitem/12411?ProjectName=svnbridge
                 logger.Error("Failed to associate work item with changeset", e);
             }
         }
