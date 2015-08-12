@@ -1096,6 +1096,19 @@ namespace SvnBridge.SourceControl
             return false;
         }
 
+        public bool IsPropertyFolderElement(string name)
+        {
+            if (IsSuspectedPropertyStuff(name))
+            {
+                return (
+                    (name.StartsWith(Constants.PropFolder + "/") ||
+                     name.EndsWith("/" + Constants.PropFolder) ||
+                     name.Contains("/" + Constants.PropFolder + "/"))
+                );
+            }
+            return false;
+        }
+
         private static void UpdateItemRevisionsBasedOnPropertyItemRevisions(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
         {
             foreach (KeyValuePair<string, int> propertyRevision in itemPropertyRevision)

@@ -58,9 +58,7 @@ namespace SvnBridge.SourceControl
             // we ignore it here because this only happens when the related item
             // is deleted, and at any rate, this is a SvnBridge implementation detail
             // which the client is not concerned about
-            if (change.Item.RemoteName.StartsWith(Constants.PropFolder + "/") ||
-                change.Item.RemoteName.EndsWith("/" + Constants.PropFolder) ||
-                change.Item.RemoteName.Contains("/" + Constants.PropFolder + "/"))
+            if (sourceControlProvider.IsPropertyFolderElement(change.Item.RemoteName))
             {
                 return;
             }
