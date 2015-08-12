@@ -26,6 +26,20 @@ namespace SvnBridge.Utility
 		private static readonly string[] ENCODED_B = new string[] { "&amp;", "&lt;", "&gt;" };
 		private static readonly string[] ENCODED_C = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60" };
 
+        public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
+        {
+            Encoding utf8WithoutBOM = new UTF8Encoding(false);
+
+            // Default buffer size is 1024 Bytes, which is rather low
+            // for our purpose (ends up as chunk size when using HTTP Chunked Encoding).
+            // NOTE that at least Subversion 1.6.17 (neon) appears to be buggy
+            // since it seems to have trouble handling incompletely-chunked
+            // transfers (however, incomplete payload within individual
+            // chunks appears to be completely legal and actually an
+            // inherent characteristic of chunking, one could say).
+            return new StreamWriter(outputStream, utf8WithoutBOM, 16 * 1024);
+        }
+
 		public static XmlReaderSettings InitializeNewXmlReaderSettings()
 		{
 			XmlReaderSettings readerSettings = new XmlReaderSettings();

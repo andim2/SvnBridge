@@ -27,7 +27,7 @@ namespace SvnBridge.Handlers
 				MergeActivityResponse mergeResponse = sourceControlProvider.MergeActivity(activityId);
 				SetResponseSettings(response, "text/xml", Encoding.UTF8, 200);
 				response.SendChunked = true;
-				using (StreamWriter output = new StreamWriter(response.OutputStream))
+				using (StreamWriter output = CreateStreamWriter(response.OutputStream))
 				{
 					WriteMergeResponse(request, mergeResponse, output);
 				}

@@ -36,7 +36,7 @@ namespace SvnBridge.Handlers
                 PropertyUpdateData data = Helper.DeserializeXml<PropertyUpdateData>(correctXml);
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
-                using (StreamWriter output = new StreamWriter(response.OutputStream))
+                using (StreamWriter output = CreateStreamWriter(response.OutputStream))
                 {
                     PropPatch(sourceControlProvider, data, extendedNamespaces, path, output);
                 }

@@ -51,7 +51,7 @@ namespace SvnBridge.Handlers
 
         private void Options(TFSSourceControlProvider sourceControlProvider, string path, Stream outputStream)
         {
-            using (StreamWriter output = new StreamWriter(outputStream))
+            using (StreamWriter output = CreateStreamWriter(outputStream))
             {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 output.Write("<D:options-response xmlns:D=\"DAV:\">\n");

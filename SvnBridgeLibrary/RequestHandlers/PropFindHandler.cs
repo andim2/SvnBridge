@@ -77,7 +77,7 @@ namespace SvnBridge.Handlers
         private void HandleAllPropVccDefault(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream stream)
         {
             int latestVersion = sourceControlProvider.GetLatestVersion();
-            using (StreamWriter writer = new StreamWriter(stream))
+            using (StreamWriter writer = CreateStreamWriter(stream))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
@@ -163,7 +163,7 @@ namespace SvnBridge.Handlers
                     throw new FileNotFoundException("There is no item " + requestPath + " in revision " + revision);
             }
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
                 if (item.ItemType == ItemType.Folder)
                 {
@@ -352,7 +352,7 @@ namespace SvnBridge.Handlers
         {
             INode node = new SvnVccDefaultNode(sourceControlProvider, requestPath, label);
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
@@ -367,7 +367,7 @@ namespace SvnBridge.Handlers
         {
             INode node = new SvnBlnNode(requestPath, int.Parse(requestPath.Substring(10)));
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
@@ -398,7 +398,7 @@ namespace SvnBridge.Handlers
             if (setTrunkAsName)
                 folderInfo.Name = "trunk";
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
@@ -446,7 +446,7 @@ namespace SvnBridge.Handlers
 
             FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depth, requestPath, null, true);
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
@@ -482,7 +482,7 @@ namespace SvnBridge.Handlers
                 throw new FileNotFoundException("Unable to find file '" + path + "' in the specified activity", path);
             }
 
-            using (StreamWriter writer = new StreamWriter(outputStream))
+            using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
                 writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 WriteMultiStatusStart(writer, data.Properties);

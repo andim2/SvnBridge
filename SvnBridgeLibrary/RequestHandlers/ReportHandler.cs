@@ -38,7 +38,7 @@ namespace SvnBridge.Handlers
                     {
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.SendChunked = true;
-                        using (var output = new StreamWriter(response.OutputStream))
+                        using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             GetLocksReport(output);
                         }
@@ -52,7 +52,7 @@ namespace SvnBridge.Handlers
                         {
                             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                             response.SendChunked = true;
-                            using (var output = new StreamWriter(response.OutputStream))
+                            using (var output = CreateStreamWriter(response.OutputStream))
                             {
                                 UpdateReport(sourceControlProvider, (UpdateReportData)data, output, update, targetRevision);
                             }
@@ -73,7 +73,7 @@ namespace SvnBridge.Handlers
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.SendChunked = true;
                         response.BufferOutput = false;
-                        using (var output = new StreamWriter(response.OutputStream))
+                        using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             LogReport(sourceControlProvider, (LogReportData)data, path, output);
                         }
@@ -83,7 +83,7 @@ namespace SvnBridge.Handlers
                         data = Helper.DeserializeXml<GetLocationsReportData>(reader);
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.SendChunked = true;
-                        using (var output = new StreamWriter(response.OutputStream))
+                        using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             GetLocationsReport(sourceControlProvider, (GetLocationsReportData)data, path, output);
                         }
@@ -93,7 +93,7 @@ namespace SvnBridge.Handlers
                         data = Helper.DeserializeXml<DatedRevReportData>(reader);
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.SendChunked = true;
-                        using (var output = new StreamWriter(response.OutputStream))
+                        using (var output = CreateStreamWriter(response.OutputStream))
                         {
                             GetDatedRevReport(sourceControlProvider, (DatedRevReportData)data, output);
                         }
@@ -129,7 +129,7 @@ namespace SvnBridge.Handlers
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.NotImplemented);
             response.AppendHeader("Connection", "close");
 
-            using (var output = new StreamWriter(response.OutputStream))
+            using (var output = CreateStreamWriter(response.OutputStream))
             {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 output.Write("<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n");
@@ -147,7 +147,7 @@ namespace SvnBridge.Handlers
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.InternalServerError);
             response.AppendHeader("Connection", "close");
 
-            using (var output = new StreamWriter(response.OutputStream))
+            using (var output = CreateStreamWriter(response.OutputStream))
             {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 output.Write("<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n");
@@ -165,7 +165,7 @@ namespace SvnBridge.Handlers
             if (replayReport.Revision == 0)
             {
                 response.StatusCode = (int) HttpStatusCode.OK;
-                using (var output = new StreamWriter(response.OutputStream))
+                using (var output = CreateStreamWriter(response.OutputStream))
                 {
                     output.Write(
                         @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -197,7 +197,7 @@ namespace SvnBridge.Handlers
             data.Entries.Add(item);
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
             response.SendChunked = true;
-            using (var output = new StreamWriter(response.OutputStream))
+            using (var output = CreateStreamWriter(response.OutputStream))
             {
                 try
                 {
@@ -313,7 +313,7 @@ namespace SvnBridge.Handlers
                     }
                 }
             }
-            using (var output = new StreamWriter(response.OutputStream))
+            using (var output = CreateStreamWriter(response.OutputStream))
             {
                 response.StatusCode = (int) HttpStatusCode.OK;
                 output.Write(

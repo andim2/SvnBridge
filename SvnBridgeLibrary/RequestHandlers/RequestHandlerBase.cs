@@ -35,9 +35,14 @@ namespace SvnBridge.Handlers
             response.AppendHeader("X-Pad", "avoid browser bug");
         }
 
+        protected static StreamWriter CreateStreamWriter(Stream outputStream)
+        {
+            return Helper.ConstructStreamWriterUTF8(outputStream);
+        }
+
 		protected static void WriteToResponse(IHttpResponse response, string content)
 		{
-			using (StreamWriter writer = new StreamWriter(response.OutputStream))
+			using (StreamWriter writer = CreateStreamWriter(response.OutputStream))
 			{
 				writer.Write(content);
 			}

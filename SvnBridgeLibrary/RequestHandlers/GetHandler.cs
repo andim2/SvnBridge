@@ -86,7 +86,7 @@ namespace SvnBridge.Handlers
                 {
                     SetResponseSettings(response, "text/html; charset=iso-8859-1", Encoding.UTF8, 301);
                     response.AppendHeader("Location", request.Url + "/");
-                    using (StreamWriter writer = new StreamWriter(response.OutputStream))
+                    using (StreamWriter writer = CreateStreamWriter(response.OutputStream))
                     {
                         writer.Write("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
                         writer.Write("<html><head>\n");
@@ -135,7 +135,7 @@ namespace SvnBridge.Handlers
             response.AppendHeader("ETag", "W/\"" + folder.ItemRevision + "//" + Helper.EncodeB(folder.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
 
-            using (StreamWriter writer = new StreamWriter(response.OutputStream))
+            using (StreamWriter writer = CreateStreamWriter(response.OutputStream))
             {
                 writer.Write("<html><head><title>");
                 writer.Write("Revision " + latestVersion + ": /" + folder.Name);
