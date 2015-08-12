@@ -247,9 +247,10 @@ namespace SvnBridge.SourceControl
                 else
                     pathElems = remoteName.Split('/');
 
-                for (int i = 0; i < pathElems.Length; i++)
+                int pathElemsCount = pathElems.Length;
+                for (int i = 0; i < pathElemsCount; i++)
                 {
-                    bool isLastPathElem = (i == pathElems.Length - 1);
+                    bool isLastPathElem = (i == pathElemsCount - 1);
 
                     PathAppendElem(ref itemPath, pathElems[i]);
 
@@ -447,9 +448,10 @@ namespace SvnBridge.SourceControl
 
             string[] pathElems = remoteName.Substring(remoteNameStart.Length).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-            for (int i = 0; i < pathElems.Length; i++)
+            int pathElemsCount = pathElems.Length;
+            for (int i = 0; i < pathElemsCount; i++)
             {
-                bool isLastPathElem = (i == pathElems.Length - 1);
+                bool isLastPathElem = (i == pathElemsCount - 1);
 
                 PathAppendElem(ref itemPath, pathElems[i]);
 
@@ -457,7 +459,7 @@ namespace SvnBridge.SourceControl
                 if (isFullyHandled)
                     break;
             }
-            if (pathElems.Length == 0)//we have to delete the checkout root itself
+            if (pathElemsCount == 0)//we have to delete the checkout root itself
             {
                 HandleDeleteItem(remoteName, change, itemPath, ref folder, true);
             }

@@ -155,9 +155,10 @@ namespace SvnBridge.SourceControl
             string itemPath = pathRoot;
             string[] pathElems = path.Split('/');
 
-            for (int i = 0; i < pathElems.Length; i++)
+            int pathElemsCount = pathElems.Length;
+            for (int i = 0; i < pathElemsCount; i++)
             {
-                bool isLastPathElem = (i == pathElems.Length - 1);
+                bool isLastPathElem = (i == pathElemsCount - 1);
 
                 UpdateDiffEngine.PathAppendElem(ref itemPath, pathElems[i]);
 
