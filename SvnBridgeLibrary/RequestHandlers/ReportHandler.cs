@@ -477,6 +477,99 @@ namespace SvnBridge.Handlers
             LogReportFromLogItem(logItem, output);
         }
 
+        /// <summary>
+        /// Pre-filters entries, to achieve properly compliant SVN-side output.
+        /// Example: deleted/renamed directories need to end up as a
+        /// single action on the directory (as expected by SVN clients)
+        /// rather than incompatibly additionally listing all individual sub files, too!
+        /// </summary>
+        /// <param name="changesOrig">Original (unfiltered) list of changes</param>
+        /// <returns>Possibly filtered list of changes</returns>
+        private static IEnumerable<SourceItemChange> FilterImplicitChanges(IEnumerable<SourceItemChange> changesOrig)
+        {
+            // Use a Dictionary to fake a HashSet (.NET >= 3.5 only).
+            Dictionary<int, bool> dictToBeRemoved = new Dictionary<int, bool>();
+            foreach (SourceItemChange change in changesOrig)
+            {
+                if (change.Item.ItemType == ItemType.Folder)
+                {
+                    // Hmm, perhaps Undelete should be handled here as well?
+                    // (perhaps it also reincarnates an entire folder
+                    // without having to list any sub entries?)
+                    if ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete)
+                    {
+                        SourceItem itemFolder = change.Item;
+                        string folderRemoteName = itemFolder.RemoteName;
+                        // Remove all within-folder deletion-type changes,
+                        // since they're redundant on SVN protocol:
+                        foreach (SourceItemChange changeVictim in changesOrig)
+                        {
+                            if (!((changeVictim.ChangeType & ChangeType.Delete) == ChangeType.Delete))
+                            {
+                                continue;
+                            }
+                            SourceItem itemVictim = changeVictim.Item;
+                            if (IsBelowBaseFolder(folderRemoteName, itemVictim.RemoteName))
+                            {
+                                // Make sure we skip removing ourselves...
+                                if (itemFolder != itemVictim)
+                                {
+                                    // Add() would throw exception when pre-existing...
+                                    dictToBeRemoved[changeVictim.GetHashCode()] = true;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
+                    {
+                        RenamedSourceItem itemFolder = (RenamedSourceItem)change.Item;
+                        string folderOriginalRemoteName = itemFolder.OriginalRemoteName;
+                        string folderRemoteName = itemFolder.RemoteName;
+                        foreach (SourceItemChange changeVictim in changesOrig)
+                        {
+                            if (!((changeVictim.ChangeType & ChangeType.Rename) == ChangeType.Rename))
+                            {
+                                continue;
+                            }
+                            RenamedSourceItem itemVictim = (RenamedSourceItem)changeVictim.Item;
+                            if (
+                                   (IsBelowBaseFolder(folderOriginalRemoteName, itemVictim.OriginalRemoteName))
+                                && (IsBelowBaseFolder(folderRemoteName, itemVictim.RemoteName))
+                            )
+                            {
+                                // Make sure we skip removing ourselves...
+                                if (itemFolder != itemVictim)
+                                {
+                                    // Add() would throw exception when pre-existing...
+                                    dictToBeRemoved[changeVictim.GetHashCode()] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            bool needFiltering = (dictToBeRemoved.Count > 0);
+            if (needFiltering)
+            {
+                List<SourceItemChange> changesFiltered = new List<SourceItemChange>(changesOrig);
+                changesFiltered.RemoveAll(elem => (dictToBeRemoved.ContainsKey(elem.GetHashCode())));
+                return changesFiltered;
+            }
+            else
+            {
+                return changesOrig;
+            }
+        }
+
+        private static bool IsBelowBaseFolder(string itemBaseFolder, string itemCandidate)
+        {
+            // FIXME: should do this path check in a _precise_ manner
+            // (compare against trailing-'/' strings).
+            return itemCandidate.StartsWith(itemBaseFolder);
+        }
+
         private static void LogReportFromLogItem(LogItem logItem, TextWriter output)
         {
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
@@ -491,7 +584,28 @@ namespace SvnBridge.Handlers
                 output.Write("<S:date>" + Helper.FormatDate(history.CommitDateTime) + "</S:date>\n");
                 output.Write("<D:comment>" + Helper.EncodeB(history.Comment) + "</D:comment>\n");
 
-                foreach (SourceItemChange change in history.Changes)
+                // FIXME layering violation!?: the changes should actually have been filtered already -
+                // this is supposed to be a simple reporting-only class,
+                // yet the input data should be in suitable format already,
+                // thus our SVN protocol provider class ought to have done that.
+                // Unless Changes usually *should* contain unfiltered content
+                // for use by SVN generators and REPORT happens to be
+                // the only component which actually requires filtering...
+
+                // We'll keep the filtering conditionals part inline,
+                // since we access .Count, which requires ICollection at least
+                // (would be less suitable to pass as a sub method param).
+                List<SourceItemChange> changesFiltered;
+                if (history.Changes.Count > 1) // optimization shortcut
+                {
+                    changesFiltered = new List<SourceItemChange>(FilterImplicitChanges(history.Changes));
+                }
+                else
+                {
+                    changesFiltered = history.Changes;
+                }
+
+                foreach (SourceItemChange change in changesFiltered)
                 {
                     if ((change.ChangeType & ChangeType.Add) == ChangeType.Add ||
                         (change.ChangeType & ChangeType.Undelete) == ChangeType.Undelete)
