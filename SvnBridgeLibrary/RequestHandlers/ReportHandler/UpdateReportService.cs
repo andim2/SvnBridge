@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Handlers;
+using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.Encode() etc.
@@ -235,6 +236,9 @@ namespace SvnBridge.Infrastructure
         {
             EntryData bestMatch = entries[0];
 
+            StringComparison stringCompareMode =
+                Configuration.SCMWantCaseSensitiveItemMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
+
             foreach (EntryData entry in entries)
             {
                 if (entry.path == name)// found a best match
@@ -243,7 +247,7 @@ namespace SvnBridge.Infrastructure
                     break;
                 }
 
-                if (entry.path == null || name.StartsWith(entry.path, StringComparison.InvariantCultureIgnoreCase) == false)
+                if (entry.path == null || name.StartsWith(entry.path, stringCompareMode) == false)
                     continue;
 
                 // if the current entry is longer than the previous best match, then this

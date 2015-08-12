@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO; // Path.GetFileName()
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
+using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.SortHistories()
 
@@ -229,6 +230,9 @@ namespace SvnBridge.SourceControl
             if (itemName.StartsWith("/"))
                 itemName = itemName.Substring(1);
 
+            StringComparison stringCompareMode =
+                Configuration.SCMWantCaseSensitiveItemMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
+
             foreach (ItemMetaData data in new List<ItemMetaData>(root.Items))
             {
                 string nameMatchingSourceItemConvention = data.Name;
@@ -237,7 +241,7 @@ namespace SvnBridge.SourceControl
 
                 // a child of the currently renamed item
                 if (data is MissingItemMetaData &&
-                    nameMatchingSourceItemConvention.StartsWith(itemName, StringComparison.InvariantCultureIgnoreCase))
+                    nameMatchingSourceItemConvention.StartsWith(itemName, stringCompareMode))
                 {
                     root.Items.Remove(data);
                     continue;
