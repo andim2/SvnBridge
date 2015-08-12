@@ -490,6 +490,7 @@ namespace SvnBridge.SourceControl
                                 if (itemChange.Item.item == item)
                                 {
                                     itemFileIncludedInChanges = true;
+                                    break;
                                 }
                             }
                             if (!itemFileIncludedInChanges)
@@ -1466,6 +1467,7 @@ namespace SvnBridge.SourceControl
                         if (folderItem.FileType == ItemType.Folder && folderItem.Path == folderName)
                         {
                             folderFound = true;
+                            break;
                         }
                     }
                 });
@@ -1547,6 +1549,7 @@ namespace SvnBridge.SourceControl
                         if (copy.TargetPath == path)
                         {
                             addToMergeList = false;
+                            break;
                         }
                     }
                 }
@@ -1698,6 +1701,7 @@ namespace SvnBridge.SourceControl
                         if (copyAction.Path.StartsWith(deletedItem + "/"))
                         {
                             copyIsRename = true;
+                            break;
                         }
                     }
                 }
