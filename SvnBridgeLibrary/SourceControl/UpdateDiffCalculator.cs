@@ -285,16 +285,13 @@ namespace SvnBridge.SourceControl
             Dictionary<string, string> clientDeletedFiles = new Dictionary<string, string>();
             if (reportData.Missing != null)
             {
+                string pathPrefix =
+                    string.IsNullOrEmpty(path) ?
+                    "/" :
+                    "/" + path + "/";
                 foreach (string missingPath in reportData.Missing)
                 {
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        clientDeletedFiles["/" + missingPath] = missingPath;
-                    }
-                    else
-                    {
-                        clientDeletedFiles["/" + path + "/" + missingPath] = missingPath;
-                    }
+                    clientDeletedFiles[pathPrefix + missingPath] = missingPath;
                 }
             }
             return clientDeletedFiles;
@@ -305,16 +302,13 @@ namespace SvnBridge.SourceControl
             Dictionary<string, int> clientExistingFiles = new Dictionary<string, int>();
             if (reportData.Entries != null)
             {
+                string pathPrefix =
+                    string.IsNullOrEmpty(path) ?
+                    "/" :
+                    "/" + path + "/";
                 foreach (EntryData entryData in reportData.Entries)
                 {
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        clientExistingFiles["/" + entryData.path] = int.Parse(entryData.Rev);
-                    }
-                    else
-                    {
-                        clientExistingFiles["/" + path + "/" + entryData.path] = int.Parse(entryData.Rev);
-                    }
+                    clientExistingFiles[pathPrefix + entryData.path] = int.Parse(entryData.Rev);
                 }
             }
             return clientExistingFiles;
