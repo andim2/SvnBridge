@@ -1,4 +1,5 @@
 using System;
+using SvnBridge; // Constants.PropFolder
 using SvnBridge.SourceControl;
 using Xunit;
 
@@ -210,8 +211,8 @@ namespace IntegrationTests
         public void GetItems_IgnoresStalePropertyFiles()
         {
             string propertyFile = "<?xml version=\"1.0\" encoding=\"utf-8\"?><ItemProperties xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><Properties><Property><Name>mime-type</Name><Value>application/octet-stream</Value></Property></Properties></ItemProperties>";
-            CreateFolder(MergePaths(testPath, "/..svnbridge"), true);
-            WriteFile(MergePaths(testPath, "/..svnbridge/WheelMUD Database Creation.sql"), GetBytes(propertyFile), true);
+            CreateFolder(MergePaths(testPath, "/" + Constants.PropFolder), true);
+            WriteFile(MergePaths(testPath, "/" + Constants.PropFolder + "/WheelMUD Database Creation.sql"), GetBytes(propertyFile), true);
 
             Assert.DoesNotThrow(delegate
             {

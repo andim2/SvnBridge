@@ -347,7 +347,7 @@ namespace SvnBridge.SourceControl
 
         private bool ShouldBeIgnored(string file)
         {
-            return Path.GetFileName(file) == "..svnbridge";
+            return Path.GetFileName(file) == Constants.PropFolder;
         }
     }
 }
