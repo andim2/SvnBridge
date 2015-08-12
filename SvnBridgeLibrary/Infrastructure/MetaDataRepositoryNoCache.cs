@@ -114,7 +114,11 @@ namespace SvnBridge.Infrastructure
         {
             if (null == serverDownloadUrl)
             {
-                var downloadUrlExtension = serverUrl.Contains("/tfs/") ? "ashx" : "asmx";
+                // I don't know what exactly it is that is being discerned here (should add clarifications).
+                // Improved check according to codeplex.com discussion #403231 "404 Errors In Log Files".
+                // This is the URL as configured by Web.config's TfsUrl key.
+                bool urlContainsTfsPart = (serverUrl.Contains("/tfs/") || serverUrl.EndsWith("/tfs"));
+                var downloadUrlExtension = urlContainsTfsPart ? "ashx" : "asmx";
                 serverDownloadUrl = serverUrl + "/VersionControl/v1.0/item." + downloadUrlExtension;
             }
             return serverDownloadUrl;
