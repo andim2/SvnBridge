@@ -31,8 +31,12 @@ namespace SvnBridge.Handlers
                 string depthHeader = request.Headers["Depth"];
                 string labelHeader = request.Headers["Label"];
 
+                // RFC4918 PROPFIND: "Servers SHOULD treat a request without a Depth header
+                // as if a "Depth: infinity" header was included."
+                // Additionally considering empty-case
+                // (IsNullOrEmpty() rather than != null) is ok, right?
                 if (String.IsNullOrEmpty(depthHeader))
-                    depthHeader = "0";
+                    depthHeader = "infinity";
 
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 207);
 
