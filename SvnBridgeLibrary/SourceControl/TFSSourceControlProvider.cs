@@ -1769,18 +1769,20 @@ namespace SvnBridge.SourceControl
         private static string GetItemFileNameFromPropertiesFileName(string path)
         {
             string itemPath = path;
-            if (itemPath == Constants.PropFolder + "/" + Constants.FolderPropFile)
+            string propFolderPlusSlash = Constants.PropFolder + "/";
+            if (itemPath.StartsWith(propFolderPlusSlash))
             {
+              if (itemPath == propFolderPlusSlash + Constants.FolderPropFile)
+              {
                 itemPath = "";
-            }
-            else if (itemPath.StartsWith(Constants.PropFolder + "/"))
-            {
-                itemPath = path.Substring(Constants.PropFolder.Length + 1);
+              }
+              else
+                itemPath = path.Substring(propFolderPlusSlash.Length);
             }
             else
             {
-                itemPath = itemPath.Replace("/" + Constants.PropFolder + "/" + Constants.FolderPropFile, "");
-                itemPath = itemPath.Replace("/" + Constants.PropFolder + "/", "/");
+                itemPath = itemPath.Replace("/" + propFolderPlusSlash + Constants.FolderPropFile, "");
+                itemPath = itemPath.Replace("/" + propFolderPlusSlash, "/");
             }
             return itemPath;
         }
