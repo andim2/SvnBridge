@@ -34,10 +34,32 @@ namespace SvnBridge
         public const int MaxPort = 65535;
         public const string ServerRootPath = "$/";
         public const string SvnVccPath = "/!svn/vcc/default";
-        public const string FolderPropFile = ".svnbridge";
+        public const string FolderPropFile = ".sbsvnpropsfile"; // see PropFolder comment
         public const string FolderPropFilePath = PropFolder + "/" + FolderPropFile;
         public const string LocalPrefix = @"C:\";
         public const string WorkspaceComment = "Temporary workspace for edit-merge-commit";
-        public const string PropFolder = "..svnbridge";
+
+        // Avoid incompatibility-prone double-dot syntax, avoid using Subversion's own ".svn" prefix convention,
+        // avoid special chars.
+        // The current choice (".sbsvnprops") might still be a bit too inconvenient
+        // since it is an exact substring of the .sbsvnpropsfile part above
+        // (incomplete [buggy] string handling may yield false positives due to semi-matches),
+        // but changing these names should not be done lightly
+        // since these files are stored all over the place
+        // within a repositories unchangeable history.
+        // Thus, either have *really* good future-proof candidates or definitely avoid changing it.
+        // See also "Problematic/incompatible "..svnbridge" dir name used for svn prop (properties) storage"
+        //   http://svnbridge.codeplex.com/workitem/15330
+        // ** WARNING ** WebDAV/SVN property storage
+        // as currently implemented via TFS items
+        // is rather unstable / buggy / semi-completed
+        // and will remain so for some time -
+        // Thereby it's recommended to avoid using properties
+        // at least for valuable repositories, since any SCM action
+        // will have persistent (and possibly bad) consequences
+        // due to a repository being history-based.
+        //public const string PropFolder = "..svnbridge";
+        public const string PropFolder = ".sbsvnprops";
+
     }
 }
