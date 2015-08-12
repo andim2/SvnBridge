@@ -56,15 +56,15 @@ namespace SvnBridge.Handlers
 
         private void PropPatch(TFSSourceControlProvider sourceControlProvider, PropertyUpdateData request, bool extendedNamespaces, string requestPath, TextWriter output)
 		{
-			string activityPath = requestPath.Substring(10);
-			if (activityPath.StartsWith("/"))
+			string activityPlusPath = requestPath.Substring(10);
+			if (activityPlusPath.StartsWith("/"))
 			{
-				activityPath = activityPath.Substring(1);
+				activityPlusPath = activityPlusPath.Substring(1);
 			}
 
-			string itemPathUndecoded = activityPath.Substring(activityPath.IndexOf('/'));
+			string itemPathUndecoded = activityPlusPath.Substring(activityPlusPath.IndexOf('/'));
 			string itemPath = Helper.Decode(itemPathUndecoded);
-			string activityId = activityPath.Split('/')[0];
+			string activityId = activityPlusPath.Split('/')[0];
 
             // Internet sez: "Servers MUST process PROPPATCH instructions in document order
             // (an exception to the normal rule that ordering is irrelevant)".
