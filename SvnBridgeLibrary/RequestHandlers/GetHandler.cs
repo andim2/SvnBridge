@@ -135,7 +135,7 @@ namespace SvnBridge.Handlers
             response.AppendHeader("ETag", "W/\"" + folder.ItemRevision + "//" + Helper.EncodeB(folder.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
 
-            using (StreamWriter writer = new StreamWriter(context.Response.OutputStream))
+            using (StreamWriter writer = new StreamWriter(response.OutputStream))
             {
                 writer.Write("<html><head><title>");
                 writer.Write("Revision " + latestVersion + ": /" + folder.Name);
