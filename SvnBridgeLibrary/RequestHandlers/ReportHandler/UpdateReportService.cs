@@ -215,19 +215,16 @@ namespace SvnBridge.Infrastructure
         {
             string name = item.Name;
 
-            if (name.StartsWith("/"))
-                name = name.Substring(1);
+            FilesysHelpers.StripRootSlash(ref name);
 
-            if (basePath.StartsWith("/"))
-                basePath = basePath.Substring(1);
+            FilesysHelpers.StripRootSlash(ref basePath);
 
             basePath = basePath + "/";
 
             if (name.StartsWith(basePath))
             {
                 name = name.Substring(basePath.Length);
-                if (name.StartsWith(@"/"))
-                    name = name.Substring(1);
+                FilesysHelpers.StripRootSlash(ref name);
             }
             return name;
         }

@@ -32,6 +32,12 @@ namespace SvnBridge.SourceControl
     /// </summary>
     public sealed class FilesysHelpers
     {
+        public static void StripRootSlash(ref string path)
+        {
+            if (path.StartsWith("/"))
+                path = path.Substring(1);
+        }
+
         /// <summary>
         /// Helper to abstract/hide away the *internal* decision
         /// on whether names of filesystem items ought to be case-mangled
@@ -191,10 +197,7 @@ namespace SvnBridge.SourceControl
             int versionTo,
             UpdateReportData reportData)
         {
-            if (path.StartsWith("/"))
-            {
-                path = path.Substring(1);
-            }
+            SVNPathStripLeadingSlash(ref path);
 
             var root = (FolderMetaData)GetItems(versionTo, path, Recursion.None);
 
@@ -303,10 +306,7 @@ namespace SvnBridge.SourceControl
             int maxCount,
             bool sortAscending = false)
         {
-            if (path.StartsWith("/"))
-            {
-                path = path.Substring(1);
-            }
+            SVNPathStripLeadingSlash(ref path);
 
             string serverPath = MakeTfsPath(path);
             RecursionType recursionType = RecursionType.None;
@@ -593,10 +593,7 @@ namespace SvnBridge.SourceControl
                 bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
                 if (needCheckCaseSensitiveItemMatch)
                 {
-                    if (path.StartsWith("/"))
-                    {
-                        path = path.Substring(1);
-                    }
+                    SVNPathStripLeadingSlash(ref path);
                     itemExists = false;
                     bool haveCorrectlyCasedItem = item.Name.Equals(path);
                     if (haveCorrectlyCasedItem)
@@ -892,10 +889,7 @@ namespace SvnBridge.SourceControl
             // Ideally we should offer a clean interface here
             // which ensures case-sensitive matching when needed.
 
-            if (path.StartsWith("/"))
-            {
-                path = path.Substring(1);
-            }
+            SVNPathStripLeadingSlash(ref path);
 
             if (version == 0 && path == "")
             {
@@ -1002,6 +996,25 @@ namespace SvnBridge.SourceControl
                 UpdateFolderRevisions(firstItem, version, recursion);
             }
             return firstItem;
+        }
+
+        /// <summary>
+        /// Small helper to strip off the leading slash
+        /// that may be fed from outer users of this interface,
+        /// i.e. to be predominantly used in (usually) public methods of this class
+        /// (inner methods should try to not need to call this any more,
+        /// since public -> private transition is expected
+        /// to already have catered for it).
+        /// Longer explanation: since leading-slash paths are an SVN protocol characteristic
+        /// (see e.g. raw paths passed into PROPFIND request)
+        /// and TFSSourceControlProvider is our exact raw SVN-conformant interface,
+        /// and ItemMetaData specs are always non-leading-slash,
+        /// this is *exactly* the right internal layer to do path stripping.
+        /// </summary>
+        /// <param name="path">Path value to be processed</param>
+        private static void SVNPathStripLeadingSlash(ref string path)
+        {
+            FilesysHelpers.StripRootSlash(ref path);
         }
 
         private void UpdateFolderRevisions(ItemMetaData item, int version, Recursion recursion)

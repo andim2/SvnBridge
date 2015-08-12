@@ -41,8 +41,7 @@ namespace SvnBridge.SourceControl
 
                         string targetPath = rootPath + "/" + data.path;
 
-                        if (targetPath.StartsWith("/"))
-                            targetPath = targetPath.Substring(1);
+                        FilesysHelpers.StripRootSlash(ref targetPath);
 
                         CalculateChangeBetweenVersions(projectRootPath, targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionFrom);
                     }
@@ -227,8 +226,7 @@ namespace SvnBridge.SourceControl
 
         private static void RemoveMissingItemsWhichAreChildrenOfRenamedItem(string itemName, FolderMetaData root)
         {
-            if (itemName.StartsWith("/"))
-                itemName = itemName.Substring(1);
+            FilesysHelpers.StripRootSlash(ref itemName);
 
             StringComparison stringCompareMode =
                 Configuration.SCMWantCaseSensitiveItemMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
@@ -236,8 +234,7 @@ namespace SvnBridge.SourceControl
             foreach (ItemMetaData data in new List<ItemMetaData>(root.Items))
             {
                 string nameMatchingSourceItemConvention = data.Name;
-                if (data.Name.StartsWith("/"))
-                    nameMatchingSourceItemConvention = data.Name.Substring(1);
+                FilesysHelpers.StripRootSlash(ref nameMatchingSourceItemConvention);
 
                 // a child of the currently renamed item
                 if (data is MissingItemMetaData &&

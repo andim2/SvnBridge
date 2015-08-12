@@ -91,6 +91,20 @@ namespace SvnBridge.Handlers
             IHttpContext context,
             TFSSourceControlProvider sourceControlProvider);
 
+    protected static string GetServerSidePath(string path)
+    {
+        // FIXME: quite likely instead of doing fugly open-coded crap
+        // this should be made
+        // to use some (possibly new?) functionality
+        // of the PathParser member which we already have...
+        if (path.IndexOf('/', 9) > -1)
+        {
+            return path.Substring(path.IndexOf('/', 9));
+        }
+        else
+            return "/";
+    }
+
 		protected string GetPath(IHttpRequest request)
 		{
 			return pathParser.GetLocalPath(request);

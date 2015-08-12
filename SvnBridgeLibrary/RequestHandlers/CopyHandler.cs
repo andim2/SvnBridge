@@ -19,7 +19,7 @@ namespace SvnBridge.Handlers
             string activityId = PathParser.GetActivityIdFromDestination(request.Headers["Destination"]);
 
             string path = GetPath(request);
-            path = path.Substring(path.IndexOf('/', 9));
+            path = GetServerSidePath(path);
 
             string destination = PathParser.GetPathFromDestination(Helper.DecodeC(request.Headers["Destination"]));
             string targetPath = destination.Substring(destination.IndexOf('/', 12));

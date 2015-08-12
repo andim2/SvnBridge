@@ -101,11 +101,7 @@ namespace SvnBridge.Handlers
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "file-revs-report")
                     {
                         data = Helper.DeserializeXml<FileRevsReportData>(reader);
-                        string serverPath = "/";
-                        if (path.IndexOf('/', 9) > -1)
-                        {
-                            serverPath = path.Substring(path.IndexOf('/', 9));
-                        }
+                        string serverPath = GetServerSidePath(path);
                         SendBlameResponse(request, response, sourceControlProvider, serverPath, (FileRevsReportData)data);
                         return;
                     }
@@ -382,14 +378,7 @@ namespace SvnBridge.Handlers
 
         private void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string path, StreamWriter output)
         {
-            if (path.IndexOf('/', 9) > -1)
-            {
-                path = path.Substring(path.IndexOf('/', 9));
-            }
-            else
-            {
-                path = "/";
-            }
+            path = GetServerSidePath(path);
 
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
             output.Write("<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
@@ -458,11 +447,7 @@ namespace SvnBridge.Handlers
 
         private static void LogReport(TFSSourceControlProvider sourceControlProvider, LogReportData logreport, string path, TextWriter output)
         {
-            string serverPath = "/";
-            if (path.IndexOf('/', 9) > -1)
-            {
-                serverPath = path.Substring(path.IndexOf('/', 9));
-            }
+            string serverPath = GetServerSidePath(path);
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);
