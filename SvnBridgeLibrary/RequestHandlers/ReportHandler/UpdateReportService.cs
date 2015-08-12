@@ -55,7 +55,7 @@ namespace SvnBridge.Infrastructure
 			this.sourceControlProvider = sourceControlProvider;
 		}
 
-		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool rootFolder, bool parentFolderWasDeleted)
+		public void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output, bool isRootFolder, bool parentFolderWasDeleted)
 		{
 			if (folder is DeleteFolderMetaData)
 			{
@@ -66,9 +66,9 @@ namespace SvnBridge.Infrastructure
 			}
 			else
 			{
-				bool existingFolder = false;
+				bool isExistingFolder = false;
                 bool folderWasDeleted = parentFolderWasDeleted;
-                if (rootFolder)
+                if (isRootFolder)
 				{
                     // root folder --> no "name" attribute specified.
 					output.Write("<S:open-directory rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
@@ -79,18 +79,18 @@ namespace SvnBridge.Infrastructure
                     int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(folder, srcPath));
 					if (ItemExistsAtTheClient(folder, updateReportRequest, srcPath, clientRevisionForItem))
 					{
-						existingFolder = true;
+						isExistingFolder = true;
 					}
 
           string itemNameEncoded = GetEncodedNamePart(folder);
 					// If another item with the same name already exists, need to remove it first.
-					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
+					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, isExistingFolder))
 					{
 						output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
                         folderWasDeleted = true;
 					}
 
-					if (existingFolder)
+					if (isExistingFolder)
 					{
 						output.Write("<S:open-directory name=\"" + itemNameEncoded +
 									 "\" rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
@@ -102,7 +102,7 @@ namespace SvnBridge.Infrastructure
 									 "\">\n");
 					}
 				}
-				if (!rootFolder || updateReportRequest.UpdateTarget == null)
+				if (!isRootFolder || updateReportRequest.UpdateTarget == null)
 				{
           UpdateReportWriteItemAttributes(output, folder);
 				}
@@ -121,7 +121,7 @@ namespace SvnBridge.Infrastructure
 					}
 				}
 				output.Write("<S:prop></S:prop>\n");
-				if (rootFolder || existingFolder)
+				if (isRootFolder || isExistingFolder)
 				{
 					output.Write("</S:open-directory>\n");
 				}
@@ -143,22 +143,22 @@ namespace SvnBridge.Infrastructure
 			}
 			else
 			{
-				bool existingFile = false;
+				bool isExistingFile = false;
 				string srcPath = GetSrcPath(updateReportRequest);
                 int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(item, srcPath));
 				if (ItemExistsAtTheClient(item, updateReportRequest, srcPath, clientRevisionForItem))
 				{
-					existingFile = true;
+					isExistingFile = true;
 				}
 
         string itemNameEncoded = GetEncodedNamePart(item);
 				// If another item with the same name already exists, need to remove it first.
-				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, existingFile))
+				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, isExistingFile))
 				{
 					output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
 				}
 
-				if (existingFile)
+				if (isExistingFile)
 				{
 					output.Write("<S:open-file name=\"" + itemNameEncoded + "\" rev=\"" +
                                  clientRevisionForItem + "\">\n");
@@ -187,7 +187,7 @@ namespace SvnBridge.Infrastructure
                 output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
                 output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");
 
-                if (existingFile)
+                if (isExistingFile)
 				{
 					output.Write("</S:open-file>\n");
 				}
