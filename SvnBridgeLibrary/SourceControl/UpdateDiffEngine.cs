@@ -248,9 +248,9 @@ namespace SvnBridge.SourceControl
 
                 for (int i = 0; i < nameParts.Length; i++)
                 {
-                    bool lastNamePart = false;
+                    bool isLastNamePart = false;
                     if (i == nameParts.Length - 1)
-                        lastNamePart = true;
+                        isLastNamePart = true;
 
                     PathAppendElem(ref itemName, nameParts[i]);
 
@@ -261,7 +261,7 @@ namespace SvnBridge.SourceControl
                     bool doReplaceByNewItem = (item == null);
                     if (!doReplaceByNewItem) // further checks...
                     {
-                        if (lastNamePart) // only if final item...
+                        if (isLastNamePart) // only if final item...
                         {
                             bool existingItemsVersionIsOutdated =
                                 updatingForwardInTime ?
@@ -329,13 +329,13 @@ namespace SvnBridge.SourceControl
                                 return;
                             }
 #endif
-                            if (lastNamePart && propertyChange)
+                            if (isLastNamePart && propertyChange)
                             {
                                 return;
                             }
                             item = new MissingItemMetaData(itemName, processedVersion, edit);
                         }
-                        if (!lastNamePart)
+                        if (!isLastNamePart)
                         {
                             StubFolderMetaData stubFolder = new StubFolderMetaData();
                             stubFolder.RealFolder = (FolderMetaData)item;
@@ -349,7 +349,7 @@ namespace SvnBridge.SourceControl
                         folder.Items.Add(item);
                         SetAdditionForPropertyChangeOnly(item, propertyChange);
                     }
-                    else if ((item is StubFolderMetaData) && lastNamePart)
+                    else if ((item is StubFolderMetaData) && isLastNamePart)
                     {
                         folder.Items.Remove(item);
                         folder.Items.Add(((StubFolderMetaData)item).RealFolder);
@@ -386,7 +386,7 @@ namespace SvnBridge.SourceControl
                         }
 //#endif
                     }
-                    if (lastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
+                    if (isLastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                     {
                         folder = (FolderMetaData)item;
                     }

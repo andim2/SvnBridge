@@ -160,10 +160,10 @@ namespace SvnBridge.SourceControl
                 UpdateDiffEngine.PathAppendElem(ref itemName, nameParts[i]);
 
                 item = folder.FindItem(itemName);
-                bool lastNamePart = i == nameParts.Length - 1;
+                bool isLastNamePart = i == nameParts.Length - 1;
                 if (item == null)
                 {
-                    if (lastNamePart)
+                    if (isLastNamePart)
                     {
                         item = sourceControlProvider.GetItems(targetVersion, itemName, recursion);
                     }
@@ -176,7 +176,7 @@ namespace SvnBridge.SourceControl
                     item = item ?? new MissingItemMetaData(itemName, targetVersion, false);
                     folder.Items.Add(item);
                 }
-                if (lastNamePart == false)
+                if (isLastNamePart == false)
                 {
                     folder = (FolderMetaData)item;
                 }
