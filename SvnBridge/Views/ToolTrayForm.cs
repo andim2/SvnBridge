@@ -18,7 +18,7 @@ namespace SvnBridge.Views
 			notifyIcon.BalloonTipClicked+=BalloonTipClicked_OnClick;
 			Closed+=((sender, e) => presenter.ViewClosed());
 			showErrorsToolStripMenuItem.Click += OnShowErrorsClick;
-            invokeDeubgger.Click+=((sender, e) => Debugger.Launch());
+            invokeDebugger.Click+=((sender, e) => Debugger.Launch());
         }
 
     	private void BalloonTipClicked_OnClick(object sender, EventArgs e)

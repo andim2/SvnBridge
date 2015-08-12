@@ -38,7 +38,7 @@ namespace SvnBridge.Views
             this.startToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.invokeDeubgger = new System.Windows.Forms.ToolStripMenuItem();
+            this.invokeDebugger = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.showErrorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,7 +59,7 @@ namespace SvnBridge.Views
             this.startToolStripMenuItem,
             this.stopToolStripMenuItem,
             this.toolStripSeparator1,
-            this.invokeDeubgger,
+            this.invokeDebugger,
             this.toolStripSeparator2,
             this.showErrorsToolStripMenuItem,
             this.exitToolStripMenuItem});
@@ -93,11 +93,11 @@ namespace SvnBridge.Views
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(147, 6);
             // 
-            // invokeDeubgger
+            // invokeDebugger
             // 
-            this.invokeDeubgger.Name = "invokeDeubgger";
-            this.invokeDeubgger.Size = new System.Drawing.Size(150, 22);
-            this.invokeDeubgger.Text = "Open Debugger";
+            this.invokeDebugger.Name = "invokeDebugger";
+            this.invokeDebugger.Size = new System.Drawing.Size(150, 22);
+            this.invokeDebugger.Text = "Open Debugger";
             // 
             // toolStripSeparator2
             // 
@@ -141,7 +141,7 @@ namespace SvnBridge.Views
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem showErrorsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem invokeDeubgger;
+        private System.Windows.Forms.ToolStripMenuItem invokeDebugger;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
