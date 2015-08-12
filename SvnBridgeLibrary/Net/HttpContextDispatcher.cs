@@ -80,19 +80,9 @@ namespace SvnBridge.Net
                     return;
                 }
 
-                if (credential != null && (tfsUrl.ToLowerInvariant().EndsWith("codeplex.com") || tfsUrl.ToLowerInvariant().Contains("tfs.codeplex.com")))
+                if (credential != null)
                 {
-                    string username = credential.UserName;
-                    string domain = credential.Domain;
-                    if (!username.ToLowerInvariant().EndsWith("_cp"))
-                    {
-                        username += "_cp";
-                    }
-                    if (domain == "")
-                    {
-                        domain = "snd";
-                    }
-                    credential = new NetworkCredential(username, credential.Password, domain);
+                    TweakCredential(ref credential, tfsUrl);
                 }
                 RequestCache.Items["serverUrl"] = tfsUrl;
                 RequestCache.Items["projectName"] = parser.GetProjectName(request);
@@ -207,6 +197,28 @@ namespace SvnBridge.Net
             return CredentialsHelper.NullCredentials;
         }
 
+        /// <summary>
+        /// Helper for implementing various site-specific tweaks.
+        /// </summary>
+        private static void TweakCredential(ref NetworkCredential credential, string tfsUrl)
+        {
+            // CodePlex-specific handling:
+            string tfsUrlLower = tfsUrl.ToLowerInvariant();
+            if ((tfsUrlLower.EndsWith("codeplex.com") || tfsUrlLower.Contains("tfs.codeplex.com")))
+            {
+                string username = credential.UserName;
+                string domain = credential.Domain;
+                if (!username.ToLowerInvariant().EndsWith("_cp"))
+                {
+                    username += "_cp";
+                }
+                if (domain == "")
+                {
+                    domain = "snd";
+                }
+                credential = new NetworkCredential(username, credential.Password, domain);
+            }
+        }
 
         private static void SendUnauthorizedResponse(IHttpContext connection)
         {
