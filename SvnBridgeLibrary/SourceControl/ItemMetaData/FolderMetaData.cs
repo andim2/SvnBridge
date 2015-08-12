@@ -33,7 +33,7 @@ namespace SvnBridge.SourceControl
 
         public ItemMetaData FindItem(string name)
         {
-            if (string.Equals(name, this.Name, StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(this.Name, name, StringComparison.InvariantCultureIgnoreCase))
                 return this;
             foreach (ItemMetaData item in Items)
             {
