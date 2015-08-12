@@ -59,6 +59,28 @@ namespace SvnBridge.SourceControl
         }
     }
 
+    internal static class CollectionHelpers
+    {
+        /// <summary>
+        /// Helper method for case-*insensitive* comparison of paths:
+        /// manually iterate through the folder map
+        /// and do an insensitive string compare to figure out the likely candidate folder.
+        /// </summary>
+        public static FolderMetaData FindMatchingExistingFolderCandidate_CaseInsensitive(Dictionary<string, FolderMetaData> dict, string folderName)
+        {
+            // To achieve a case-insensitive comparison, we
+            // unfortunately need to manually *iterate* over all hash entries:
+            foreach (var pair in dict)
+            {
+                // Make sure to also use the method that's commonly used
+                // for such path comparison purposes:
+                if (ItemMetaData.IsSamePath(folderName, pair.Key))
+                    return pair.Value;
+            }
+            return null;
+        }
+    }
+
     [Interceptor(typeof(TracingInterceptor))]
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]
     public class TFSSourceControlProvider : MarshalByRefObject
@@ -1118,15 +1140,6 @@ namespace SvnBridge.SourceControl
             Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
             Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
             ItemMetaData firstItem = null;
-            // Workaround variable for case sensitivity issues - always keep a record of the folder name
-            // which a (potentially imprecisely named!) file should nevertheless have ended up in.
-            // This has been observed with a Changeset where 50 files were correctly named yet
-            // 2 others (the elsewhere case-infamous resource.h sisters) had incorrect folder case.
-            // While this managed to cure the problem, another, possibly more helpful
-            // (in case of some completely unrelated folder place being affected!), way of doing the workaround
-            // would be to have a helper method manually iterate through the folder map
-            // and do an insensitive string compare to figure out the likely candidate folder.
-            string currentFolderName = null;
             foreach (SourceItem sourceItem in items)
             {
                 ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
@@ -1144,8 +1157,8 @@ namespace SvnBridge.SourceControl
                     // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
                     if (item.ItemType == ItemType.Folder)
                     {
-                        currentFolderName = FilesysHelpers.GetCaseMangledName(item.Name);
-                        folders[currentFolderName] = (FolderMetaData)item;
+                        string folderNameMangled = FilesysHelpers.GetCaseMangledName(item.Name);
+                        folders[folderNameMangled] = (FolderMetaData)item;
                     }
                     if (firstItem == null)
                     {
@@ -1161,10 +1174,24 @@ namespace SvnBridge.SourceControl
                     else
                     {
                         string folderName = GetFolderName(item.Name);
+                        string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
                         FolderMetaData folder = null;
-                        if (!folders.TryGetValue(FilesysHelpers.GetCaseMangledName(folderName), out folder)) // NOT FOUND?? (case sensitivity!?) Try recorded folder.
+                        if (!folders.TryGetValue(folderNameMangled, out folder))
                         {
-                            folder = folders[currentFolderName];
+                            // NOT FOUND?? (due to obeying a proper strict case sensitivity mode!?)
+                            // Try very special algo to detect likely candidate folder.
+
+                            // This problem has been observed with a Changeset
+                            // where a whopping 50 files were correctly named
+                            // yet 2 lone others (the elsewhere case-infamous resource.h sisters)
+                            // had *DIFFERENT* folder case.
+                            // Thus call this helper to (try to) locate the actually matching
+                            // *pre-registered* folder via a case-insensitive lookup.
+                            bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // workaround for CS0162 unreachable code
+                            bool acceptingCaseInsensitiveResults = !wantCaseSensitiveMatch;
+
+                            folder = (acceptingCaseInsensitiveResults) ?
+                                CollectionHelpers.FindMatchingExistingFolderCandidate_CaseInsensitive(folders, folderNameMangled) : null;
                         }
                         folder.Items.Add(item);
                     }
