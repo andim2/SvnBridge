@@ -61,8 +61,8 @@ namespace SvnBridge
 
         private static int? TryGetPortFromSettings()
         {
-            if (Configuration.TfsPort != 0)
-                return Configuration.TfsPort;
+            if (Configuration.SvnPort != 0)
+                return Configuration.SvnPort;
             return null;
         }
 
@@ -92,7 +92,7 @@ namespace SvnBridge
         {
             var view = new SettingsForm();
             var presenter = new SettingsViewPresenter(view, proxyInfo);
-            presenter.Port = port ?? Configuration.TfsPort;
+            presenter.Port = port ?? Configuration.SvnPort;
             presenter.Show();
 
             if (!presenter.Canceled)
@@ -115,7 +115,7 @@ namespace SvnBridge
     				DataProtectionScope.CurrentUser
     				);
     		}
-            Configuration.TfsPort = port;
+            Configuration.SvnPort = port;
             Configuration.TfsProxyUrl = proxyInfo.TfsProxyUrl;
             Configuration.UseProxy = proxyInfo.UseProxy;
             Configuration.ProxyUrl = proxyInfo.Url;

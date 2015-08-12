@@ -22,6 +22,12 @@ namespace SvnBridge.Infrastructure
             ProxyPort,
             ProxyUseDefaultCredentials,
             ProxyUsername,
+            SvnPort,
+            // Terrible misnomer: "TfsPort" does not end up as a "TFS port",
+            // but the port that _we_ are offering for _our_ SvnBridge socket services
+            // (which obviously are completely different from the services that TFS offers).
+            // Thus I decided to semi-deprecate this completely misguided name,
+            // with SvnPort being the new and strongly preferred name.
             TfsPort,
             TfsUrl,
             TfsTimeout,
@@ -100,10 +106,34 @@ namespace SvnBridge.Infrastructure
             get { return ReadConfig<bool>(ConfigSettings.PerfCountersAreMandatory, false); }
         }
 
-        public static int TfsPort
+        public static int SvnPort
         {
-            get { return ReadConfig<int>(ConfigSettings.TfsPort, 8080); }
-            set { userConfig[ConfigSettings.TfsPort.ToString()] = value.ToString(); }
+            get
+            {
+                const int portDefault = 8080;
+                int port = ReadConfig<int>(ConfigSettings.SvnPort, -1);
+                // Maintain compatibility for users still using deprecated TfsPort name:
+                if (-1 == port)
+                {
+                    port = ReadConfig<int>(ConfigSettings.TfsPort, -1);
+                }
+                if (-1 == port)
+                {
+                    port = portDefault;
+                }
+                return port;
+            }
+            set
+            {
+                string strValue = value.ToString();
+                // Make sure that both SvnPort and deprecated TfsPort setting
+                // are being maintained.
+                // NOPE - since we now always prefer reading of SvnPort,
+                // TfsPort does NOT need to be write-maintained
+                // (which would potentially *newly* add it!) any more.
+                userConfig[ConfigSettings.SvnPort.ToString()] = strValue;
+                //userConfig[ConfigSettings.TfsPort.ToString()] = strValue;
+            }
         }
 
         public static string TfsProxyUrl
