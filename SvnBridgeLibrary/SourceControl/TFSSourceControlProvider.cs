@@ -114,6 +114,28 @@ namespace SvnBridge.SourceControl
         }
     }
 
+    /// <summary>
+    /// Delegate definition for tweaking one local level within a folder hierarchy.
+    /// Note that we're expressly offering an isLastPathElem bool to indicate having reached the final element,
+    /// since this interface should minimally be concerned about manipulation within one path element level only
+    /// and thus NOT offer any whole-path strings (which could be compared to have the bool determined internally).
+    /// If any whole-path information happens to actually be needed,
+    /// then it should be supplied by outside yet scope-visible variables
+    /// which are to be directly accessed within an open-coded delegate part.
+    /// </summary>
+    /// <param name="folder">Item indicating the current base folder level to be modified</param>
+    /// <param name="itemPath">Path to the item that is supposed to be treated</param>
+    /// <param name="isLastPathElem">Indicates that the current item will be the final level</param>
+    /// <param name="requestFinish">May be set to true by user to indicate that we ought to bail out of folder iteration loop.
+    /// Decided to have it as ref rather than out
+    /// since user side of an out param would (usually...)
+    /// need to have false assigned initially
+    /// with those places which then do want to have it bail out
+    /// then needing to do an *additional* true assignment...
+    /// </param>
+    /// <returns>The item that is to become the base folder of the next iteration</returns>
+    public delegate ItemMetaData FolderTweaker(FolderMetaData folder, string itemPath, bool isLastPathElem, ref bool requestFinish);
+
     public sealed class ItemHelpers
     {
         /// <summary>
@@ -171,6 +193,43 @@ namespace SvnBridge.SourceControl
             // which properly ensures
             // that .Items operations always directly get done on the real folder anyway.
             return ItemHelpers.FolderOps_ReplaceItem(folder, itemStubFolder, itemStubFolder.RealFolder);
+        }
+
+        public static ItemMetaData PathIterator(FolderMetaData root, string pathRoot, string pathSub, FolderTweaker folderTweaker)
+        {
+            ItemMetaData itemNext = null;
+
+            FolderMetaData folder = root;
+            string itemPath = pathRoot;
+            string[] pathElems = FilesysHelpers.GetPathElems(pathSub);
+
+            int pathElemsCount = pathElems.Length;
+            for (int i = 0; i < pathElemsCount; i++)
+            {
+                bool isLastPathElem = (i == pathElemsCount - 1);
+
+                FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
+
+                bool requestFinish = false;
+
+                // Note that in case access to local context members is required
+                // from within the delegate code,
+                // this is expected to be dealt with by open-coding the delegate call at the callsite
+                // and thereby ensuring that those members can be accessed there.
+                itemNext = folderTweaker(folder, itemPath, isLastPathElem, ref requestFinish);
+
+                if (requestFinish)
+                {
+                    break;
+                }
+
+                if (isLastPathElem == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
+                {
+                    folder = (FolderMetaData)itemNext;
+                }
+            }
+
+            return itemNext;
         }
     }
 

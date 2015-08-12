@@ -276,46 +276,33 @@ namespace SvnBridge.SourceControl
 
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)
         {
-            ItemMetaData item = null;
-
-            FolderMetaData folder = root;
-            string itemPath = pathRoot;
-            string[] pathElems = FilesysHelpers.GetPathElems(path);
-
-            int pathElemsCount = pathElems.Length;
-            for (int i = 0; i < pathElemsCount; i++)
-            {
-                bool isLastPathElem = (i == pathElemsCount - 1);
-
-                FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
-
-                ItemMetaData itemPrev = folder.FindItem(itemPath);
-                item = itemPrev;
-                if (itemPrev == null)
+            ItemMetaData itemFound = ItemHelpers.PathIterator(root, pathRoot, path,
+                delegate(FolderMetaData folder, string itemPath, bool isLastPathElem, ref bool requestFinish)
                 {
-                    ItemMetaData itemFetched = sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
+                    ItemMetaData itemPrev = folder.FindItem(itemPath);
+                    ItemMetaData item = itemPrev;
+                    if (itemPrev == null)
+                    {
+                        ItemMetaData itemFetched = sourceControlProvider.GetItems(targetVersion, itemPath, recursion);
 
-                    bool isFolder = (!isLastPathElem);
-                    if (isFolder)
-                    {
-                        FolderMetaData subFolder = (FolderMetaData)itemFetched;
-                        item = subFolder;
-                    }
-                    else
-                    {
-                        item = itemFetched;
+                        bool isFolder = (!isLastPathElem);
+                        if (isFolder)
+                        {
+                            FolderMetaData subFolder = (FolderMetaData)itemFetched;
+                            item = subFolder;
+                        }
+                        else
+                        {
+                            item = itemFetched;
+                        }
+
+                        item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
+                        ItemHelpers.FolderOps_AddItem(folder, item);
                     }
 
-                    item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
-                    ItemHelpers.FolderOps_AddItem(folder, item);
-                }
-                if (isLastPathElem == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
-                {
-                    folder = (FolderMetaData)item;
-                }
-            }
-
-            return item;
+                    return item;
+                });
+            return itemFound;
         }
 
         private void CalculateChangeBetweenVersions(string checkoutRootPath, int checkoutRootVersion, FolderMetaData root, int sourceVersion, int targetVersion)
