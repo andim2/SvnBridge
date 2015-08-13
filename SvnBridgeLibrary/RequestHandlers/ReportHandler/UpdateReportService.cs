@@ -70,6 +70,7 @@ namespace SvnBridge.Infrastructure
                 bool folderWasDeleted = parentFolderWasDeleted;
                 if (rootFolder)
 				{
+                    // root folder --> no "name" attribute specified.
 					output.Write("<S:open-directory rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
 				}
 				else
@@ -82,7 +83,7 @@ namespace SvnBridge.Infrastructure
 					}
 
           string itemNameEncoded = GetEncodedNamePart(folder);
-					//another item with the same name already exists, need to remove it.
+					// If another item with the same name already exists, need to remove it first.
 					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
 					{
 						output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
@@ -151,7 +152,7 @@ namespace SvnBridge.Infrastructure
 				}
 
         string itemNameEncoded = GetEncodedNamePart(item);
-				//another item with the same name already exists, need to remove it.
+				// If another item with the same name already exists, need to remove it first.
 				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, existingFile))
 				{
 					output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");

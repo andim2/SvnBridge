@@ -220,6 +220,11 @@ namespace SvnBridge.Handlers
             // the very last communication part that gets sent, thus the Close() should be made hard behaviour?
         }
 
+        /// <remarks>
+        /// I believe that ending up here
+        /// should be considered rather "normal" (benign) -
+        /// SVN protocol handling does seem to expect this, right?
+        /// </remarks>
         protected void WriteFileNotFoundResponse(IHttpRequest request, IHttpResponse response)
         {
             string requestPath = GetPath(request);

@@ -503,6 +503,8 @@ namespace SvnBridge.Handlers
             }
             if (metadata != null)
             {
+                // Start async crawler thread which will populate our
+                // existing metadata items with actual-data base64 content:
                 loader = new AsyncItemLoader(metadata, sourceControlProvider, Helper.GetCacheBufferTotalSizeRecommendedLimit());
                 ThreadPool.QueueUserWorkItem(state => loader.Start());
             }
