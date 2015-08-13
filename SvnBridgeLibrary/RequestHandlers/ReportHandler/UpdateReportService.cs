@@ -145,7 +145,8 @@ namespace SvnBridge.Infrastructure
 				output.Write("<S:txdelta>");
                 // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
                 output.Write(base64DiffData);
-				output.Write("\n</S:txdelta>");
+				output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
+                output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
                 output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");
 
                 if (existingFile)
