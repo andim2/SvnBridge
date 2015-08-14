@@ -57,6 +57,9 @@ namespace SvnBridge.Net
             listener = new TcpListener(DetermineNonPublicInterfaceBindAddress(), Port);
             listener.Start();
 
+            // Initial async BeginAccept done in main thread,
+            // all subsequent ones do *not* need to be performed by main thread
+            // (done by the worker callbacks, which temporarily suspend Accept()ing).
             listener.BeginAcceptTcpClient(Accept, null);
         }
 
@@ -103,11 +106,9 @@ namespace SvnBridge.Net
 
         private void Accept(IAsyncResult asyncResult)
         {
-            TcpClient tcpClient;
-
             try
             {
-                tcpClient = listener.EndAcceptTcpClient(asyncResult);
+                ServeNewClientAtListener(asyncResult);
             }
             catch (ObjectDisposedException e)
             {
@@ -127,26 +128,42 @@ namespace SvnBridge.Net
 
                 throw;
             }
+        }
 
-            listener.BeginAcceptTcpClient(Accept, null);
-
-            try
+        private void ServeNewClientAtListener(IAsyncResult asyncResult)
+        {
+            // For every BeginAcceptTcpClient() call, code implementation
+            // should *unconditionally* ensure that a symmetric call to End...() happens
+            // (otherwise necessary cleanup might get skipped).
+            // In the listener.Stop() case,
+            // the IAsyncResult callback will actually be called
+            // (allows call to End...())
+            // yet the listener will not provide a tcpClient
+            // (throws ObjectDisposedException).
+            using (var tcpClient = listener.EndAcceptTcpClient(asyncResult))
             {
+                // Now directly resume accepting a new incoming client
+                // (accepting new clients should be reenabled ASAP, obviously;
+                // and definitely *unconditionally* reenable accepting clients,
+                // even if *current* client instance happened to turn out null):
+                listener.BeginAcceptTcpClient(Accept, null);
+
                 if (tcpClient != null)
                 {
                     try
                     {
                         ProcessClient(tcpClient);
                     }
+                    catch (Exception ex)
+                    {
+                        OnListenException(ex);
+                    }
                     finally
                     {
-                        TcpClientClose(tcpClient);
+                          // Should not be necessary ("using" tcpClient above):
+                          //TcpClientClose(tcpClient);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                OnListenException(ex);
             }
         }
 
