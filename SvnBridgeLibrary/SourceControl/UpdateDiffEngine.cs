@@ -610,7 +610,7 @@ namespace SvnBridge.SourceControl
             string[] pathElems;
 
             string pathSub = GetSubPath_PossiblyBelowSpecificRoot(root, path);
-            pathElems = pathSub.Split('/');
+            pathElems = FilesysHelpers.GetPathElems(pathSub);
 
             return pathElems;
         }

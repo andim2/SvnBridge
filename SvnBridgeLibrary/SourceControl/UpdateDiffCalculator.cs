@@ -280,7 +280,7 @@ namespace SvnBridge.SourceControl
 
             FolderMetaData folder = root;
             string itemPath = pathRoot;
-            string[] pathElems = path.Split('/');
+            string[] pathElems = FilesysHelpers.GetPathElems(path);
 
             int pathElemsCount = pathElems.Length;
             for (int i = 0; i < pathElemsCount; i++)

@@ -78,6 +78,13 @@ namespace SvnBridge.SourceControl
             return res;
         }
 
+        public static string[] GetPathElems(string path)
+        {
+            // We might need to apply StringSplitOptions.RemoveEmptyEntries here
+            // (possibly indicated by a bool parameter of our method).
+            return path.Split(repo_separator_c);
+        }
+
         public static void PathAppendElem(ref string path, string pathElem)
         {
             if (path != "" && !path.EndsWith(repo_separator_s))
