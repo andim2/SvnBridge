@@ -109,9 +109,23 @@ namespace SvnBridge.Net
             {
                 tcpClient = listener.EndAcceptTcpClient(asyncResult);
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException e)
             {
-                return;
+                bool suspectKnownCaseOfCanceledListener = IsThisObjectDisposedExceptionTypeDueToCanceledListener(
+                    listener,
+                    e);
+                bool isKnownBenignCase = (suspectKnownCaseOfCanceledListener);
+                bool needSilenceException = (isKnownBenignCase);
+                bool doNormalExceptionRethrow = !(needSilenceException);
+                if (!(doNormalExceptionRethrow))
+                {
+                    // Need to actively bail out (return) here
+                    // (even if this was the known exception case to be silenced,
+                    // we still cannot continue normally further below).
+                    return;
+                }
+
+                throw;
             }
 
             listener.BeginAcceptTcpClient(Accept, null);
@@ -134,6 +148,49 @@ namespace SvnBridge.Net
             {
                 OnListenException(ex);
             }
+        }
+
+        /// <summary>
+        /// Almost comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// Since silencing an ObjectDisposedException
+        /// is considered a dirty thing to do,
+        /// for those cases where we do need to silence them sometimes,
+        /// at least ensure that we silence the exception only in case
+        /// it strictly was due to the known "benign" EndAcceptTcpClient() case
+        /// (ObjectDisposedException due to listener having been canceled):
+        /// ensure this case by:
+        /// - doing related Listener handling
+        ///   within a very restrictively scoped (EndAcceptTcpClient()-focussed) try { }
+        /// - doing special .IsBound check that exception was indeed due to this case
+        /// [BTW, one could circumvent this "undesirable" Listener-produced exception
+        /// by doing .IsBound check prior to EndAcceptTcpClient() call,
+        /// but that would produce at least two (very) undesirable things:
+        /// move exceptional handling out of error path
+        /// *and* I suspect it would introduce a race condition (open a race window) -
+        /// DO NOT do an advance check of whether some action "may fail" and then skip execution,
+        /// but rather DO actively do it and *then* handle errors
+        /// only in case they *do* turn up -
+        /// see also the very comparable fugly case of various filesystem-side file existence check race conditions [mktemp etc.]).
+        /// http://stackoverflow.com/questions/1173774/stopping-a-tcplistener-after-calling-beginaccepttcpclient#comment12623099_1174002
+        /// Side note: we also end up with this behaviour
+        /// when reconfiguring Settings of the running program, to use a different port.
+        /// </remarks>
+        private static bool IsThisObjectDisposedExceptionTypeDueToCanceledListener(
+            TcpListener listener,
+            ObjectDisposedException e)
+        {
+            bool isExceptionDueToCanceledListener = false;
+
+            bool isServerBound = (listener.Server.IsBound);
+
+            if (!(isServerBound))
+            {
+                isExceptionDueToCanceledListener = true;
+            }
+
+            return isExceptionDueToCanceledListener;
         }
 
         /// <summary>
