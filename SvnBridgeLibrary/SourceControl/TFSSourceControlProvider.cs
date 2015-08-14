@@ -1730,6 +1730,7 @@ namespace SvnBridge.SourceControl
             //   ... CHECKOUT / COPY / PUT / DELETE ...
             // DELETE
             // transaction lifecycle:
+            Helper.DebugUsefulBreakpointLocation();
 
             sourceControlService.PendChanges(
                 serverUrl, credentials,

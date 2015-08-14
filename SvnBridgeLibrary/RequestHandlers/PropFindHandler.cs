@@ -64,6 +64,7 @@ namespace SvnBridge.Handlers
             }
             catch (FileNotFoundException)
             {
+                Helper.DebugUsefulBreakpointLocation();
                 WriteFileNotFoundResponse(request, response);
             }
             catch

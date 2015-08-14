@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics; // Conditional
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -389,5 +390,50 @@ namespace SvnBridge.Utility
 			}
 			return path1 + "/" + path2;
 		}
+
+        /// <summary>
+        /// Comment-only helper:
+        /// may be used to centrally have one single breakpoint configured only
+        /// which manages to catch all known cases
+        /// which have been deemed to be potentially "interesting".
+        /// So either set central breakpoint within this helper,
+        /// or set it at various places which you are interested in
+        /// which have their code "annotated"/"documented" with this helper invocation;
+        /// however, to avoid invocation bloat
+        /// (avoid triggering all the time when having a breakpoint here),
+        /// it should better only be invoked
+        /// for pretty much "unusual", "exceptional" situations.
+        ///
+        /// For marking sites (/context)
+        /// where exceptions are originating from (thrown),
+        /// it should either be called directly prior to throwing
+        /// (or ideally directly within the exception class's constructor),
+        /// or (for cases where exception throw sites are *unreachable*
+        /// i.e. in toolkits)
+        /// it should be called within our nearest catch() handler.
+        /// </summary>
+        /// <remarks>
+        /// Side note: it should also be very useful
+        /// to determine exception throw sites
+        /// by enabling exception throw notification
+        /// in MSVS Exceptions dialog (Ctrl-Alt-E).
+        /// </remarks>
+        [Conditional("DEBUG")]
+        public static void DebugUsefulBreakpointLocation()
+        {
+            // DEBUG_SITE: useful breakpoint location.
+            // Or possibly also uncomment this:
+            //System.Diagnostics.Debugger.Launch();
+
+            // Side note about Debugger.Launch() use in general:
+            // while using it
+            // might be tempting for situations
+            // where one did not have a debugger session open
+            // when interesting things happened,
+            // for single-process environments (i.e. non-IIS desktop SvnBridge I guess)
+            // having the single process stalled at the debugger launch prompt wait
+            // will block *all* potential clients of this process,
+            // which is something that one might want to avoid...
+        }
 	}
 }

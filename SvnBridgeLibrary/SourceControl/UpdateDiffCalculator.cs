@@ -4,7 +4,7 @@ using System.IO; // Path.GetFileName()
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Protocol;
-using SvnBridge.Utility; // Helper.SortHistories()
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.SortHistories()
 
 namespace SvnBridge.SourceControl
 {
@@ -99,8 +99,11 @@ namespace SvnBridge.SourceControl
             foreach (ItemMetaData item in root.Items)
             {
                 if (item is MissingItemMetaData)
+                {
+                    Helper.DebugUsefulBreakpointLocation();
                     throw new InvalidOperationException("Found missing item:" + item +
                                                         " but those should not be returned from UpdateDiffCalculator");
+                }
                 if (item is FolderMetaData)
                     VerifyNoMissingItemMetaDataRemained((FolderMetaData)item);
             }

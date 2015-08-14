@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.Net
 {
@@ -205,6 +206,7 @@ namespace SvnBridge.Net
 
         private void OnListenException(Exception ex)
         {
+            Helper.DebugUsefulBreakpointLocation();
             ListenError(this, new ListenErrorEventArgs(ex));
         }
     }
