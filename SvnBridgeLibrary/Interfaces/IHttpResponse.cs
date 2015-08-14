@@ -37,6 +37,10 @@ namespace SvnBridge.Interfaces
         // be flushed into OutputStream,
         // but better don't even think about that overhead...
         Stream OutputStream { get; }
+        /// <summary>
+        /// MSDN: "Gets or sets a wrapping filter object that is used to modify the HTTP entity body before transmission."
+        /// </summary>
+        Stream Filter { get; set; }
         bool SendChunked { get; set; }
         int StatusCode { get; set; }
 

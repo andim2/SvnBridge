@@ -24,6 +24,12 @@ namespace SvnBridge.Net
     /// and thus can be written at the very end of content creation only
     /// (when final Length is known).
     /// </summary>
+    /// Side note: XXX I'm unsure whether layering of
+    /// (especially) ListenerResponseStream vs. ListenerResponse
+    /// is fully correct
+    /// (e.g. I'm strongly wondering
+    /// whether writing of specific HTTP headers
+    /// in a ListenerResponseStream stream object is ok...)
     public class ListenerResponseStream : Stream
     {
         protected bool flushed /* = false */;

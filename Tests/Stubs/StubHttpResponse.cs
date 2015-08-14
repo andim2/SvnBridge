@@ -12,6 +12,7 @@ namespace UnitTests
         private Encoding contentEncoding;
         private string contentType;
         private Stream outputStream = new MemoryStream();
+        private Stream filter;
         private bool sendChunked;
         private int statusCode;
         private bool bufferOutput;
@@ -19,6 +20,7 @@ namespace UnitTests
         public StubHttpResponse()
         {
             headers = new List<KeyValuePair<string, string>>();
+            filter = outputStream;
         }
 
         internal List<KeyValuePair<string, string>> Headers
@@ -53,6 +55,12 @@ namespace UnitTests
         {
             get { return outputStream; }
             set { outputStream = value; }
+        }
+
+        public Stream Filter
+        {
+            get { return filter; }
+            set { filter = value; }
         }
 
         public string Output

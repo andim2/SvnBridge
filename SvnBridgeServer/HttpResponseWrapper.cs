@@ -34,6 +34,12 @@ namespace SvnBridgeServer
             get { return response.OutputStream; }
         }
 
+        public Stream Filter
+        {
+            get { return response.Filter; }
+            set { response.Filter = value; }
+        }
+
         public bool SendChunked
         {
             get { throw new NotSupportedException(); }
