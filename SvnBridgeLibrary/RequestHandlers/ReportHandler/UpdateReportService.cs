@@ -550,7 +550,8 @@ namespace SvnBridge.Infrastructure
         /// </summary>
         private static bool IsMissing(UpdateReportData data, string localPath, string name)
         {
-            return IsWithin(data.Missing, localPath, name);
+            bool isMissing = IsWithin(data.Missing, localPath, name); // debug helper var
+            return isMissing;
         }
 
         private static bool IsWithin(List<string> entries, string localPath, string name)
