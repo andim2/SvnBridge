@@ -179,15 +179,15 @@ namespace SvnBridge.Infrastructure
 			return url;
 		}
 
-		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData folder,
+		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData item,
 			UpdateReportData updateReportRequest,
 			string srcPath,
 			int clientRevisionForItem,
-			bool existingFolder)
+			bool isExistingItem)
 		{
-			return existingFolder == false && updateReportRequest.IsCheckOut == false &&
-                   IsMissing(updateReportRequest, srcPath, folder.Name) == false &&
-				   sourceControlProvider.ItemExists(folder.Name, clientRevisionForItem);
+			return isExistingItem == false && updateReportRequest.IsCheckOut == false &&
+                   IsMissing(updateReportRequest, srcPath, item.Name) == false &&
+				   sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
 		}
 
         private void UpdateReportWriteItemAttributes(TextWriter output, ItemMetaData item)
