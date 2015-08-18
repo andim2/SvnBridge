@@ -195,16 +195,6 @@ namespace SvnBridge.SourceControl
         {
             return (changeType & ChangeType.Edit) == ChangeType.Edit;
         }
-
-        /// <summary>
-        /// Simplistic (read: likely incorrect
-        /// due to insufficiently precise / incomplete parameterization) variant.
-        /// AVOID ITS USE.
-        /// </summary>
-        public static bool IsAddOperation(SourceItemChange change)
-        {
-            return IsAddOperation(change, true);
-        }
     }
 
     public class ShouldBeIgnoredException : Exception
@@ -538,6 +528,15 @@ namespace SvnBridge.SourceControl
         /// as intended to be implemented here
         /// always ought to be able to come
         /// to the same final item status conclusion...
+        /// Further details of operation:
+        /// the engine has to take a good hard cold look
+        /// at existing properly preserved
+        /// (but possibly damage-post-sanitized!!!!!)
+        /// TFS commit records
+        /// to figure out which item state/location to choose exactly
+        /// for the next SCM item to be fetched and placed into its
+        /// diff-range-collecting folder hierarchy space,
+        /// taking into account forward/backward updating etc.
         private void ApplyChangeOps(UpdateDiffEngine engine, SourceItemChange change, bool updatingForwardInTime)
         {
             DebugIntercept(change);
@@ -573,6 +572,12 @@ namespace SvnBridge.SourceControl
 
             if (ChangeTypeAnalyzer.IsEditOperation(change))
             {
+                // UPDATE: Yes indeed, an item's revision of course
+                // *MUST NOT* be bent!!
+                // One could call such actions
+                // changing the goalposts, or even "history revisionism"...
+                // Details see method docs.
+#if false
                 if (updatingForwardInTime == false)
                 {
                     // FIXME: rather than dirtily fumbling a member of *foreign* objects,
@@ -584,7 +589,8 @@ namespace SvnBridge.SourceControl
                     // for all related uses of this item...
                     change.Item.RemoteChangesetId -= 1; // we turn the edit around, basically
                 }
-                engine.Edit(change);
+#endif
+                engine.Edit(change, updatingForwardInTime);
                 changed = true;
             }
 

@@ -50,9 +50,20 @@ namespace SvnBridge.SourceControl
             Add(change, true);
         }
 
+        public void Edit(SourceItemChange change, bool updatingForwardInTime)
+        {
+            PerformAddOrUpdate(change, true, updatingForwardInTime);
+        }
+
+        /// <summary>
+        /// Simplistic (read: likely incorrect
+        /// due to insufficiently precise / incomplete parameterization) variant.
+        /// AVOID ITS USE.
+        /// </summary>
+        /// <param name="change"></param>
         public void Edit(SourceItemChange change)
         {
-            PerformAddOrUpdate(change, true, true);
+            Edit(change, true);
         }
 
         public void Delete(SourceItemChange change)
@@ -66,7 +77,7 @@ namespace SvnBridge.SourceControl
             {
                 return;
             }
-            ProcessDeletedItem(remoteName, change);
+            ProcessDeletedItem(remoteName, change, true);
         }
 
         public void Rename(SourceItemChange change, bool updatingForwardInTime)
@@ -116,7 +127,7 @@ namespace SvnBridge.SourceControl
             // happened to expect a different order.
             if (processDelete)
             {
-                ProcessDeletedItem(itemOldNameIndicated, change);
+                ProcessDeletedItem(itemOldNameIndicated, change, updatingForwardInTime);
             }
             if (processAdd)
             {
@@ -275,10 +286,14 @@ namespace SvnBridge.SourceControl
 
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)
         {
+            var itemFetchRevision = GetFetchRevision(
+                change.Item.RemoteChangesetId,
+                updatingForwardInTime);
+
             bool isChangeAlreadyCurrentInClientState = clientStateTracker.IsChangeAlreadyCurrentInClientState(
                 ChangeType.Add,
                 remoteName,
-                change.Item.RemoteChangesetId);
+                itemFetchRevision);
             if (isChangeAlreadyCurrentInClientState)
             {
                 return;
@@ -289,7 +304,7 @@ namespace SvnBridge.SourceControl
             // Special case for changes of source root item (why? performance opt?):
             if (ItemMetaData.IsSamePath(remoteName, _checkoutRootPath))
             {
-                ItemMetaData item = sourceControlProvider.GetItems(_targetVersion, remoteName, Recursion.None);
+                ItemMetaData item = sourceControlProvider.GetItems(itemFetchRevision, remoteName, Recursion.None);
                 if (item != null)
                 {
                     _root.Properties = item.Properties;
@@ -321,6 +336,17 @@ namespace SvnBridge.SourceControl
                     {
                         if (isLastPathElem) // only if final item...
                         {
+                            // Hmm, to properly fully incrementally handle
+                            // interim/*temporary* item Changes within *one single* Changeset, too
+                            // (e.g. Rename from item source1 to destination1,
+                            // then Rename/Merge/whatever something to source1),
+                            // this isOutdated check might be exactly wrong
+                            // since it might need to do <= / >= checks then,
+                            // to have subsequent "conflicting-location" Changes
+                            // properly replace old items
+                            // (currently we're doing handling of such direct
+                            // replacements further below,
+                            // which might or might not be fully correct).
                             bool existingItemsVersionIsOutdated =
                                 updatingForwardInTime ?
                                     (itemPrev.Revision < change.Item.RemoteChangesetId) : (itemPrev.Revision > change.Item.RemoteChangesetId);
@@ -350,9 +376,8 @@ namespace SvnBridge.SourceControl
                         // ...and fetch the updated one
                         // (forward *or* backward change)
                         // for the currently processed version:
-                        var processedVersion = _targetVersion;
                         Recursion recursionMode = GetRecursionModeForItemAdd(updatingForwardInTime);
-                        item = sourceControlProvider.GetItems(processedVersion, itemPath, recursionMode);
+                        item = sourceControlProvider.GetItems(itemFetchRevision, itemPath, recursionMode);
                         if (item == null)
                         {
                             // THIS IS *NOT* TRUE!!
@@ -392,7 +417,7 @@ namespace SvnBridge.SourceControl
                             {
                                 return;
                             }
-                            item = new MissingItemMetaData(itemPath, processedVersion, edit);
+                            item = new MissingItemMetaData(itemPath, itemFetchRevision, edit);
                             // From an incremental-handling POV even a "missing item"
                             // (which may indicate e.g. a previously-deleted item
                             // within a parent-folder rename)
@@ -426,19 +451,44 @@ namespace SvnBridge.SourceControl
                     { // former item was a DELETE...
 
                         //System.Diagnostics.Debugger.Launch();
+
                         // ...and new one then _resurrects_ the (_actually_ deleted) item:
-                        if (ChangeTypeAnalyzer.IsAddOperation(change))
+                        bool isItemPlaced = (
+                            ChangeTypeAnalyzer.IsAddOperation(change, updatingForwardInTime) ||
+                            ChangeTypeAnalyzer.IsRenameOperation(change) ||
+                            ChangeTypeAnalyzer.IsMergeOperation(change));
+                        if (isItemPlaced)
                         {
                           if (!propertyChange)
                           {
-                              item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
+                              item = sourceControlProvider.GetItems(itemFetchRevision, itemPath, Recursion.None);
                               Folder_ReplaceItem(folder, itemPrev, item);
                           }
                         }
-//                        // [section below was a temporary patch which should not be needed any more now that our processing is much better]
-//#if false
+                        // [section below was a temporary patch which should not be needed any more now that our processing is much better]
+#if false
                         // ...or _renames_ the (pseudo-deleted) item!
                         // (OBEY VERY SPECIAL CASE: _similar-name_ rename (EXISTING ITEM LOOKUP SUCCESSFUL ABOVE!!), i.e. filename-case-only change)
+                        // UPDATE: I don't think that this is correct here,
+                        // especially now that we DON'T get an "existing item" (case-incorrect) any more
+                        // (since we have working case filtering).
+                        // These Add/Update | Edit | Rename handlers
+                        // simply ought to do
+                        // straight clean isolated *fully incremental*
+                        // per-item update fetch handling
+                        // which focusses each
+                        // on the *current* item update
+                        // to grab from TFS into our filesystem hierarchy,
+                        // for the individual *part* (c.f. add/delete!)
+                        // of the *currently* executed TFS Change.
+                        // The case where this impl broke down
+                        // was Rename|Edit of an item with its *parent* folder renamed,
+                        // where .GetItems() of that folder on !updatingForwardInTime
+                        // failed (null) since the folder name at that revision
+                        // was obviously different from itemPath.
+                        // One could say "simply don't add null item",
+                        // but I believe the impl itself to be not correct here;
+                        // also, it kept adding (rather than replacing) duplicate folder items.
                         else if (ChangeTypeAnalyzer.IsRenameOperation(change))
                         {
                           // Such TFS-side renames need to be reflected
@@ -448,10 +498,10 @@ namespace SvnBridge.SourceControl
                           // upon "svn diff" requests
                           // SvnBridge does generate both delete and add diffs,
                           // whereas for similar-name renames it previously did not -> buggy!]
-                          item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
+                          item = sourceControlProvider.GetItems(itemFetchRevision, itemPath, Recursion.None);
                           Folder_AddItem(folder, item, newlyAdded);
                         }
-//#endif
+#endif
                     }
                     if (isLastPathElem == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                     {
@@ -515,12 +565,16 @@ namespace SvnBridge.SourceControl
             return bResult;
         }
 
-        private void ProcessDeletedItem(string remoteName, SourceItemChange change)
+        private void ProcessDeletedItem(string remoteName, SourceItemChange change, bool updatingForwardInTime)
         {
+            var itemFetchRevision = GetFetchRevision(
+                change.Item.RemoteChangesetId,
+                updatingForwardInTime);
+
             bool isChangeAlreadyCurrentInClientState = clientStateTracker.IsChangeAlreadyCurrentInClientState(
                 ChangeType.Delete,
                 remoteName,
-                change.Item.RemoteChangesetId);
+                itemFetchRevision);
             if (isChangeAlreadyCurrentInClientState)
             {
                 RemoveMissingItem(remoteName, _root);
@@ -541,22 +595,24 @@ namespace SvnBridge.SourceControl
 
                 FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
 
-                bool isFullyHandled = HandleDeleteItem(remoteName, change, itemPath, ref folder, isLastPathElem);
+                bool isFullyHandled = HandleDeleteItem(remoteName, change, itemPath, ref folder, isLastPathElem, updatingForwardInTime);
                 if (isFullyHandled)
                     break;
             }
             if (pathElemsCount == 0)//we have to delete the checkout root itself
             {
-                HandleDeleteItem(remoteName, change, itemPath, ref folder, true);
+                HandleDeleteItem(remoteName, change, itemPath, ref folder, true, updatingForwardInTime);
             }
         }
 
-        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemPath, ref FolderMetaData folder, bool isLastPathElem)
+        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemPath, ref FolderMetaData folder, bool isLastPathElem, bool updatingForwardInTime)
         {
             ItemMetaData itemPrev = folder.FindItem(itemPath);
             // Shortcut: valid item in our cache, and it's a delete already? We're done :)
             if (IsDeleteMetaDataKind(itemPrev))
                 return true;
+
+            var itemFetchRevision = GetFetchRevision(change.Item.RemoteChangesetId, updatingForwardInTime);
 
             ItemMetaData item = itemPrev;
 
@@ -568,12 +624,11 @@ namespace SvnBridge.SourceControl
                         (ItemType.File != change.Item.ItemType));
 
                     item.Name = remoteName;
-                    item.ItemRevision = change.Item.RemoteChangesetId;
+                    item.ItemRevision = itemFetchRevision;
                 }
                 else
                 {
-                    var processedVersion = _targetVersion;
-                    item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, itemPath, Recursion.None);
+                    item = sourceControlProvider.GetItemsWithoutProperties(itemFetchRevision, itemPath, Recursion.None);
                     if (item == null)
                     {
                         // FIXME: hmm, are we really supposed to actively Delete a non-isLastPathElem item
@@ -581,7 +636,7 @@ namespace SvnBridge.SourceControl
                         // After all the actual delete operation is expected to be carried out (possibly later) properly, too...
                         item = new DeleteFolderMetaData();
                         item.Name = itemPath;
-                        item.ItemRevision = processedVersion;
+                        item.ItemRevision = itemFetchRevision;
                     }
                     else
                     {
@@ -594,7 +649,6 @@ namespace SvnBridge.SourceControl
             }
             else if (isLastPathElem)
             {
-                var processedVersion = _targetVersion;
                 bool isItemNewlyAddedWithinDiffRevisionRange = (itemPrev.NewlyAdded);
                 bool haveExistingRecordedItemChangeAvailToDiscard = (isItemNewlyAddedWithinDiffRevisionRange);
                 bool needIndicateRealDelete = (!haveExistingRecordedItemChangeAvailToDiscard);
@@ -604,14 +658,14 @@ namespace SvnBridge.SourceControl
                         (ItemType.File != change.Item.ItemType));
 
                     item.Name = remoteName;
-                    item.ItemRevision = change.Item.RemoteChangesetId;
+                    item.ItemRevision = itemFetchRevision;
                     Folder_ReplaceItem(folder, itemPrev, item);
                 }
                 else if (itemPrev is StubFolderMetaData)
                 {
                     DeleteFolderMetaData itemDeleteFolder = new DeleteFolderMetaData();
                     itemDeleteFolder.Name = itemPrev.Name;
-                    itemDeleteFolder.ItemRevision = processedVersion;
+                    itemDeleteFolder.ItemRevision = itemFetchRevision;
                     Folder_ReplaceItem(folder, itemPrev, itemDeleteFolder);
                 }
                 else if (IsAdditionForPropertyChangeOnly(itemPrev))
@@ -619,14 +673,14 @@ namespace SvnBridge.SourceControl
                     ItemMetaData itemDelete = ConstructDeletedItem(
                         itemPrev is FolderMetaData);
                     itemDelete.Name = itemPrev.Name;
-                    itemDelete.ItemRevision = processedVersion;
+                    itemDelete.ItemRevision = itemFetchRevision;
                     Folder_ReplaceItem(folder, itemPrev, itemDelete);
                 }
                 else if (itemPrev is MissingItemMetaData && ((MissingItemMetaData)itemPrev).Edit == true)
                 {
                     ItemMetaData itemDelete = new DeleteMetaData();
                     itemDelete.Name = itemPrev.Name;
-                    itemDelete.ItemRevision = processedVersion;
+                    itemDelete.ItemRevision = itemFetchRevision;
                     Folder_ReplaceItem(folder, itemPrev, itemDelete);
                 }
                 else
@@ -636,6 +690,15 @@ namespace SvnBridge.SourceControl
             }
             folder = (item as FolderMetaData) ?? folder;
             return false;
+        }
+
+        private static int GetFetchRevision(
+            int changesetId,
+            bool updatingForwardInTime)
+        {
+            return TfsLibraryHelpers.GetFetchRevision(
+                changesetId,
+                updatingForwardInTime);
         }
 
         private static string[] GetSubPathElems_PossiblyBelowSpecificRoot(string root, string path)

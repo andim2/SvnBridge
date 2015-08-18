@@ -2072,6 +2072,19 @@ namespace SvnBridge.SourceControl
             return isRename;
         }
 
+        public static int GetFetchRevision(
+            int changesetId,
+            bool updatingForwardInTime)
+        {
+            int changesetIdFetch = changesetId;
+            bool needPriorItemVersion = (!updatingForwardInTime);
+            if (needPriorItemVersion)
+            {
+                changesetIdFetch -= 1;
+            }
+            return changesetIdFetch;
+        }
+
         /// <summary>
         /// Since the various VersionSpec derivatives
         /// do not seem to have

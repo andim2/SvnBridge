@@ -355,18 +355,18 @@ namespace UnitTests
             engine.Rename(CreateChangeRename(ChangeType.Edit | ChangeType.Rename, pathBar,      0, pathBarOld,  1, ItemType.File), true);
             engine.Rename(CreateChangeRename(ChangeType.Edit | ChangeType.Rename, pathBarNew,   0, pathBar,     1, ItemType.File), true);
 
-            AssertFolder(root, "project", 0, 4);
+            AssertFolder(root, "project", 0, 3);
             var items = root.Items;
-            var elemItemVictim = items[0];
-            var elemItemVictimRenamed = items[1];
-            var elemItemVictimNew = items[2];
-            var elemItemVictimRenamedNew = items[3];
-            AssertDeleteItem(elemItemVictim, pathBar);
+            var elemItemVictimRenamed = items[0];
+            var elemItemVictimNew = items[1];
+            var elemItemVictim = items[2];
+            //var elemItemVictimRenamedNew = items[3];
             AssertItem(elemItemVictimRenamed, pathBarOld, 1);
             Assert.Equal(elemItemVictimRenamed.Id, idItemBar);
             AssertDeleteItem(elemItemVictimNew, pathBarNew);
-            AssertItem(elemItemVictimRenamedNew, pathBar, 1);
-            Assert.Equal(elemItemVictimRenamedNew.Id, idItemBarNew);
+            AssertItem(elemItemVictim, pathBar, 1);
+            //AssertItem(elemItemVictimRenamedNew, pathBar, 1);
+            //Assert.Equal(elemItemVictimRenamedNew.Id, idItemBarNew);
         }
 
         [Fact(Skip="Temporary disable (not complete yet)")]
