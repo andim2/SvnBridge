@@ -299,7 +299,11 @@ namespace CodePlex.TfsLibrary.ObjectModel
             if (httpResult != null)
             {
                 httpResult.Credentials = credentials;
-                httpResult.ServicePoint.UseNagleAlgorithm = false;
+                // .ServicePoint property resolving seems very painful
+                // (proxy lookup etc.),
+                // thus *maybe* caching in local variable helps a bit.
+                var servicePoint = httpResult.ServicePoint;
+                servicePoint.UseNagleAlgorithm = false;
                 httpResult.SendChunked = false;
                 httpResult.Pipelined = false;
                 httpResult.KeepAlive = true;
@@ -308,7 +312,7 @@ namespace CodePlex.TfsLibrary.ObjectModel
 
 				// these are needed in order to handle large amount of connections
 				// to a single server in a short period of time
-				httpResult.ServicePoint.BindIPEndPointDelegate = BindIPEndPointCallback;
+				servicePoint.BindIPEndPointDelegate = BindIPEndPointCallback;
 				httpResult.UnsafeAuthenticatedConnectionSharing = true;
             }
             if (OnSetupWebRequest != null)
