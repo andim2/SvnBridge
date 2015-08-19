@@ -56,16 +56,7 @@ namespace SvnBridge.Infrastructure
 					output.Write("<S:add-file name=\"" + GetEncodedNamePart(item) + "\">\n");
 				}
 
-				string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
-				output.Write("<D:checked-in><D:href>" + svnVerLocalPath + "</D:href></D:checked-in>\n");
-				output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + item.Revision + "</S:set-prop>\n");
-				output.Write("<S:set-prop name=\"svn:entry:committed-date\">" + Helper.FormatDate(item.LastModifiedDate) + "</S:set-prop>\n");
-				output.Write("<S:set-prop name=\"svn:entry:last-author\">" + item.Author + "</S:set-prop>\n");
-				output.Write("<S:set-prop name=\"svn:entry:uuid\">" + sourceControlProvider.GetRepositoryUuid() + "</S:set-prop>\n");
-				foreach (KeyValuePair<string, string> property in item.Properties)
-				{
-					output.Write("<S:set-prop name=\"" + property.Key + "\">" + property.Value + "</S:set-prop>\n");
-				}
+        UpdateReportWriteItemAttributes(output, item);
 
 				while (item.DataLoaded == false)
 					Thread.Sleep(100);
@@ -159,18 +150,7 @@ namespace SvnBridge.Infrastructure
 				}
 				if (!rootFolder || updateReportRequest.UpdateTarget == null)
 				{
-					string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + folder.Revision + "/" + Helper.Encode(folder.Name, true));
-					output.Write("<D:checked-in><D:href>" + svnVerLocalPath + "</D:href></D:checked-in>\n");
-					output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + folder.Revision +
-								 "</S:set-prop>\n");
-					output.Write("<S:set-prop name=\"svn:entry:committed-date\">" +
-								 Helper.FormatDate(folder.LastModifiedDate) + "</S:set-prop>\n");
-					output.Write("<S:set-prop name=\"svn:entry:last-author\">" + folder.Author + "</S:set-prop>\n");
-					output.Write("<S:set-prop name=\"svn:entry:uuid\">" + sourceControlProvider.GetRepositoryUuid() + "</S:set-prop>\n");
-					foreach (KeyValuePair<string, string> property in folder.Properties)
-					{
-						output.Write("<S:set-prop name=\"" + property.Key + "\">" + property.Value + "</S:set-prop>\n");
-					}
+          UpdateReportWriteItemAttributes(output, folder);
 				}
 
 				for (int i = 0; i < folder.Items.Count; i++)
@@ -207,6 +187,20 @@ namespace SvnBridge.Infrastructure
                    IsMissing(updateReportRequest, srcPath, folder.Name) == false &&
 				   sourceControlProvider.ItemExists(folder.Name, clientRevisionForItem);
 		}
+
+        private void UpdateReportWriteItemAttributes(TextWriter output, ItemMetaData item)
+        {
+            string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
+            output.Write("<D:checked-in><D:href>" + svnVerLocalPath + "</D:href></D:checked-in>\n");
+            output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + item.Revision + "</S:set-prop>\n");
+            output.Write("<S:set-prop name=\"svn:entry:committed-date\">" + Helper.FormatDate(item.LastModifiedDate) + "</S:set-prop>\n");
+            output.Write("<S:set-prop name=\"svn:entry:last-author\">" + item.Author + "</S:set-prop>\n");
+            output.Write("<S:set-prop name=\"svn:entry:uuid\">" + sourceControlProvider.GetRepositoryUuid() + "</S:set-prop>\n");
+            foreach (KeyValuePair<string, string> property in item.Properties)
+            {
+                output.Write("<S:set-prop name=\"" + property.Key + "\">" + property.Value + "</S:set-prop>\n");
+            }
+        }
 
 		private static string GetFileName(string path)
 		{
