@@ -235,19 +235,14 @@ namespace SvnBridge.SourceControl
 
             if (updateReportData.Entries != null)
             {
-                // pre-calculate rootPath prior to subsequent loop:
-                string rootPath = checkoutRootPath;
-                if (updateReportData.UpdateTarget != null)
-                    rootPath += "/" + updateReportData.UpdateTarget;
+                string pathUpdateTargetBase = GetUpdateReportDataPathBase(checkoutRootPath, updateReportData);
 
                 foreach (EntryData data in updateReportData.Entries)
                 {
                     int itemVersionFrom = int.Parse(data.Rev);
                     if (itemVersionFrom < versionFrom)
                     {
-                        string targetPath = rootPath + "/" + data.path;
-
-                        FilesysHelpers.StripRootSlash(ref targetPath);
+                        string targetPath = FilesysHelpers.PathJoin(pathUpdateTargetBase, data.path);
 
                         CalculateChangeBetweenVersions(projectRootPath, targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionFrom);
                     }
@@ -300,6 +295,18 @@ namespace SvnBridge.SourceControl
         {
             string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             return (parts.Length > 0) ? parts[0] : "";
+        }
+
+        private static string GetUpdateReportDataPathBase(string checkoutRootPath, UpdateReportData updateReportData)
+        {
+            string rootPath = checkoutRootPath;
+            FilesysHelpers.StripRootSlash(ref rootPath);
+            string pathUpdateTargetBase =
+                 (updateReportData.UpdateTarget != null) ?
+                     FilesysHelpers.PathJoin(rootPath, updateReportData.UpdateTarget) :
+                     rootPath;
+
+            return pathUpdateTargetBase;
         }
 
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)

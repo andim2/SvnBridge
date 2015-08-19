@@ -211,6 +211,23 @@ namespace SvnBridge.SourceControl
         }
 
         /// <summary>
+        /// Appends a path element to a path.
+        /// I decided to add this alternative
+        /// to the ref-based PathAppendElem()
+        /// since I'm now less sure
+        /// whether a ref-based method is really useful
+        /// (since that thwarts proper RAII-style use).
+        /// </summary>
+        public static string PathJoin(string path, string pathElem)
+        {
+            string append = (path != "" && !path.EndsWith(repo_separator_s)) ?
+                repo_separator_s + pathElem :
+                pathElem;
+
+            return path + append;
+        }
+
+        /// <summary>
         /// Helper to abstract/hide away the *internal* decision
         /// on whether names of filesystem items ought to be case-mangled
         /// (to repair TFS-side case-insensitive / case sensitivity handling issues).
