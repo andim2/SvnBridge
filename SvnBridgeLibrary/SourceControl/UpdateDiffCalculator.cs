@@ -359,8 +359,14 @@ namespace SvnBridge.SourceControl
             int lastVersion = sourceVersion;
             // Need loop iteration (the history fetching below
             // might be configured to return partial history parts):
-            while (lastVersion != targetVersion)
+            for (; ; )
             {
+                bool haveFurtherChangesets = (lastVersion != targetVersion);
+                if (!(haveFurtherChangesets))
+                {
+                    break;
+                }
+
                 int versionFrom = Math.Min(lastVersion, targetVersion) + 1;
                 int versionTo = Math.Max(lastVersion, targetVersion);
                 var historiesSorted = FetchSortedHistory(changePath, changeVersion, versionFrom, versionTo, updatingForwardInTime);
