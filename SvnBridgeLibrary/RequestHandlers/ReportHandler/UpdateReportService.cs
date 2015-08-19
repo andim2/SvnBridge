@@ -202,6 +202,14 @@ namespace SvnBridge.Infrastructure
             return Helper.EncodeB(GetFileName(item.Name));
         }
 
+		private string GetSrcPath(UpdateReportData updateReportRequest)
+		{
+			string url = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
+			if (updateReportRequest.UpdateTarget != null)
+				return url + "/" + updateReportRequest.UpdateTarget;
+			return url;
+		}
+
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
 		{
 			return updateReportRequest.IsCheckOut == false &&
@@ -209,14 +217,6 @@ namespace SvnBridge.Infrastructure
 			       // we need to check both name and id to ensure that the item was not renamed
 			       sourceControlProvider.ItemExists(item.Name, clientRevisionForItem) &&
 			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem);
-		}
-
-		private string GetSrcPath(UpdateReportData updateReportRequest)
-		{
-			string url = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
-			if (updateReportRequest.UpdateTarget != null)
-				return url + "/" + updateReportRequest.UpdateTarget;
-			return url;
 		}
 
 		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData item,
