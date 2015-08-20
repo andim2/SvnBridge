@@ -163,7 +163,7 @@ namespace SvnBridge.Utility
                 svnDiff.SourceViewLength = 0;
                 svnDiff.TargetViewLength = (ulong)length;
 
-                MemoryStream dataStream = new MemoryStream();
+                MemoryStream dataStream = new Utility.MemoryStreamLOHSanitized();
                 using (BinaryWriter dataWriter = new BinaryWriter(dataStream))
                 {
                     dataWriter.Write(bytes, index, length);
@@ -175,7 +175,7 @@ namespace SvnBridge.Utility
                 instruction.OpCode = SvnDiffInstructionOpCode.CopyFromNewData;
                 instruction.Length = (ulong)length;
 
-                MemoryStream instructionStream = new MemoryStream();
+                MemoryStream instructionStream = new Utility.MemoryStreamLOHSanitized();
                 using (BinaryWriter instructionWriter = new BinaryWriter(instructionStream))
                 {
                     WriteInstruction(instructionWriter, instruction);

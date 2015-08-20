@@ -29,7 +29,7 @@ namespace SvnBridge.Net
             this.stream = stream;
             this.maxKeepAliveConnections = maxKeepAliveConnections;
 
-            this.streamBuffer = new MemoryStream();
+            this.streamBuffer = new Utility.MemoryStreamLOHSanitized();
         }
 
         public override bool CanRead

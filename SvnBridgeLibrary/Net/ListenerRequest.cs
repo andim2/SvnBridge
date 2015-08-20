@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
+using SvnBridge.Utility; // Utility.MemoryStreamLOHSanitized
 
 namespace SvnBridge.Net
 {
@@ -92,7 +93,7 @@ namespace SvnBridge.Net
       // (during multiple parse activities)
       // for all subsequent I/O-decoupled parsing
       // of data from network stream here.
-			MemoryStream buffer = new MemoryStream();
+			MemoryStream buffer = new Utility.MemoryStreamLOHSanitized();
 
 			ReadToBuffer(stream, buffer);
 

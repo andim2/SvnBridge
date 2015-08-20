@@ -1,4 +1,4 @@
-using System;
+using System; // IntPtr.Size
 using System.Diagnostics; // Conditional
 using System.Collections.Generic;
 using System.IO;
@@ -501,4 +501,22 @@ namespace SvnBridge.Utility
             }
         }
 	}
+
+    /// <summary>
+    /// Provide a helper which implicitly supplies the *specific-length*
+    /// value (to help the questionably robust GC LOH implementation do its job)
+    /// to the base class ctor on 32bit systems
+    /// yet leaves 64bit systems unconstrained
+    /// (supply standard zero value for dynamic length behaviour).
+    /// </summary>
+    public sealed class MemoryStreamLOHSanitized : MemoryStream
+    {
+        // FxCop warning "Do not initialize unnecessarily"
+        // but since that assignment is intentionally completely coldpath we don't care.
+        private static readonly int capacityCtorParm = (IntPtr.Size == 8) ? 0 : Constants.AllocSize_AvoidLOHCatastrophy;
+        public MemoryStreamLOHSanitized()
+            : base(capacityCtorParm)
+        {
+        }
+    }
 }

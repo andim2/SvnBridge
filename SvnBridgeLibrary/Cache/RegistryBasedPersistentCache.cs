@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Win32;
 using SvnBridge.Interfaces;
 using SvnBridge.Net;
+using SvnBridge.Utility; // Utility.MemoryStreamLOHSanitized
 
 namespace SvnBridge.Cache
 {
@@ -166,7 +167,7 @@ namespace SvnBridge.Cache
 					{
 						if (item.Changed == false)
 							continue;
-						using (MemoryStream ms = new MemoryStream())
+						using (MemoryStream ms = new Utility.MemoryStreamLOHSanitized())
 						{
 							bf.Serialize(ms, item);
 							CurrentKeys[Hash(item.Name)]
