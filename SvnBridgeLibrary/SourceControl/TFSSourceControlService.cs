@@ -1368,6 +1368,10 @@ namespace SvnBridge.SourceControl
             bool slotMode,
             bool sortAscending);
 
+        /// <remarks>
+        /// Warning: the ItemSet results actually may have ItemType .Any
+        /// (details see TfsLibraryHelpers.IsItemTypeCompatible()).
+        /// </remarks>
         ItemSet[] QueryItems(
             string tfsUrl,
             ICredentials credentials,
@@ -1402,6 +1406,35 @@ namespace SvnBridge.SourceControl
         {
             // Resort to open-coded ctor (for lack of a class-side .Clone()...):
             return new LogItem(logItem.LocalPath, logItem.ServerPath, logItem.History);
+        }
+
+        /// <summary>
+        /// Doh, forgot to (--> do not forget to!) take into account
+        /// special "extended compatibility" properties of ItemType.Any...
+        /// (.Any may not specifically be
+        /// what is expected IOW compared against
+        /// e.g. .File, .Folder).
+        /// </summary>
+        /// <param name="candidate"></param>
+        /// <param name="required"></param>
+        /// <returns></returns>
+        public static bool IsItemTypeCompatible(
+            ItemType candidate,
+            ItemType required)
+        {
+            // fully breakpointable syntax here:
+            bool isCompatible = (candidate == required);
+
+            if (!isCompatible)
+            {
+                bool shouldAcceptAnyType = (ItemType.Any == required);
+                if (shouldAcceptAnyType)
+                {
+                    isCompatible = true;
+                }
+            }
+
+            return isCompatible;
         }
 
         /// <summary>

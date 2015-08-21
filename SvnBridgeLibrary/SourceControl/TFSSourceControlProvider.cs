@@ -1509,7 +1509,14 @@ namespace SvnBridge.SourceControl
                         ItemMetaData oldItem;
                         bool renameWithPreviousVersion = false;
                         bool haveOldItem = oldItemsById.TryGetValue(change.Item.ItemId, out oldItem);
+                        bool haveValidOldItem = false;
                         if (haveOldItem)
+                        {
+                            haveValidOldItem = IsValidRenameChange(
+                                oldItem,
+                                change.Item);
+                        }
+                        if (haveValidOldItem)
                         {
                             RenamedSourceItem itemRenamed = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
                             change.Item = itemRenamed;
@@ -1517,6 +1524,14 @@ namespace SvnBridge.SourceControl
                         }
                         if (!renameWithPreviousVersion)
                         {
+                            // I suspect that such cases might in fact
+                            // always be processing errors
+                            // rather than "special" TFS input.
+                            // Thus, since after some further fixes
+                            // such cases now should be sufficiently rare,
+                            // it now ought to be actively analyzed when occurring:
+                            Helper.DebugUsefulBreakpointLocation();
+
                             renamesWithNoPreviousVersion.Add(change);
                         }
                     }
@@ -1582,6 +1597,78 @@ namespace SvnBridge.SourceControl
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Special helper to deal with the strange case
+        /// of getting veritable "ghost"/"zombie" rename commits from TFS
+        /// (AFAICS this changeset content is what we are getting from inner TFS layers,
+        /// and AFAICS it indeed does not make sense!):
+        /// changesets containing change(s) with ChangeType.Rename,
+        /// yet everything IDENTICAL:
+        /// - origin and destination name same-name same-case
+        /// - origin and destination item IDs
+        /// - item size
+        ///
+        /// Method signature is strangely type-asymmetric
+        /// due to asymmetry at existing user, but oh well...
+        /// </summary>
+        /// <remarks>
+        /// Of course a whole-folder compare
+        /// in TFS2013 Source Control Explorer (MSVS2010sp1)
+        /// of that changeset
+        /// DOES come up completely empty, too!
+        /// Turns out that this was a changeset
+        /// where people did same-name different-case renames
+        /// of some base folders.
+        /// So it's understandable after all
+        /// that Source Control Explorer would filter away
+        /// all case-only changes
+        /// since that seems to be their strange design intent.
+        /// What *isn't* understandable
+        /// is that that a part of the changes within this changeset
+        /// were completely IDENTICAL ones,
+        /// rather than case-only changes.
+        /// And this is when things started falling apart
+        /// in SvnBridge areas, understandably,
+        /// prior to this fix...
+        /// Hmmmmmmm, thinking about it some more,
+        /// it might be the case
+        /// that for these problematic (completely IDENTICAL) origin items,
+        /// our inner low-level filters
+        /// which do TFS case issues sanitize-correcting
+        /// failed to resolve the actually correct case in advance.
+        /// So perhaps our filter algo
+        /// still might need some improving
+        /// (perhaps lookup of the most recent older revision
+        /// doesn't suffice,
+        /// since the correct old-item case will be revealed by TFS
+        /// only for even older revisions - who knows...).
+        /// AND INDEED, it looks like I failed to
+        /// take into account special properties of ItemType.Any there
+        /// (ItemType.File != ItemType.Any *is* ok
+        /// where "any" type i.e. ItemType.Any is requested),
+        /// causing us to skip path checks,
+        /// since we generally do that for all non-matching item types.
+        /// </remarks>
+        /// <param name="oldItem"></param>
+        /// <param name="newItem"></param>
+        /// <returns></returns>
+        private static bool IsValidRenameChange(
+            ItemMetaData oldItem,
+            SourceItem newItem)
+        {
+            bool isValidRename;
+
+            // PERFORMANCE: definitely compare numeric values first,
+            // *then* expensive strings!
+            bool isMatch = (
+                (oldItem.Id == newItem.ItemId) &&
+                (oldItem.Name.Equals(newItem.RemoteName))
+            );
+            isValidRename = !(isMatch);
+
+            return isValidRename;
         }
 
         /// <summary>

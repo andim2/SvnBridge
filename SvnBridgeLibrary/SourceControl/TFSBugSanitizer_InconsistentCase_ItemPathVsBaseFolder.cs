@@ -172,7 +172,9 @@ namespace SvnBridge.SourceControl
 
                 foreach (var item in itemSet.Items)
                 {
-                    bool isItemTypeCompatible = (itemType == item.type);
+                    bool isItemTypeCompatible = TfsLibraryHelpers.IsItemTypeCompatible(
+                        item.type,
+                        itemType);
                     if (isItemTypeCompatible)
                     {
                         string pathResult = item.item;
