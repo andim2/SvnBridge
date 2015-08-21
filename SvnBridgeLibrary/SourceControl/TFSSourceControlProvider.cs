@@ -1507,10 +1507,17 @@ namespace SvnBridge.SourceControl
                     foreach (var change in history.Changes.Where(change => (change.ChangeType & ChangeType.Rename) == ChangeType.Rename))
                     {
                         ItemMetaData oldItem;
-                        if (oldItemsById.TryGetValue(change.Item.ItemId, out oldItem))
+                        bool renameWithPreviousVersion = false;
+                        bool haveOldItem = oldItemsById.TryGetValue(change.Item.ItemId, out oldItem);
+                        if (haveOldItem)
+                        {
                             change.Item = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
-                        else
+                            renameWithPreviousVersion = true;
+                        }
+                        if (!renameWithPreviousVersion)
+                        {
                             renamesWithNoPreviousVersion.Add(change);
+                        }
                     }
 
                     // [this is slowpath (rare event),
