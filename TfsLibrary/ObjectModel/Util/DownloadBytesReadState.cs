@@ -36,12 +36,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 			try
 			{
 				int read = Stream.EndRead(ar);
-				if (downloadedBytes.Capacity < downloadedBytes.Count + read)
-					downloadedBytes.Capacity = downloadedBytes.Count + read;
-				for (int i = 0; i < read; ++i)
-				{
-					downloadedBytes.Add(buffer[i]);
-				}
+        ListAppendArrayPart(downloadedBytes, buffer, read);
 				if (read == 0)
 				{
 					DisposeResources();
@@ -79,5 +74,15 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 				// got all we needed
 			}
 		}
+
+        private static void ListAppendArrayPart(List<byte> list, byte[] data, int count)
+        {
+            if (list.Capacity < list.Count + count)
+                list.Capacity = list.Count + count;
+            for (int i = 0; i < count; ++i)
+            {
+                list.Add(data[i]);
+            }
+        }
 	}
 }
