@@ -224,7 +224,8 @@ namespace SvnBridge.Utility
                 // AWFUL Capacity handling!! (GC catastrophy)
                 // .Capacity should most definitely *NEVER* be directly (manually) modified,
                 // since framework ought to know best
-                // how to increment .Capacity in suitably future-proof-sized steps!
+                // how to increment .Capacity in suitably future-proof-sized steps,
+                // rather than restricted to this-time needs
                 // (read: it's NOT useful
                 // to keep incrementing [read: reallocating!!]
                 // a continuously aggregated perhaps 8MB .Capacity
