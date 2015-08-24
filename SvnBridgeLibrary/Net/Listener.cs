@@ -120,7 +120,14 @@ namespace SvnBridge.Net
             {
                 if (tcpClient != null)
                 {
-                    ProcessClient(tcpClient);
+                    try
+                    {
+                        ProcessClient(tcpClient);
+                    }
+                    finally
+                    {
+                        TcpClientClose(tcpClient);
+                    }
                 }
             }
             catch (Exception ex)
@@ -135,15 +142,8 @@ namespace SvnBridge.Net
         /// <param name="tcpClient">The TCP client to be processed</param>
         private void ProcessClient(TcpClient tcpClient)
         {
-            try
-            {
-                ProcessClientStream(
-                    tcpClient.GetStream());
-            }
-            finally
-            {
-                TcpClientClose(tcpClient);
-            }
+            ProcessClientStream(
+                tcpClient.GetStream());
         }
 
         /// <remarks>
