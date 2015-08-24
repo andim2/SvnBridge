@@ -7,8 +7,8 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 {
 	public class DownloadBytesReadState
 	{
-		private readonly byte[] buffer;
 		private readonly int bufferSize;
+		private readonly byte[] buffer;
 		private readonly List<byte> downloadedBytes = new List<byte>();
 		private readonly WebResponse response;
 		private readonly DownloadBytesAsyncResult result;
