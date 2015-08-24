@@ -1511,7 +1511,8 @@ namespace SvnBridge.SourceControl
                         bool haveOldItem = oldItemsById.TryGetValue(change.Item.ItemId, out oldItem);
                         if (haveOldItem)
                         {
-                            change.Item = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
+                            RenamedSourceItem itemRenamed = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
+                            change.Item = itemRenamed;
                             renameWithPreviousVersion = true;
                         }
                         if (!renameWithPreviousVersion)
