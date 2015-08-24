@@ -19,9 +19,40 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 			this.result = result;
 			this.response = response;
 			Stream = stream;
-			this.bufferSize = expectedContentLength;
+			this.bufferSize = DetermineSizeOfIncrementalReadBuffer(expectedContentLength);
 			buffer = new byte[bufferSize];
 		}
+
+        /// <summary>
+        /// While we used to be using
+        /// a weird full-HTTP-ContentLength-sized buffer
+        /// for per-incremental-callback reads,
+        /// we cannot keep doing so since
+        /// ContentLength may be infinitely big
+        /// (at least for all cases other than chunked Transfer-Encoding
+        /// where ContentLength will be passed as 0, that is)
+        /// and will currently be stupidly used here
+        /// to collect a final big-blob object already at this place
+        /// (rather than forwarding things
+        /// in a fully incremental streamy manner until the
+        /// final destination amasses big-blob!!!),
+        /// thus we have awful memory size constraint conditions
+        /// which means we should at least
+        /// keep the incremental buffer minimal.
+        /// </summary>
+        /// <remarks>
+        /// Chose a size
+        /// which is below GC LOH threshold size,
+        /// yet large enough to be much larger
+        /// than the usual incremental download lengths.
+        /// </remarks>
+        /// <param name="contentLength"></param>
+        /// <returns></returns>
+        private static int DetermineSizeOfIncrementalReadBuffer(int contentLength)
+        {
+            return Math.Min(contentLength, 64 * 1024);
+        }
+
 		public void Start(Stream stream)
 		{
 			stream.BeginRead(
