@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics; // Debug.WriteLine()
 using System.IO;
+using System.IO.Compression; // DeflateStream, GZipStream
 using System.Net;
 using System.Net.Sockets;
 using System.Text; // Encoding
@@ -442,6 +443,13 @@ namespace SvnBridge.Net
             ref bool requestedHttpKeepAlive,
             ref bool serveFurtherRequests)
         {
+            // Warning: some setup parts in here
+            // may actively change Response.OutputStream setup,
+            // before we proceed
+            // with actually handling the request method below!
+            SetupHttpResponseEncoding(
+                context);
+
             // Make sure to parse Connection header value
             // unconditionally in *all* iterations
             // (e.g. to react on close announcement):
@@ -555,6 +563,126 @@ namespace SvnBridge.Net
             }
 
             return isGoodHttpRequest;
+        }
+
+        private static void SetupHttpResponseEncoding(
+            IHttpContext connection)
+        {
+            string acceptEncodingHeader = connection.Request.Headers["Accept-Encoding"];
+            bool haveHeaderAcceptEncoding = !string.IsNullOrEmpty(acceptEncodingHeader);
+            if (haveHeaderAcceptEncoding)
+            {
+                SetupHttpHeaderAcceptEncodingCompressionTry(
+                    acceptEncodingHeader,
+                    connection.Response);
+            }
+        }
+
+        /// <remarks>
+        /// This was written and tested via Desktop SvnBridge case only.
+        /// Quite possibly in the SvnBridge-via-IIS case
+        /// IIS might already do compression filter handling
+        /// on its own...
+        ///
+        /// http://weblog.west-wind.com/posts/2007/Feb/05/More-on-GZip-compression-with-ASPNET-Content
+        /// </remarks>
+        private static void SetupHttpHeaderAcceptEncodingCompressionTry(
+            string acceptEncodingHeader,
+            IHttpResponse response)
+        {
+            if (!(ShouldSupportHttpResponseContentBodyCompression))
+            {
+                return;
+            }
+
+            SetupHttpHeaderAcceptEncodingCompression(
+                acceptEncodingHeader,
+                response);
+        }
+
+        private static bool ShouldSupportHttpResponseContentBodyCompression
+        {
+            get { return true; }
+        }
+
+        /// <remarks>
+        /// Very detailed discussion about Content-Encoding vs. Transfer-Encoding:
+        /// http://stackoverflow.com/questions/11641923/transfer-encoding-gzip-vs-content-encoding-gzip
+        /// </remarks>
+        private static void SetupHttpHeaderAcceptEncodingCompression(
+            string acceptEncodingHeader,
+            IHttpResponse response)
+        {
+            string contentEncoding;
+            Stream filter = SetupHttpResponseCompressionFilterStream(
+                acceptEncodingHeader,
+                response,
+                out contentEncoding);
+
+            bool haveNextFilterConfig = (null != filter);
+            if (haveNextFilterConfig)
+            {
+                response.Filter = filter;
+                response.AppendHeader("Content-Encoding", contentEncoding);
+
+                // Allow proxy servers to cache encoded and unencoded versions separately
+                response.AppendHeader("Vary", "Content-Encoding");
+            }
+        }
+
+        private static Stream SetupHttpResponseCompressionFilterStream(
+            string acceptEncodingHeader,
+            IHttpResponse response,
+            out string contentEncoding)
+        {
+            acceptEncodingHeader = acceptEncodingHeader.ToLower();
+            Stream filter;
+            Stream filterChainPrev = response.Filter;
+            string contentEncoding_deflate = "deflate";
+            string contentEncoding_gzip = "gzip";
+            // Side note: we may or may not want to use
+            // the Stream classes' leaveOpen ctor parm.
+            if (
+                (acceptEncodingHeader.Contains(contentEncoding_deflate) ||
+                 acceptEncodingHeader.Equals("*")) &&
+                ContentEncodingDeflateAllowed
+            )
+            {
+                filter = new DeflateStream(filterChainPrev, CompressionMode.Compress);
+                contentEncoding = contentEncoding_deflate;
+            }
+            else
+            if (
+                (acceptEncodingHeader.Contains(contentEncoding_gzip)) &&
+                ContentEncodingGzipAllowed
+            )
+            {
+                filter = new GZipStream(filterChainPrev, CompressionMode.Compress);
+                contentEncoding = contentEncoding_gzip;
+            }
+            else
+            {
+                filter = null;
+                contentEncoding = null;
+            }
+
+            return filter;
+        }
+
+        private static bool ContentEncodingDeflateAllowed
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        private static bool ContentEncodingGzipAllowed
+        {
+            get
+            {
+                return true;
+            }
         }
 
         private static void GetHttpHeaderConnectionConfig(

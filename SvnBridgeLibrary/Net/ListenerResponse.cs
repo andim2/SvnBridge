@@ -5,12 +5,6 @@ using SvnBridge.Interfaces;
 
 namespace SvnBridge.Net
 {
-    /// TODO: Somewhere one might want to support Content-Encoding gzip and deflate
-    /// (via GZipStream / DeflateStream). See e.g. the nicely detailed article
-    /// http://weblog.west-wind.com/posts/2012/Apr/28/GZipDeflate-Compression-in-ASPNET-MVC
-    /// http://stackoverflow.com/questions/10639337/gzip-compression-asp-net-c-sharp
-    /// This probably is to be done via [I]HttpResponse.Filter, here?
-    /// http://www.waytocoding.com/2011/07/how-to-use-compression-method-in-aspnet.html
     public sealed class ListenerResponse : IHttpResponse
     {
         private readonly List<KeyValuePair<string, string>> headers;
