@@ -4,6 +4,11 @@ using System.Web;
 
 namespace SvnBridge.Net
 {
+    /// <summary>
+    /// Global, static cache class
+    /// the lifetime of which is (and needs to remain!) exactly restricted
+    /// to per-HTTP-request scope.
+    /// </summary>
 	public static class RequestCache
 	{
 		[ThreadStatic] private static IDictionary currentItems;

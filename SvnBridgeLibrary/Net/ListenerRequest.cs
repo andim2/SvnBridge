@@ -95,7 +95,11 @@ namespace SvnBridge.Net
       // of data from network stream here.
 			MemoryStream buffer = new Utility.MemoryStreamLOHSanitized();
 
-			ReadToBuffer(stream, buffer);
+			bool isReadOK = ReadToBuffer(stream, buffer);
+            if (!(isReadOK))
+            {
+                return;
+            }
 
 			string startLine = ReadLine(stream, buffer);
 			ParseStartLine(startLine);
@@ -167,7 +171,11 @@ namespace SvnBridge.Net
 
 				if (byteRead == -1)
 				{
-					ReadToBuffer(stream, buffer);
+					bool isReadOK = ReadToBuffer(stream, buffer);
+                    if (!(isReadOK))
+                    {
+                        break;
+                    }
 				}
 				else
 				{
@@ -186,14 +194,22 @@ namespace SvnBridge.Net
         /// </summary>
         /// <param name="stream">Stream to be read</param>
         /// <param name="buffer">MemoryStream to be written to</param>
-		private static void ReadToBuffer(Stream stream,
+        /// <returns>true in case any data could be read, else false (socket close, etc.).</returns>
+		private static bool ReadToBuffer(Stream stream,
 										 MemoryStream buffer)
 		{
-			var originalPosition = buffer.Position;
-
 			byte[] bytes = new byte[Constants.BufferSize];
 
 			int bytesRead = stream.Read(bytes, 0, bytes.Length);
+
+            bool isConnectionOK = IsConnectionOK(
+                bytesRead);
+
+            if (!(isConnectionOK))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+                return false;
+            }
 
       var positionWriteStart = buffer.Length;
       var numToBeWritten = bytesRead;
@@ -221,12 +237,38 @@ namespace SvnBridge.Net
 #endif
 			}
 
+			var originalPosition = buffer.Position;
+
 			buffer.Position = positionWriteStart;
 
 			buffer.Write(bytes, 0, numToBeWritten);
 
 			buffer.Position = originalPosition;
+
+            return true;
 		}
+
+        /// <summary>
+        /// Almost comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// http://www.codeproject.com/Answers/273194/TcpClient-NetworkStream-Read-Help-Stream-does-not
+        /// "NetworkStream.Read will return 0 if and only if the connection has been terminated
+        ///  (otherwise it will block until there is at least one byte)."
+        /// </remarks>
+        private static bool IsConnectionOK(
+            int bytesReadTotal)
+        {
+            bool isConnectionOK = false;
+
+            bool haveData = (0 != bytesReadTotal);
+            if (haveData)
+            {
+                isConnectionOK = true;
+            }
+
+            return isConnectionOK;
+        }
 
 		private void ReadMessageBody(Stream stream,
 									 MemoryStream buffer)
@@ -242,7 +284,11 @@ namespace SvnBridge.Net
 					break;
 				}
 
-				ReadToBuffer(stream, buffer);
+				bool isReadOK = ReadToBuffer(stream, buffer);
+				if (!(isReadOK))
+				{
+					break;
+				}
 			}
 
       // Optimized(?) handling details:

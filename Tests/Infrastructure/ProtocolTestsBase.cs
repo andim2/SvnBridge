@@ -87,6 +87,21 @@ namespace Tests
                 expected = expected.Replace("Connection: Keep-Alive", "Connection: close");
             }
 
+            // We are now doing handling of Connection response headers
+            // *outside* of inner Dispatcher-only handling
+            // (which admittedly may or may not be debatable...),
+            // thus we do *not* provide these headers
+            // within this test setup any more,
+            // thus we need a way to get completely rid of these header lines
+            // whenever needed.
+            bool haveConnectionHeaders = false;
+            if (!(haveConnectionHeaders))
+            {
+                expected = expected.Replace("Keep-Alive: timeout=15, max=100\r\n", "");
+                expected = expected.Replace("Connection: Keep-Alive\r\n", "");
+                expected = expected.Replace("Connection: close\r\n", "");
+            }
+
             expected = RemoveDate(expected);
             response = RemoveDate(response);
 

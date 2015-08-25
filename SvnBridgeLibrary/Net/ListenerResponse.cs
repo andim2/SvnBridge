@@ -20,7 +20,7 @@ namespace SvnBridge.Net
                                 Stream stream)
         {
             headers = new List<KeyValuePair<string, string>>();
-            outputStream = new ListenerResponseStream(request, this, stream, 100);
+            outputStream = new ListenerResponseStream(request, this, stream);
         }
 
         internal List<KeyValuePair<string, string>> Headers

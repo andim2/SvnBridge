@@ -16,12 +16,18 @@ namespace SvnBridge.Net
         private bool isListening;
         private readonly DefaultLogger logger;
         private TcpListener listener;
+        // Convenient config setting bool -
+        // indicates whether SvnBridge wants to support
+        // HTTP Keep-Alive (aka "HTTP persistent connection" / "connection reuse") or not.
+        private readonly bool supportHttpKeepAlive;
+
         private int? port;
         private ActionTrackingViaPerfCounter actionTracking;
 
         public Listener(DefaultLogger logger, ActionTrackingViaPerfCounter actionTracking)
         {
             this.logger = logger;
+            this.supportHttpKeepAlive = true;
             this.actionTracking = actionTracking;
         }
 
@@ -214,7 +220,12 @@ namespace SvnBridge.Net
         }
 
         /// <summary>
-        /// Processes the TcpClient.
+        /// Keeps processing the TcpClient until it's fully completed, i.e.
+        /// either it ended up happy (success)
+        /// since all (potentially multiple: Keep-Alive) requests
+        /// are fully served
+        /// or an error occurred,
+        /// e.g. exceptions such as timeout or socket close.
         /// </summary>
         /// <param name="tcpClient">The TCP client to be processed</param>
         private void ProcessClient(TcpClient tcpClient)
@@ -233,27 +244,283 @@ namespace SvnBridge.Net
         private void ProcessClientStream(
             NetworkStream networkStream)
         {
-            IHttpContext connection = new ListenerContext(
+            // Subversion neon-debug-mask 511 indicated that Subversion was surprised about an interim socket close
+            // via its "Could not read status line" / "Persistent connection timed out, retrying" log
+            // despite requesting (and formerly being falsely acknowledged!) HTTP Keep-Alive
+            // (side note: Keep-Alive became the default mechanism in HTTP/1.1).
+            // Root cause probably is our Net Listener setup being based on IHttpRequest rather than
+            // a full HttpWebRequest, i.e. we're rolling our own implementation.
+            // Thus make sure to support Keep-Alive properly. Note that we don't support the pipelining possibilities of Keep-Alive (yet?).
+            // As a side effect, enabling persistent connections to the client side (SVN)
+            // seems to have provided some relief to the hairy socket exhaustion exception issue as well.
+            //
+            // Some search keywords: "ServicePoint", "HttpBehaviour", "DefaultConnectionLimit", "DefaultPersistentConnectionLimit".
+
+            bool requestedHttpKeepAlive = false; // globally persistent state (KEEP SCOPE OUT OF LOOP)
+            for (int numRequestsHandled = 0; ; ++numRequestsHandled)
+            {
+                bool wasSuccessfulRequest = TryHandleOneHttpMethodRequest(
+                    networkStream,
+                    ref requestedHttpKeepAlive);
+
+                if (!(wasSuccessfulRequest))
+                {
+                    break;
+                }
+
+                // This multi-request loop should not be implemented via
+                // an overly simplistic DataAvailable conditional - rather,
+                // it probably should be infinite i.e. terminated only by hitting ReceiveTimeout / client-side socket close.
+                // Also, note that e.g. TcpClient.Connected is said to be unreliable:
+                // http://go4answers.webhost4life.com/Example/net4-tcpclient-fails-81091.aspx
+                // Possibly relevant: http://stackoverflow.com/a/1980554/1222997
+                //   "The HTTP protocol has the status code Request Timeout which you can send to the client if it seems dead."
+                if (!(requestedHttpKeepAlive))
+                {
+                    break;
+                }
+            }
+        }
+
+        private bool TryHandleOneHttpMethodRequest(
+            NetworkStream networkStream,
+            ref bool requestedHttpKeepAlive)
+        {
+            IHttpContext context = new ListenerContext(
                 networkStream,
                 logger);
 
-            HandleConnection(
-                connection);
+            bool isGoodHttpRequest = IsGoodHttpRequest(
+                context.Request);
+
+            bool canHandlePerHttpMethodRequestContext = false;
+            if (isGoodHttpRequest)
+            {
+                canHandlePerHttpMethodRequestContext = true;
+            }
+
+            if (!(canHandlePerHttpMethodRequestContext))
+                return false;
+
+            HandlePerHttpMethodRequestContext(
+                context,
+                networkStream,
+                ref requestedHttpKeepAlive);
+
+            return true;
         }
 
-        private void HandleConnection(
-            IHttpContext connection)
+        private void HandlePerHttpMethodRequestContext(
+            IHttpContext context,
+            NetworkStream networkStream,
+            ref bool requestedHttpKeepAlive)
         {
+            var response = context.Response;
+            bool doSupportHttpKeepAlive = (supportHttpKeepAlive);
+            // See also http://www.w3.org/Protocols/HTTP/Issues/http-persist.html
+            // http://stackoverflow.com/questions/140765/how-do-i-know-when-to-close-an-http-1-1-keep-alive-connection?rq=1
+            if (doSupportHttpKeepAlive)
+            {
+                // In case it's not known yet in this chain of HTTP requests
+                // whether client wants Keep-Alive, evaluate it and do setup if necessary.
+                // FIXME: Wikipedia "In HTTP 1.1, all connections are considered persistent unless declared otherwise".
+                // Problem here is that ListenerRequest ParseStartLine() currently
+                // does not provide the HTTP version value yet...
+                if (!(requestedHttpKeepAlive))
+                {
+                    bool foundKeepAlive;
+                    GetHttpHeaderConnectionConfig(
+                        context.Request,
+                        out foundKeepAlive);
+
+                    if (foundKeepAlive)
+                    {
+                        requestedHttpKeepAlive = true;
+                    }
+                    bool setupHttpKeepAlive = (requestedHttpKeepAlive);
+                    if (setupHttpKeepAlive)
+                    {
+                        int httpKeepAliveTimeoutSec;
+                        int httpKeepAliveMaxConnections;
+                        GetHttpKeepAliveSettings(
+                            out httpKeepAliveTimeoutSec,
+                            out httpKeepAliveMaxConnections);
+
+                        //tcpClient.Client.Blocking = true;
+                        // ".Net 2.0 Breaks .Net 1.1 TcpClient ReadTimeouts"
+                        //   http://social.msdn.microsoft.com/forums/en-US/netfxnetcom/thread/d3769a76-3b4a-4b80-b601-055da5370627/
+                        // says: "You must set NetworkStream.ReadTimeout, NEVER set TcpClient.ReceiveTimeout"
+                        //tcpClient.ReceiveTimeout = httpKeepAliveTimeoutSec * 1000;
+                        networkStream.ReadTimeout = httpKeepAliveTimeoutSec * 1000;
+                        StringWriter writer = new StringWriter();
+                        writer.Write("timeout={0}, max={1}", httpKeepAliveTimeoutSec, httpKeepAliveMaxConnections);
+                        response.AppendHeader("Keep-Alive", writer.ToString());
+                    }
+                }
+            }
+            else
+            {
+                ConnectionIndicateNonPersistent(
+                    response);
+            }
+
+            // Now do actual handling
+            // of the currently requested HTTP method:
             HandleOneHttpRequest(
-                connection);
+                context);
         }
 
+        /// <summary>
+        /// Comment-only helper.
+        ///
+        /// Hmm... this check has been added to detect non-existing requests
+        /// due to e.g. the client having closed the socket
+        /// within the (obviously non-existing) next request that we attempt to fetch (HTTP Keep-Alive).
+        /// Rather than doing an explicit open-coded check here,
+        /// an alternative might be to do things exception-based
+        /// (have internal handler input processing throw exception on closed socket [NetworkStream.Read() == 0]) -
+        /// after all connection object isn't usable anyway, thus it should probably be handled via exception,
+        /// to cleanly unwind all inner parts.
+        /// OTOH socket closing will always happen,
+        /// i.e. it is an expected (completely non-exceptional) event,
+        /// thus it should not be handled via exception after all.
+        /// </summary>
+        private static bool IsGoodHttpRequest(
+            IHttpRequest request)
+        {
+            bool isGoodHttpRequest = false;
+
+            bool isValidHttpMethod = !string.IsNullOrEmpty(request.HttpMethod);
+            if (isValidHttpMethod)
+            {
+                isGoodHttpRequest = true;
+            }
+
+            return isGoodHttpRequest;
+        }
+
+        private static void GetHttpHeaderConnectionConfig(
+            IHttpRequest request,
+            out bool foundKeepAlive)
+        {
+            foundKeepAlive = false;
+
+            string connectionHeader = request.Headers["Connection"];
+            if (null != connectionHeader)
+            {
+                ParseHttpHeaderConnection(
+                    connectionHeader,
+                    out foundKeepAlive);
+            }
+        }
+
+        private static void ParseHttpHeaderConnection(
+            string connectionHeader,
+            out bool foundKeepAlive)
+        {
+            foundKeepAlive = false;
+
+            string[] connectionHeaderParts = connectionHeader.Split(',');
+            foreach (string directive in connectionHeaderParts)
+            {
+                string directiveStart = directive.TrimStart();
+                bool isDirectiveKeepAlive = directiveStart.Equals("Keep-Alive", StringComparison.OrdinalIgnoreCase);
+                if (isDirectiveKeepAlive)
+                {
+                    foundKeepAlive = true;
+                    break;
+                }
+            }
+        }
+
+        /// <remarks>
+        /// http://blog.fastmail.fm/2011/06/28/http-keep-alive-connection-timeouts/
+        /// says that some firewalls have a 2 minute state timeout
+        /// --> might want to safely stay quite a bit below this value.
+        ///
+        /// References:
+        /// http://stackoverflow.com/questions/4139379/http-keep-alive-in-the-modern-age
+        /// http://stackoverflow.com/questions/8222987/enable-keep-alive-page-speed
+        /// </remarks>
+        private static void GetHttpKeepAliveSettings(
+            out int httpKeepAliveTimeoutSec,
+            out int httpKeepAliveMaxConnections)
+        {
+            httpKeepAliveTimeoutSec = GetHttpKeepAliveTimeoutSeconds();
+            httpKeepAliveMaxConnections = GetHttpKeepAliveMaxConnections();
+        }
+
+        /// <summary>
+        /// Helper to decide on a convenient yet safe
+        /// HTTP KA timeout value.
+        /// </summary>
+        private static int GetHttpKeepAliveTimeoutSeconds()
+        {
+            int httpKeepAliveTimeoutSec;
+
+            httpKeepAliveTimeoutSec = 45;
+
+            return httpKeepAliveTimeoutSec;
+        }
+
+        /// <remarks>
+        /// TODO: specs seem to indicate
+        /// that when the server does report a max value for connections,
+        /// it is free to end serving requests after that number of requests were done,
+        /// so perhaps we should replace the request loop condition
+        /// with a counter of 1 in non-Keep-Alive case
+        /// and maxConn in Keep-Alive case.
+        /// </remarks>
+        private static int GetHttpKeepAliveMaxConnections()
+        {
+            return 100;
+        }
+
+        private static void ConnectionIndicateNonPersistent(
+            IHttpResponse response)
+        {
+            // Hmm, despite us advertising "close", Subversion 1.6.17 still attempts persistent connections.
+            // This as observed on SvnBridge/.NET 2.0.5xxx.
+            // Hmm, HTTP 1.1 is specified to have persistence by default,
+            // so possibly this is because of Subversion not obeying us manually disabling persistence...
+             // It *seems* HTTP header values are supposed to be treated case-insensitively,
+            // however "close" is spelt lower-case in most cases,
+            // thus write it in the more common variant:
+            response.AppendHeader("Connection", "close");
+        }
+
+        /// <remarks>
+        /// Most likely a lot of HTTP-specific handling here
+        /// (including all that HTTP Keep-Alive setup)
+        /// ought to be moved to the post-Dispatch() inner side.
+        /// However, this would mean
+        /// that IHttpContext would become a connection-global
+        /// (persisting through all HTTP requests within Keep-Alive)
+        /// rather than a per-request object.
+        /// But in fact this seems to be what it should actually be,
+        /// judging from the HttpContext implementation of fap.googlecode.com's HttpContext.cs.
+        /// SendHandlerErrorResponse() would then (mostly)
+        /// be moved inside HTTP dispatcher impl as well.
+        /// UPDATE: Hmm, this is not how we currently implement Keep-Alive feature
+        /// (we don't keep IHttpContext object during all HTTP method requests,
+        /// but re-create it per-method-request,
+        /// which actually may or may not be how it is supposed to be done).
+        /// </remarks>
         private void HandleOneHttpRequest(
             IHttpContext connection)
         {
             DateTime timeUtcStart = DateTime.UtcNow;
             try
             {
+                // The global RequestCache object
+                // currently(?) seems to store
+                // several *per-request-restricted* attributes
+                // (attributes that are *specific*
+                // to the particular HTTP method
+                // that is about to be processed),
+                // thus we'll have to init/tear down it
+                // here (and here at this scope only!!)
+                // anew.
                 RequestCache.Init();
                 dispatcher.Dispatch(connection);
             }
@@ -270,7 +537,7 @@ namespace SvnBridge.Net
                     // we explicitly ignore all exceptions here, we don't really have
                     // much to do if the error handling code failed to work, after all.
                 }
-                // we still raise the original exception, though.
+                // we still raise the original exception (from further above), though.
                 throw;
             }
             finally

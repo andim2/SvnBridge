@@ -28,23 +28,20 @@ namespace SvnBridge.Net
     {
         protected bool flushed /* = false */;
         protected bool headerWritten /* = false */;
-        protected ListenerRequest request;
+        protected ListenerRequest request; // actually unused now (and it probably should be!)
         protected ListenerResponse response;
         protected Stream stream;
-        protected int maxKeepAliveConnections;
         protected MemoryStream streamBuffer;
         protected static readonly byte[] chunkFooterChunk = Encoding.UTF8.GetBytes("\r\n");
         protected static readonly byte[] chunkFooterFinalZeroChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
 
         public ListenerResponseStream(ListenerRequest request,
                                       ListenerResponse response,
-                                      Stream stream,
-                                      int maxKeepAliveConnections)
+                                      Stream stream)
         {
             this.request = request;
             this.response = response;
             this.stream = stream;
-            this.maxKeepAliveConnections = maxKeepAliveConnections;
 
             this.streamBuffer = CreateMemoryStream();
         }
@@ -288,50 +285,9 @@ namespace SvnBridge.Net
                 writer.WriteLine("Transfer-Encoding: chunked");
             }
 
-            // FIXME: we are potentially writing multiple Connection: headers! (see below)
-            // Should be consolidating this by implementing a HTTP header helper
-            // which writes specific HTTP headers (with the corresponding values joined via ", ")
-            // iff the input values string array is non-empty.
             if (connection != null)
             {
                 writer.WriteLine("Connection: {0}", connection);
-            }
-
-            string connectionHeader = request.Headers["Connection"];
-            if (connectionHeader != null)
-            {
-                string[] connectionHeaderParts = connectionHeader.Split(',');
-                foreach (string directive in connectionHeaderParts)
-                {
-                    if (directive.TrimStart() == "Keep-Alive")
-                    {
-                        // It seems that as long as our Listener.cs does an active socket close via TcpClient.Close(),
-                        // we really should *not* pretend to fulfill persistent connections via a HTTP Keep-Alive reply.
-                        // Subversion neon-debug-mask 511 indicates that Subversion is surprised about an interim socket close
-                        // via its "Could not read status line" / "Persistent connection timed out, retrying" log
-                        // despite requesting (and being falsely acknowledged!) HTTP Keep-Alive
-                        // (side note: it became the default mechanism in HTTP/1.1).
-                        // Hmm, despite advertising "close" Subversion 1.6.17 still attempts persistent connections.
-                        // This as observed on SvnBridge/.NET 2.0.5xxx.
-                        // Root cause probably is our Net Listener setup being based on IHttpRequest rather than
-                        // a full HttpWebRequest, i.e. we're rolling our own implementation.
-                        // Disabling the TcpClient.Close() does *not* help (Subversion hangs at subsequent request,
-                        // probably since the socket is not being served properly on our side; TODO: investigate...).
-                        // Search keywords: "ServicePoint", "HttpBehaviour", "DefaultConnectionLimit", "DefaultPersistentConnectionLimit", 
-                        bool isHttpKeepAliveSupported = false;
-
-                        if (isHttpKeepAliveSupported)
-                        {
-                            writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
-                            writer.WriteLine("Connection: Keep-Alive");
-                        }
-                        else
-                            // It *seems* HTTP header values are supposed to be treated case-insensitively,
-                            // however "close" is spelt lower-case in most cases,
-                            // thus write it in the more common variant:
-                            writer.WriteLine("Connection: close");
-                    }
-                }
             }
 
             writer.WriteLine("Content-Type: {0}", response.ContentType);
