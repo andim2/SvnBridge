@@ -2,6 +2,7 @@ namespace SvnBridge.SourceControl
 {
     using System; // StringSplitOptions
     using System.Net; // ICredentials
+    using CodePlex.TfsLibrary; // NetworkAccessDeniedException
     using CodePlex.TfsLibrary.ObjectModel; // SourceItem
     using CodePlex.TfsLibrary.RepositoryWebSvc; // DeletedState, ItemType, VersionSpec
     using Interfaces; // ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder
@@ -47,6 +48,45 @@ namespace SvnBridge.SourceControl
                 pathElems,
                 0,
                 count);
+        }
+
+        /// <summary>
+        /// Centrally comment-enabling helper.
+        /// Arrives at a decision
+        /// by taking into account all related parameters.
+        /// </summary>
+        /// <returns></returns>
+        bool ShouldIgnoreQueryItemsException_NetworkAccessDeniedException(
+            NetworkAccessDeniedException e,
+            string path,
+            VersionSpec versionSpec,
+            ItemType itemType)
+        {
+            bool ignore = false;
+            // Known cases where this exception may be thrown:
+            // - legitimate NetworkAccessDeniedException
+            // - signalling unavailability of an item
+            //   at that particular location/revision:
+            //   - it may have been deleted (ChangeType.Delete)
+            //     at that very revision:
+            //     $/SomeTeamProj/SomeProj/SomeItemDeletedNow.txt
+            //   - it may have been a previously deleted item
+            //     whose parent directory has been moved
+            //     to a different location,
+            //     in which case TFS indicates a ChangeType.None
+            //     for such previously-deleted items
+            //     (most likely it is some kind of important hinting marker
+            //     e.g. for the case where multiple branches
+            //     may get merged and some of those do/don't contain
+            //     that file any more):
+            //     $/SomeTeamProj/SomeProj/SomeItemDeletedPreviously.txt
+            //     -->
+            //     $/SomeTeamProj/SomeProjRenamed/SomeItemDeletedPreviously.txt
+            // We need to ignore *certain* cases of these exceptions:
+
+            ignore = true;
+
+            return ignore;
         }
 
         public virtual void CheckNeedItemPathSanitize(
@@ -110,30 +150,50 @@ namespace SvnBridge.SourceControl
                     itemTypeCurr = ItemType.Folder;
                 }
 
-                string pathToBeChecked_Curr = PathJoin(
-                    pathElemsToBeChecked,
-                    numElemsRemain);
-                SourceItem sourceItem = QueryItem(
-                    pathToBeChecked_Curr,
-                    versionSpec,
-                    itemTypeCurr);
-                string pathResult = sourceItem.RemoteName;
-                bool isPathElemMatch = pathResult.Equals(pathToBeChecked_Curr);
-                if (!(isPathElemMatch))
+                string pathToBeChecked_Curr = PathJoin(pathElemsToBeChecked, numElemsRemain);
+                try
                 {
-                    haveEncounteredAnyMismatch = true;
-                    var idxPathElemToBeCorrected = numElemsRemain - 1;
-                    HandlePathElemMismatch(
-                        ref pathElemsSanitized,
-                        idxPathElemToBeCorrected,
-                        pathResult);
+                    SourceItem sourceItem = QueryItem(
+                        pathToBeChecked_Curr,
+                        versionSpec,
+                        itemTypeCurr);
+                    string pathResult = sourceItem.RemoteName;
+                    bool isPathElemMatch = pathResult.Equals(pathToBeChecked_Curr);
+                    if (!(isPathElemMatch))
+                    {
+                        haveEncounteredAnyMismatch = true;
+                        var idxPathElemToBeCorrected = numElemsRemain - 1;
+                        HandlePathElemMismatch(
+                            ref pathElemsSanitized,
+                            idxPathElemToBeCorrected,
+                            pathResult);
+                    }
+                    // UPDATE: NOPE, we now use a count-based .Join():
+                    //// Hmm, I guess decreasing like this
+                    //// is more convenient
+                    //// than keeping things in a list
+                    //// and then having to do .ToArray() each time...
+                    //Array.Resize<string>(ref pathElemsToBeChecked, pathElemsToBeChecked.Length - 1);
                 }
-                // UPDATE: NOPE, we now use a count-based .Join():
-                //// Hmm, I guess decreasing like this
-                //// is more convenient
-                //// than keeping things in a list
-                //// and then having to do .ToArray() each time...
-                //Array.Resize<string>(ref pathElemsToBeChecked, pathElemsToBeChecked.Length - 1);
+                catch (NetworkAccessDeniedException e)
+                {
+                    Helper.DebugUsefulBreakpointLocation();
+                    bool shouldIgnoreException = ShouldIgnoreQueryItemsException_NetworkAccessDeniedException(
+                        e,
+                        pathToBeChecked_Curr,
+                        versionSpec,
+                        itemTypeCurr);
+                    if (shouldIgnoreException)
+                    {
+                        // Nothing extra to be done here -
+                        // since we had an exception, query of the current item hierarchy failed,
+                        // thus we resort to simply skipping to the next one.
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
 
             bool hadSanePath = !(haveEncounteredAnyMismatch);
