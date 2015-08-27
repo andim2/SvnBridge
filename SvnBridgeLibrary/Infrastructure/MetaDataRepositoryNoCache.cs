@@ -34,24 +34,12 @@ namespace SvnBridge.Infrastructure
 
         public override SourceItem[] QueryItems(int revision, string[] paths, Recursion recursion)
         {
-            List<ItemSpec> itemSpecs = new List<ItemSpec>(paths.Length);
-            foreach (string path in paths)
-            {
-                ItemSpec itemspec = new ItemSpec { item = GetServerPath(path), recurse = RecursionType.None };
-                switch (recursion)
-                {
-                    case Recursion.OneLevel:
-                        itemspec.recurse = RecursionType.OneLevel;
-                        break;
-                    case Recursion.Full:
-                        itemspec.recurse = RecursionType.Full;
-                        break;
-                }
-                itemSpecs.Add(itemspec);
-            }
+            ItemSpec[] itemSpecs = PathsToItemSpecs(
+                paths,
+                recursion);
             ItemSet[] itemSets = sourceControlService.QueryItems(serverUrl, credentials,
                 VersionSpec.FromChangeset(revision),
-                itemSpecs.ToArray(),
+                itemSpecs,
                 0);
 
             SortedList<string, SourceItem> resultUniqueSorted = new SortedList<string, SourceItem>(); // double loop and complex insertion condition --> no initial capacity guesstimate possible

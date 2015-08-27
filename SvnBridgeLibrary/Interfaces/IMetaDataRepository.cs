@@ -4,6 +4,7 @@ using SvnBridge.SourceControl;
 
 // XXX: using:s for MetaDataRepositoryBase only (see below)
 using System.Net; // ICredentials
+using System.Collections.Generic; // List
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ItemSpec, RecursionType
 using SvnBridge.Interfaces; // IMetaDataRepository
 using SvnBridge.Proxies; // TracingInterceptor
@@ -156,6 +157,28 @@ namespace SvnBridge.Infrastructure
                 deletedState,
                 itemType,
                 false, 0);
+        }
+
+        protected ItemSpec[] PathsToItemSpecs(
+            string[] paths,
+            Recursion recursion)
+        {
+            List<ItemSpec> itemSpecs = new List<ItemSpec>(paths.Length);
+            foreach (string path in paths)
+            {
+                ItemSpec itemspec = new ItemSpec { item = GetServerPath(path), recurse = RecursionType.None };
+                switch (recursion)
+                {
+                    case Recursion.OneLevel:
+                        itemspec.recurse = RecursionType.OneLevel;
+                        break;
+                    case Recursion.Full:
+                        itemspec.recurse = RecursionType.Full;
+                        break;
+                }
+                itemSpecs.Add(itemspec);
+            }
+            return itemSpecs.ToArray();
         }
     }
 }
