@@ -752,10 +752,11 @@ namespace SvnBridge.Utility
             StringBuilder sb = new StringBuilder(hash.Length * HexByteStringLength);
             foreach (byte b in hash)
             {
-                sb.Append(b.ToString("x2").ToLower());
+                sb.Append(b.ToString("x2"));
             }
 
-            return sb.ToString();
+            // Performance: .ToLower() operation logically actually is per-hexbyte, but... :))
+            return sb.ToString().ToLower();
         }
 
         // (Almost) generic encoder (transform item set #2 to item set #1)
@@ -769,6 +770,7 @@ namespace SvnBridge.Utility
             int decodedLen = decoded.Length;
 			for (int i = 0; i < decodedLen; i++)
 			{
+                // Due to ampersand special case probably cannot do .ToUpper() globally at end, right?
 				if (capitalize && !(decoded[i].Equals("&")))
 				{
 					value = value.Replace(decoded[i], encoded[i].ToUpper());
