@@ -602,7 +602,7 @@ namespace SvnBridge.Net
 
         private static bool ShouldSupportHttpResponseContentBodyCompression
         {
-            get { return true; }
+            get { return Configuration.SvnHttpResponseContentBodyCompress; }
         }
 
         /// <remarks>

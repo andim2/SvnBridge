@@ -45,6 +45,7 @@ namespace SvnBridge.Infrastructure
             TfsProxyUrl,
             TfsCorrectCaseSensitivityInconsistentCommitRecords,
             SCMWantCaseSensitiveItemMatch,
+            SvnHttpResponseContentBodyCompress,
             SessionCombineWhenAuthIdentical,
             TraceEnabled,
             UseCodePlexServers,
@@ -254,6 +255,22 @@ namespace SvnBridge.Infrastructure
         public static bool SCMWantCaseSensitiveItemMatch
         {
             get { return ReadConfig<bool>(ConfigSettings.SCMWantCaseSensitiveItemMatch, true); }
+        }
+
+        /// <summary>
+        /// Indicates whether our SVN-side HTTP response body
+        /// should enable compression
+        /// (supported: gzip or deflate)
+        /// when requested by client.
+        /// Default value now true
+        /// since previously remaining issues
+        /// with response stream (.OutputStream) scope
+        /// have now been fixed,
+        /// by properly "using" .OutputStream at its outermost scope.
+        /// </summary>
+        public static bool SvnHttpResponseContentBodyCompress
+        {
+            get { return ReadConfig<bool>(ConfigSettings.SvnHttpResponseContentBodyCompress, true); }
         }
 
         /// <summary>
