@@ -398,14 +398,17 @@ namespace SvnBridge.Infrastructure
 
         public static object AppSettings(string name)
         {
-            name = name.ToLower();
-            if (name == ConfigSettings.CacheEnabled.ToString().ToLower()) return CacheEnabled;
-            if (name == ConfigSettings.LogPath.ToString().ToLower()) return LogPath;
-            if (name == ConfigSettings.PerfCountersAreMandatory.ToString().ToLower()) return PerfCountersMandatory;
-            if (name == ConfigSettings.TfsUrl.ToString().ToLower()) return TfsUrl;
-            if (name == ConfigSettings.DomainIncludesProjectName.ToString().ToLower()) return DomainIncludesProjectName;
-            if (name == ConfigSettings.UseCodePlexServers.ToString().ToLower()) return UseCodePlexServers;
-            if (name == ConfigSettings.TfsTimeout.ToString().ToLower()) return TfsTimeout;
+            // Do *NOT* do case-insensitive compare
+            // via manual terribly string-duplicating hacks!! (.ToLower() etc.)
+            // http://www.codeproject.com/Articles/10318/Performance-considerations-for-strings-in-C
+            StringComparison comparison = StringComparison.OrdinalIgnoreCase;
+            if (name.Equals(ConfigSettings.CacheEnabled.ToString(), comparison)) return CacheEnabled;
+            if (name.Equals(ConfigSettings.LogPath.ToString(), comparison)) return LogPath;
+            if (name.Equals(ConfigSettings.PerfCountersAreMandatory.ToString(), comparison)) return PerfCountersMandatory;
+            if (name.Equals(ConfigSettings.TfsUrl.ToString(), comparison)) return TfsUrl;
+            if (name.Equals(ConfigSettings.DomainIncludesProjectName.ToString(), comparison)) return DomainIncludesProjectName;
+            if (name.Equals(ConfigSettings.UseCodePlexServers.ToString(), comparison)) return UseCodePlexServers;
+            if (name.Equals(ConfigSettings.TfsTimeout.ToString(), comparison)) return TfsTimeout;
             return null;
         }
 
