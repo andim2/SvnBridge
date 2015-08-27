@@ -724,15 +724,6 @@ namespace SvnBridge.Utility
 			return histories;
 		}
 
-		public static string GetFolderNameUsingServerRootPath(string name)
-		{
-			int indexOfSlash = name.LastIndexOf("/");
-			string folderName = indexOfSlash == -1 ? Constants.ServerRootPath : name.Substring(0, indexOfSlash);
-			if (folderName == "$")
-				return Constants.ServerRootPath;
-			return folderName;
-		}
-
 		public static string CombinePath(string path1, string path2)
 		{
 			if (path1.EndsWith("/"))
