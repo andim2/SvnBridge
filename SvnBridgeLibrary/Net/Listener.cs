@@ -378,6 +378,16 @@ namespace SvnBridge.Net
             ref bool requestedHttpKeepAlive,
             ref bool needClose)
         {
+            // Make sure to parse Connection header value
+            // unconditionally in *all* iterations
+            // (e.g. to react on close announcement):
+            bool foundKeepAlive;
+            bool foundConnectionClose;
+            GetHttpHeaderConnectionConfig(
+                context.Request,
+                out foundKeepAlive,
+                out foundConnectionClose);
+
             var response = context.Response;
             bool doSupportHttpKeepAlive = (supportHttpKeepAlive);
             // See also http://www.w3.org/Protocols/HTTP/Issues/http-persist.html
@@ -391,13 +401,6 @@ namespace SvnBridge.Net
                 // does not provide the HTTP version value yet...
                 if (!(requestedHttpKeepAlive))
                 {
-                    bool foundKeepAlive;
-                    bool foundConnectionClose;
-                    GetHttpHeaderConnectionConfig(
-                        context.Request,
-                        out foundKeepAlive,
-                        out foundConnectionClose);
-
                     if (foundKeepAlive && !foundConnectionClose)
                     {
                         requestedHttpKeepAlive = true;
@@ -427,12 +430,17 @@ namespace SvnBridge.Net
                 }
             }
 
-            // Handle Connection-close announcement
+            // Handle Connection-close evaluation and announcement
             // outside of Keep-Alive handling!
             // (required for both KA and legacy non-KA)
             // And append all headers *prior* to doing handling of the requests below
             // (once we return here after connection handling below
             // it's already done and sent to client).
+            if (foundConnectionClose)
+            {
+                needClose = true;
+            }
+
             if (needClose)
             {
                 ConnectionIndicateNonPersistent(
