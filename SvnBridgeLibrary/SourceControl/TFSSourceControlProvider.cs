@@ -74,8 +74,87 @@ namespace SvnBridge.SourceControl
 
         public static string StripPrefix(string prefix, string full)
         {
+            // Hmm, there's an off-by-1 API mismatch
+            // between StripPrefix() and GetSubPath().
+            // Would be nice to possibly have that cleaned up
+            // to not need StripPrefix()...
             string res = (full.Length > prefix.Length) ? full.Substring(prefix.Length) : "";
             return res;
+        }
+
+        public static string GetSubPath(string pathRoot, string pathFull)
+        {
+            // Hmm, perhaps have an additional check
+            // against pathFull being only a part of pathRoot?
+            // (see StripPrefix() above)
+            return pathFull.Substring(pathRoot.Length + 1);
+        }
+
+        /// <summary>
+        /// Calculates the common parent folder path of two items
+        /// (returning a path which is able to contain both path items),
+        /// irrespective of whether that path then happens to already exist or not.
+        /// "parent" is not to be confused with "ancestor" (we're not talking history here...).
+        /// </summary>
+        /// <param name="path1">Location one</param>
+        /// <param name="path2">Location two</param>
+        public static string CalculateCommonParentFolderPath(string path1, string path2)
+        {
+            string pathCommonParent = "";
+
+            // First, handle special cases:
+            if (null == path1)
+            {
+                pathCommonParent = path2;
+            }
+            else
+            if (null == path2)
+            {
+                pathCommonParent = path1;
+            }
+            else
+            {
+                pathCommonParent = NeedCalculateCommonParentFolderPath(path1, path2);
+            }
+
+            return pathCommonParent;
+        }
+
+        private static string NeedCalculateCommonParentFolderPath(string path1, string path2)
+        {
+            string pathCommonParent = "";
+
+            string[] path1Elems = GetPathElems(path1);
+            string[] path2Elems = GetPathElems(path2);
+            int pathElemsLen = Math.Min(path1Elems.Length, path2Elems.Length);
+
+            // Performance opt: first do a query-only comparison of elems,
+            // *then* laboriously assemble final result string.
+            int idxMatch = 0;
+            for (idxMatch = 0; idxMatch < pathElemsLen; ++idxMatch)
+            {
+                bool isStillMatching = (path1Elems[idxMatch] == path2Elems[idxMatch]);
+                if (!isStillMatching)
+                {
+                    break;
+                }
+            }
+
+            bool foundSomeCommonPathElems = (0 < idxMatch);
+            if (foundSomeCommonPathElems)
+            {
+                pathCommonParent = string.Join(repo_separator_s, path1Elems, 0, idxMatch);
+            }
+
+            // Not sure whether we need this path tweak
+            // (this would spoil the otherwise very clean symmetric handling
+            // "determine common data *only* given two items"
+            // by *manually* adding a slash,
+            // so quite likely this should only be applied externally if needed):
+            //if (!pathCommonParent.StartsWith("/"))
+            //    pathCommonParent = "/" + pathCommonParent;
+
+            return pathCommonParent;
         }
 
         public static string[] GetPathElems(string path)
@@ -322,8 +401,12 @@ namespace SvnBridge.SourceControl
         /// i.e. it should *never* be a stub item type (external users implement item existence checks by querying it!).
         /// </summary>
         private ItemMetaData rootItem;
-        public FolderMap()
+        private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly int _targetVersion;
+        public FolderMap(TFSSourceControlProvider sourceControlProvider, int version)
         {
+            this.sourceControlProvider = sourceControlProvider;
+            this._targetVersion = version;
         }
 
         public ItemMetaData QueryRootItem()
@@ -344,70 +427,164 @@ namespace SvnBridge.SourceControl
         /// <param name="newItem">The item to be inserted</param>
         public void Insert(ItemMetaData newItem)
         {
-            // TODO: should probably start operations with a path that's
+            // We'll start operations with determining a path that's
             // the common parent of root item vs. new item,
-            // since that one will become the new root item.
+            // since that one will become the new root item,
+            // and it's important to hook up items starting from the root direction
+            // since existing parent folders need to have their children added.
+            // So, first figure out the new value of the root item.
 
+            //if (newItem.Name.ToLowerInvariant().Contains("somefile.h"))
+            //{
+            //    Helper.DebugUsefulBreakpointLocation();
+            //}
+
+            // === STEP 1: DETERMINE LOCATION OF NEW ROOT ITEM ===
+
+            ItemMetaData oldRootItem = QueryRootItem();
+            string pathToOldRootItem = (null != oldRootItem) ? oldRootItem.Name : null;
+
+            bool newItemIsFolder = (ItemType.Folder == newItem.ItemType);
+
+            string pathToNewFolder = newItemIsFolder ? newItem.Name : FilesysHelpers.GetFolderPathPart(newItem.Name);
+
+            // It is not relevant that the root item might be non-folder (i.e., file),
+            // since in that case we'd always end up with a proper result of a
+            // suitable new parent folder...
+            string pathToNewRootItem = FilesysHelpers.CalculateCommonParentFolderPath(pathToOldRootItem, pathToNewFolder);
+
+            // === STEP 2: UPDATE ROOT ITEM IF NEEDED ===
+
+            ItemMetaData newRootItem;
+
+            bool rootItemNeedsUpdate = (pathToNewRootItem != pathToOldRootItem);
+            if (rootItemNeedsUpdate)
+            {
+                bool newItemIsNewRootItem = (newItem.Name == pathToNewRootItem);
+                newRootItem = (newItemIsNewRootItem) ? newItem : QueryItem(pathToNewRootItem);
+                if (ItemType.Folder == newRootItem.ItemType)
+                    InsertFolderInMap((FolderMetaData)newRootItem);
+                rootItem = newRootItem;
+            }
+            else
+                newRootItem = oldRootItem;
+
+            // AT THIS POINT WE EXPECT TO HAVE DETERMINED A VALID NEW ROOT ITEM!
+
+            FolderMetaData newRootFolder = newRootItem as FolderMetaData;
+            bool newRootItemIsFolder = (null != newRootFolder);
+            bool needRelinkRootFolderSubContent = (newRootItemIsFolder);
+
+            if (needRelinkRootFolderSubContent)
+            {
+                // === STEP 3: IF NEEDED, COMPLETE PATH FROM NEW ROOT ITEM TO OLD ROOT ITEM ===
+
+                bool rootItemLocationMoved = ((null != oldRootItem) && (newRootFolder != oldRootItem));
+                if (rootItemLocationMoved)
+                {
+                    CompletePath(newRootFolder, oldRootItem);
+                }
+
+                // === STEP 4: IF NEEDED, COMPLETE PATH FROM NEW ROOT ITEM TO NEW ITEM ===
+
+                bool itemDiffersFromRootItem = (newRootFolder != newItem);
+                if (itemDiffersFromRootItem)
+                {
+                    CompletePath(newRootFolder, newItem);
+                }
+            }
+        }
+
+        private ItemMetaData QueryItem(string itemName)
+        {
+            return sourceControlProvider.GetItemsWithoutProperties(_targetVersion, itemName, Recursion.None);
+        }
+
+        private FolderMetaData QueryAsStubFolder(string itemName)
+        {
+            // Due to our prior handling,
+            // we expect the item at that location to exist, and to be a folder.
+            FolderMetaData folder = (FolderMetaData)QueryItem(itemName);
+            // And since we weakly *queried* the folder item here
+            // (rather than e.g. receiving an explicit folder to queue),
+            // we'll have to mark it as stub folder
+            // (for interim item collection purposes, as the parent folder)
+            // until the time eventually may come
+            // that someone *actually* happens to submit this folder item for real:
+            return ItemHelpers.WrapFolderAsStubFolder(folder);
+        }
+
+        /// <summary>
+        /// Completes the "path to an item",
+        /// by adding/linking as many interim folders as needed, up to the actual final item.
+        /// </summary>
+        /// <param name="folderFrom">Start folder</param>
+        /// <param name="itemTo">The item to provide a complete path to</param>
+        private void CompletePath(FolderMetaData folderFrom, ItemMetaData itemTo)
+        {
+            string pathRoot = folderFrom.Name;
+            string pathSub = FilesysHelpers.GetSubPath(pathRoot, itemTo.Name);
+            bool finalItemIsFolder = (ItemType.Folder == itemTo.ItemType);
             // NOTE: we'll do operations relatively openly in one big loop rather than sub methods
             // since handling always needs to be done from the view of the parent item
             // (we may need to update list linking), as provided by the previous loop iteration.
+            ItemHelpers.PathIterator(folderFrom, pathRoot, pathSub,
+                delegate(FolderMetaData folder, string itemPath, bool isLastPathElem, ref bool requestFinish) {
+                    // Detect our possibly pre-existing record of this item within the changeset version range
+                    // that we're in the process of analyzing/collecting...
+                    // This existing item may possibly be a placeholder (stub folder).
+                    ItemMetaData item = folder.FindItem(itemPath);
+                    bool doReplaceByNewItem = (null == item);
+                    if (!doReplaceByNewItem) // further checks...
+                    {
+                        if (isLastPathElem) // only if final item...
+                        {
+                            // Our new item gets actively inserted, thus it does need to properly end up as the replacement:
+                            doReplaceByNewItem = true;
+                        }
+                    }
+                    // So... do we actively want to grab a new item?
+                    if (doReplaceByNewItem)
+                    {
+                        // First remove this prior item...
+                        if (item != null)
+                        {
+                            ItemHelpers.FolderOps_RemoveItem(folder, item);
+                        }
 
-            ItemMetaData rootItem = QueryRootItem();
-            string rootPath = (null != rootItem) ? rootItem.Name : "";
+                        // ...and fetch the updated one (forward *or* backward change) for the currently processed version:
+                        bool isFolder = (!isLastPathElem) || finalItemIsFolder;
+                        item = (isFolder) ?
+                               ProvideFolderTypeItemForPath(itemPath)
+                             :
+                               // item is not folder, ergo it can be the final non-folder (file) item only
+                               itemTo
+                             ;
 
-            // Figure out whether there's an existing item which might be parent
-            // of the new item:
-            bool haveRoot = (null != rootItem);
-            if (haveRoot)
-            {
-                if (newItem.IsBelowEqual(rootItem.Name))
-                {
-                    Debugger.Launch(); // TODO UNFINISHED
-                }
-            }
+                        if (null == item)
+                        {
+                            bool edit = false; // FIXME correct value!?
+                            item = new MissingItemMetaData(itemPath, _targetVersion, edit);
+                        }
+                        if (!isLastPathElem)
+                        {
+                            item = ItemHelpers.WrapFolderAsStubFolder((FolderMetaData)item);
+                        }
+                        ItemHelpers.FolderOps_AddItem(folder, item);
 
-            if (newItem.ItemType == ItemType.Folder)
-            {
-                InsertFolder((FolderMetaData)newItem);
-            }
+                        if (ItemType.Folder == item.ItemType)
+                        {
+                            InsertFolderInMap((FolderMetaData)item);
+                        }
+                    }
+                    else if ((item is StubFolderMetaData) && isLastPathElem)
+                    {
+                        item = ItemHelpers.FolderOps_UnwrapStubFolder(folder, (StubFolderMetaData)item);
+                        InsertFolderInMap((FolderMetaData)item); // update map to contain new folder item
+                    }
 
-            if (newItem.ItemType == ItemType.File)
-            {
-                string folderName = FilesysHelpers.GetFolderPathPart(newItem.Name);
-                // Hmm... since this is a *helper-only* folder:
-                // perhaps we should wrap a new FolderMetaData in a *stub*
-                // StubFolderMetaData instead?
-                FolderMetaData folder = new FolderMetaData();
-                folder.Name = folderName;
-                InsertFolder(folder);
-                AddItemToFolder(folder, newItem);
-            }
-
-            {
-                FolderMetaData folder = FetchContainerFolderForItem(newItem);
-                // NO null check here - I'm not quite certain about the rootItem mechanism yet,
-                // thus if it crashes, then it does, which ensures that we'll be able to notice it.
-                ItemHelpers.FolderOps_AddItem(folder, newItem);
-            }
-        }
-
-        private void SubmitAsRootItem(ItemMetaData item)
-        {
-            if (null == rootItem)
-            {
-                rootItem = item;
-            }
-        }
-
-        private static void AddItemToFolder(FolderMetaData folder, ItemMetaData item)
-        {
-            ItemHelpers.FolderOps_AddItem(folder, item);
-        }
-
-        private void InsertFolder(FolderMetaData folder)
-        {
-            InsertFolderInMap(folder);
-            SubmitAsRootItem(folder);
+                    return item;
+                });
         }
 
         private void InsertFolderInMap(FolderMetaData folder)
@@ -442,18 +619,20 @@ namespace SvnBridge.SourceControl
         /// <summary>
         /// *Guarantees* returning a (not necessarily having pre-existed) folder item.
         /// </summary>
-        /// <param name="item">The item (file, folder) to return a base folder for</param>
-        /// <returns>Base folder item which may be used to contain the item</returns>
-        private FolderMetaData FetchContainerFolderForItem(ItemMetaData item)
+        /// <param name="itemPath">Path to the folder to fetch</param>
+        /// <returns>Folder item</returns>
+        FolderMetaData ProvideFolderTypeItemForPath(string itemPath)
         {
-            string folderName = FilesysHelpers.GetFolderPathPart(item.Name);
-            string folderNameMangled = FilesysHelpers.GetCaseMangledName(folderName);
+            FolderMetaData item;
 
-            FolderMetaData folder = TryGetFolder(folderNameMangled);
-            return folder;
+            FolderMetaData itemFolderExisting = GetExistingContainerFolderForPath(itemPath);
+            bool haveItemFolderExisting = (null != itemFolderExisting);
+            item = (haveItemFolderExisting) ?
+                itemFolderExisting :
+                QueryAsStubFolder(itemPath);
+
+            return item;
         }
-
-
 
         private FolderMetaData GetExistingContainerFolderForPath(string path)
         {
@@ -515,15 +694,17 @@ namespace SvnBridge.SourceControl
     public class ItemQueryCollector
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly int version;
 
-        public ItemQueryCollector(TFSSourceControlProvider sourceControlProvider)
+        public ItemQueryCollector(TFSSourceControlProvider sourceControlProvider, int version)
         {
             this.sourceControlProvider = sourceControlProvider;
+            this.version = version;
         }
 
         public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
         {
-                FolderMap folderMap = new FolderMap();
+                FolderMap folderMap = new FolderMap(sourceControlProvider, version);
                 Dictionary<string, ItemProperties> dictPropertiesOfItems = new Dictionary<string, ItemProperties>(items.Length);
                 Dictionary<string, int> dictPropertiesRevisionOfItems = new Dictionary<string, int>(items.Length);
                 WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
@@ -2204,7 +2385,7 @@ namespace SvnBridge.SourceControl
 
             if (sourceItems.Length > 0)
             {
-                var itemCollector = new ItemQueryCollector(this);
+                var itemCollector = new ItemQueryCollector(this, version);
                 // Authorship (== history) fetching is very expensive -
                 // TODO: make intelligently configurable from the outside,
                 // only where needed (perhaps via a parameterization struct
