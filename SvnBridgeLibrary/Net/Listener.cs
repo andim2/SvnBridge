@@ -518,7 +518,7 @@ namespace SvnBridge.Net
             {
                 // Now do actual handling
                 // of the currently requested HTTP method:
-                HandleOneHttpRequest(
+                HandleOneHttpRequestTimed(
                     context,
                     output);
             }
@@ -657,6 +657,36 @@ namespace SvnBridge.Net
             response.AppendHeader("Connection", "close");
         }
 
+        private void HandleOneHttpRequestTimed(
+            IHttpContext connection,
+            StreamWriter output)
+        {
+            DateTime timeUtcStart = DateTime.UtcNow;
+            try
+            {
+                // Inner parts which are to be strictly concerned
+                // with per-request-handler stuff
+                // (for per-specific-handler latency evaluation):
+                HandleOneHttpRequest(
+                    connection,
+                    output);
+            }
+            finally
+            {
+                // Performance: first grab timestamp
+                // to achieve precise time length of the HTTP handling scope,
+                // *then* immediately ensure a flush of the connection data to consumer,
+                // *then* do remaining unimportant evaluation handling.
+                DateTime timeUtcEnd = DateTime.UtcNow; // debug helper
+                // Now disabled (see comment at method):
+                //FlushConnection(connection);
+                TimeSpan duration = timeUtcEnd - timeUtcStart;
+                FinishedHandling(this, new FinishedHandlingEventArgs(duration,
+                    connection.Request.Url.AbsoluteUri,
+                    connection.Request.HttpMethod));
+            }
+        }
+
         /// <remarks>
         /// Most likely a lot of HTTP-specific handling here
         /// (including all that HTTP Keep-Alive setup)
@@ -678,7 +708,6 @@ namespace SvnBridge.Net
             IHttpContext connection,
             StreamWriter output)
         {
-            DateTime timeUtcStart = DateTime.UtcNow;
             try
             {
                 // The global RequestCache object
@@ -713,20 +742,6 @@ namespace SvnBridge.Net
                 }
                 // we still raise the original exception (from further above), though.
                 throw;
-            }
-            finally
-            {
-                // Performance: first grab timestamp
-                // to achieve precise time length of the HTTP handling scope,
-                // *then* immediately ensure a flush of the connection data to consumer,
-                // *then* do remaining unimportant evaluation handling.
-                DateTime timeUtcEnd = DateTime.UtcNow; // debug helper
-                // Now disabled (see comment at method):
-                //FlushConnection(connection);
-                TimeSpan duration = timeUtcEnd - timeUtcStart;
-                FinishedHandling(this, new FinishedHandlingEventArgs(duration,
-                    connection.Request.Url.AbsoluteUri,
-                    connection.Request.HttpMethod));
             }
         }
 
