@@ -202,6 +202,8 @@
     <Compile Include="SourceControl\Recursion.cs" />
     <Compile Include="SourceControl\RenamedSourceItem.cs" />
     <Compile Include="SourceControl\ItemMetaData\StubFolderMetaData.cs" />
+    <Compile Include="Interfaces\ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder.cs" />
+    <Compile Include="SourceControl\TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder.cs" />
     <Compile Include="SourceControl\TFSSourceControlService.cs" />
     <Compile Include="SourceControl\TFSSourceControlProvider.cs">
       <SubType>Code</SubType>

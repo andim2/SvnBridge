@@ -338,6 +338,70 @@ namespace UnitTests
             Assert.Equal(elemItemVictimRenamedNew.Id, idItemBarNew);
         }
 
+        [Fact(Skip="Temporary disable (not complete yet)")]
+        [Trait("TestName", "BTCIMCCDES")]
+        public void BrokenTFSCaseInsensitiveMismatchCommitContentDamageEnsureSanitized()
+        {
+            //System.Diagnostics.Debugger.Launch();
+            string pathOther = "project/other";
+            string pathOtherOther1 = pathOther + "/other1.txt"; // foreign file, properly existing
+            string pathSub = "project/sub";
+            string pathOtherOther1New = pathSub + "/other1.txt"; // incorrectly-cased (NON-EXISTING) destination directory
+            string pathSUB = "project/SUB";
+            string pathSUBfoo = pathSUB + "/foo.txt"; // properly existing file
+            stub.Attach(sourceControlProvider.GetItems, Return.DelegateResult(delegate(object[] parameters)
+            {
+                int version = (int)parameters[0];
+                string path = (string)parameters[1];
+                //var recursion = parameters[2];
+
+                switch (version)
+                {
+                    case 1:
+                        if ((pathSUB == path) || (pathOther == path))
+                        {
+                            FolderMetaData folder = new FolderMetaData(path);
+                            return folder;
+                        }
+                        else
+                        if (pathSub == path)
+                        {
+                            return null; // invalid, non-existing sub dir - does not get retrieved
+                        }
+                        else
+                        if (pathOtherOther1New == path)
+                        {
+                            // yup, this incorrectly-cased item *does* get retrieved...
+                            ItemMetaData item = CreateItem(path, version);
+                            return item;
+                        }
+                        else
+                        if (pathSUBfoo == path)
+                        {
+                            ItemMetaData item = CreateItem(path, version);
+                            return item;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                throw new InvalidOperationException();
+            }));
+
+            engine.Edit(CreateChange(ChangeType.Edit, pathSUBfoo, 1, ItemType.File));
+            engine.Rename(CreateChangeRename(ChangeType.Edit | ChangeType.Rename, pathOther,  0, pathOtherOther1New,  1, ItemType.File), true);
+
+            AssertFolder(root, "project", 0, 2);
+            var items = root.Items;
+            AssertFolder(items[0], pathSUB, 1, 2);
+            AssertDeleteItem(items[1], pathOther);
+            //AssertItem(items[1], pathBarOld, 1);
+            //Assert.Equal(items[1].Id, idItemBar);
+            //AssertDeleteItem(items[2], pathBarNew);
+            //AssertItem(items[3], pathBar, 1);
+            //Assert.Equal(items[3].Id, idItemBarNew);
+        }
+
         private void AssertFolder(object folder, string name, int changeset, int itemCount)
         {
             Assert.IsType<FolderMetaData>(folder);

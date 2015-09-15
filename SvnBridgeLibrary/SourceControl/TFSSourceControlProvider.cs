@@ -647,6 +647,19 @@ namespace SvnBridge.SourceControl
         /// Query: /project/myFolder/
         /// This would return Location1, despite Location2 arguably being more relevant
         /// (the root entry is precise, and only the sub dir is different).
+        /// However, please note that we encountered veritable, true cases of TFS SCM history
+        /// indicating WRONGLY-cased, non-existent items (even within single commits!)
+        /// as a sibling of the actually CORRECTLY-cased, non-referenced item, *within one commit*
+        /// (i.e., one could very strongly argue that such inconsistent commit data is TERRIBLY B0RKEN,
+        /// irrespective of whether TFS does or does not have contracted
+        /// the case insensitive disease in general).
+        /// I would think that such cases best ought be treated at the following location:
+        /// *after* having compiled the full set of changes within a commit
+        /// (i.e., post-processed),
+        /// and *per-commit* only!!
+        /// (i.e. avoid applying such corrective actions beyond a single commit's border,
+        /// since it's that commit and that commit only
+        /// which is to blame for having introduced such case inconsistency).
         /// </remarks>
         public FolderMetaData TryGetFolder(string key)
         {
@@ -2725,14 +2738,6 @@ namespace SvnBridge.SourceControl
 
         private ItemMetaData GetItems(int version, string path, Recursion recursion, bool returnPropertyFiles)
         {
-            // WARNING: this interface will (update: "might" - things are now improved...)
-            // return filename items with a case-insensitive match,
-            // due to querying into TFS-side APIs!
-            // All users which rely on precise case-sensitive matching
-            // will need to account for this.
-            // Ideally we should offer a clean interface here
-            // which ensures case-sensitive matching when needed.
-
             ItemMetaData rootItem = null;
 
             SVNPathStripLeadingSlash(ref path);
