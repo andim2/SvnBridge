@@ -39,6 +39,7 @@ namespace SvnBridge.Infrastructure
             TfsPort,
             TfsUrl,
             TfsTimeout,
+            TfsTcpKeepAliveSeconds,
             TfsProxyUrl,
             SCMWantCaseSensitiveItemMatch,
             TraceEnabled,
@@ -178,6 +179,20 @@ namespace SvnBridge.Infrastructure
         public static int TfsTimeout
         {
             get { return ReadConfig<int>(ConfigSettings.TfsTimeout, 900000); }
+        }
+
+        /// <summary>
+        /// Configures the number of seconds for TCP Keep-Alive intervals.
+        /// A value of 0 will disable custom configuration
+        /// of this request setting.
+        /// A recommended configured value is 50.
+        /// Since TCP Keep-Alive is generally expected
+        /// to be a reliability-increasing measure,
+        /// I chose to enable it by default, by adopting the recommended value.
+        /// </summary>
+        public static int TfsTcpKeepAliveSeconds
+        {
+            get { return ReadConfig<int>(ConfigSettings.TfsTcpKeepAliveSeconds, 50); }
         }
 
         /// <summary>

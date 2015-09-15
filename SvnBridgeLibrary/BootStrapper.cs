@@ -39,7 +39,7 @@ namespace SvnBridge
             // this would be even more important
             // if it was instead done
             // in the performance-critical OnWebRequest hook hotpath.
-            var keepAliveTimeSeconds = 50;
+            var keepAliveTimeSeconds = Configuration.TfsTcpKeepAliveSeconds;
             var keepAliveIntervalSeconds = 1;
             bool enable = (0 != keepAliveTimeSeconds);
             if (enable)
