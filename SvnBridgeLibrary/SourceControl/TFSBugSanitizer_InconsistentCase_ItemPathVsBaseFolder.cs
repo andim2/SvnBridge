@@ -49,8 +49,8 @@ namespace SvnBridge.SourceControl
                 count);
         }
 
-        public virtual bool MakeItemPathSanitized(
-            ref string pathToBeChecked,
+        public virtual void CheckNeedItemPathSanitize(
+            string pathToBeChecked,
             VersionSpec versionSpec,
             ItemType itemType)
         {
@@ -128,13 +128,9 @@ namespace SvnBridge.SourceControl
             bool hadSanePath = !(haveEncounteredAnyMismatch);
             if (!(hadSanePath))
             {
-                string pathSanitized = PathJoin(
-                    pathElemsSanitized,
-                    pathElemsSanitized.Length);
-                pathToBeChecked = pathSanitized;
+                ReportSanitizedPathFromElems(
+                    pathElemsSanitized);
             }
-
-            return haveEncounteredAnyMismatch;
         }
 
         private SourceItem QueryItem(
@@ -210,6 +206,23 @@ namespace SvnBridge.SourceControl
             // to be incorrect at this time:
             pathElemsToBeCorrected[idxPathElemToBeCorrected] = pathElemsCorrected[idxPathElemToBeCorrected];
         }
+
+        private static void ReportSanitizedPathFromElems(
+            string[] pathElemsSanitized)
+        {
+            string pathSanitized = PathJoin(
+                pathElemsSanitized,
+                pathElemsSanitized.Length);
+            ReportSanitizedPath(
+                pathSanitized);
+        }
+
+        private static void ReportSanitizedPath(
+            string pathSanitized)
+        {
+            throw new ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize(
+                pathSanitized);
+        }
     }
 
     public class TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Bracketed
@@ -224,17 +237,44 @@ namespace SvnBridge.SourceControl
         /// "error CS0206: A property, indexer or dynamic member access may not be passed as an out or ref parameter"
         /// (should be using an explicit try /catch frame then (to keep exceptional handling in exception path).
         /// </summary>
+        public static void EnsureItemPathSanitized(
+            TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer,
+            ref string itemPathToBeSanitized,
+            VersionSpec versionSpecItem,
+            ItemType itemType)
+        {
+            try
+            {
+                bugSanitizer.CheckNeedItemPathSanitize(
+                    itemPathToBeSanitized,
+                    versionSpecItem,
+                    itemType);
+            }
+            catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+            {
+                itemPathToBeSanitized = e.PathSanitized;
+            }
+        }
+
         public static bool CheckNeededItemPathSanitized(
             TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer,
             ref string itemPathToBeSanitized,
             VersionSpec versionSpecItem,
             ItemType itemType)
         {
-            bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
-                ref itemPathToBeSanitized,
-                versionSpecItem,
-                itemType);
-            bool hadSanePath = !(haveEncounteredAnyMismatch);
+            bool hadSanePath = true;
+            try
+            {
+                bugSanitizer.CheckNeedItemPathSanitize(
+                    itemPathToBeSanitized,
+                    versionSpecItem,
+                    itemType);
+            }
+            catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+            {
+                itemPathToBeSanitized = e.PathSanitized;
+                hadSanePath = false;
+            }
 
             return !(hadSanePath);
         }

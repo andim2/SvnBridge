@@ -1,6 +1,26 @@
 namespace SvnBridge.Interfaces
 {
+    using System; // Exception
     using CodePlex.TfsLibrary.RepositoryWebSvc; // VersionSpec
+
+    public sealed class ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize : Exception
+    {
+        private readonly string pathSanitized;
+
+        public ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize(
+            string pathSanitized)
+        {
+            this.pathSanitized = pathSanitized;
+        }
+
+        public string PathSanitized
+        {
+            get
+            {
+                return pathSanitized;
+            }
+        }
+    }
 
     /// <summary>
     /// TFS (at least TFS2013, but quite likely also TFS2008 etc.)
@@ -95,7 +115,7 @@ namespace SvnBridge.Interfaces
         /// may easily be executed for thousands of items, at all times!!
         /// (IOW avoid any bloat whatsoever in your implementation!)
         ///
-        /// I decided to provide this as bool result / string reference
+        /// I decided to provide this as string reference
         /// (rather than returning a potentially modified string),
         /// since that way the "strings mismatching" decision
         /// can be carried out internally already
@@ -124,12 +144,16 @@ namespace SvnBridge.Interfaces
         ///   thus we are able to (and it is a good idea)
         ///   to be directly making use of
         ///   helper types specific to that toolkit
-        /// <param name="pathToBeChecked">Full SCM path of item - potentially tweaked (sanitized)</param>
+        /// Also, implement this in exception-based manner,
+        /// since having to sanitize a path
+        /// definitely is to be seen
+        /// as an exceptional case rather than the norm
+        /// (IOW, keep standard/normal control flow optimized).
+        /// <param name="pathToBeChecked">Full SCM path of item</param>
         /// <param name="versionSpec">Version to query items of</param>
         /// <param name="itemType">Type of item, at innermost (read: full) sub path location</param>
-        /// <returns>bool which indicates whether the path string has been sanitized</returns>
-        bool MakeItemPathSanitized(
-            ref string pathToBeChecked,
+        void CheckNeedItemPathSanitize(
+            string pathToBeChecked,
             VersionSpec versionSpec,
             ItemType itemType);
     }

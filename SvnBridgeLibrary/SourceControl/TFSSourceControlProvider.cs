@@ -2047,19 +2047,20 @@ namespace SvnBridge.SourceControl
                 int cg = 0; // Debug helper (it's sufficiently relevant to know the current element)
                 foreach (var change in changeset.Changes)
                 {
-                    string pathToBeChecked = change.Item.item;
-                    bool needCheckPath = (pathToBeChecked.Contains("/display/"));
+                    bool needCheckPath = (change.Item.item.Contains("/display/"));
                     if (needCheckPath)
                     {
                         VersionSpec versionSpecItem = versionSpecChangeset;
-                        bool haveEncounteredAnyMismatch = bugSanitizer.MakeItemPathSanitized(
-                            ref pathToBeChecked,
-                            versionSpecItem,
-                            change.Item.type);
-                        bool hadSanePath = !(haveEncounteredAnyMismatch);
-                        if (!(hadSanePath))
+                        try
                         {
-                            change.Item.item = pathToBeChecked;
+                            bugSanitizer.CheckNeedItemPathSanitize(
+                                change.Item.item,
+                                versionSpecItem,
+                                change.Item.type);
+                        }
+                        catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+                        {
+                            change.Item.item = e.PathSanitized;
                         }
                     }
                     ++cg;
