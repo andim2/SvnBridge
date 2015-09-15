@@ -67,11 +67,18 @@ namespace SvnBridge.Net
             // on ethernet network interface etc.).
             // Convenient search keywords: interface bind ip port firewall localhost external
             // Note: THIS SETTING MIGHT OBVIOUSLY CONSTITUTE A SECURITY ISSUE!
-            bool useSecureMode = true;
+            // We currently don't offer
+            // (and given that this setting is a security issue we likely shouldn't)
+            // a setting at the Settings GUI presenter (yet?).
+            // So at the moment to enable this setting
+            // you will have to cause a setting change in GUI,
+            // then edit the saved (due to setting change) .config file,
+            // to manually add the config entry.
+            bool useSecureMode = (true != Configuration.NetworkSvnUseInsecureNonLoopbackBind);
 
             if (!useSecureMode)
             {
-                Debug.WriteLine("Attention: SVN network listener configured to provide insecure global (not loopback-only) network interface bind.\n");
+                Debug.WriteLine("Attention: SVN network listener configured to provide insecure global (not loopback-only) network interface bind, due to NetworkSvnUseInsecureNonLoopbackBind app.config setting.\n");
             }
 
             bool doLocalhostInterfaceBindOnly = useSecureMode;

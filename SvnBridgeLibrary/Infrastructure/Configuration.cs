@@ -16,6 +16,7 @@ namespace SvnBridge.Infrastructure
             DomainIncludesProjectName,
             LogCancelErrors,
             LogPath,
+            NetworkSvnUseInsecureNonLoopbackBind,
             PerfCountersAreMandatory,
             ProxyEncryptedPassword,
             ProxyUrl,
@@ -86,6 +87,12 @@ namespace SvnBridge.Infrastructure
         public static bool LogCancelErrors
         {
             get { return ReadConfig<bool>(ConfigSettings.LogCancelErrors, false); }
+        }
+
+        public static bool NetworkSvnUseInsecureNonLoopbackBind
+        {
+            get { return
+            ReadConfig<bool>(ConfigSettings.NetworkSvnUseInsecureNonLoopbackBind, false); }
         }
 
         public static bool PerfCountersMandatory
