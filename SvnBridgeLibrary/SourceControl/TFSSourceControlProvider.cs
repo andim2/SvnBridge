@@ -1755,7 +1755,8 @@ namespace SvnBridge.SourceControl
                         bool itemFileIncludedInChanges = false;
                         foreach (SourceItemChangeClassifier changeClassifier in changeClassifiers)
                         {
-                            if (changePropEdit.Item.RemoteName.Equals(changeClassifier.change.Item.RemoteName))
+                            bool isSameName = (changePropEdit.Item.RemoteName.Equals(changeClassifier.change.Item.RemoteName));
+                            if (isSameName)
                             {
                                 bool hitSameObject = (changeClassifier.change == changePropEdit);
                                 if (!hitSameObject)
@@ -1765,7 +1766,8 @@ namespace SvnBridge.SourceControl
                                 }
                             }
                         }
-                        if (!itemFileIncludedInChanges)
+                        bool addPropEditChangeForItem = !itemFileIncludedInChanges;
+                        if (addPropEditChangeForItem)
                         {
                             changesSVNValid.Add(changePropEdit);
                         }
