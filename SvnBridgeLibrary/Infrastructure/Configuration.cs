@@ -39,6 +39,7 @@ namespace SvnBridge.Infrastructure
             TfsPort,
             TfsUrl,
             TfsTimeout,
+            TfsRequestsPendingMax,
             TfsTcpKeepAliveSeconds,
             TfsProxyUrl,
             SCMWantCaseSensitiveItemMatch,
@@ -179,6 +180,20 @@ namespace SvnBridge.Infrastructure
         public static int TfsTimeout
         {
             get { return ReadConfig<int>(ConfigSettings.TfsTimeout, 900000); }
+        }
+
+        /// <summary>
+        /// Configures the max. number of concurrent pending requests,
+        /// to be obeyed for those cases
+        /// where we do have properly asynchronous operation
+        /// (note that this currently applies
+        /// to the asynchronous item data loader implementation only).
+        /// Should definitely keep this number very low -
+        /// reasons see implementation-side comments.
+        /// </summary>
+        public static int TfsRequestsPendingMax
+        {
+            get { return ReadConfig<int>(ConfigSettings.TfsRequestsPendingMax, 3); }
         }
 
         /// <summary>

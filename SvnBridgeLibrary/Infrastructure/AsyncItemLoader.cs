@@ -531,7 +531,7 @@ namespace SvnBridge.Infrastructure
         /// </remarks>
         private static int DetermineTfsRequestsPendingMax()
         {
-            int tfsRequestsPendingMax = 3;
+            int tfsRequestsPendingMax = Configuration.TfsRequestsPendingMax;
 
             if (Helper.NeedAvoidLongLivedMemoryFragmentation)
             {
