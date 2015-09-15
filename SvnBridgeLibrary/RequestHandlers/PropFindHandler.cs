@@ -321,12 +321,6 @@ namespace SvnBridge.Handlers
 
         private void DoHandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
         {
-            // WebDAV (Cadaver) fix:
-            while (requestPath.EndsWith("/"))
-            {
-                requestPath = requestPath.Remove(requestPath.Length - 1, 1);
-            }
-
             bool requestHandled = false;
             if (requestPath.StartsWith("/!svn/"))
             {
@@ -451,7 +445,7 @@ namespace SvnBridge.Handlers
                                        PropData data,
                                        Stream outputStream)
         {
-            if (!sourceControlProvider.ItemExists(Helper.Decode(requestPath), -1))
+            if (!sourceControlProvider.ItemExists(GetLocalPathTrailingSlashStripped(Helper.Decode(requestPath)), -1))
             {
                 throw new FileNotFoundException("Unable to find file '" + requestPath + "' in the source control repository",
                                                 requestPath);

@@ -26,14 +26,7 @@ namespace SvnBridge.PathParsing
 
 		public override string GetLocalPath(IHttpRequest request)
 		{
-            string localPath = request.LocalPath;
-
-            // WebDAV (Cadaver) fix:
-            while (localPath.EndsWith("/"))
-            {
-                localPath = localPath.Remove(localPath.Length - 1, 1);
-            }
-			return localPath;
+			return request.LocalPath;
 		}
 
         public override string GetLocalPath(IHttpRequest request, string url)

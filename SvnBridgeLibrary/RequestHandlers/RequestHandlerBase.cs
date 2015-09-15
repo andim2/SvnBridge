@@ -148,6 +148,22 @@ namespace SvnBridge.Handlers
 			return PathParser.GetLocalPath(httpContext.Request, path);
 		}
 
+        /// <summary>
+        /// Helper required for Cadaver (WebDAV) fix.
+        /// I don't quite know yet where/how to centralize things properly,
+        /// but for now let's have this helper here.
+        /// </summary>
+        /// <param name="localPath"></param>
+        /// <returns></returns>
+        protected static string GetLocalPathTrailingSlashStripped(string localPath)
+        {
+            while (localPath.EndsWith("/"))
+            {
+                localPath = localPath.Substring(0, localPath.Length - 1);
+            }
+            return localPath;
+        }
+
         protected static Recursion ConvertDepthHeaderToRecursion(string depth)
         {
             Recursion recursion = Recursion.None;
