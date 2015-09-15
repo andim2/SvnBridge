@@ -263,7 +263,7 @@ namespace SvnBridge.Handlers
                     output.WriteLine("<S:target-revision rev=\"{0}\"/>", targetRevision);
 
                     OutputEditorReport(sourceControlProvider, metadata, replayReport.Revision,
-                                       localPath == "/",
+                                       localPath.Equals("/"),
                                        output);
 
                     output.Write("</S:editor-report>");

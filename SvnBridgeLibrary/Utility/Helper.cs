@@ -363,7 +363,7 @@ namespace SvnBridge.Utility
 
 			for (int i = 0; i < decoded.Length; i++)
 			{
-				if (capitalize && decoded[i] != "&")
+				if (capitalize && !(decoded[i].Equals("&")))
 				{
 					value = value.Replace(decoded[i], encoded[i].ToUpper());
 				}

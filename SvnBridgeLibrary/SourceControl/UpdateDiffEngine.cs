@@ -289,7 +289,7 @@ namespace SvnBridge.SourceControl
             }
             else if (remoteName.StartsWith(propFolderPlusSlash))
             {
-                if (remoteName == propFolderPlusSlash + Constants.FolderPropFile)
+                if (remoteName.Equals(propFolderPlusSlash + Constants.FolderPropFile))
                 {
                     remoteName = "";
                 }
@@ -669,7 +669,8 @@ namespace SvnBridge.SourceControl
             // was a workaround against one initial '/' not getting removed due to missing "+ 1".
             // So, for now on the user side try doing .Split() without .RemoveEmptyEntries...
             //   pathElems = path.Substring(root.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            bool isRootSpecified = (root != "");
+            bool haveNoRoot = root.Equals("");
+            bool isRootSpecified = !(haveNoRoot);
             subPath = isRootSpecified ? path.Substring(root.Length + 1) : path;
 
             return subPath;
@@ -724,7 +725,7 @@ namespace SvnBridge.SourceControl
         {
             foreach (ItemMetaData item in folder.Items)
             {
-                if (item.Name == name && item is MissingItemMetaData)
+                if (item.Name.Equals(name) && item is MissingItemMetaData)
                 {
                     folder.Items.Remove(item);
                     return true;

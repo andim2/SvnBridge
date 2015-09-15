@@ -139,7 +139,7 @@ namespace SvnBridge.Infrastructure
                 using (StreamWriter sw = new StreamWriter(stream))
                 {
                     WorkItemInformation information = GetWorkItemInformation(workItemId);
-                    if(information.State == "Fixed")
+                    if(information.State.Equals("Fixed"))
                         return; // already fixed
                     int workItemRevisionId = information.Revision;
                     string text =
@@ -237,7 +237,7 @@ namespace SvnBridge.Infrastructure
             int index = 0;
             foreach (XmlNode xmlNode in node.SelectNodes("wi:columns/wi:c/wi:n", nsMgr))
             {
-                if (xmlNode.InnerText == columnName)
+                if (xmlNode.InnerText.Equals(columnName))
                     break;
                 index += 1;
             }

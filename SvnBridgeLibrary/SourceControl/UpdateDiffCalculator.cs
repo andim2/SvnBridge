@@ -146,7 +146,7 @@ namespace SvnBridge.SourceControl
                 // this is because we may have a file move from below the checkoutRootPath, 
                 // which we still need to consider
                 FolderMetaData projectRoot = checkoutRoot;
-                if (projectRootPath != checkoutRootPath)
+                if (!(projectRootPath.Equals(checkoutRootPath)))
                 {
                     projectRoot = (FolderMetaData)sourceControlProvider.GetItems(versionTo, projectRootPath, Recursion.None);
                     string path = checkoutRootPath.Substring(0, checkoutRootPath.LastIndexOf('/'));
@@ -633,7 +633,7 @@ namespace SvnBridge.SourceControl
 
         private bool ShouldBeIgnored(string file)
         {
-            //return Path.GetFileName(file) == Constants.PropFolder;
+            //return Path.GetFileName(file).Equals(Constants.PropFolder);
             return sourceControlProvider.IsPropertyFolder(file);
         }
     }

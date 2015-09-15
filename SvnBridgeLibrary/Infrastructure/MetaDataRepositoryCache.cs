@@ -63,7 +63,7 @@ namespace SvnBridge.Infrastructure
             // root path special-casing (shortcut!?!? guess not really...) here!?
             // Should really try to get rid of it
             // once having gathered evidence after testing.
-            bool doSpecialCasingOfRootItem = (serverPath == Constants.ServerRootPath && recursion == Recursion.None);
+            bool doSpecialCasingOfRootItem = (serverPath.Equals(Constants.ServerRootPath) && recursion == Recursion.None);
             if (doSpecialCasingOfRootItem)
             {
                 sourceItems = Service_QueryItems(
@@ -242,7 +242,7 @@ namespace SvnBridge.Infrastructure
                 {
                     persistentCache.Add(GetItemFullPathCacheKey(revision, parentDirectory), itemCacheKey);
                     parentDirectory = GetParentName(parentDirectory);
-                } while (parentDirectory != Constants.ServerRootPath && string.IsNullOrEmpty(parentDirectory) == false);
+                } while (!(parentDirectory.Equals(Constants.ServerRootPath)) && string.IsNullOrEmpty(parentDirectory) == false);
             }
         }
 
@@ -330,7 +330,7 @@ namespace SvnBridge.Infrastructure
 
         private static bool IsRootPath(string path)
         {
-            return path == "$";
+            return path.Equals("$");
         }
     }
 }

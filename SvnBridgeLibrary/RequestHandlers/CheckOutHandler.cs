@@ -65,7 +65,7 @@ namespace SvnBridge.Handlers
             if (requestPath.Contains("/bln"))
                 return GetLocalPath("//!svn/wbl/" + activityId + requestPath.Substring(9));
 
-            if (requestPath == Constants.SvnVccPath)
+            if (requestPath.Equals(Constants.SvnVccPath))
             {
                 int latestVersion = sourceControlProvider.GetLatestVersion();
                 return GetLocalPath("//!svn/wbl/" + activityId + "/" + latestVersion.ToString());

@@ -411,7 +411,7 @@ namespace SvnBridge.SourceControl
                     bool deleteIsRename = false;
                     foreach (CopyAction copy in activity.CopiedItems)
                     {
-                        if (copy.Path == path)
+                        if (copy.Path.Equals(path))
                         {
                             ConvertCopyToRename(activityId, copy);
                             deleteIsRename = true;
@@ -827,7 +827,7 @@ namespace SvnBridge.SourceControl
                             bool itemFileIncludedInChanges = false;
                             foreach (Change itemChange in changeset.Changes)
                             {
-                                if (itemChange.Item.item == item)
+                                if (item.Equals(itemChange.Item.item))
                                 {
                                     itemFileIncludedInChanges = true;
                                     break;
@@ -1563,7 +1563,7 @@ namespace SvnBridge.SourceControl
 
             SVNPathStripLeadingSlash(ref path);
 
-            if (version == 0 && path == "")
+            if (version == 0 && path.Equals(""))
             {
                 version = GetEarliestVersion(path);
             }
@@ -1932,7 +1932,7 @@ namespace SvnBridge.SourceControl
         {
             if (IsSuspectedPropertyStuff(path))
             { // found!? --> do precise checks.
-                if (path == Constants.PropFolder || path.EndsWith("/" + Constants.PropFolder))
+                if (path.Equals(Constants.PropFolder) || path.EndsWith("/" + Constants.PropFolder))
                     return true;
             }
             return false;
@@ -2005,13 +2005,13 @@ namespace SvnBridge.SourceControl
                 //for (int j = activity.MergeList.Count - 1; j >= 0; j--)
                 //{
                 //    if (activity.MergeList[j].Action == ActivityItemAction.Deleted
-                //        && activity.MergeList[j].Path == serverItemPath)
+                //        && activity.MergeList[j].Path.Equals(serverItemPath))
                 //    {
                 //        activity.MergeList.RemoveAt(j);
                 //    }
                 //}
                 activity.MergeList.RemoveAll(
-                  elem => (elem.Action == ActivityItemAction.Deleted) && (elem.Path == serverItemPath)
+                  elem => (elem.Action == ActivityItemAction.Deleted) && (elem.Path.Equals(serverItemPath))
                 );
             });
         }
@@ -2045,7 +2045,7 @@ namespace SvnBridge.SourceControl
                             sortedMergeResponse.Add(newItem.Path);
 
                             string path = newItem.Path.Substring(rootPath.Length - 1);
-                            if (path == "")
+                            if (path.Equals(""))
                                 path = "/";
 
                             MergeActivityResponseItem responseItem =
@@ -2077,7 +2077,7 @@ namespace SvnBridge.SourceControl
                 {
                     foreach (ActivityItem folderItem in activity.MergeList)
                     {
-                        if (folderItem.FileType == ItemType.Folder && folderItem.Path == folderName)
+                        if (folderItem.FileType == ItemType.Folder && folderItem.Path.Equals(folderName))
                         {
                             folderFound = true;
                             break;
@@ -2161,7 +2161,7 @@ namespace SvnBridge.SourceControl
                     }
                     foreach (CopyAction copy in activity.CopiedItems)
                     {
-                        if (copy.TargetPath == path)
+                        if (copy.TargetPath.Equals(path))
                         {
                             addToMergeList = false;
                             break;
@@ -2196,12 +2196,12 @@ namespace SvnBridge.SourceControl
                                        new string[] { path });
             //for (int i = activity.MergeList.Count - 1; i >= 0; i--)
             //{
-            //    if (activity.MergeList[i].Path == path)
+            //    if (activity.MergeList[i].Path.Equals(path))
             //    {
             //        activity.MergeList.RemoveAt(i);
             //    }
             //}
-            activity.MergeList.RemoveAll(elem => (elem.Path == path));
+            activity.MergeList.RemoveAll(elem => (elem.Path.Equals(path)));
         }
 
         private void ConvertCopyToRename(string activityId, CopyAction copy)
@@ -2394,7 +2394,7 @@ namespace SvnBridge.SourceControl
         {
             if (itemType == ItemType.Folder)
             {
-                if (path == "/")
+                if (path.Equals("/"))
                     return "/" + Constants.PropFolder;
                 return path + "/" + Constants.PropFolder;
             }
@@ -2408,7 +2408,7 @@ namespace SvnBridge.SourceControl
             string itemPath = path;
             if (itemPath.StartsWith(propFolderPlusSlash))
             {
-              if (itemPath == propFolderPlusSlash + Constants.FolderPropFile)
+              if (itemPath.Equals(propFolderPlusSlash + Constants.FolderPropFile))
               {
                 itemPath = "";
               }
@@ -2427,7 +2427,7 @@ namespace SvnBridge.SourceControl
         {
             if (itemType == ItemType.Folder)
             {
-                if (path == "/")
+                if (path.Equals("/"))
                     return "/" + propFolderPlusSlash + Constants.FolderPropFile;
                 return path + "/" + propFolderPlusSlash + Constants.FolderPropFile;
             }

@@ -44,7 +44,7 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                if (requestPath == "/")
+                if (requestPath.Equals("/"))
                     SetResponseSettings(response, "httpd/unix-directory", Encoding.UTF8, 200);
                 else
                     SetResponseSettings(response, "text/plain", Encoding.UTF8, 200);

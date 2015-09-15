@@ -350,7 +350,7 @@ namespace SvnBridge.Handlers
             bool requestHandled = false;
             if (requestPath.StartsWith("/!svn/"))
             {
-                if (requestPath == Constants.SvnVccPath)
+                if (requestPath.Equals(Constants.SvnVccPath))
                 {
                     WriteVccResponse(sourceControlProvider, requestPath, labelHeader, data, outputStream);
                     requestHandled = true;
@@ -442,7 +442,7 @@ namespace SvnBridge.Handlers
 
                 WriteMultiStatusStart(writer, data.Properties);
 
-                if (depthHeader == "1")
+                if (depthHeader.Equals("1"))
                 {
                     INode node = new BcFileNode(version, folderInfo, sourceControlProvider);
 
@@ -508,7 +508,7 @@ namespace SvnBridge.Handlers
                                        Stream outputStream)
         {
             string activityId = requestPath.Split('/')[3];
-            if (depth != "0")
+            if (!(depth.Equals("0")))
             {
                 throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
             }

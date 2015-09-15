@@ -257,12 +257,12 @@ namespace SvnBridge.Net
 
             foreach (KeyValuePair<string, string> header in headers)
             {
-                if (header.Key == "X-Pad")
+                if (header.Key.Equals("X-Pad"))
                 {
                     xPadHeader = header.Value;
                     continue;
                 }
-                else if (header.Key == "Connection")
+                else if (header.Key.Equals("Connection"))
                 {
                     connection = header.Value;
                     continue;

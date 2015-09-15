@@ -436,7 +436,7 @@ namespace SvnBridge.Handlers
     {
         protected static bool IsPropertyName(XmlElement prop, string name)
         {
-            return prop.LocalName == name;
+            return prop.LocalName.Equals(name);
         }
     }
 

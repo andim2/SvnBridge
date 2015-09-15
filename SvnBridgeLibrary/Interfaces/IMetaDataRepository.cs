@@ -73,7 +73,7 @@ namespace SvnBridge.Infrastructure
                 path
             ;
 
-            if (serverPath.EndsWith("/") && serverPath != "$/")
+            if (serverPath.EndsWith("/") && !serverPath.Equals("$/"))
                 serverPath = serverPath.Substring(0, serverPath.Length - 1);
 
             return serverPath;
