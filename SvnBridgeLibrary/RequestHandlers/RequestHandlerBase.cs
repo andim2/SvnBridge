@@ -157,9 +157,10 @@ namespace SvnBridge.Handlers
         // this should be made
         // to use some (possibly new?) functionality
         // of the PathParser member which we already have...
-        if (path.IndexOf('/', 9) > -1)
+        int indexAfterServerSidePath = path.IndexOf('/', 9);
+        if (indexAfterServerSidePath > -1)
         {
-            return path.Substring(path.IndexOf('/', 9));
+            return path.Substring(indexAfterServerSidePath);
         }
         else
             return "/";
