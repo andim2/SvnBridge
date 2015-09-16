@@ -110,29 +110,14 @@ namespace SvnBridge.Infrastructure
             ConstructorInfo[] constructors = type.GetConstructors();
             if (constructors.Length != 0)
             {
-                foreach (ParameterInfo info in constructors[0].GetParameters())
+                try
                 {
-                    try
-                    {
-                        object appSetting = Configuration.AppSettings(info.Name);
-                        if (appSetting != null)
-                        {
-                            args.Add(appSetting);
-                        }
-                        else if (RequestCache.IsInitialized && RequestCache.Items.Contains(info.Name))
-                        {
-                            args.Add(RequestCache.Items[info.Name]);
-                        }
-                        else
-                        {
-                            args.Add(ResolveType(info.ParameterType));
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        throw new InvalidOperationException(
-                            "Failed trying to resolve constructor parameter '" + info.Name + "' for: " + type, e);
-                    }
+                    args = GetMethodArgsFromParameterInfos(constructors[0].GetParameters());
+                }
+                catch (Exception e)
+                {
+                    throw new InvalidOperationException(
+                        "Failed trying to resolve constructor parameters for: " + type, e);
                 }
             }
             if (args.Count > 0)
@@ -143,6 +128,47 @@ namespace SvnBridge.Infrastructure
             {
                 return Activator.CreateInstance(type);
             }
+        }
+
+        private List<object> GetMethodArgsFromParameterInfos(ParameterInfo[] infos)
+        {
+            List<object> args = new List<object>();
+
+            foreach (ParameterInfo info in infos)
+            {
+                args.Add(GetMethodArgFromParameterInfo(info));
+            }
+
+            return args;
+        }
+
+        private object GetMethodArgFromParameterInfo(ParameterInfo info)
+        {
+            object arg;
+
+            try
+            {
+                object appSetting = Configuration.AppSettings(info.Name);
+                if (appSetting != null)
+                {
+                    arg = appSetting;
+                }
+                else if (RequestCache.IsInitialized && RequestCache.Items.Contains(info.Name))
+                {
+                    arg = RequestCache.Items[info.Name];
+                }
+                else
+                {
+                    arg = ResolveType(info.ParameterType);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(
+                    "Failed trying to resolve method parameter '" + info.Name + "'", e);
+            }
+
+            return arg;
         }
 
         private List<Type> GetInterceptorTypes(Type impl)
