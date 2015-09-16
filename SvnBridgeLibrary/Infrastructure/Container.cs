@@ -85,15 +85,23 @@ namespace SvnBridge.Infrastructure
             return delegate()
             {
                 object instance = CreateInstance(impl);
-                List<IInterceptor> interceptors = new List<IInterceptor>();
-                foreach (Type interceptorType in interceptorTypes)
-                {
-                    interceptors.Add((IInterceptor)ResolveType(interceptorType));
-                }
+                List<IInterceptor> interceptors = GetInterceptors(interceptorTypes);
                 if (interceptors.Count == 0)
                     return instance;
                 return ProxyFactory.Create(service, instance, interceptors.ToArray());
             };
+        }
+
+        private List<IInterceptor> GetInterceptors(List<Type> interceptorTypes)
+        {
+            List<IInterceptor> interceptors = new List<IInterceptor>();
+
+            foreach (Type interceptorType in interceptorTypes)
+            {
+                interceptors.Add((IInterceptor)ResolveType(interceptorType));
+            }
+
+            return interceptors;
         }
 
         private object CreateInstance(Type type)
