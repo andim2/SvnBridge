@@ -86,7 +86,8 @@ namespace SvnBridge.Infrastructure
             {
                 object instance = CreateInstance(impl);
                 List<IInterceptor> interceptors = GetInterceptors(interceptorTypes);
-                if (interceptors.Count == 0)
+                bool haveInterceptors = (0 != interceptors.Count);
+                if (!(haveInterceptors))
                     return instance;
                 return ProxyFactory.Create(service, instance, interceptors.ToArray());
             };
@@ -107,7 +108,8 @@ namespace SvnBridge.Infrastructure
         private object CreateInstance(Type type)
         {
             List<object> args = GetCreateInstanceArgs(type);
-            if (args.Count > 0)
+            bool haveArgs = (args.Count > 0);
+            if (haveArgs)
             {
                 return Activator.CreateInstance(type, args.ToArray());
             }
