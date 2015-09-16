@@ -2234,31 +2234,61 @@ namespace SvnBridge.SourceControl
 
             var previousRevision = changeset_Newer - 1;
 
+            // Rather than the prior hard if/else skipping of branches,
+            // we'll now do handling of TFS08/multi right in the very same code flow,
+            // to gain the capability of dynamically choosing (via configurable high-level bools)
+            // which branch to actually add to the execution.
+            // The reason for that is that I'm entirely unsure about the reasoning/differences
+            // between the <=TFS08 implementation and OTOH the multi stuff
+            // (and currently there's a data mismatch of members in case of a RenamedSourceItem
+            // vs. the results queried here!),
+            // thus debugging needs to be very easy, to finally gain sufficient insight.
+            SourceItem[] resultTFS08Fallback = null;
+            SourceItem[] resultMulti = null;
+
             // What *exactly* is the significance of this check? Rename/comment variable as needed...
             bool isAllItemsWithNullContent = (renamedItems.All(item => (null == item) || (null == item.FromItem)));
-            if (isAllItemsWithNullContent)
+            bool needTfs08FallbackAlgo = isAllItemsWithNullContent;
+            bool wantTfs08FallbackAlgo = needTfs08FallbackAlgo;
+
+            bool wantMultiRequestMode = false;
+            bool wantDebugResults = false;
+            //wantDebugResults = true; // DEBUG_SITE: UNCOMMENT IF DESIRED (or simply ad-hoc toggle var in debugger)
+            if (wantDebugResults)
+            {
+                wantTfs08FallbackAlgo = true;
+                wantMultiRequestMode = true;
+            }
+
+            if (wantTfs08FallbackAlgo)
             {
                 // fallback for TFS08 and earlier
                 var previousSourceItemIds = items.Select(item => item.ItemId).ToArray();
-                var previousSourceItems = metaDataRepository.QueryItems(
+                resultTFS08Fallback = metaDataRepository.QueryItems(
                     previousRevision,
                     previousSourceItemIds);
-                return previousSourceItems;
             }
-
-            var previousItems = new List<SourceItem>();
-            for (var i = 0; i < renamedItems.Length; i++)
+            // This multi-request style is O(n) as opposed to ~ O(1), network-wise
+            // (and network-side processing complexity is all that matters!),
+            // thus it's prone to socket exhaustion exceptions and terrible performance.
+            if (wantMultiRequestMode)
             {
-                var renamedItem = renamedItems[i];
-                var previousSourceItemId = GetItemIdOfRenamedItem(renamedItem, items[i]);
-                var previousSourceItems = metaDataRepository.QueryItems(
-                    previousRevision,
-                    previousSourceItemId);
-                // Yes, do actively append this slot even if no result
-                // (caller requires index-consistent behaviour of input vs. result storage)
-                previousItems.Add(previousSourceItems.Length > 0 ? previousSourceItems[0] : null);
+                List<SourceItem> resultMulti_List = new List<SourceItem>();
+                for (var i = 0; i < renamedItems.Length; i++)
+                {
+                    var renamedItem = renamedItems[i];
+                    var previousSourceItemId = GetItemIdOfRenamedItem(renamedItem, items[i]);
+                    var previousSourceItems = metaDataRepository.QueryItems(
+                        previousRevision,
+                        previousSourceItemId
+                    );
+                    // Yes, do actively append this slot even if no result
+                    // (caller requires index-consistent behaviour of input vs. result storage)
+                    resultMulti_List.Add(previousSourceItems.Length > 0 ? previousSourceItems[0] : null);
+                }
+                resultMulti = resultMulti_List.ToArray();
             }
-            result = previousItems.ToArray();
+            result = needTfs08FallbackAlgo ? resultTFS08Fallback : resultMulti;
 
             return result;
         }
