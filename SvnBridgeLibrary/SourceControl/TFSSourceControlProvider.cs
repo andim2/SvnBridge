@@ -2512,6 +2512,12 @@ namespace SvnBridge.SourceControl
             // What *exactly* is the significance of this check? Rename/comment variable as needed...
             bool isAllItemsWithNullContent = (renamedItems.All(item => (null == item) || (null == item.FromItem)));
             bool needTfs08FallbackAlgo = isAllItemsWithNullContent;
+
+            // I believe (while working on TFS08) that the handling done by the TFS08 branch below is buggy
+            // (as determined by mismatch checks triggering in UpdateDiffEngine.Rename()),
+            // thus we'll simply decide to skip use of any of its results.
+            needTfs08FallbackAlgo = false;
+
             bool wantTfs08FallbackAlgo = needTfs08FallbackAlgo;
 
             bool wantMultiRequestMode = false;
