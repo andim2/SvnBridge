@@ -106,7 +106,21 @@ namespace SvnBridge.Infrastructure
 
         private object CreateInstance(Type type)
         {
+            List<object> args = GetCreateInstanceArgs(type);
+            if (args.Count > 0)
+            {
+                return Activator.CreateInstance(type, args.ToArray());
+            }
+            else
+            {
+                return Activator.CreateInstance(type);
+            }
+        }
+
+        private List<object> GetCreateInstanceArgs(Type type)
+        {
             List<object> args = new List<object>();
+
             ConstructorInfo[] constructors = type.GetConstructors();
             if (constructors.Length != 0)
             {
@@ -120,14 +134,8 @@ namespace SvnBridge.Infrastructure
                         "Failed trying to resolve constructor parameters for: " + type, e);
                 }
             }
-            if (args.Count > 0)
-            {
-                return Activator.CreateInstance(type, args.ToArray());
-            }
-            else
-            {
-                return Activator.CreateInstance(type);
-            }
+
+            return args;
         }
 
         private List<object> GetMethodArgsFromParameterInfos(ParameterInfo[] infos)
