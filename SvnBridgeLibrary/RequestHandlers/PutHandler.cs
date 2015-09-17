@@ -23,8 +23,7 @@ namespace SvnBridge.Handlers
                 sourceControlProvider,
                 requestPath,
                 request.InputStream,
-                request.Headers["X-SVN-Base-Fulltext-MD5"],
-                request.Headers["X-SVN-Result-Fulltext-MD5"]);
+                request);
 
             if (isWebdavResourceNewlyCreated)
             {
@@ -46,15 +45,18 @@ namespace SvnBridge.Handlers
             }
         }
 
+        private enum PUT_Mode
+        {
+            Activity,
+            Collection,
+            Resource
+        }
         private static bool Put(
             TFSSourceControlProvider sourceControlProvider,
             string requestPath,
             Stream inputStream,
-            string baseHashSvnProvided,
-            string resultHashSvnProvided)
+            IHttpRequest request)
         {
-            bool isWebdavResourceNewlyCreated = false;
-
             // Hmm, is this part really necessary??
             // See also MkColHandler where it's being fed into a regex match...
             if (!requestPath.StartsWith("//"))
@@ -65,7 +67,9 @@ namespace SvnBridge.Handlers
             // FIXME: I'm not sure whether SVN-specific PUT really always is done
             // within a corresponding activity (MKACTIVITY) or collection (MKCOL),
             // however if not (standard PUT does NOT seem to have that),
-            // then we should be able to flexibly handle NOT having an activity here...
+            // then we should be able to flexibly handle NOT having an activity here.
+            // I'm not sure whether this switching here is even marginally useful,
+            // but let's keep it like that...
             //
             // FIXME: should be using BasePathParser (GetActivityId() or some such)
             // rather than doing this dirt-ugly open-coded something:
@@ -73,10 +77,62 @@ namespace SvnBridge.Handlers
             string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
             string itemPathUndecoded = requestPath.Substring(startIndex + activityId.Length);
             string itemPath = Helper.Decode(itemPathUndecoded);
+            ItemMetaData itemBase;
+            PUT_Mode mode = PUT_Mode.Activity;
+
+            switch (mode)
+            {
+                case PUT_Mode.Activity:
+                    itemBase = sourceControlProvider.GetItemInActivity(
+                        activityId,
+                        itemPath);
+                    break;
+                default:
+                    throw new NonActivityPUTNotSupportedException(
+                        );
+            }
+
+            // Hmm, should perhaps assign hashes only in case string.IsNullOrEmpty() false...
+            string baseHashSvnProvided = request.Headers["X-SVN-Base-Fulltext-MD5"];
+            string resultHashSvnProvided = request.Headers["X-SVN-Result-Fulltext-MD5"];
+
+            return WebDAV_PUT_SVN(
+                sourceControlProvider,
+                activityId,
+                itemBase,
+                itemPath,
+                inputStream,
+                baseHashSvnProvided,
+                resultHashSvnProvided);
+        }
+
+        /// <remarks>
+        /// I have a hunch that given the security shenanigans of HTTP PUT,
+        /// we might want to skip support of Non-WebDAV PUT anyway...
+        /// </remarks>
+        public sealed class NonActivityPUTNotSupportedException : NotSupportedException
+        {
+            public NonActivityPUTNotSupportedException()
+                : base(
+                    "Non-activity PUT not supported yet!")
+            {
+            }
+        }
+
+        private static bool WebDAV_PUT_SVN(
+            TFSSourceControlProvider sourceControlProvider,
+            string activityId,
+            ItemMetaData itemBase,
+            string itemPath,
+            Stream inputStream,
+            string baseHashSvnProvided,
+            string resultHashSvnProvided)
+        {
+            bool isWebdavResourceNewlyCreated = false;
+
             // Adopt proper SVN speak: "base" == original file, "result" == updated file.
             // In SVN source code, *both* base and result hash are handled as *optional*
             // (and git-svn does not pass the relevant checksum in the result hash case at least).
-            ItemMetaData itemBase = sourceControlProvider.GetItemInActivity(activityId, itemPath);
             bool baseExists = (null != itemBase);
             byte[] baseData = new byte[0];
             if (baseExists)
