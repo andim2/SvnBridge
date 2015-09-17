@@ -649,12 +649,14 @@ namespace SvnBridge.SourceControl
             {
                 histories.RemoveAt(0);
             }
-            if (histories.Count > maxCount)
+            var numElemsExceeding = histories.Count - maxCount;
+            bool isCountWithinRequestedLimit = (0 >= numElemsExceeding);
+            if (!(isCountWithinRequestedLimit))
             {
                 // Order of the results that TFS returns is from _newest_ (index 0) to oldest (last index),
                 // thus when whenOverflowDiscardNewest == true we need to remove the starting range,
                 // else end range.
-                int numElemsRemove = histories.Count - maxCount;
+                var numElemsRemove = numElemsExceeding;
                 int startIndex = whenOverflowDiscardNewest ? 0 : maxCount;
                 histories.RemoveRange(startIndex, numElemsRemove);
             }
