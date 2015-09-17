@@ -7,6 +7,15 @@ using SvnBridge.Utility; // Helper
 
 namespace SvnBridge.Net
 {
+    /// <summary>
+    /// I don't know... somehow this class doesn't have proper separation of concerns
+    /// (which led to all sorts of issues).
+    /// Rather than implementing both chunked _and_ non-chunked operation,
+    /// it should be specific class instantiations (either chunked or non-chunked) in advance,
+    /// depending on response.SendChunked.
+    /// And _then_ one could implement it in a way to form a new chunk per each Flush().
+    /// Perhaps similar to what Acme.Serve.servlet.http.ChunkedOutputStream does.
+    /// </summary>
     public class ListenerResponseStream : Stream
     {
         protected bool flushed = false;
@@ -29,7 +38,7 @@ namespace SvnBridge.Net
             this.stream = stream;
             this.maxKeepAliveConnections = maxKeepAliveConnections;
 
-            this.streamBuffer = new Utility.MemoryStreamLOHSanitized();
+            this.streamBuffer = CreateMemoryStream();
         }
 
         public override bool CanRead
@@ -58,23 +67,40 @@ namespace SvnBridge.Net
             set { throw new NotSupportedException(); }
         }
 
+        /// <remarks>
+        /// NOTE: this method could (and did!) get called _multiple_ times,
+        /// thus it should better be made
+        /// to not have single-invocation-only constraints.
+        /// </remarks>
         public override void Flush()
         {
             if (!flushed)
             {
                 WriteHeaderIfNotAlreadyWritten();
-                if (response.SendChunked)
-                {
-                    stream.Write(chunkFooterFinalZeroChunk, 0, chunkFooterFinalZeroChunk.Length);
-                }
-                else
+                if (!response.SendChunked)
                 {
                     ForwardStreamBuffer();
                 }
 
-                stream.Flush();
                 flushed = true;
             }
+            // Better invoke the member's Flush() unconditionally /
+            // *outside* of our semi-dirty Flush() override handling above!
+            stream.Flush();
+        }
+
+        public override void Close()
+        {
+            Flush(); // may write header!
+
+            if (response.SendChunked)
+            {
+                flushed = false;
+                stream.Write(chunkFooterFinalZeroChunk, 0, chunkFooterFinalZeroChunk.Length);
+                Flush(); // ...and a second flush!
+            }
+            // FIXME: hmm... should we Close() our wrapped Stream member here, too!?
+            base.Close();
         }
 
         private void ForwardStreamBuffer()
@@ -83,6 +109,9 @@ namespace SvnBridge.Net
             //stream.Write(buffer, 0, buffer.Length);
             //stream.Write(streamBuffer.GetBuffer() /* *non-copy* of full internal container length */, 0, (int)streamBuffer.Length);
             streamBuffer.WriteTo(stream);
+            // Make sure to re-create (cleanly/fully discard all old content,
+            // by discarding old object!):
+            streamBuffer = CreateMemoryStream();
         }
 
         public override int Read(byte[] buffer,
@@ -107,6 +136,16 @@ namespace SvnBridge.Net
                                    int offset,
                                    int count)
         {
+            // BUG: best to avoid maintaining dirty buggy *manual* state
+            // within a supposedly-thin wrapper class!!
+            // (nobody ever used to reset that member!!)
+            // And it's not really reliable in general:
+            // Any stream-modifying base method other than Write()
+            // could cause a Flush() to be newly required
+            // (i.e. our manual bool state would need to be reset!),
+            // and we wouldn't detect it...
+            flushed = false; // Write() modifies buffer --> RESET OUR DIRTY STATE HELPER!
+
             if (response.SendChunked)
             {
                 WriteHeaderIfNotAlreadyWritten();
@@ -121,6 +160,11 @@ namespace SvnBridge.Net
             {
                 streamBuffer.Write(buffer, offset, count);
             }
+        }
+
+        private static MemoryStream CreateMemoryStream()
+        {
+            return new Utility.MemoryStreamLOHSanitized();
         }
 
         private static string GetStatusCodeDescription(int httpStatusCode)
