@@ -1604,6 +1604,16 @@ namespace SvnBridge.SourceControl
         {
             SourceItemHistory historyOfSVNCommit = ConstructSourceItemHistoryFromChangeset(
                 changeset);
+
+            // We'll try to implement handling in a way that preserves
+            // the *sort order* of changes as gotten from TFS as much as possible
+            // (by adding all potential changes linearly,
+            // then after having established the full list
+            // filtering out any unwanted entries as needed).
+            // I'm not certain whether preserving proper order of changes is an important requirement on SVN,
+            // but better do implement it this way.
+            // And do abstract away property storage details etc. as much as possible, too.
+
             historyOfSVNCommit.Changes = ConvertTFSChangesetToSVNSourceItemChanges(
                 changeset).ToList();
 
@@ -1630,10 +1640,18 @@ namespace SvnBridge.SourceControl
         private IEnumerable<SourceItemChange> ConvertTFSChangesetToSVNSourceItemChanges(
             Changeset changeset)
         {
-            List<SourceItemChange> sourceItemChanges = new List<SourceItemChange>(changeset.Changes.Length);
+            IEnumerable<SourceItemChange> changesSVNValid;
+
+            List<SourceItemChangeClassifier> changeClassifiers = new List<SourceItemChangeClassifier>(changeset.Changes.Length);
 
             foreach (Change change in changeset.Changes)
             {
+                // Design intent: go towards an implementation of pluggable SourceItemChange generators/modifiers, to:
+                // - have TFS-side property storage specifics fully abstracted away
+                // - veto some SourceItemChange additions (as e.g. in the case of the [non-SVN-related] root folder that's used for property storage items)
+                // - generate standard changes for standard source control items
+                SourceItemChange sourceItemChange = null;
+
                 bool isChangeRelevantForSVNHistory = !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item);
 
                 if (!(isChangeRelevantForSVNHistory))
@@ -1641,43 +1659,55 @@ namespace SvnBridge.SourceControl
                     continue;
                 }
 
-                bool isChangeOfAnSVNProperty = WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item);
-                if (isChangeOfAnSVNProperty)
+                sourceItemChange = GetSourceItemChange_For_Potential_PropertyChange(change);
+                // Handle various change reasons (prop change, source item change, ...)
+                // In future might possibly sometimes even end up generating multiple changes for a single original change!
+                bool isPropertyChange = (null != sourceItemChange);
+                if (isPropertyChange)
                 {
-                    string item = WebDAVPropertyStorageAdaptor.GetPathOfDataItemFromPathOfPropStorageItem(change.Item.item);
-                    bool itemFileIncludedInChanges = false;
-                    foreach (Change itemChange in changeset.Changes)
-                    {
-                        if (item.Equals(itemChange.Item.item))
-                        {
-                            itemFileIncludedInChanges = true;
-                            break;
-                        }
-                    }
-                    if (!itemFileIncludedInChanges)
-                    {
-                        SourceItem sourceItem = ConvertChangeToSourceItem(change);
-                        string item_actual = item;
-                        ItemType itemType_actual = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
-                        sourceItem.RemoteName = item_actual;
-                        sourceItem.ItemType = itemType_actual;
-                        ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
-
-                        sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
-                    }
+                    SourceItemChangeClassifier changeClassifier = new SourceItemChangeClassifier(SourceItemChangeClassifier.ChangeModifierType.PropEdit, sourceItemChange);
+                    changeClassifiers.Add(changeClassifier);
                 }
-                else // change of a standard source control item
+                else
                 {
                     SourceItem sourceItem = ConvertChangeToSourceItem(change);
                     ChangeType changeType = change.type;
                     if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
                         (changeType == (ChangeType.Add | ChangeType.Encoding)))
                         changeType = ChangeType.Add;
-                    sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType));
+                    sourceItemChange = new SourceItemChange(sourceItem, changeType);
+                    SourceItemChangeClassifier changeClassifier = new SourceItemChangeClassifier(SourceItemChangeClassifier.ChangeModifierType.AuthoritativeTFS, sourceItemChange);
+                    changeClassifiers.Add(changeClassifier);
                 }
             }
 
-            return sourceItemChanges;
+            changesSVNValid = CollapseChangeClassifiersForCleanSVNHistory(changeClassifiers);
+
+            return changesSVNValid;
+        }
+
+        /// <summary>
+        /// Purpose: abstracts away property storage location specifics.
+        /// </summary>
+        /// <param name="change">The change to be analyzed</param>
+        /// <returns>Suitable SourceItemChange for the data item that had a property edit</returns>
+        private static SourceItemChange GetSourceItemChange_For_Potential_PropertyChange(Change change)
+        {
+            SourceItemChange sourceItemChange = null;
+
+            bool isChangeOfAnSVNProperty = WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item);
+            if (isChangeOfAnSVNProperty)
+            {
+                SourceItem sourceItem = ConvertChangeToSourceItem(change);
+                string item_actual = WebDAVPropertyStorageAdaptor.GetPathOfDataItemFromPathOfPropStorageItem(change.Item.item);
+                ItemType itemType_actual = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
+                sourceItem.RemoteName = item_actual;
+                sourceItem.ItemType = itemType_actual;
+                ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
+
+                sourceItemChange = new SourceItemChange(sourceItem, changeType_PropertiesWereModified);
+            }
+            return sourceItemChange;
         }
 
         private static SourceItem ConvertChangeToSourceItem(Change change)
@@ -1699,6 +1729,51 @@ namespace SvnBridge.SourceControl
             sourceItem.DownloadUrl = item.durl;
 
             return sourceItem;
+        }
+
+        private IEnumerable<SourceItemChange> CollapseChangeClassifiersForCleanSVNHistory(IEnumerable<SourceItemChangeClassifier> changeClassifiers)
+        {
+            List<SourceItemChange> changesSVNValid = new List<SourceItemChange>(changeClassifiers.Count());
+
+            // Now that we managed to create an *SVN-side* view of the changes
+            // (independent of TFS-internal property storage specifics, etc.),
+            // filter them as needed:
+            foreach (SourceItemChangeClassifier changeClassifierAdd in changeClassifiers)
+            {
+                switch (changeClassifierAdd.modifierType)
+                {
+                    case SourceItemChangeClassifier.ChangeModifierType.AuthoritativeTFS:
+                        // Straight pass-through:
+                        changesSVNValid.Add(changeClassifierAdd.change);
+                        break;
+                    case SourceItemChangeClassifier.ChangeModifierType.PropEdit:
+                        SourceItemChange changePropEdit = changeClassifierAdd.change;
+                        // Determine whether there's already a change listed for the data item
+                        // corresponding to our WebDAV property change,
+                        // otherwise add an invented, virtual change of the data item
+                        // (in SVN, a property change is to be signalled as an "Edit" of the data item file).
+                        bool itemFileIncludedInChanges = false;
+                        foreach (SourceItemChangeClassifier changeClassifier in changeClassifiers)
+                        {
+                            if (changePropEdit.Item.RemoteName.Equals(changeClassifier.change.Item.RemoteName))
+                            {
+                                bool hitSameObject = (changeClassifier.change == changePropEdit);
+                                if (!hitSameObject)
+                                {
+                                    itemFileIncludedInChanges = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!itemFileIncludedInChanges)
+                        {
+                            changesSVNValid.Add(changePropEdit);
+                        }
+                        break;
+                }
+            }
+
+            return changesSVNValid;
         }
 
         /// WARNING: the service-side QueryHistory() API will silently discard **older** entries
@@ -4081,6 +4156,30 @@ namespace SvnBridge.SourceControl
                 serverUrl, credentials,
                 activityId, serverItems
             );
+        }
+    }
+
+    /// <summary>
+    /// Helper class to have an additional change layer
+    /// (e.g. enables us to abstract away property changes from internal TFS-side property impl specifics).
+    /// </summary>
+    internal sealed class SourceItemChangeClassifier
+    {
+        public enum ChangeModifierType
+        {
+            AuthoritativeTFS, // this is a legal authoritative TFS entry which ought to be preserved (pass-through)
+            PropEdit, // *invented* (non-TFS) change, to mark a data item as having experienced a WebDAV property change (SVN "Edit" change)
+        }
+        public readonly ChangeModifierType modifierType;
+        // Warning: (ab-)using TfsLibrary SourceItemChange type here, for SVN purposes! -
+        // should quite certainly introduce our own SVN-side corresponding classes here,
+        // to achieve *clean* separation from TFS-side behaviour/specifics.
+        public readonly SourceItemChange change;
+
+        public SourceItemChangeClassifier(ChangeModifierType modifierType, SourceItemChange change)
+        {
+            this.modifierType = modifierType;
+            this.change = change;
         }
     }
 
