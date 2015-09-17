@@ -76,11 +76,18 @@ namespace SvnBridge.Infrastructure
 
         private void CheckCancel_i()
         {
-            if (cancelOperation)
+            bool needCancel = (cancelOperation);
+            bool canContinue = !(needCancel);
+            if (!(canContinue))
             {
-                Helper.DebugUsefulBreakpointLocation();
-                throw new MonitoredCommBaseExceptionCancel();
+                DoCancel_i();
             }
+        }
+
+        private static void DoCancel_i()
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new MonitoredCommBaseExceptionCancel();
         }
 
         public void Cancel()
