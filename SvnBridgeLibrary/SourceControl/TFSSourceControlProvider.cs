@@ -526,14 +526,14 @@ namespace SvnBridge.SourceControl
                         histories = new List<SourceItemHistory>(result.History);
                     }
 
-                    while ((histories.Count > 0) && (histories[0].ChangeSetID > versionTo))
-                    {
-                        histories.RemoveAt(0);
-                    }
-                    while (histories.Count > maxCount)
-                    {
-                        histories.RemoveAt(histories.Count - 1);
-                    }
+                    // I don't know whether we actually want/need to do ugly manual version limiting here -
+                    // perhaps it would be possible to simply restrict the queries above up to versionTo,
+                    // but perhaps these queries were being done this way since perhaps e.g. for merge operations
+                    // (nonlinear history) version ranges of a query do need to be specified in full.
+                    Histories_RestrictToRangeWindow(
+                        ref histories,
+                        versionTo,
+                        maxCount);
                     return new LogItem(null, serverPath, histories.ToArray());
                 }
                 else
@@ -593,6 +593,29 @@ namespace SvnBridge.SourceControl
                 sortAscending);
 
             return changesets;
+        }
+
+        /// <summary>
+        /// Restrict a possibly overly wide list of changesets to a certain desired range,
+        /// by passing a maximum version to be listed,
+        /// and by subsequently restricting the number of entries to maxCount.
+        /// </summary>
+        /// <param name="histories">List of changesets to be modified</param>
+        /// <param name="versionTo">maximum version to keep listing</param>
+        /// <param name="maxCount">maximum number of entries allowed</param>
+        private static void Histories_RestrictToRangeWindow(
+            ref List<SourceItemHistory> histories,
+            int versionTo,
+            int maxCount)
+        {
+            while ((histories.Count > 0) && (histories[0].ChangeSetID > versionTo))
+            {
+                histories.RemoveAt(0);
+            }
+            while (histories.Count > maxCount)
+            {
+                histories.RemoveAt(histories.Count - 1);
+            }
         }
 
         public virtual bool IsDirectory(int version, string path)
