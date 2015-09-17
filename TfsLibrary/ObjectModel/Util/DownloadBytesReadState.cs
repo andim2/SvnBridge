@@ -87,11 +87,27 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 
         private static void ListEnsureCapacity(List<byte> list, int requiredMinimumCapacity)
         {
+            // WARNING: below issue managed the incredible feat
+            // of causing > 5GB total process space!!!!
+            // However the kicker is
+            // that in fact we do not need to do any size handling here whatsoever
+            // since in this particular case we have a List
+            // (where its .Add() will manage .Capacity automatically).
+#if false
+            // AWFUL Capacity handling!! (GC catastrophy)
+            // .Capacity value should most definitely *NEVER* be directly (manually) modified,
+            // since framework ought to know best
+            // how to increment .Capacity value in suitably future-proof-sized steps!
+            // (read: it's NOT useful
+            // to keep incrementing [read: keep actively reallocating!!]
+            // a continuously aggregated perhaps 8MB .Capacity
+            // by some perhaps 4273 Bytes each!)
             bool needEnlargeCapacity = (list.Capacity < requiredMinimumCapacity);
             if (needEnlargeCapacity)
             {
                 list.Capacity = requiredMinimumCapacity;
             }
+#endif
         }
 	}
 }
