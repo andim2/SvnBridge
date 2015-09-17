@@ -175,8 +175,8 @@ namespace SvnBridge.Net
         {
             string statusCodeDescription = GetStatusCodeDescription(response.StatusCode);
 
-            StringBuilder buffer = new StringBuilder();
-            StringWriter writer = new StringWriter(buffer);
+            // Use ctor variant for implicit (*internal*) StringBuilder:
+            StringWriter writer = new StringWriter();
 
             writer.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
 
@@ -220,9 +220,10 @@ namespace SvnBridge.Net
                 writer.WriteLine("Connection: {0}", connection);
             }
 
-            if (request.Headers["Connection"] != null)
+            string connectionHeader = request.Headers["Connection"];
+            if (connectionHeader != null)
             {
-                string[] connectionHeaderParts = request.Headers["Connection"].Split(',');
+                string[] connectionHeaderParts = connectionHeader.Split(',');
                 foreach (string directive in connectionHeaderParts)
                 {
                     if (directive.TrimStart() == "Keep-Alive")
@@ -242,7 +243,8 @@ namespace SvnBridge.Net
 
             writer.WriteLine("");
 
-            byte[] bufferBytes = Encoding.UTF8.GetBytes(buffer.ToString());
+            string headersString = writer.ToString(); // debug convenience
+            byte[] bufferBytes = Encoding.UTF8.GetBytes(headersString);
 
             stream.Write(bufferBytes, 0, bufferBytes.Length);
         }
