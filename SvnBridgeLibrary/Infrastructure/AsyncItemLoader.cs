@@ -32,6 +32,7 @@ namespace SvnBridge.Infrastructure
     public class MonitoredCommBase
     {
         private bool cancelOperation /* = false */;
+        private bool ignoreCancel /* = false */;
 
         public MonitoredCommBase()
         {
@@ -76,7 +77,7 @@ namespace SvnBridge.Infrastructure
 
         private void CheckCancel_i()
         {
-            bool needCancel = (cancelOperation);
+            bool needCancel = (cancelOperation && !ignoreCancel);
             bool canContinue = !(needCancel);
             if (!(canContinue))
             {
@@ -102,6 +103,15 @@ namespace SvnBridge.Infrastructure
         {
             cancelOperation = true;
             Pulse();
+        }
+
+        /// <summary>
+        /// To be called once cancelling ought to be ignored
+        /// (e.g. once in shutdown already).
+        /// </summary>
+        protected void SetCancelIgnored()
+        {
+            ignoreCancel = true;
         }
     }
 
@@ -216,6 +226,7 @@ namespace SvnBridge.Infrastructure
 
         private void WaitFinished_i()
         {
+            SetCancelIgnored();
             WaitFinishedImpl();
         }
 
