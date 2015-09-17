@@ -453,8 +453,8 @@ namespace SvnBridge.SourceControl
 
                 PathAppendElem(ref itemPath, pathElems[i]);
 
-                bool fullyHandled = HandleDeleteItem(remoteName, change, itemPath, ref folder, isLastPathElem);
-                if (fullyHandled)
+                bool isFullyHandled = HandleDeleteItem(remoteName, change, itemPath, ref folder, isLastPathElem);
+                if (isFullyHandled)
                     break;
             }
             if (pathElems.Length == 0)//we have to delete the checkout root itself
