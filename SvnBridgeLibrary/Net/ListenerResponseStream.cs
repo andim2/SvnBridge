@@ -123,13 +123,11 @@ namespace SvnBridge.Net
             }
         }
 
-        protected void WriteHeaderIfNotAlreadyWritten()
+        private static string GetStatusCodeDescription(int httpStatusCode)
         {
-            if (!headerWritten)
-            {
                 string statusCodeDescription;
 
-                switch (response.StatusCode)
+                switch (httpStatusCode)
                 {
                     case 204:
                         statusCodeDescription = "No Content";
@@ -156,9 +154,26 @@ namespace SvnBridge.Net
                         statusCodeDescription = "Method Not Implemented";
                         break;
                     default:
-                        statusCodeDescription = ((HttpStatusCode)response.StatusCode).ToString();
+                        statusCodeDescription = ((HttpStatusCode)httpStatusCode).ToString();
                         break;
                 }
+
+                return statusCodeDescription;
+        }
+
+        protected void WriteHeaderIfNotAlreadyWritten()
+        {
+            if (!headerWritten)
+            {
+                DoWriteHeader();
+
+                headerWritten = true;
+            }
+        }
+
+        private void DoWriteHeader()
+        {
+                string statusCodeDescription = GetStatusCodeDescription(response.StatusCode);
 
                 StringBuilder buffer = new StringBuilder();
                 StringWriter writer = new StringWriter(buffer);
@@ -230,9 +245,6 @@ namespace SvnBridge.Net
                 byte[] bufferBytes = Encoding.UTF8.GetBytes(buffer.ToString());
 
                 stream.Write(bufferBytes, 0, bufferBytes.Length);
-
-                headerWritten = true;
-            }
         }
     }
 }
