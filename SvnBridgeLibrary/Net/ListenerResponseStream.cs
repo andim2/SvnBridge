@@ -125,40 +125,40 @@ namespace SvnBridge.Net
 
         private static string GetStatusCodeDescription(int httpStatusCode)
         {
-                string statusCodeDescription;
+            string statusCodeDescription;
 
-                switch (httpStatusCode)
-                {
-                    case 204:
-                        statusCodeDescription = "No Content";
-                        break;
-                    case 207:
-                        statusCodeDescription = "Multi-Status";
-                        break;
-                    case 301:
-                        statusCodeDescription = "Moved Permanently";
-                        break;
-                    case 401:
-                        statusCodeDescription = "Authorization Required";
-                        break;
-                    case 404:
-                        statusCodeDescription = "Not Found";
-                        break;
-                    case 405:
-                        statusCodeDescription = "Method Not Allowed";
-                        break;
-                    case 500:
-                        statusCodeDescription = "Internal Server Error";
-                        break;
-                    case 501:
-                        statusCodeDescription = "Method Not Implemented";
-                        break;
-                    default:
-                        statusCodeDescription = ((HttpStatusCode)httpStatusCode).ToString();
-                        break;
-                }
+            switch (httpStatusCode)
+            {
+                case 204:
+                    statusCodeDescription = "No Content";
+                    break;
+                case 207:
+                    statusCodeDescription = "Multi-Status";
+                    break;
+                case 301:
+                    statusCodeDescription = "Moved Permanently";
+                    break;
+                case 401:
+                    statusCodeDescription = "Authorization Required";
+                    break;
+                case 404:
+                    statusCodeDescription = "Not Found";
+                    break;
+                case 405:
+                    statusCodeDescription = "Method Not Allowed";
+                    break;
+                case 500:
+                    statusCodeDescription = "Internal Server Error";
+                    break;
+                case 501:
+                    statusCodeDescription = "Method Not Implemented";
+                    break;
+                default:
+                    statusCodeDescription = ((HttpStatusCode)httpStatusCode).ToString();
+                    break;
+            }
 
-                return statusCodeDescription;
+            return statusCodeDescription;
         }
 
         protected void WriteHeaderIfNotAlreadyWritten()
@@ -173,78 +173,78 @@ namespace SvnBridge.Net
 
         private void DoWriteHeader()
         {
-                string statusCodeDescription = GetStatusCodeDescription(response.StatusCode);
+            string statusCodeDescription = GetStatusCodeDescription(response.StatusCode);
 
-                StringBuilder buffer = new StringBuilder();
-                StringWriter writer = new StringWriter(buffer);
+            StringBuilder buffer = new StringBuilder();
+            StringWriter writer = new StringWriter(buffer);
 
-                writer.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
+            writer.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
 
-                writer.WriteLine("Date: {0}", Helper.FormatDateB(DateTime.Now));
-                writer.WriteLine("Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2");
+            writer.WriteLine("Date: {0}", Helper.FormatDateB(DateTime.Now));
+            writer.WriteLine("Server: Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2");
 
-                List<KeyValuePair<string, string>> headers = response.Headers;
+            List<KeyValuePair<string, string>> headers = response.Headers;
 
-                string xPadHeader = null;
-                string connection = null;
+            string xPadHeader = null;
+            string connection = null;
 
-                foreach (KeyValuePair<string, string> header in headers)
+            foreach (KeyValuePair<string, string> header in headers)
+            {
+                if (header.Key == "X-Pad")
                 {
-                    if (header.Key == "X-Pad")
-                    {
-                        xPadHeader = header.Value;
-                        continue;
-                    }
-                    else if (header.Key == "Connection")
-                    {
-                        connection = header.Value;
-                        continue;
-                    }
-                    else
-                    {
-                        writer.WriteLine("{0}: {1}", header.Key, header.Value);
-                    }
+                    xPadHeader = header.Value;
+                    continue;
                 }
-
-                if (!response.SendChunked)
+                else if (header.Key == "Connection")
                 {
-                    writer.WriteLine("Content-Length: {0}", streamBuffer.Length);
+                    connection = header.Value;
+                    continue;
                 }
                 else
                 {
-                    writer.WriteLine("Transfer-Encoding: chunked");
+                    writer.WriteLine("{0}: {1}", header.Key, header.Value);
                 }
+            }
 
-                if (connection != null)
-                {
-                    writer.WriteLine("Connection: {0}", connection);
-                }
+            if (!response.SendChunked)
+            {
+                writer.WriteLine("Content-Length: {0}", streamBuffer.Length);
+            }
+            else
+            {
+                writer.WriteLine("Transfer-Encoding: chunked");
+            }
 
-                if (request.Headers["Connection"] != null)
+            if (connection != null)
+            {
+                writer.WriteLine("Connection: {0}", connection);
+            }
+
+            if (request.Headers["Connection"] != null)
+            {
+                string[] connectionHeaderParts = request.Headers["Connection"].Split(',');
+                foreach (string directive in connectionHeaderParts)
                 {
-                    string[] connectionHeaderParts = request.Headers["Connection"].Split(',');
-                    foreach (string directive in connectionHeaderParts)
+                    if (directive.TrimStart() == "Keep-Alive")
                     {
-                        if (directive.TrimStart() == "Keep-Alive")
-                        {
-                            writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
-                            writer.WriteLine("Connection: Keep-Alive");
-                        }
+                        writer.WriteLine("Keep-Alive: timeout=15, max={0}", maxKeepAliveConnections);
+                        writer.WriteLine("Connection: Keep-Alive");
                     }
                 }
+            }
 
-                writer.WriteLine("Content-Type: {0}", response.ContentType);
+            writer.WriteLine("Content-Type: {0}", response.ContentType);
 
-                if (!String.IsNullOrEmpty(xPadHeader))
-                {
-                    writer.WriteLine("X-Pad: {0}", xPadHeader);
-                }
+            if (!String.IsNullOrEmpty(xPadHeader))
+            {
+                writer.WriteLine("X-Pad: {0}", xPadHeader);
+            }
 
-                writer.WriteLine("");
+            writer.WriteLine("");
 
-                byte[] bufferBytes = Encoding.UTF8.GetBytes(buffer.ToString());
+            byte[] bufferBytes = Encoding.UTF8.GetBytes(buffer.ToString());
 
-                stream.Write(bufferBytes, 0, bufferBytes.Length);
+            stream.Write(bufferBytes, 0, bufferBytes.Length);
         }
     }
 }
