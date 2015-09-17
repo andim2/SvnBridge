@@ -241,17 +241,17 @@ namespace SvnBridge.SourceControl
             {
                 FolderMetaData folder = _root;
                 string itemName = _checkoutRootPath;
-                string[] nameParts;
+                string[] pathElems;
                 if (_checkoutRootPath != "")
-                    nameParts = remoteName.Substring(_checkoutRootPath.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    pathElems = remoteName.Substring(_checkoutRootPath.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 else
-                    nameParts = remoteName.Split('/');
+                    pathElems = remoteName.Split('/');
 
-                for (int i = 0; i < nameParts.Length; i++)
+                for (int i = 0; i < pathElems.Length; i++)
                 {
-                    bool isLastNamePart = (i == nameParts.Length - 1);
+                    bool isLastPathElem = (i == pathElems.Length - 1);
 
-                    PathAppendElem(ref itemName, nameParts[i]);
+                    PathAppendElem(ref itemName, pathElems[i]);
 
                     // Detect our possibly pre-existing record of this item within the changeset version range
                     // that we're in the process of analyzing/collecting...
@@ -260,7 +260,7 @@ namespace SvnBridge.SourceControl
                     bool doReplaceByNewItem = (item == null);
                     if (!doReplaceByNewItem) // further checks...
                     {
-                        if (isLastNamePart) // only if final item...
+                        if (isLastPathElem) // only if final item...
                         {
                             bool existingItemsVersionIsOutdated =
                                 updatingForwardInTime ?
@@ -328,13 +328,13 @@ namespace SvnBridge.SourceControl
                                 return;
                             }
 #endif
-                            if (isLastNamePart && propertyChange)
+                            if (isLastPathElem && propertyChange)
                             {
                                 return;
                             }
                             item = new MissingItemMetaData(itemName, processedVersion, edit);
                         }
-                        if (!isLastNamePart)
+                        if (!isLastPathElem)
                         {
                             StubFolderMetaData stubFolder = new StubFolderMetaData();
                             stubFolder.RealFolder = (FolderMetaData)item;
@@ -348,7 +348,7 @@ namespace SvnBridge.SourceControl
                         folder.Items.Add(item);
                         SetAdditionForPropertyChangeOnly(item, propertyChange);
                     }
-                    else if ((item is StubFolderMetaData) && isLastNamePart)
+                    else if ((item is StubFolderMetaData) && isLastPathElem)
                     {
                         folder.Items.Remove(item);
                         folder.Items.Add(((StubFolderMetaData)item).RealFolder);
@@ -385,7 +385,7 @@ namespace SvnBridge.SourceControl
                         }
 //#endif
                     }
-                    if (isLastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
+                    if (isLastPathElem == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                     {
                         folder = (FolderMetaData)item;
                     }
@@ -444,27 +444,27 @@ namespace SvnBridge.SourceControl
             //string remoteNameStart = remoteName.StartsWith(_checkoutRootPath) ? _checkoutRootPath : itemName;
             string remoteNameStart = itemName;
 
-            string[] nameParts = remoteName.Substring(remoteNameStart.Length)
+            string[] pathElems = remoteName.Substring(remoteNameStart.Length)
                 .Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             FolderMetaData folder = _root;
-            for (int i = 0; i < nameParts.Length; i++)
+            for (int i = 0; i < pathElems.Length; i++)
             {
-                bool isLastNamePart = (i == nameParts.Length - 1);
+                bool isLastPathElem = (i == pathElems.Length - 1);
 
-                PathAppendElem(ref itemName, nameParts[i]);
+                PathAppendElem(ref itemName, pathElems[i]);
 
-                bool fullyHandled = HandleDeleteItem(remoteName, change, itemName, ref folder, isLastNamePart);
+                bool fullyHandled = HandleDeleteItem(remoteName, change, itemName, ref folder, isLastPathElem);
                 if (fullyHandled)
                     break;
             }
-            if (nameParts.Length == 0)//we have to delete the checkout root itself
+            if (pathElems.Length == 0)//we have to delete the checkout root itself
             {
                 HandleDeleteItem(remoteName, change, itemName, ref folder, true);
             }
         }
 
-        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemName, ref FolderMetaData folder, bool isLastNamePart)
+        private bool HandleDeleteItem(string remoteName, SourceItemChange change, string itemName, ref FolderMetaData folder, bool isLastPathElem)
         {
             ItemMetaData item = folder.FindItem(itemName);
             // Shortcut: valid item in our cache, and it's a delete already? We're done :)
@@ -473,7 +473,7 @@ namespace SvnBridge.SourceControl
 
             if (item == null)
             {
-                if (isLastNamePart)
+                if (isLastPathElem)
                 {
                     if (change.Item.ItemType == ItemType.File)
                         item = new DeleteMetaData();
@@ -489,7 +489,7 @@ namespace SvnBridge.SourceControl
                     item = sourceControlProvider.GetItemsWithoutProperties(processedVersion, itemName, Recursion.None);
                     if (item == null)
                     {
-                        // FIXME: hmm, are we really supposed to actively Delete a non-isLastNamePart item
+                        // FIXME: hmm, are we really supposed to actively Delete a non-isLastPathElem item
                         // rather than indicating a MissingItemMetaData!?
                         // After all the actual delete operation is expected to be carried out (possibly later) properly, too...
                         item = new DeleteFolderMetaData();
@@ -498,7 +498,7 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        // This item is NOT the final one (isLastNamePart == true), only a helper,
+                        // This item is NOT the final one (isLastPathElem == true), only a helper,
                         // thus it certainly shouldn't
                         // directly indicate real actions (add/delete) yet
                         // within the currently processed Changeset,
@@ -516,7 +516,7 @@ namespace SvnBridge.SourceControl
                 }
                 folder.Items.Add(item);
             }
-            else if (isLastNamePart) // we need to revert the item addition
+            else if (isLastPathElem) // we need to revert the item addition
             {
                 var processedVersion = _targetVersion;
                 if (item.OriginallyDeleted) // convert back into a delete

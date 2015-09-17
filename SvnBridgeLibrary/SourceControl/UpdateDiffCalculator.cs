@@ -150,19 +150,19 @@ namespace SvnBridge.SourceControl
         private ItemMetaData FindItemOrCreateItem(FolderMetaData root, string pathRoot, string path, int targetVersion, Recursion recursion)
         {
             FolderMetaData folder = root;
-            string[] nameParts = path.Split('/');
+            string[] pathElems = path.Split('/');
             string itemName = pathRoot;
             ItemMetaData item = null;
-            for (int i = 0; i < nameParts.Length; i++)
+            for (int i = 0; i < pathElems.Length; i++)
             {
-                bool isLastNamePart = (i == nameParts.Length - 1);
+                bool isLastPathElem = (i == pathElems.Length - 1);
 
-                UpdateDiffEngine.PathAppendElem(ref itemName, nameParts[i]);
+                UpdateDiffEngine.PathAppendElem(ref itemName, pathElems[i]);
 
                 item = folder.FindItem(itemName);
                 if (item == null)
                 {
-                    if (isLastNamePart)
+                    if (isLastPathElem)
                     {
                         item = sourceControlProvider.GetItems(targetVersion, itemName, recursion);
                     }
@@ -175,7 +175,7 @@ namespace SvnBridge.SourceControl
                     item = item ?? new MissingItemMetaData(itemName, targetVersion, false);
                     folder.Items.Add(item);
                 }
-                if (isLastNamePart == false)
+                if (isLastPathElem == false)
                 {
                     folder = (FolderMetaData)item;
                 }
