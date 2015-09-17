@@ -172,7 +172,7 @@ namespace SvnBridge.Net
             }
             finally
             {
-                tcpClient.Close();
+                TcpClientClose(tcpClient);
             }
         }
 
@@ -195,6 +195,19 @@ namespace SvnBridge.Net
             {
                 /* Ignore error, caused by client cancelling operation */
             }
+        }
+
+        /// <summary>
+        /// Comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// side note: Close()ing TcpClient
+        /// will *not* Close() its NetworkStream,
+        /// see GetStream() docs (http://stackoverflow.com/a/12691758).
+        /// </remarks>
+        private static void TcpClientClose(TcpClient tcpClient)
+        {
+            tcpClient.Close();
         }
 
         private void LogError(Guid guid, Exception e)
