@@ -311,11 +311,11 @@ namespace SvnBridge.Handlers
                 {
                     if (sourceControlProvider.ItemExists(item.Name, revision - 1))
                     {
-                        output.Write("<S:open-file name=\"{0}\" rev=\"-1\"/>\n", item.Name);
+                        output.Write("<S:open-file name=\"{0}\" rev=\"-1\"/>\n", Helper.EncodeB(item.Name));
                     }
                     else
                     {
-                        output.Write("<S:add-file name=\"{0}\"/>\n", item.Name);
+                        output.Write("<S:add-file name=\"{0}\"/>\n", Helper.EncodeB(item.Name));
                     }
 
                     while (item.DataLoaded == false)
@@ -344,7 +344,11 @@ namespace SvnBridge.Handlers
                 serverPath,
                 data.StartRevision,
                 data.EndRevision,
-                Recursion.Full,
+                // SVNBRIDGE_WARNING_REF_RECURSION - additional comments:
+                // since SVN blame activity is a single-object (e.g. file) activity
+                // (and we did end up with bogus unrelated files listed!),
+                // we definitely should not specify .Full here.
+                Recursion.None,
                 data.EndRevision - data.StartRevision);
 
             if (log.History.Length == 0)
@@ -378,7 +382,7 @@ namespace SvnBridge.Handlers
 
                         output.Write(@"<S:file-rev path=""" + change.Item.RemoteName + @""" rev=""" +
                             change.Item.RemoteChangesetId + @""">
-                            <S:rev-prop name=""svn:log"">" + history.Comment + @"</S:rev-prop>
+                            <S:rev-prop name=""svn:log"">" + Helper.EncodeB(history.Comment) + @"</S:rev-prop>
                             <S:rev-prop name=""svn:author"">" + history.Username + @"</S:rev-prop>
                             <S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
                             <S:txdelta>"
@@ -468,6 +472,7 @@ namespace SvnBridge.Handlers
             }
             if (updatereport.IsCheckOut)
             {
+                // SVNBRIDGE_WARNING_REF_RECURSION
                 metadata = (FolderMetaData)sourceControlProvider.GetItemsWithoutProperties(targetRevision, basePath, Recursion.Full);
             }
             else
@@ -499,6 +504,7 @@ namespace SvnBridge.Handlers
 
             int end = int.Parse(logreport.EndRevision);
             int start = int.Parse(logreport.StartRevision);
+            // SVNBRIDGE_WARNING_REF_RECURSION
             LogItem logItem = sourceControlProvider.GetLog(
                 serverPath,
                 Math.Min(start, end),

@@ -117,6 +117,7 @@ namespace SvnBridge.SourceControl
             {
                 if (sourceControlProvider.ItemExists(checkoutRootPath + "/" + missingItem, versionTo))
                 {
+                    // SVNBRIDGE_WARNING_REF_RECURSION
                     FindItemOrCreateItem(checkoutRoot, checkoutRootPath, missingItem, versionTo, Recursion.Full);
                 }
             }
@@ -176,6 +177,21 @@ namespace SvnBridge.SourceControl
             CalculateChangeBetweenVersions(checkoutRootPath, checkoutRootPath, checkoutRootVersion, root, sourceVersion, targetVersion);
         }
 
+        /// <summary>
+        /// This helper is intended to do the following:
+        /// - fetch a full revision log of the affected item(s) from TFS,
+        ///   ranging from sourceVersion to targetVersion
+        /// - iterate through all gathered Changesets
+        ///   - iterate through all Changes contained within a Changeset version
+        ///     - then help transforming all Changes
+        ///       into appropriate SVN-compatible diff history,
+        ///       by progressively collecting all updated items (folders, files)
+        ///       within a root FolderMetaData hierarchy
+        ///       (updates may actually cancel each other out
+        ///       in case of Adds/Deletes!)
+        /// And all this in a way that is compatible with
+        /// both forward and backward updates/logs.
+        /// </summary>
         private void CalculateChangeBetweenVersions(string checkoutRootPath, string changePath, int changeVersion, FolderMetaData root, int sourceVersion, int targetVersion)
         {
             bool updatingForwardInTime = sourceVersion <= targetVersion;
@@ -210,7 +226,7 @@ namespace SvnBridge.SourceControl
                 changePath,
                 changeVersion,
                 versionFrom, versionTo,
-                Recursion.Full,
+                Recursion.Full, // SVNBRIDGE_WARNING_REF_RECURSION
                 // Hmm, why only 256 *here*?? This would match <see cref="TFSSourceControlProvider"/> TFS_QUERY_LIMIT
                 // (which is being worked around over there),
                 // thus I don't think we want to artificially specify it here as a constraint...
@@ -338,7 +354,29 @@ namespace SvnBridge.SourceControl
             }
             else
             {
-                throw new NotSupportedException("Unsupported change type " + change.ChangeType);
+                if (ChangeTypeAnalyzer.IsMergeOperation(change) && (change.Item.RemoteItemStatus == SourceItemStatus.Unmodified))
+                {
+                    // Simply skip this merge operation which is "logical" (no-op) (right?)
+                    // We're very lucky in this no-op case...
+                    // OTOH perhaps we still do need to add some special protocol parts
+                    // (perhaps svn client should be able to show a 'G' for such a non-changed file, too).
+                    // BTW for other Merge changes in many cases they have a flag *combination*
+                    // i.e. they're already cleanly being handled via the Edit etc. handlers above anyway.
+                    // I observed a Merge-only change
+                    // where the reason for it not indicating any Edit, Delete etc. change ops
+                    // was that someone in Merge source branch
+                    // had done an Edit of the file
+                    // in a prior commit,
+                    // yet the Merge target branch
+                    // already had the very same Edit in an unrelated commit
+                    // done by someone else
+                    // --> no indication of Edit change needed
+                    // since Merge source vs. Merge target items were identical.
+                }
+                else
+                {
+                    throw new NotSupportedException("Unsupported change type " + change.ChangeType);
+                }
             }
         }
 

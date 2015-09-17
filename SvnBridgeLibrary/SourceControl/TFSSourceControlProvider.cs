@@ -310,10 +310,16 @@ namespace SvnBridge.SourceControl
             SVNPathStripLeadingSlash(ref path);
 
             string serverPath = MakeTfsPath(path);
+            // SVNBRIDGE_WARNING_REF_RECURSION
             RecursionType recursionType = RecursionType.None;
             switch (recursion)
             {
                 case Recursion.OneLevel:
+                    // Hmm, why is this translated to .None here?
+                    // There was neither a comment here nor was it encapsulated into a self-explanatory
+                    // helper method.
+                    // Perhaps it's for correcting OneLevel requests
+                    // which probably don't make sense with log-type SVN queries... right?
                     recursionType = RecursionType.None;
                     break;
                 case Recursion.Full:
@@ -582,7 +588,7 @@ namespace SvnBridge.SourceControl
                         ref histories,
                         versionTo,
                         maxCount,
-                        true);
+                        false);
 
                     return histories;
                 }
@@ -949,7 +955,7 @@ namespace SvnBridge.SourceControl
             date = date.ToUniversalTime();
             try
             {
-                ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full);
+                ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full); // SVNBRIDGE_WARNING_REF_RECURSION
                 Changeset[] changesets = Service_QueryHistory(
                     itemSpec, VersionSpec.Latest,
                     VersionSpec.First, VersionSpec.FromDate(date),
@@ -1103,6 +1109,15 @@ namespace SvnBridge.SourceControl
             Dictionary<string, ItemProperties> properties = new Dictionary<string, ItemProperties>();
             Dictionary<string, int> itemPropertyRevision = new Dictionary<string, int>();
             ItemMetaData firstItem = null;
+            // Workaround variable for case sensitivity issues - always keep a record of the folder name
+            // which a (potentially imprecisely named!) file should nevertheless have ended up in.
+            // This has been observed with a Changeset where 50 files were correctly named yet
+            // 2 others (the elsewhere case-infamous resource.h sisters) had incorrect folder case.
+            // While this managed to cure the problem, another, possibly more helpful
+            // (in case of some completely unrelated folder place being affected!), way of doing the workaround
+            // would be to have a helper method manually iterate through the folder map
+            // and do an insensitive string compare to figure out the likely candidate folder.
+            string currentFolderName = null;
             foreach (SourceItem sourceItem in items)
             {
                 ItemMetaData item = ConvertSourceItem(sourceItem, rootPath);
@@ -1114,9 +1129,14 @@ namespace SvnBridge.SourceControl
                 }
                 else if ((!IsPropertyFile(item.Name) && !IsPropertyFolder(item.Name)) || returnPropertyFiles)
                 {
+                    // FIXME: this optimistic handling relies on a folder-type item always being listed
+                    // prior to its file-type content, which may sometimes not be the case.
+                    // Might need to rearrange things more flexibly (by using the usual
+                    // first-create-StubFolderMetaData-then-replace-with-real-FolderMetaData-item mechanism).
                     if (item.ItemType == ItemType.Folder)
                     {
-                        folders[FilesysHelpers.GetCaseMangledName(item.Name)] = (FolderMetaData)item;
+                        currentFolderName = FilesysHelpers.GetCaseMangledName(item.Name);
+                        folders[currentFolderName] = (FolderMetaData)item;
                     }
                     if (firstItem == null)
                     {
@@ -1132,7 +1152,12 @@ namespace SvnBridge.SourceControl
                     else
                     {
                         string folderName = GetFolderName(item.Name);
-                        folders[FilesysHelpers.GetCaseMangledName(folderName)].Items.Add(item);
+                        FolderMetaData folder = null;
+                        if (!folders.TryGetValue(FilesysHelpers.GetCaseMangledName(folderName), out folder)) // NOT FOUND?? (case sensitivity!?) Try recorded folder.
+                        {
+                            folder = folders[currentFolderName];
+                        }
+                        folder.Items.Add(item);
                     }
                 }
             }
@@ -1194,6 +1219,10 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
+                    // SVNBRIDGE_WARNING_REF_RECURSION - additional comments:
+                    // the reason for specifying .Full here probably is to get a full history,
+                    // which ensures that the first entry (due to sort order)
+                    // does provide the *newest* Change(set) anywhere below that item.
                     LogItem log = GetLog(
                         item.Name,
                         version,

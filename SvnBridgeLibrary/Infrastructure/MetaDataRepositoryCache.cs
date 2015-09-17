@@ -186,7 +186,7 @@ namespace SvnBridge.Infrastructure
             SourceItem[] items =
                 sourceControlService.QueryItems(serverUrl, credentials,
                     serverPath,
-                    RecursionType.Full,
+                    RecursionType.Full, // SVNBRIDGE_WARNING_REF_RECURSION
                     versionSpec,
                     DeletedState.NonDeleted,
                     ItemType.Any,
@@ -201,7 +201,7 @@ namespace SvnBridge.Infrastructure
                 items =
                 sourceControlService.QueryItems(serverUrl, credentials,
                     serverPath,
-                    RecursionType.Full,
+                    RecursionType.Full, // SVNBRIDGE_WARNING_REF_RECURSION
                     versionSpec,
                     DeletedState.NonDeleted,
                     ItemType.Any,
