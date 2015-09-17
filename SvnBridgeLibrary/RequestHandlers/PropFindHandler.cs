@@ -102,43 +102,43 @@ namespace SvnBridge.Handlers
 
         private static FolderMetaData GetFolderInfo(TFSSourceControlProvider sourceControlProvider,
                                                     string depth,
-                                                    string path,
+                                                    string itemPath,
                                                     int? version,
                                                     bool loadPropertiesFromFile)
         {
             Recursion recursion = ConvertDepthHeaderToRecursion(depth);
             var versionToFetch = version.HasValue ? version.Value : TFSSourceControlProvider.LATEST_VERSION;
             if (recursion == Recursion.OneLevel)
-                return (FolderMetaData)GetItems(sourceControlProvider, versionToFetch, path, recursion, loadPropertiesFromFile);
+                return (FolderMetaData)GetItems(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
 
             FolderMetaData folderInfo = new FolderMetaData();
-            ItemMetaData item = GetItems(sourceControlProvider, versionToFetch, path, recursion, loadPropertiesFromFile);
+            ItemMetaData item = GetItems(sourceControlProvider, versionToFetch, itemPath, recursion, loadPropertiesFromFile);
             folderInfo.Items.Add(item);
             return folderInfo;
         }
 
         private static ItemMetaData GetItems(TFSSourceControlProvider sourceControlProvider,
                                              int version,
-                                             string path,
+                                             string itemPath,
                                              Recursion recursion,
                                              bool loadPropertiesFromFile)
         {
-            // Make sure path is decoded
+            // We expect itemPath to have been properly decoded already
 
             // FIXME BUG!?: those two calls actually map into the *same* underlying method call!!
             // Not sure about properties handling here, but if indeed it's expected
             // to have property storage items returned here, then it's probably wrong
             // (always returnPropertyFiles == false!). TODO add breakpoint here and investigate!
             if (loadPropertiesFromFile)
-                return sourceControlProvider.GetItems(version, Helper.Decode(path), recursion);
+                return sourceControlProvider.GetItems(version, itemPath, recursion);
             else
-                return sourceControlProvider.GetItemsWithoutProperties(version, Helper.Decode(path), recursion);
+                return sourceControlProvider.GetItemsWithoutProperties(version, itemPath, recursion);
         }
 
         private void HandleAllProp(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream outputStream)
         {
             int revision;
-            string path;
+            string itemPath;
             bool bcPath = false;
             // TODO: handle these two very similar types via a common helper or so.
             // Also, this section is semi-duplicated (and thus fragile)
@@ -146,37 +146,39 @@ namespace SvnBridge.Handlers
             // (should likely be provided by a method in request base class).
             if (requestPath.StartsWith("/!svn/"))
             {
+                string itemPathUndecoded;
                 if (requestPath.StartsWith("/!svn/bc"))
                 {
                     bcPath = true;
                     revision = int.Parse(requestPath.Split('/')[3]);
-                    path = requestPath.Substring("/!svn/bc/".Length + revision.ToString().Length);
+                    itemPathUndecoded = requestPath.Substring("/!svn/bc/".Length + revision.ToString().Length);
                 }
                 else
                 if (requestPath.StartsWith("/!svn/ver"))
                 {
                     revision = int.Parse(requestPath.Split('/')[3]);
-                    path = requestPath.Substring("/!svn/ver/".Length + revision.ToString().Length);
+                    itemPathUndecoded = requestPath.Substring("/!svn/ver/".Length + revision.ToString().Length);
                 }
                 else
                 {
                     ReportUnsupportedSVNRequestPath(requestPath);
                     // Exception dummies:
-                    path = requestPath;
+                    itemPathUndecoded = requestPath;
                     revision = 0;
                 }
+                itemPath = Helper.Decode(itemPathUndecoded);
             }
             else
             {
-                revision = sourceControlProvider.GetItems(TFSSourceControlProvider.LATEST_VERSION, requestPath, Recursion.None).Revision;
-                path = requestPath;
+                itemPath = requestPath;
+                revision = sourceControlProvider.GetItems(TFSSourceControlProvider.LATEST_VERSION, itemPath, Recursion.None).Revision;
             }
 
-            ItemMetaData item = GetItems(sourceControlProvider, revision, path, Recursion.None, true);
+            ItemMetaData item = GetItems(sourceControlProvider, revision, itemPath, Recursion.None, true);
 
             if (item == null)
             {
-                if (IsSvnRequestForProjectCreation(path, revision, sourceControlProvider))
+                if (IsSvnRequestForProjectCreation(itemPath, revision, sourceControlProvider))
                 {
                     item = GetItems(sourceControlProvider, revision, "", Recursion.None, true);
                     item.Name = "trunk";
@@ -421,18 +423,19 @@ namespace SvnBridge.Handlers
                                      Stream outputStream)
         {
             int version = int.Parse(requestPath.Split('/')[3]);
-            string path = requestPath.Substring(9 + version.ToString().Length);
+            string itemPathUndecoded = requestPath.Substring(9 + version.ToString().Length);
+            string itemPath = Helper.Decode(itemPathUndecoded);
             bool setTrunkAsName = false;
 
-            if (!sourceControlProvider.ItemExists(Helper.Decode(path), version))
+            if (!sourceControlProvider.ItemExists(itemPath, version))
             {
-                if (!IsSvnRequestForProjectCreation(path, version, sourceControlProvider))
+                if (!IsSvnRequestForProjectCreation(itemPath, version, sourceControlProvider))
                     throw new FileNotFoundException();
-                path = "";
+                itemPath = "";
                 setTrunkAsName = true;
             }
 
-            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depthHeader, path, version, false);
+            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depthHeader, itemPath, version, false);
             if (setTrunkAsName)
                 folderInfo.Name = "trunk";
 
@@ -466,7 +469,7 @@ namespace SvnBridge.Handlers
                 {
                     propdesc += prop.LocalName + ":";
                 }
-                WriteLog(path + ":" + propdesc);
+                WriteLog(itemPathUndecoded + ":" + propdesc);
             }
         }
 
@@ -476,13 +479,15 @@ namespace SvnBridge.Handlers
                                        PropData data,
                                        Stream outputStream)
         {
-            if (!sourceControlProvider.ItemExists(GetLocalPathTrailingSlashStripped(Helper.Decode(requestPath)), TFSSourceControlProvider.LATEST_VERSION))
+            string itemPathUndecoded = requestPath;
+            string itemPath = Helper.Decode(itemPathUndecoded);
+            if (!sourceControlProvider.ItemExists(GetLocalPathTrailingSlashStripped(itemPath), TFSSourceControlProvider.LATEST_VERSION))
             {
                 throw new FileNotFoundException("Unable to find file '" + requestPath + "' in the source control repository",
                                                 requestPath);
             }
 
-            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depth, requestPath, null, true);
+            FolderMetaData folderInfo = GetFolderInfo(sourceControlProvider, depth, itemPath, null, true);
 
             using (StreamWriter writer = CreateStreamWriter(outputStream))
             {
@@ -512,12 +517,13 @@ namespace SvnBridge.Handlers
             {
                 ReportUnsupportedDepthHeaderValue(depth);
             }
-            string path = requestPath.Substring(11 + activityId.Length);
-            ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, Helper.Decode(path));
+            string itemPathUndecoded = requestPath.Substring(11 + activityId.Length);
+            string itemPath = Helper.Decode(itemPathUndecoded);
+            ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, itemPath);
 
             if (item == null)
             {
-                throw new FileNotFoundException("Unable to find file '" + path + "' in the specified activity", path);
+                throw new FileNotFoundException("Unable to find file '" + itemPathUndecoded + "' in the specified activity", itemPathUndecoded);
             }
 
             using (StreamWriter writer = CreateStreamWriter(outputStream))
@@ -626,9 +632,9 @@ namespace SvnBridge.Handlers
             return false;
         }
 
-        private static bool IsSvnRequestForProjectCreation(string requestPath, int version, TFSSourceControlProvider sourceControlProvider)
+        private static bool IsSvnRequestForProjectCreation(string itemPath, int version, TFSSourceControlProvider sourceControlProvider)
         {
-            bool isSvnPath = IsSubPathOfSvnStdlayoutConvention(Helper.Decode(requestPath));
+            bool isSvnPath = IsSubPathOfSvnStdlayoutConvention(itemPath);
             return isSvnPath && version == sourceControlProvider.GetEarliestVersion(string.Empty);
         }
 

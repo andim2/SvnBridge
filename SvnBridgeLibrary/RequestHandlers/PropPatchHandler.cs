@@ -62,7 +62,8 @@ namespace SvnBridge.Handlers
 				activityPath = activityPath.Substring(1);
 			}
 
-			string itemPath = Helper.Decode(activityPath.Substring(activityPath.IndexOf('/')));
+			string itemPathUndecoded = activityPath.Substring(activityPath.IndexOf('/'));
+			string itemPath = Helper.Decode(itemPathUndecoded);
 			string activityId = activityPath.Split('/')[0];
 
             // Internet sez: "Servers MUST process PROPPATCH instructions in document order

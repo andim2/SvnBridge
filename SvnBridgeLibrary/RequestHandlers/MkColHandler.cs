@@ -21,7 +21,7 @@ namespace SvnBridge.Handlers
 
             try
             {
-                MakeCollection(itemPath, sourceControlProvider);
+                MakeCollection(requestPath, sourceControlProvider);
 
                 SendCreatedResponse(request, response, itemPath, request.Url.Host, request.Url.Port.ToString());
             }
@@ -31,17 +31,18 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private static void MakeCollection(string itemPath, TFSSourceControlProvider sourceControlProvider)
+        private static void MakeCollection(string requestPath, TFSSourceControlProvider sourceControlProvider)
         {
-            if (!itemPath.StartsWith("//"))
+            if (!requestPath.StartsWith("//"))
             {
-                itemPath = "/" + itemPath;
+                requestPath = "/" + requestPath;
             }
 
-            Match match = Regex.Match(itemPath, @"//!svn/wrk/([a-zA-Z0-9\-]+)/?");
-            string folderPath = itemPath.Substring(match.Groups[0].Value.Length - 1);
+            Match match = Regex.Match(requestPath, @"//!svn/wrk/([a-zA-Z0-9\-]+)/?");
+            string folderPathElementUndecoded = requestPath.Substring(match.Groups[0].Value.Length - 1);
+            string folderPathElement = Helper.Decode(folderPathElementUndecoded);
             string activityId = match.Groups[1].Value;
-            sourceControlProvider.MakeCollection(activityId, Helper.Decode(folderPath));
+            sourceControlProvider.MakeCollection(activityId, folderPathElement);
         }
 
         private static void SendCreatedResponse(IHttpRequest request, IHttpResponse response, string itemPath, string server, string port)

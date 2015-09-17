@@ -23,7 +23,9 @@ namespace SvnBridge.Handlers
             response.AppendHeader("DAV", "merge,baseline,activity,version-controlled-collection");
             response.AppendHeader("MS-Author-Via", "DAV");
             response.AppendHeader("Allow", "OPTIONS,GET,HEAD,POST,DELETE,TRACE,PROPFIND,PROPPATCH,COPY,MOVE,LOCK,UNLOCK,CHECKOUT");
-            sourceControlProvider.ItemExists(Helper.Decode(requestPath)); // Verify permissions to access
+            string itemPathUndecoded = requestPath;
+            string itemPath = Helper.Decode(itemPathUndecoded);
+            sourceControlProvider.ItemExists(itemPath); // Verify permissions to access
 
             if (request.InputStream.Length != 0)
             {

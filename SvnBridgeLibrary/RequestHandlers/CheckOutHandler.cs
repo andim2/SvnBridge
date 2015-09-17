@@ -73,22 +73,23 @@ namespace SvnBridge.Handlers
 
             int revisionStart = requestPath.IndexOf("/ver/") + 5;
             int version;
-            string itemPath;
+            string itemPathUndecoded;
             if (requestPath.IndexOf('/', revisionStart + 1) != -1)
             {
                 int revisionEnd = requestPath.IndexOf('/', revisionStart + 1);
                 version = int.Parse(requestPath.Substring(revisionStart, revisionEnd - revisionStart));
-                itemPath = requestPath.Substring(revisionEnd);
+                itemPathUndecoded = requestPath.Substring(revisionEnd);
             }
             else
             {
                 version = int.Parse(requestPath.Substring(revisionStart));
-                itemPath = "/";
+                itemPathUndecoded = "/";
             }
 
-            itemPath = itemPath.Replace("//", "/");
+            itemPathUndecoded = itemPathUndecoded.Replace("//", "/");
 
-            ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(TFSSourceControlProvider.LATEST_VERSION, Helper.Decode(itemPath), Recursion.None);
+            string itemPath = Helper.Decode(itemPathUndecoded);
+            ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(TFSSourceControlProvider.LATEST_VERSION, itemPath, Recursion.None);
             // Possibly technically a NULL item shouldn't happen here
             // (this probably indicates client-side WC state out of sync with repository,
             // since the client shouldn't be doing requests on non-existing items?
@@ -101,7 +102,7 @@ namespace SvnBridge.Handlers
                 throw new ConflictException();
             }
 
-            location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
+            location = GetLocalPath("//!svn/wrk/" + activityId + itemPathUndecoded);
 
             return location;
         }

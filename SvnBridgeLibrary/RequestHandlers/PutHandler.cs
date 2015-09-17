@@ -17,7 +17,8 @@ namespace SvnBridge.Handlers
             IHttpResponse response = context.Response;
 
             string requestPath = GetPath(request);
-            string itemPath = Helper.Decode(requestPath);
+            string itemPathUndecoded = requestPath;
+            string itemPath = Helper.Decode(itemPathUndecoded);
             bool isWebdavResourceNewlyCreated = Put(
                 sourceControlProvider,
                 requestPath,
@@ -70,11 +71,12 @@ namespace SvnBridge.Handlers
             // rather than doing this dirt-ugly open-coded something:
             const int startIndex = 11;
             string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
-            string serverPath = Helper.Decode(requestPath.Substring(startIndex + activityId.Length));
+            string itemPathUndecoded = requestPath.Substring(startIndex + activityId.Length);
+            string itemPath = Helper.Decode(itemPathUndecoded);
             // Adopt proper SVN speak: "base" == original file, "result" == updated file.
             // In SVN source code, *both* base and result hash are handled as *optional*
             // (and git-svn does not pass the relevant checksum in the result hash case at least).
-            ItemMetaData itemBase = sourceControlProvider.GetItemInActivity(activityId, serverPath);
+            ItemMetaData itemBase = sourceControlProvider.GetItemInActivity(activityId, itemPath);
             bool baseExists = (null != itemBase);
             byte[] baseData = new byte[0];
             if (baseExists)
@@ -116,7 +118,7 @@ namespace SvnBridge.Handlers
             bool isUpdateNeeded = ((baseHashCalc != resultHashCalc) || (!baseExists));
             if (isUpdateNeeded)
             {
-                isWebdavResourceNewlyCreated = sourceControlProvider.WriteFile(activityId, serverPath, resultData);
+                isWebdavResourceNewlyCreated = sourceControlProvider.WriteFile(activityId, itemPath, resultData);
             }
             return isWebdavResourceNewlyCreated;
         }

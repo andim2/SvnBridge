@@ -32,6 +32,8 @@ namespace SvnBridge.Handlers
                     "<title>404 Not Found</title>\n" +
                     "</head><body>\n" +
                     "<h1>Not Found</h1>\n" +
+                    // FIXME: I really don't think that a *de*code of a *raw* (non-split) requestPath
+                    // is even remotely correct...
                     "<p>The requested URL /" + Helper.Decode(requestPath) + " was not found on this server.</p>\n" +
                     "<hr>\n" +
                     "<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
@@ -57,8 +59,9 @@ namespace SvnBridge.Handlers
             {
                 const int startIndex = 10;
                 string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
-                string filePath = requestPath.Substring(requestPath.IndexOf('/', startIndex));
-                return sourceControlProvider.DeleteItem(activityId, Helper.Decode(filePath));
+                string itemPathUndecoded = requestPath.Substring(requestPath.IndexOf('/', startIndex));
+                string itemPath = Helper.Decode(itemPathUndecoded);
+                return sourceControlProvider.DeleteItem(activityId, itemPath);
             }
             else
             {
