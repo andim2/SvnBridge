@@ -1,11 +1,13 @@
 using System;
+using System.Diagnostics; // Conditional
 using System.Net;
 using CodePlex.TfsLibrary;
 using CodePlex.TfsLibrary.ObjectModel; // LogItem
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using CodePlex.TfsLibrary.Utility;
 using SvnBridge.Infrastructure; // DefaultLogger
-using SvnBridge.Utility; // Helper.GetUnsafeNetworkCredential()
+using SvnBridge.Interfaces; // ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.GetUnsafeNetworkCredential()
 
 namespace SvnBridge.SourceControl
 {
@@ -54,18 +56,25 @@ namespace SvnBridge.SourceControl
             bool useTfsService = true;
             if (useTfsService)
             {
-                ITFSSourceControlService scs_inner = new TFSSourceControlService_inner(
+                ITFSSourceControlService scs_buggy = new TFSSourceControlService_buggy_database_content(
                     registrationService,
                     webSvcFactory,
                     webTransferService,
                     fileSystem,
                     logger);
-                scs_wrapper_outermost = scs_inner;
+                scs_wrapper_outermost = scs_buggy;
             }
             else
             {
                 // Well, what kind of emulation service or other
                 // would one want to offer here??
+            }
+            bool doSanitize_BugAll = true;
+            if (doSanitize_BugAll)
+            {
+                ITFSSourceControlService scs_wrapper_bug_sanitizer = new TFSSourceControlService_BugSanitizerAll(
+                    scs_wrapper_outermost);
+                scs_wrapper_outermost = scs_wrapper_bug_sanitizer;
             }
 
             return scs_wrapper_outermost;
@@ -505,11 +514,363 @@ namespace SvnBridge.SourceControl
         #endregion
     }
 
-	public class TFSSourceControlService_inner : SourceControlService /* concrete foreign class implementing *parts* of the interface */, ITFSSourceControlService
+    /// <summary>
+    /// Wrapper class which is intended to be
+    /// the generic-name outer-layer "typedef"
+    /// for *all* TFS bug corrections which one may need to do in total.
+    /// Future improvements might include:
+    /// - doing certain corrections
+    ///   only for those TFS versions where such corrections are needed
+    /// </summary>
+    internal class TFSSourceControlService_BugSanitizerAll : ITFSSourceControlService_wrapper
+    {
+        public TFSSourceControlService_BugSanitizerAll(
+            ITFSSourceControlService scsWrapped)
+            : base(
+                ConstructWrappedSourceControlService(
+                    scsWrapped))
+        {
+        }
+
+        private static ITFSSourceControlService ConstructWrappedSourceControlService(
+            ITFSSourceControlService scsWrapped)
+        {
+            ITFSSourceControlService scs_wrapper_outermost = scsWrapped;
+
+            bool doSanitize_BugCaseInconsistentCommitRecords = true;
+            if (doSanitize_BugCaseInconsistentCommitRecords)
+            {
+                ITFSSourceControlService scs_wrapper_bug_sanitizer_CaseInconsistentCommitRecords = new TFSSourceControlService_BugSanitizerCaseSensitivityInconsistentCommitRecords(
+                    scs_wrapper_outermost);
+                scs_wrapper_outermost = scs_wrapper_bug_sanitizer_CaseInconsistentCommitRecords;
+            }
+
+            return scs_wrapper_outermost;
+        }
+    }
+
+    /// <remarks>
+    /// IMPORTANT NOTE: handling within this class
+    /// is a rather terrible PERFORMANCE HOTPATH
+    /// since it needs to verify tons of paths.
+    /// Some of it is useless overhead since certain parts
+    /// contain the same path / revision pair even *multiple* times
+    /// (especially in the QueryBranches_sanitize() case).
+    /// To try to improve the situation,
+    /// one should likely introduce a cache class
+    /// which provides/keeps mappings
+    /// from the potentially-wrong-path / revision pair
+    /// to case-verified result path,
+    /// and keep this cache as a maximally globally available object,
+    /// i.e. for use during at least one filter class session,
+    /// or ideally much more (e.g. for all same-credential same-server-url session scopes).
+    /// Initially one could introduce the cache object
+    /// for within-class-session use only,
+    /// and once it works to a satisfying extent,
+    /// one could add infrastructure
+    /// to be able to share that cache object
+    /// within a much larger (yet still compatible) session scope.
+    /// </remarks>
+    internal class TFSSourceControlService_BugSanitizerCaseSensitivityInconsistentCommitRecords : ITFSSourceControlService_wrapper
+    {
+        public TFSSourceControlService_BugSanitizerCaseSensitivityInconsistentCommitRecords(
+            ITFSSourceControlService scsWrapped)
+            : base(
+                scsWrapped)
+        {
+        }
+
+        #region ISourceControlService members
+        public override SourceItem[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            string serverPath,
+            RecursionType recursion,
+            VersionSpec version,
+            DeletedState deletedState,
+            ItemType itemType,
+            bool sortAscending,
+            int options)
+        {
+            SourceItem[] sourceItems = base.QueryItems(
+                tfsUrl,
+                credentials,
+                serverPath,
+                recursion,
+                version,
+                deletedState,
+                itemType,
+                sortAscending,
+                options);
+
+            return sourceItems;
+        }
+
+        public override SourceItem[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            int[] itemIds,
+            int changeSet,
+            int options)
+        {
+            SourceItem[] sourceItems = base.QueryItems(
+                tfsUrl,
+                credentials,
+                itemIds,
+                changeSet,
+                options);
+
+            return sourceItems;
+        }
+
+        public override LogItem QueryLog(
+            string tfsUrl,
+            ICredentials credentials,
+            string serverPath,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            RecursionType recursionType,
+            int maxCount,
+            bool sortAscending)
+        {
+            LogItem logItem = base.QueryLog(
+                tfsUrl,
+                credentials,
+                serverPath,
+                versionFrom,
+                versionTo,
+                recursionType,
+                maxCount,
+                sortAscending);
+
+            return logItem;
+        }
+        #endregion
+
+
+
+        #region ISourceControlService_broken_missing_methods members
+        public override BranchItem[][] QueryBranches(
+            string tfsUrl,
+            ICredentials credentials,
+            ItemSpec[] items,
+            VersionSpec version)
+        {
+            BranchItem[][] branchItems = base.QueryBranches(
+                tfsUrl,
+                credentials,
+                items,
+                version);
+
+            return branchItems;
+        }
+        #endregion
+
+
+        #region ITFSSourceControlService_parts members
+        public override Changeset[] QueryHistory(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            string workspaceOwner,
+            ItemSpec itemSpec,
+            VersionSpec versionItem,
+            string user,
+            VersionSpec versionFrom,
+            VersionSpec versionTo,
+            int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
+            bool sortAscending)
+        {
+            Changeset[] changesets = base.QueryHistory(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                workspaceOwner,
+                itemSpec,
+                versionItem,
+                user,
+                versionFrom,
+                versionTo,
+                maxCount,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
+                sortAscending);
+
+            MakeBugSanitizer(
+                tfsUrl,
+                credentials).QueryHistory_sanitize(
+                    ref changesets);
+
+            return changesets;
+        }
+
+        public override ItemSet[] QueryItems(
+            string tfsUrl,
+            ICredentials credentials,
+            VersionSpec version,
+            ItemSpec[] items,
+            int options)
+        {
+            ItemSet[] itemSets = base.QueryItems(
+                tfsUrl,
+                credentials,
+                version,
+                items,
+                options);
+
+            return itemSets;
+        }
+
+        public override ExtendedItem[][] QueryItemsExtended(
+            string tfsUrl,
+            ICredentials credentials,
+            string workspaceName,
+            ItemSpec[] items,
+            DeletedState deletedState,
+            ItemType itemType,
+            int options)
+        {
+            ExtendedItem[][] extendedItems = base.QueryItemsExtended(
+                tfsUrl,
+                credentials,
+                workspaceName,
+                items,
+                deletedState,
+                itemType,
+                options);
+
+            return extendedItems;
+        }
+        #endregion
+
+
+        #region local filtering-related methods
+        private TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_SourceControlService MakeBugSanitizer(
+            string tfsUrl,
+            ICredentials credentials)
+        {
+            return new TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_SourceControlService(
+                base.SCSWrapped,
+                tfsUrl, credentials);
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// Helper class to have a new object as required by each new request.
+    /// This is needed since subsequent requests
+    /// have a specific (potentially different) url/credentials pair.
+    /// </summary>
+    /// <remarks>
+    /// One could conceive a caching mechanism for objects of this class,
+    /// but given that the class is very lightweight
+    /// that would be overkill.
+    /// </remarks>
+    internal class TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_SourceControlService
+    {
+        private readonly TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer;
+
+        public TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_SourceControlService(
+            ITFSSourceControlService scs,
+            string tfsUrl,
+            ICredentials credentials)
+        {
+            this.bugSanitizer = new TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder(
+                scs,
+                tfsUrl,
+                credentials);
+        }
+
+        // Since I'm somewhat unsure
+        // whether/where this might occur (perhaps branch merges?),
+        // keep an eye on such cases...
+        [Conditional("DEBUG")]
+        private static void AssertVersionMatch(
+            int version1,
+            int version2)
+        {
+            bool isMatch = (version1 == version2);
+            if (!(isMatch))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+                throw new InvalidOperationException(
+                    "changeset vs. change version mismatch");
+            }
+        }
+
+        public void QueryHistory_sanitize(
+            ref Changeset[] changesets)
+        {
+            int cs = 0; // Debug helper (it's sufficiently relevant to know the current element)
+            foreach (var changeset in changesets)
+            {
+                VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset.cset);
+
+                int cg = 0; // Debug helper (it's sufficiently relevant to know the current element)
+                foreach (var change in changeset.Changes)
+                {
+                    bool needCheckPath = (change.Item.item.Contains("/display/"));
+                    if (needCheckPath)
+                    {
+                        VersionSpec versionSpecItem = versionSpecChangeset;
+                        bool isDelete = ((change.type & ChangeType.Delete) == ChangeType.Delete);
+                        bool isCurrentVersionUnavailable = (isDelete);
+                        bool needQueryPriorVersion = (isCurrentVersionUnavailable);
+                        AssertVersionMatch(change.Item.cs, changeset.cset);
+                        if (needQueryPriorVersion)
+                        {
+                            VersionSpec versionSpecItemPrev = VersionSpec.FromChangeset(change.Item.cs - 1);
+                            versionSpecItem = versionSpecItemPrev;
+                        }
+                        try
+                        {
+                            bugSanitizer.CheckNeedItemPathSanitize(
+                                change.Item.item,
+                                versionSpecItem,
+                                change.Item.type);
+                        }
+                        catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
+                        {
+                            change.Item.item = e.PathSanitized;
+                        }
+                    }
+                    ++cg;
+                }
+                ++cs;
+            }
+        }
+    }
+
+    /// <summary>
+    /// "Unusable" (TFS-based) SCM handler class -
+    /// it very unfortunately is known
+    /// to deliver data streams (commit data) with broken content.
+    /// Consequently, this "damage-conveying" class
+    /// should always remain an inner/internal/private layer,
+    /// i.e. *always* accessible only
+    /// when being properly wrapped
+    /// by outer damage-correcting layers
+    /// and NOT be used directly,
+    /// or otherwise at least only
+    /// in case it's known
+    /// that a particular TFS version
+    /// is free from such crippling defects.
+    /// For specific details of the various TFS issues
+    /// of the data that this interface provides,
+    /// see full docs at certain specific inner
+    /// data corruption correction helpers
+    /// which the outer interface-wrapping correction classes
+    /// make use of.
+    /// </summary>
+	internal class TFSSourceControlService_buggy_database_content : SourceControlService /* concrete foreign class implementing *parts* of the interface */, ITFSSourceControlService
 	{
         private readonly DefaultLogger logger;
 
-        public TFSSourceControlService_inner(
+        public TFSSourceControlService_buggy_database_content(
             IRegistrationService registrationService,
             IRepositoryWebSvcFactory webSvcFactory,
             IWebTransferService webTransferService,

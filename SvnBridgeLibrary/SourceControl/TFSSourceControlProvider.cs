@@ -2024,57 +2024,7 @@ namespace SvnBridge.SourceControl
                 true, false, false,
                 sortAscending);
 
-            bool havePolicySanitizeTfsBug = true;
-            if (havePolicySanitizeTfsBug)
-            {
-                Service_QueryHistory_TFSBugSanitize(ref changesets);
-            }
-
             return changesets;
-        }
-
-        private void Service_QueryHistory_TFSBugSanitize(ref Changeset[] changesets)
-        {
-            TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer = new TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder(
-                sourceControlService,
-                serverUrl, credentials);
-
-            int cs = 0; // Debug helper (it's sufficiently relevant to know the current element)
-            foreach (var changeset in changesets)
-            {
-                VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset.cset);
-
-                int cg = 0; // Debug helper (it's sufficiently relevant to know the current element)
-                foreach (var change in changeset.Changes)
-                {
-                    bool needCheckPath = (change.Item.item.Contains("/display/"));
-                    if (needCheckPath)
-                    {
-                        VersionSpec versionSpecItem = versionSpecChangeset;
-                        bool isDelete = ((change.type & ChangeType.Delete) == ChangeType.Delete);
-                        bool isCurrentVersionUnavailable = (isDelete);
-                        bool needQueryPriorVersion = (isCurrentVersionUnavailable);
-                        if (needQueryPriorVersion)
-                        {
-                            VersionSpec versionSpecItemPrev = VersionSpec.FromChangeset(change.Item.cs - 1);
-                            versionSpecItem = versionSpecItemPrev;
-                        }
-                        try
-                        {
-                            bugSanitizer.CheckNeedItemPathSanitize(
-                                change.Item.item,
-                                versionSpecItem,
-                                change.Item.type);
-                        }
-                        catch (ITFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Exception_NeedSanitize e)
-                        {
-                            change.Item.item = e.PathSanitized;
-                        }
-                    }
-                    ++cg;
-                }
-                ++cs;
-            }
         }
 
         /// <summary>
