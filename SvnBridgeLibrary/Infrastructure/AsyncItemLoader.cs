@@ -103,7 +103,9 @@ namespace SvnBridge.Infrastructure
 
                 CheckCancel();
 
-                if (++retry > timeoutInSeconds)
+                bool isWaitExceeded = (++retry > timeoutInSeconds);
+                bool haveTimeRemain = !(isWaitExceeded);
+                if (!(haveTimeRemain))
                 {
                     ReportErrorItemDataConsumptionTimeout();
                 }
