@@ -100,9 +100,12 @@ namespace SvnBridge.Infrastructure
                         break;
                     }
 
-                    CheckCancel();
-
-                    sourceControlProvider.ReadFileAsync(item);
+                    bool isSubmitted = SubmitOne(
+                        item);
+                    if (!(isSubmitted))
+                    {
+                        break;
+                    }
                     NotifyConsumer_ItemProcessingEnded(item);
                 }
             }
@@ -182,6 +185,53 @@ namespace SvnBridge.Infrastructure
         private static TimeSpan TimeoutAwaitAnyConsumptionActivity
         {
             get { return TimeSpan.FromHours(4); }
+        }
+
+        private bool SubmitOne(
+            ItemMetaData item)
+        {
+            bool isSubmitted = false;
+
+            bool maySubmit = WaitSubmitOne();
+            if (maySubmit)
+            {
+                isSubmitted = SubmitOne_Do(
+                    item);
+            }
+
+            return isSubmitted;
+        }
+
+        private bool WaitSubmitOne()
+        {
+            bool maySubmit = false;
+
+            // DUMMY (blocking/serialized ops)
+            maySubmit = true;
+            CheckCancel();
+
+            return maySubmit;
+        }
+
+        private bool SubmitOne_Do(
+            ItemMetaData item)
+        {
+            bool isSubmitted = false;
+
+            // FIXME performance:
+            // downloading one item in blocking manner is *awfully* slow
+            // (usually one second per item) -
+            // we should definitely be switching to an IAsyncResult architecture
+            // (which would result in e.g. having a moderate but efficient number of 5 requests
+            // in-flight at all times).
+            // Especially since webService properly offers BeginDownloadBytes()/EndDownloadBytes()!
+            // See also "Async without the pain"
+            //   http://blog.marcgravell.com/2009/02/async-without-pain.html
+            sourceControlProvider.ReadFileAsync(
+                item);
+            isSubmitted = true;
+
+            return isSubmitted;
         }
 
         private bool WaitNotify(
