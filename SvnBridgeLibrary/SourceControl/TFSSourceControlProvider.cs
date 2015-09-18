@@ -777,7 +777,42 @@ namespace SvnBridge.SourceControl
         {
             ItemMetaData item = null;
 
-            item = FindTargetItemForItemProperties_LegacyCaseInsensitiveLookup(folderMap, itemPath);
+            ItemMetaData itemRoot = folderMap.QueryRootItem();
+
+            if (null != itemRoot)
+            {
+                // First, try case sensitive standard item lookup...
+                FolderMetaData folderRoot = itemRoot as FolderMetaData;
+                bool isRootItemOfFolderType = (null != folderRoot);
+                if (isRootItemOfFolderType)
+                {
+                    item = folderRoot.FindItem(itemPath);
+                }
+                else
+                {
+                    if (itemRoot.IsSamePath(itemPath))
+                        item = itemRoot;
+                }
+
+                // ...then, if not found, try old case insensitive lookup in map.
+                if (null == item)
+                {
+                    item = FindTargetItemForItemProperties_LegacyCaseInsensitiveLookupIfAllowed(folderMap, itemPath);
+                }
+            }
+
+            return item;
+        }
+
+        private static ItemMetaData FindTargetItemForItemProperties_LegacyCaseInsensitiveLookupIfAllowed(FolderMap folderMap, string itemPath)
+        {
+            ItemMetaData item = null;
+
+            bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch; // CS0429 warning workaround
+            if (!wantCaseSensitiveMatch)
+            {
+                item = FindTargetItemForItemProperties_LegacyCaseInsensitiveLookup(folderMap, itemPath);
+            }
 
             return item;
         }
