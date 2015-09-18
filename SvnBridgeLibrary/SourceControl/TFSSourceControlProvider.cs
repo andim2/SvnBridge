@@ -777,6 +777,15 @@ namespace SvnBridge.SourceControl
         {
             ItemMetaData item = null;
 
+            item = FindTargetItemForItemProperties_LegacyCaseInsensitiveLookup(folderMap, itemPath);
+
+            return item;
+        }
+
+        private static ItemMetaData FindTargetItemForItemProperties_LegacyCaseInsensitiveLookup(FolderMap folderMap, string itemPath)
+        {
+            ItemMetaData item = null;
+
             string itemPathMangled = itemPath.ToLowerInvariant();
             FolderMetaData itemFolder = folderMap.TryGetFolder(itemPathMangled);
             if (null != itemFolder)
