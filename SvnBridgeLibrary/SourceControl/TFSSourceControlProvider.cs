@@ -776,6 +776,7 @@ namespace SvnBridge.SourceControl
         private static ItemMetaData FindTargetItemForItemProperties(FolderMap folderMap, string itemPath)
         {
             ItemMetaData item = null;
+
             string itemPathMangled = itemPath.ToLowerInvariant();
             FolderMetaData itemFolder = folderMap.TryGetFolder(itemPathMangled);
             if (null != itemFolder)
@@ -792,6 +793,7 @@ namespace SvnBridge.SourceControl
                     item = itemFolder.FindItem(itemPath);
                 }
             }
+
             return item;
         }
 
