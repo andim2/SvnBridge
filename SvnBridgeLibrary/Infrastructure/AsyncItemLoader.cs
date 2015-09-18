@@ -1,4 +1,5 @@
 using System; // IntPtr.Size
+using System.Threading; // AutoResetEvent
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.DebugUsefulBreakpointLocation()
@@ -11,12 +12,19 @@ namespace SvnBridge.Infrastructure
         private readonly TFSSourceControlProvider sourceControlProvider;
         private readonly long cacheTotalSizeLimit;
         private bool cancelOperation /* = false */;
+        private readonly AutoResetEvent finishedOne;
+        private readonly WaitHandle[] finishedOneArray;
 
         public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider, long cacheTotalSizeLimit)
         {
             this.folderInfo = folderInfo;
             this.sourceControlProvider = sourceControlProvider;
             this.cacheTotalSizeLimit = cacheTotalSizeLimit;
+            // Performance: do allocation of event array on init rather than per-use.
+            // And keep specific member for handle itself, too,
+            // to enable direct (non-dereferenced) fast access.
+            this.finishedOne = new AutoResetEvent(false);
+            this.finishedOneArray = new WaitHandle[] { finishedOne };
         }
 
         public void Start()
@@ -80,6 +88,7 @@ namespace SvnBridge.Infrastructure
                 else if (!(item is DeleteMetaData))
                 {
                     sourceControlProvider.ReadFileAsync(item);
+                    NotifyConsumer_ItemProcessingEnded(item);
                 }
             }
         }
@@ -117,6 +126,25 @@ namespace SvnBridge.Infrastructure
         private static long TimeoutAwaitAnyConsumptionActivity
         {
             get { return 3600*4; }
+        }
+
+        /// <summary>
+        /// Notifies the consumer side
+        /// (well, at least once the time comes
+        /// that we do want to let the consumer side
+        /// learn of the new [and final] item state)
+        /// that processing (i.e., download activities)
+        /// of this item ultimately ended
+        /// (irrespective of whether successful *or* not).
+        /// </summary>
+        private void NotifyConsumer_ItemProcessingEnded(ItemMetaData item)
+        {
+            NotifyConsumer(); // new item available
+        }
+
+        private void NotifyConsumer()
+        {
+            finishedOne.Set();
         }
 
         /// <summary>
@@ -201,6 +229,13 @@ namespace SvnBridge.Infrastructure
             DateTime timeUtcWaitLoaded_Expire = DateTime.MinValue;
             TimeSpan spanTimeoutRemain = spanTimeout;
 
+            // Since the event handle currently is loader-global (and probably will remain,
+            // since that ought to be more efficient than per-item handles horror),
+            // it will be used to signal *any* progress.
+            // Thus we need to keep iterating until in fact *our* item is loaded.
+            // And since we need to do that, update a timeout value
+            // which will be reliably determined from actual current timestamp.
+
             for (;;)
             {
                 // IMPORTANT: definitely remember to do an *initial* status check
@@ -211,15 +246,23 @@ namespace SvnBridge.Infrastructure
                 }
 
                 // FIXME!! race window *here*:
-                // if producer happens to be doing [set .DataLoaded true] *right here*,
+                // if producer happens to be doing [set .DataLoaded true and signal event] *right here*,
                 // then prior .DataLoaded false check will have failed
                 // and we're about to wait on an actually successful load
                 // (and having missed the signal event).
+                // The properly atomically scoped (read: non-racy) solution likely would be
+                // to move .DataLoaded evaluation inside a Monitor scope
+                // (and below wait activity would then unlock the Monitor),
+                // but since finishedOneArray is currently managed separately from a Monitor scope
+                // properly handshaked unlocked-waiting might be not doable ATM.
 
-                // Since we don't have a wait handle here,
-                // need to use fixed short intervals
-                // to ensure that we notice changes sufficiently quickly:
-                Helper.CooperativeSleep(100);
+                // Cannot use .WaitOne() since that one does not signal .WaitTimeout (has bool result).
+                int idxEvent = WaitHandle.WaitAny(finishedOneArray, spanTimeoutRemain);
+                bool isTimeout = (WaitHandle.WaitTimeout == idxEvent);
+                if (isTimeout)
+                {
+                    break;
+                }
 
                 if (item.DataLoaded)
                 {
@@ -237,16 +280,11 @@ namespace SvnBridge.Infrastructure
                 // Performance: implement grabbing current timestamp ALAP, to have strict timeout-side handling.
                 DateTime timeUtcNow = DateTime.UtcNow; // debug helper
 
-                // Make sure to have handling be focussed on a precise final timepoint
+                // Make sure to have the timeout value variable updated for next round above:
+                // And make sure to have handling be focussed on a precise final timepoint
                 // to have a precisely bounded timeout endpoint
                 // (i.e., avoid annoying accumulation of added-up multi-wait scheduling delays imprecision).
                 spanTimeoutRemain = timeUtcWaitLoaded_Expire - timeUtcNow;
-
-                bool isTimeout = (spanTimeoutRemain.CompareTo(TimeSpan.Zero) < 0);
-                if (isTimeout)
-                {
-                    break;
-                }
             }
 
             return item.DataLoaded;
