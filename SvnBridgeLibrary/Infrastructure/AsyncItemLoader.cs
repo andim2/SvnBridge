@@ -988,7 +988,25 @@ namespace SvnBridge.Infrastructure
         /// </summary>
         private void NotifyConsumer_ItemProcessingEnded(ItemMetaData item)
         {
+            // *First* notify consumer...
             NotifyConsumer(); // new item available
+            // *then* potentially end up
+            // with destroyed local context via exception...
+            bool isItemLoaded = ((null != item) && (item.DataLoaded));
+            if (!isItemLoaded)
+            {
+                // Very questionable: uncaught exception, kills entire process...
+                //throw new ItemNotLoadedException();
+            }
+        }
+
+        public sealed class ItemNotLoadedException : Exception
+        {
+            public ItemNotLoadedException()
+                : base("Huh, item finished but data not indicated as loaded!?")
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
         }
 
         private void NotifyConsumer()
