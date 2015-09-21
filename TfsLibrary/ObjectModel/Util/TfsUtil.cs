@@ -298,6 +298,8 @@ namespace CodePlex.TfsLibrary.ObjectModel
 
             if (httpResult != null)
             {
+                ConfigureProxy(httpResult);
+
                 httpResult.Credentials = credentials;
                 // .ServicePoint property resolving seems very painful
                 // (proxy lookup etc.),
@@ -319,6 +321,23 @@ namespace CodePlex.TfsLibrary.ObjectModel
                 OnSetupWebRequest(httpResult);
             
             return result;
+        }
+
+        /// <summary>
+        /// Helper to possibly configure proxy specifics.
+        /// </summary>
+        /// <remarks>
+        /// Lookup of *default* proxy in case of an unconfigured *specific* proxy
+        /// appears to be a *VERY* painful
+        /// (goes down to expensive iterative handling of Win32 APIs even)
+        /// part of per-request execution time penalties,
+        /// thus we might want to (TODO!)
+        /// have a specific proxy configured when needed,
+        /// as possibly requested by a user setting.
+        /// </remarks>
+        private static void ConfigureProxy(HttpWebRequest httpResult)
+        {
+            //httpResult.Proxy = null;
         }
 
 		/// <summary>
