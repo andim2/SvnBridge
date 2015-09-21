@@ -125,6 +125,7 @@ namespace SvnBridge.SourceControl
             }
 
             var base64DiffData = Base64DiffData;
+            var base64DiffDataLength = base64DiffData.Length; // debug convenience helper
             md5Hash = Md5Hash;
 
             ContentDataRelease();

@@ -86,7 +86,9 @@ namespace SvnBridge.Utility
                 // rather than passing a ToArray() _copy_ to ToBase64String(array).
                 // See also
                 // http://www.hightechtalks.com/dotnet-framework-winforms-controls/serializing-image-base64-string-best-222259.html
-                return Convert.ToBase64String(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length);
+                var base64SvnDiffData = Convert.ToBase64String(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length);
+                var base64SvnDiffDataLength = base64SvnDiffData.Length;
+                return base64SvnDiffData;
             }
         }
 
