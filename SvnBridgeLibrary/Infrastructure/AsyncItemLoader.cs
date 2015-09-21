@@ -292,7 +292,7 @@ namespace SvnBridge.Infrastructure
             TimeSpan spanExpireProduction = TimeoutExpireProduction;
             this.timeUtcExpireProduction = DateTime.UtcNow + spanExpireProduction;
 
-            var tfsRequestsPendingMax = 8;
+            var tfsRequestsPendingMax = DetermineTfsRequestsPendingMax();
             this.monitoredComm = new MonitoredCommAsyncItemLoader(
                 timeUtcExpireProduction,
                 tfsRequestsPendingMax);
@@ -312,6 +312,47 @@ namespace SvnBridge.Infrastructure
             this.spanTimeoutAwaitAnyConsumptionActivity = TimeoutAwaitAnyConsumptionActivity;
 
             this.spanTimeoutTryWaitConsumptionStep = DefineTimeoutTryWaitConsumptionStep();
+        }
+
+        /// <summary>
+        /// Determines the maximum number (limit) of pending TFS requests
+        /// to be submitted.
+        /// </summary>
+        /// <remarks>
+        /// This number may easily turn out dangerously high
+        /// (usually this limit should be around 3, 4 requests).
+        /// Such values have been experimentally determined
+        /// to be a useful value when judging against:
+        /// - other ongoing serialized (read: blocking) activities
+        /// - server-side capabilities
+        ///   (memory resources may be very limited,
+        ///   and resource use prediction is difficult,
+        ///   number of cores might be relevant and limited)
+        ///
+        /// Detailed reasons for keeping it very low:
+        /// - TfsLibrary download handling (DownloadBytesReadState)
+        ///   is awfully weak, e.g. it does NOT support
+        ///   properly partially streamed chained forwarding
+        ///   via *fully end-to-end* pass-through via read callback,
+        ///   but rather (and completely stupidly)
+        ///   aggregates the entire (potentially multi-TB!!) download size
+        ///   in memory - talk about SPOF...
+        ///
+        /// The article
+        /// ""Concurrent" users"
+        ///   http://blogs.msdn.com/b/bharry/archive/2005/12/03/499791.aspx
+        /// contains the following "interesting" statement:
+        /// "We found that, in our data, this number is 1 request per second per concurrent user."
+        /// which seems to rather confirm
+        /// that there is not much to be too excited about
+        /// when it comes to request performance
+        /// of Microsoft-eco-system-specific server software...
+        /// </remarks>
+        private static int DetermineTfsRequestsPendingMax()
+        {
+            int tfsRequestsPendingMax = 3;
+
+            return tfsRequestsPendingMax;
         }
 
         public void Start()
