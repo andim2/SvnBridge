@@ -194,17 +194,7 @@ namespace SvnBridge.Utility
         {
             BinaryReaderSvnDiff reader = new BinaryReaderSvnDiff(inputStream);
 
-            byte[] signature = reader.ReadBytes(3);
-            byte version = reader.ReadByte();
-
-            if (signature[0] != 'S' || signature[1] != 'V' || signature[2] != 'N')
-            {
-                throw new InvalidOperationException("The signature is invalid.");
-            }
-            if (version != 0)
-            {
-                throw new Exception("Unsupported SVN diff version");
-            }
+            CheckSvnDiffSignatureAndSupportedVersion(reader);
 
             List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             while (!EOF(reader))
@@ -223,6 +213,21 @@ namespace SvnBridge.Utility
                 diffs.Add(diff);
             }
             return diffs.ToArray();
+        }
+
+        private static void CheckSvnDiffSignatureAndSupportedVersion(BinaryReaderSvnDiff reader)
+        {
+            byte[] signature = reader.ReadBytes(3);
+            byte version = reader.ReadByte();
+
+            if (signature[0] != 'S' || signature[1] != 'V' || signature[2] != 'N')
+            {
+                throw new InvalidOperationException("The signature is invalid.");
+            }
+            if (version != 0)
+            {
+                throw new Exception("Unsupported SVN diff version");
+            }
         }
 
         public static void WriteSvnDiffSignature(BinaryWriter writer)
