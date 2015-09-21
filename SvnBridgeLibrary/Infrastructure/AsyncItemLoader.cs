@@ -505,6 +505,12 @@ namespace SvnBridge.Infrastructure
         ///   number of cores might be relevant and limited)
         ///
         /// Detailed reasons for keeping it very low:
+        /// - the more slots we queue up in advance,
+        ///   the bigger our mismatch
+        ///   between "potentially largest download size"
+        ///   and "calculated size as existing in our folder hierarchy"
+        ///   (--> high risk of getting dangerously close
+        ///   to exceeding memory resources)
         /// - TfsLibrary download handling (DownloadBytesReadState)
         ///   is awfully weak, e.g. it does NOT support
         ///   properly partially streamed chained forwarding
@@ -526,6 +532,18 @@ namespace SvnBridge.Infrastructure
         private static int DetermineTfsRequestsPendingMax()
         {
             int tfsRequestsPendingMax = 3;
+
+            if (Helper.NeedAvoidLongLivedMemoryFragmentation)
+            {
+                // Choose the minimum value
+                // which has strongly reduced memory activity
+                // but still allows for enjoying some benefits of parallelism.
+                const int tfsRequestsPendingReducedLimit = 3;
+                if (tfsRequestsPendingMax > tfsRequestsPendingReducedLimit)
+                {
+                    tfsRequestsPendingMax = tfsRequestsPendingReducedLimit;
+                }
+            }
 
             return tfsRequestsPendingMax;
         }
