@@ -63,10 +63,29 @@ namespace SvnBridge.Infrastructure
             {
                 // Before reading further data, verify total pending size:
 
-                // Wanted to move size check/data reading into a helper,
-                // but then the cancel handling below
-                // would have to be implemented in an awkward more indirect way...
+                bool haveUnusedItemLoadBufferCapacity = WaitForUnusedItemLoadBufferCapacity();
 
+                if (!(haveUnusedItemLoadBufferCapacity))
+                {
+                    break;
+                }
+
+                CheckCancel();
+
+                if (item.ItemType == ItemType.Folder)
+                {
+                    ReadItemsInFolder((FolderMetaData) item);
+                }
+                else if (!(item is DeleteMetaData))
+                {
+                    sourceControlProvider.ReadFileAsync(item);
+                    NotifyConsumer_ItemProcessingEnded(item);
+                }
+            }
+        }
+
+        private bool WaitForUnusedItemLoadBufferCapacity()
+        {
                 bool haveUnusedItemLoadBufferCapacity = false;
 
                 // Q&D HACK to ensure that this crawler resource will bail out at least eventually
@@ -96,23 +115,7 @@ namespace SvnBridge.Infrastructure
                     CheckCancel();
                 }
 
-                if (!(haveUnusedItemLoadBufferCapacity))
-                {
-                    break;
-                }
-
-                CheckCancel();
-
-                if (item.ItemType == ItemType.Folder)
-                {
-                    ReadItemsInFolder((FolderMetaData) item);
-                }
-                else if (!(item is DeleteMetaData))
-                {
-                    sourceControlProvider.ReadFileAsync(item);
-                    NotifyConsumer_ItemProcessingEnded(item);
-                }
-            }
+                return haveUnusedItemLoadBufferCapacity;
         }
 
         private bool HaveUnusedItemLoadBufferCapacity(long totalLoadedItemsSize)
