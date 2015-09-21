@@ -14,12 +14,12 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 		private readonly DownloadBytesAsyncResult result;
 		public readonly Stream Stream;
 
-		public DownloadBytesReadState(DownloadBytesAsyncResult result, WebResponse response, Stream stream, int bufferSize)
+		public DownloadBytesReadState(DownloadBytesAsyncResult result, WebResponse response, Stream stream, int expectedContentLength)
 		{
 			this.result = result;
 			this.response = response;
 			Stream = stream;
-			this.bufferSize = bufferSize;
+			this.bufferSize = expectedContentLength;
 			buffer = new byte[bufferSize];
 		}
 		public void Start(Stream stream)
