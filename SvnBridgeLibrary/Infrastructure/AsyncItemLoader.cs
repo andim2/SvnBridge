@@ -346,32 +346,30 @@ namespace SvnBridge.Infrastructure
         }
     }
 
-    internal sealed class ItemDataDownloadWaiter
+    internal sealed class MonitoredComm_ItemConsumption : MonitoredCommBase
     {
-        private readonly ItemMetaData item;
-        private readonly WaitHandle[] finishedOneArray;
-
-        public ItemDataDownloadWaiter(
-            ItemMetaData item,
-            WaitHandle finishedOne)
-        {
-            this.item = item;
-            this.finishedOneArray = new WaitHandle[] { finishedOne };
-        }
-
         public void Wait(
+            ItemMetaData item,
             TimeSpan spanTimeout)
         {
-            WaitLoop(
-                spanTimeout);
+            lock (this)
+            {
+                WaitForThisItemLoaded(
+                    item,
+                    spanTimeout);
+            }
         }
 
-        private void WaitLoop(
+        private void WaitForThisItemLoaded(
+            ItemMetaData item,
             TimeSpan spanTimeout)
         {
             DateTime timeUtcWaitLoaded_Start = DateTime.UtcNow; // Calculate ASAP (to determine timeout via precise right-upon-start timestamp)
             DateTime timeUtcWaitLoaded_Expire = DateTime.MinValue;
             TimeSpan spanTimeoutRemain = spanTimeout;
+
+            // Some exceptional issues (timeout / cancel)
+            // will be properly signalled via exception here...
 
             // Since the event handle currently is loader-global (and probably will remain,
             // since that ought to be more efficient than per-item handles horror),
@@ -382,14 +380,9 @@ namespace SvnBridge.Infrastructure
 
             for (;;)
             {
-                bool isTimeout;
                 DoWait(
-                    spanTimeoutRemain,
-                    out isTimeout);
-                if (isTimeout)
-                {
-                    break;
-                }
+                    item,
+                    spanTimeoutRemain);
 
                 // One reason for .DataLoaded ending up false
                 // even after having waited for success
@@ -426,11 +419,9 @@ namespace SvnBridge.Infrastructure
         }
 
         private void DoWait(
-            TimeSpan spanTimeout,
-            out bool isTimeout)
+            ItemMetaData item,
+            TimeSpan spanTimeout)
         {
-            isTimeout = false;
-
             // IMPORTANT: definitely remember to do an *initial* status check
             // directly prior to first wait.
             if (item.DataLoaded)
@@ -438,23 +429,16 @@ namespace SvnBridge.Infrastructure
                 return;
             }
 
-            // FIXME!! race window *here*:
-            // if producer happens to be doing [set .DataLoaded true and signal event] *right here*,
-            // then prior .DataLoaded false check will have failed
-            // and we're about to wait on an actually successful load
-            // (and having missed the signal event).
-            // The properly atomically scoped (read: non-racy) solution likely would be
-            // to move .DataLoaded evaluation inside a Monitor scope
-            // (and below wait activity would then unlock the Monitor),
-            // but since finishedOneArray is currently managed separately from a Monitor scope
-            // properly handshaked unlocked-waiting might be not doable ATM.
+            Wait(
+                spanTimeout);
+        }
 
-            // To observe item loader's async download progress,
-            // see method which serves async callback
-            // (TfsLibrary.DownloadBytesReadState.ReadCallback()).
-            // Cannot use .WaitOne() since that one does not signal .WaitTimeout (has bool result).
-            int idxEvent = WaitHandle.WaitAny(finishedOneArray, spanTimeout);
-            isTimeout = (WaitHandle.WaitTimeout == idxEvent);
+        public void NotifyConsumer()
+        {
+            lock (this)
+            {
+                Pulse();
+            }
         }
     }
 
@@ -471,7 +455,7 @@ namespace SvnBridge.Infrastructure
 
         private readonly AsyncCallback callback;
 
-        private readonly AutoResetEvent finishedOne;
+        private readonly MonitoredComm_ItemConsumption monitoredComm_ItemConsumption;
 
         private readonly AutoResetEvent crawlerEvent;
         private readonly WaitHandle[] crawlerEventArray;
@@ -497,7 +481,7 @@ namespace SvnBridge.Infrastructure
             this.callback = new AsyncCallback(
                 OnItemDataDownloadEnded);
 
-            this.finishedOne = new AutoResetEvent(false);
+            this.monitoredComm_ItemConsumption = new MonitoredComm_ItemConsumption();
 
             // Performance: do allocation of event array on init rather than per-use.
             // And keep specific member for handle itself, too,
@@ -590,6 +574,7 @@ namespace SvnBridge.Infrastructure
         public virtual void Cancel()
         {
             monitoredComm.Cancel();
+            //monitoredComm_ItemConsumption.Cancel(); // perhaps we need this??
             NotifyCrawler(); // FIXME: ugly workaround to also notify the *other* wait parts...
         }
 
@@ -1008,7 +993,7 @@ namespace SvnBridge.Infrastructure
 
         private void NotifyConsumer()
         {
-            finishedOne.Set();
+            monitoredComm_ItemConsumption.NotifyConsumer();
         }
 
         /// <summary>
@@ -1058,6 +1043,10 @@ namespace SvnBridge.Infrastructure
         /// Helper for the *consumer*-side thread context,
         /// to allow for reliable waiting and fetching of item data
         /// (after item has achieved "loaded" state).
+        /// Since we currently want to avoid an interface-breaking change,
+        /// keeps serving an improper bool-result-based interface
+        /// (converted from exceptions)
+        /// rather than properly throwing exceptions to the user.
         /// </summary>
         /// <param name="item">Item whose data we will be waiting for to have finished loading</param>
         /// <param name="spanTimeout">Expiry timeout for waiting for the item's data to become loaded</param>
@@ -1094,12 +1083,21 @@ namespace SvnBridge.Infrastructure
             ItemMetaData item,
             TimeSpan spanTimeout)
         {
-            ItemDataDownloadWaiter waiter = new ItemDataDownloadWaiter(
-                item,
-                finishedOne);
+            try
+            {
+                // To observe item loader's async download progress,
+                // see method which serves async callback
+                // (TfsLibrary.DownloadBytesReadState.ReadCallback()).
 
-            waiter.Wait(
-                spanTimeout);
+                // Will bail out with an exception on error (timeout / cancel).
+                monitoredComm_ItemConsumption.Wait(
+                    item,
+                    spanTimeout);
+            }
+            catch
+            {
+                // Simply silence exceptions
+            }
 
             return item.DataLoaded;
         }
