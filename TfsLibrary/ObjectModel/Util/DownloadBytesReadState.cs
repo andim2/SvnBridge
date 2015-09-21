@@ -9,7 +9,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 	{
 		private readonly int bufferSize;
 		private readonly byte[] buffer;
-		private readonly List<byte> downloadedBytes = new List<byte>();
+		private readonly List<byte> downloadedBytes;
 		private readonly WebResponse response;
 		private readonly DownloadBytesAsyncResult result;
 		public readonly Stream Stream;
@@ -21,7 +21,83 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 			Stream = stream;
 			this.bufferSize = DetermineSizeOfIncrementalReadBuffer(expectedContentLength);
 			buffer = new byte[bufferSize];
+      // GRAVE NOTE: passing a specific intended capacity to a List ctor
+      // (rather than no parameter or 0)
+      // will disable proper implicit .Capacity growing
+      // via .Capacity duplication
+      // and instead resorts to single-byte increment!
+      // (this behaviour change most likely is indicated by
+      // System.Collections.IList.IsFixedSize
+      // - see also
+      // https://social.msdn.microsoft.com/Forums/en-US/d7dbaa97-eb40-4d70-a0b5-fee2189a6716/ilist-isfixedsize-property
+      // )
+      // But since content length may be very huge
+      // which will necessitate copying of HUGE data,
+      // better do prefer to pass the correctly-predicted(?) content length
+      // to avoid extremely painful huge-blob duplication...
+      var initialCapacity = ChooseSuitableCapacityForFinalContentLength(expectedContentLength);
+      downloadedBytes = new List<byte>(initialCapacity);
 		}
+
+        /// <summary>
+        /// Since target buffer
+        /// will also roughly (gzip or not...)
+        /// end up with content size,
+        /// do choose initial capacity to be something *slightly* larger
+        /// (do achieve some sizeable reserve .Capacity,
+        /// yet avoid using excessive memory in huge-blob case).
+        /// </summary>
+        private static int ChooseSuitableCapacityForFinalContentLength(int expectedContentLength)
+        {
+            int chosenCapacity;
+
+            chosenCapacity = expectedContentLength;
+
+            ChooseSuitableCapacity_Increased(ref chosenCapacity);
+
+            ChooseSuitableCapacity_Align(ref chosenCapacity);
+
+            return chosenCapacity;
+        }
+
+        private static void ChooseSuitableCapacity_Increased(ref int capacity)
+        {
+            int increasedCapacity =
+                (capacity) +
+                (capacity / 32); // ~3% leeway
+
+        }
+
+        private static void ChooseSuitableCapacity_Align(ref int capacity)
+        {
+            bool doHeapAlign = DoHeapAlignOfContentBlock();
+            if (doHeapAlign)
+            {
+                ChooseSuitableCapacity_AlignDo(ref capacity);
+            }
+        }
+
+        /// Nope, we will NOT do manual "heap block alignment" here -
+        /// there's not a single relevant shred
+        /// of *domain-specific* hints about memory handling
+        /// that we are able to contribute here,
+        /// thus we try to trust in the heap management
+        /// doing its job correctly...
+        /// (and likely with much higher sophistication)
+        private static bool DoHeapAlignOfContentBlock()
+        {
+            return false;
+        }
+
+        private static void ChooseSuitableCapacity_AlignDo(ref int capacity)
+        {
+            const int alignment = 32 * 1024; // nice align (keep hitting same cache-hot heap blocks!)
+
+            const int alignmentMask = (alignment-1);
+
+            var alignedCapacity = (capacity + alignmentMask) & ~(alignmentMask);
+            capacity = alignedCapacity;
+        }
 
         /// <summary>
         /// While we used to be using
@@ -156,7 +232,21 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
             // that in fact we do not need to do any size handling here whatsoever
             // since in this particular case we have a List
             // (where its .Add() will manage .Capacity automatically).
-#if false
+            //ListEnsureCapacityDo(list, requestedMinimumCapacity);
+        }
+
+        private static void ListEnsureCapacityDo(List<byte> list, int requiredMinimumCapacity)
+        {
+            // UPDATE: well, in fact List does *NOT* seem to
+            /// implicitly increase .Capacity properly
+            // (don't know whether that's the case in general,
+            // but at least in certain situations, such as very large .Capacity,
+            // List.Add() will cause .Capacity
+            // to have positively awful single-byte increments!!!!)
+            // .Capacity change most certainly is dependent on (not) passing initialCapacity to ctor:
+            // when given initialCapacity, list .Capacity will be assumed to not need increasing,
+            // thus the most that will be done is single-byte increments.
+#if true // you did construct List to be flexible-capacity (non-initialCapacity), right?
             // AWFUL Capacity handling!! (GC catastrophy)
             // .Capacity value should most definitely *NEVER* be directly (manually) modified,
             // since framework ought to know best
