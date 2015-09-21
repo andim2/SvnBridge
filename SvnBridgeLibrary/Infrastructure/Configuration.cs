@@ -260,7 +260,7 @@ namespace SvnBridge.Infrastructure
         /// <summary>
         /// Indicates whether our SVN-side HTTP response body
         /// should enable compression
-        /// (supported: gzip or deflate)
+        /// (supported: gzip [NOPE - fatal less-than 4GB size restriction] or deflate)
         /// when requested by client.
         /// Default value now true
         /// since previously remaining issues

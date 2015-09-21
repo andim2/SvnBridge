@@ -677,12 +677,67 @@ namespace SvnBridge.Net
             }
         }
 
+        /// <remarks>
+        /// Turns out we *cannot* support gzip content encoding.
+        /// Since this is about *Content*-Encoding rather than *Transfer*-Encoding,
+        /// possibly the way to properly support this annoying restriction
+        /// is to rework things to signal to *content* generators
+        /// whether they *may* be using something like gzip or deflate,
+        /// then the content generators encoding content
+        /// if size limitations are obviously not violated
+        /// (which is somewhat complicated though, since
+        /// length of gzip-compressed content
+        /// may end up *larger* than
+        /// length of original content!!),
+        /// and then generators reporting
+        /// which encoding they actually used.
+        ///
+        /// But note that many servers (subversion and others)
+        /// do NOT seem to generate gzip-compressed content either:
+        /// "Re: gzip compression"
+        ///   http://svn.haxx.se/users/archive-2011-08/0150.shtml
+        ///
+        /// Probably due to one gz stream being atomic
+        /// (see also MSDN GZipStream.Flush():
+        /// "The current implementation of this method does not flush the
+        /// internal buffer. The internal buffer is flushed when the
+        /// object is disposed."
+        /// )
+        /// i.e. the compression frame does need to be one entire unit -
+        /// there's no way for it to be "partial".
+        /// </remarks>
         private static bool ContentEncodingGzipAllowed
         {
             get
             {
-                return true;
+                return !(HaveGzipLengthRestrictionOf32bit4GB());
             }
+        }
+
+        /// <remarks>
+        /// Unfortunately gzip has a hard
+        /// 4GB (32bit unsigned length value type) restriction
+        /// in its specs.
+        /// I guess that they did not want to spend more than 32bit,
+        /// and also expanding a 4GB-sized gzip blob will create
+        /// *another* >> 4GB blob, which arguably is an awful lot
+        /// for both usual machines and bit error rates anyway.
+        /// This 4GB restriction
+        /// is properly obeyed (but not MSDN-documented!?) by GZipStream:
+        /// "System.IO.InvalidDataException: The gzip stream can't
+        /// contain more than 4GB data."
+        /// (see "How can I zip a 8 Gb file using c# ?"
+        /// http://www.tech-archive.net/Archive/DotNet/microsoft.public.dotnet.languages.csharp/2006-10/msg00064.html
+        /// ).
+        /// Strangely enough, this restriction seems to have been
+        /// the underlying reason (root cause)
+        /// for various *random* exception types near socket comms
+        /// (quite possibly the 4GB exception simply was swallowed
+        /// and converted into other IOException types).
+        /// </remarks>
+        private static bool HaveGzipLengthRestrictionOf32bit4GB()
+        {
+            return true;
         }
 
         private static void GetHttpHeaderConnectionConfig(
