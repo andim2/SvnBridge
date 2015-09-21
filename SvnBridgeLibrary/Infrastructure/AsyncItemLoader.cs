@@ -957,9 +957,9 @@ namespace SvnBridge.Infrastructure
                 {
                     itemsSize += CalculateLoadedItemsSize((FolderMetaData) item);
                 }
-                else if (item.DataLoaded)
+                else
                 {
-                    itemsSize += item.Base64DiffData.Length;
+                    itemsSize += item.ContentStorageLength;
                 }
             }
 

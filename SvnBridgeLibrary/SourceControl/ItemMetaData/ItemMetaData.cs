@@ -84,6 +84,21 @@ namespace SvnBridge.SourceControl
             Md5Hash = null;
         }
 
+        public int ContentStorageLength
+        {
+            get
+            {
+                int length = 0;
+
+                if (DataLoaded)
+                {
+                    length = Base64DiffData.Length;
+                }
+
+                return length;
+            }
+        }
+
         public virtual int Revision
         {
             get
