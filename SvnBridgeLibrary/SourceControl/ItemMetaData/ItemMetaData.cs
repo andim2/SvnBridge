@@ -69,6 +69,7 @@ namespace SvnBridge.SourceControl
         public int PropertyRevision;
         public int SubItemRevision;
         private const int RenderContentAsString_indent = 2;
+        private static bool wantCaseSensitiveMatch = Configuration.SCMWantCaseSensitiveItemMatch;
 
         public ItemMetaData()
         {
@@ -259,9 +260,19 @@ namespace SvnBridge.SourceControl
             );
         }
 
+        /// <remarks>
+        /// Decided to have this implementation return an intermediate static bool
+        /// rather than dynamically querying the authoritative site
+        /// since configuration implementation
+        /// is very slow (performance profiling hotspot)
+        /// relative to its surroundings.
+        /// This is an important optimization
+        /// for cases of very large filesystem space hierarchies
+        /// which keep iterating through sub-content.
+        /// </remarks>
         protected static bool WantCaseSensitiveMatch
         {
-            get { return Configuration.SCMWantCaseSensitiveItemMatch; }
+            get { return wantCaseSensitiveMatch; }
         }
 
         /// <summary>

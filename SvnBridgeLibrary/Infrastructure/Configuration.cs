@@ -6,6 +6,14 @@ using System.Xml;
 
 namespace SvnBridge.Infrastructure
 {
+    /// <remarks>
+    /// Warning: configuration queries are very slow
+    /// i.e. a performance profiling hotspot.
+    /// Thus in frequent-access cases,
+    /// you might want to cache configuration settings
+    /// locally (as class member, or for static methods
+    /// in a class-global static variable).
+    /// </remarks>
     public static class Configuration
     {
         private enum ConfigSettings
