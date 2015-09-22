@@ -573,15 +573,22 @@ namespace SvnBridge.Infrastructure
             // *prior* to even starting the operation.
             lock (dictAsync)
             {
-                IAsyncResult ar = BeginDownloadItemData(
-                    item);
-                dictAsync.Add(
-                    ar,
+                SubmitOne_Do_i(
                     item);
             }
             isSubmitted = true;
 
             return isSubmitted;
+        }
+
+        private void SubmitOne_Do_i(
+            ItemMetaData item)
+        {
+            IAsyncResult ar = BeginDownloadItemData(
+                item);
+            dictAsync.Add(
+                ar,
+                item);
         }
 
         private bool WaitNotify(
