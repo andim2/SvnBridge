@@ -773,8 +773,18 @@ namespace SvnBridge.Infrastructure
                     }
                     finally
                     {
-                        data = EndDownloadItemData(
-                            ar);
+                        try
+                        {
+                            data = EndDownloadItemData(
+                                ar);
+                        }
+                        catch
+                        {
+                            //System.Diagnostics.Debugger.Launch();
+                            Helper.DebugUsefulBreakpointLocation();
+
+                            throw;
+                        }
                     }
                 }
                 finally
