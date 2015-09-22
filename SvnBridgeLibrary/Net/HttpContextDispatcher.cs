@@ -449,8 +449,9 @@ namespace SvnBridge.Net
                              "<address>" + RequestHandlerBase.GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
                              "</body></html>\n";
 
-            byte[] buffer = Encoding.UTF8.GetBytes(content);
-            response.OutputStream.Write(buffer, 0, buffer.Length);
+            AppendAsUTF8(
+                response,
+                content);
         }
 
         private static void SendUnsupportedMethodResponse(IHttpContext connection)
@@ -471,8 +472,9 @@ namespace SvnBridge.Net
                     </body>
                 </html>";
 
-            byte[] buffer = Encoding.UTF8.GetBytes(content);
-            response.OutputStream.Write(buffer, 0, buffer.Length);
+            AppendAsUTF8(
+                response,
+                content);
         }
 
         protected static void SendFileNotFoundResponse(IHttpContext connection)
@@ -490,6 +492,15 @@ namespace SvnBridge.Net
                 "<hr>\n" +
                 "</body></html>\n";
 
+            AppendAsUTF8(
+                response,
+                content);
+        }
+
+        private static void AppendAsUTF8(
+            IHttpResponse response,
+            string content)
+        {
             byte[] buffer = Encoding.UTF8.GetBytes(content);
             response.OutputStream.Write(buffer, 0, buffer.Length);
         }
