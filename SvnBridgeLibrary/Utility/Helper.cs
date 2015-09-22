@@ -292,6 +292,21 @@ namespace SvnBridge.Utility
             return new StreamWriter(outputStream, utf8WithoutBOM, 16 * 1024);
         }
 
+        /// <summary>
+        /// Sanitizing / commenting encapsulation helper.
+        /// Returns StreamWriter.BaseStream,
+        /// while carefully handling the very special restriction / "feature"
+        /// that writing to .BaseStream may end up in underlying output
+        /// *prior* to (actually cached) StreamWriter.Write()-dispatched data!!!
+        /// This very, very special issue of .BaseStream access
+        /// again is NOT MSDN-documented AFAICS!!!!!
+        /// </summary>
+        public static Stream AccessStreamWriterBaseStreamSanitized(StreamWriter sw)
+        {
+            sw.Flush(); // !!!!
+            return sw.BaseStream;
+        }
+
 		public static XmlReaderSettings InitializeNewXmlReaderSettings()
 		{
 			XmlReaderSettings readerSettings = new XmlReaderSettings();

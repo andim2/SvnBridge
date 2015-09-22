@@ -377,7 +377,7 @@ namespace SvnBridge.Handlers
                     DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, memoryWriter);
 
                     // Initiate write to network *prior* to hitting file (perf opt!!)
-                    CopyMemoryStream(ms, output.BaseStream);
+                    CopyMemoryStream(ms, Helper.AccessStreamWriterBaseStreamSanitized(output));
 
                     string pathLogFile = Path.Combine(LogBasePath, DateTime.Now.ToString("HH_mm_ss_ffff") + ".txt");
                     using (FileStream file = new FileStream(pathLogFile, FileMode.Create, System.IO.FileAccess.Write))

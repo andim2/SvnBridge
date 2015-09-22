@@ -134,7 +134,7 @@ namespace SvnBridge.Handlers
                 byte[] itemData = sourceControlProvider.ReadFile(item);
                 if (itemData.Length > 0) // Write throws exception if zero bytes
                 {
-                    output.BaseStream.Write(itemData, 0, itemData.Length);
+                    Helper.AccessStreamWriterBaseStreamSanitized(output).Write(itemData, 0, itemData.Length);
                 }
             }
         }

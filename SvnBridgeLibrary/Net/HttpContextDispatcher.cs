@@ -11,7 +11,7 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl; // CredentialsHelper
-using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.AccessStreamWriterBaseStreamSanitized()
 using System.Web;
 
 namespace SvnBridge.Net
@@ -830,7 +830,7 @@ namespace SvnBridge.Net
             string content)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(content);
-            output.BaseStream.Write(buffer, 0, buffer.Length);
+            Helper.AccessStreamWriterBaseStreamSanitized(output).Write(buffer, 0, buffer.Length);
         }
     }
 }
