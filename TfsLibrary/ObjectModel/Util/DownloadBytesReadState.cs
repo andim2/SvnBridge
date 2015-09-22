@@ -9,7 +9,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 	{
 		private readonly int bufferSize;
 		private readonly byte[] buffer;
-		private readonly DataStoreList dataStore;
+		private readonly DataStoreSegmented dataStore;
 		private readonly WebResponse response;
 		private readonly DownloadBytesAsyncResult result;
 		public readonly Stream Stream;
@@ -36,7 +36,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
       // better do prefer to pass the correctly-predicted(?) content length
       // to avoid extremely painful huge-blob duplication...
       var initialCapacity = ChooseSuitableCapacityForFinalContentLength(expectedContentLength);
-      dataStore = new DataStoreList(initialCapacity);
+      dataStore = new DataStoreSegmented(initialCapacity);
 		}
 
         /// <summary>
@@ -187,6 +187,170 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
         void Append(byte[] buffer, int count);
 
         byte[] GrabAsArray();
+    }
+
+    /// <summary>
+    /// Segmented-storage (non-linear) data container.
+    /// To be used in cases
+    /// where final length of huge-blob data
+    /// is not reliably known yet
+    /// and we don't want to keep having very painful reallocations
+    /// (final linear full-length data will be exported *once* at end).
+    /// </summary>
+    internal class DataStoreSegmented : DataStore
+    {
+        private readonly List<byte[]> segments;
+        private long position;
+        private long length;
+        private long capacity;
+
+        public DataStoreSegmented(long expectedContentLength)
+        {
+            var numSegments = PositionToSegmentIndex(expectedContentLength) + 1;
+            var segmentsInitialCapacity = numSegments;
+            this.segments = new List<byte[]>(segmentsInitialCapacity);
+        }
+
+        private static int PositionToSegmentIndex(long position)
+        {
+            return (int)(position / SegmentSize);
+        }
+
+        private static int PositionToSegmentPosition(long position)
+        {
+            return (int)(position % SegmentSize);
+        }
+
+        /// <remarks>
+        /// Chose a size
+        /// which is below GC LOH threshold size
+        /// (keep LOH free from fragmentation,
+        /// to remain able to accomodate a final HUGE linear blob),
+        /// yet large enough to be much larger
+        /// than the usual incremental download lengths.
+        /// </remarks>
+        private static int SegmentSize
+        {
+            get
+            {
+                return 64 * 1024;
+            }
+        }
+
+        public long Position
+        {
+            get
+            {
+                return position;
+            }
+        }
+
+        public long Length
+        {
+            get
+            {
+                return length;
+            }
+        }
+
+        public long Capacity
+        {
+            get
+            {
+                return capacity;
+            }
+        }
+
+        public virtual void Append(byte[] buffer, int count)
+        {
+            var sizeSeg = SegmentSize;
+            var posBegin = Position;
+            var posEnd = posBegin + count;
+
+            var remain = count;
+
+            var pos = posBegin;
+            var sourceIndex = 0;
+            for (; ; )
+            {
+                bool haveDataRemain = (remain > 0);
+                if (!(haveDataRemain))
+                {
+                    break;
+                }
+
+                var idxSeg = PositionToSegmentIndex(pos);
+                EnsureSegmentAvailable(idxSeg);
+                var posSeg = PositionToSegmentPosition(pos);
+                var remainSeg = (sizeSeg - posSeg);
+                var lenThisTime = Math.Min(remain, remainSeg);
+
+                var segment = segments[idxSeg];
+
+                var destinationIndex = posSeg;
+                Array.Copy(buffer, sourceIndex, segment, destinationIndex, lenThisTime);
+
+                pos += lenThisTime;
+                sourceIndex += lenThisTime;
+                remain -= lenThisTime;
+            }
+
+            position = pos;
+            length = position;
+        }
+
+        /// <remarks>
+        /// Ensures properly allocated segments *up to* a certain index.
+        /// Expects to be called incrementally / evolutionary
+        /// (starting with index 0).
+        /// </remarks>
+        /// <param name="idxSeg"></param>
+        private void EnsureSegmentAvailable(int idxSeg)
+        {
+            for (; ; )
+            {
+                bool haveEnoughSegments = (segments.Count > idxSeg); // >= idxSeg + 1
+                if (haveEnoughSegments)
+                {
+                    break;
+                }
+
+                var sizeSeg = SegmentSize;
+                segments.Add(new byte[sizeSeg]);
+                capacity += sizeSeg;
+            }
+        }
+
+        public virtual byte[] GrabAsArray()
+        {
+            var sizeSeg = SegmentSize;
+            var len = Length;
+            byte[] array = new byte[len];
+
+            long pos = 0;
+            for (;;)
+            {
+                var remain = (len - pos);
+                bool haveDataRemain = (remain > 0);
+                if (!(haveDataRemain))
+                {
+                    break;
+                }
+
+                var idxSeg = PositionToSegmentIndex(pos);
+                var segment = segments[idxSeg];
+                var lenThisTime = Math.Min(remain, sizeSeg);
+
+                Array.Copy(segment, 0, array, pos, lenThisTime);
+                segment = null; // GC
+
+                pos += lenThisTime;
+            }
+
+            segments.Clear();
+
+            return array;
+        }
     }
 
     internal class DataStoreList : DataStore
