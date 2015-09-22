@@ -9,7 +9,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 	{
 		private readonly int bufferSize;
 		private readonly byte[] buffer;
-		private readonly List<byte> downloadedBytes;
+		private readonly DataStoreList dataStore;
 		private readonly WebResponse response;
 		private readonly DownloadBytesAsyncResult result;
 		public readonly Stream Stream;
@@ -36,7 +36,7 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
       // better do prefer to pass the correctly-predicted(?) content length
       // to avoid extremely painful huge-blob duplication...
       var initialCapacity = ChooseSuitableCapacityForFinalContentLength(expectedContentLength);
-      downloadedBytes = new List<byte>(initialCapacity);
+      dataStore = new DataStoreList(initialCapacity);
 		}
 
         /// <summary>
@@ -143,13 +143,12 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 			try
 			{
 				int read = Stream.EndRead(ar);
-        ListAppendArrayPart(downloadedBytes, buffer, read);
+        dataStore.Append(buffer, read);
 				if (read == 0)
 				{
 					DisposeResources();
 
-					result.Buffer = downloadedBytes.ToArray();
-					downloadedBytes.Clear();
+					result.Buffer = dataStore.GrabAsArray();
 					result.SetComplete();
 					return;
 				}
@@ -181,6 +180,28 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 				// got all we needed
 			}
 		}
+	}
+
+    internal interface DataStore // XXX: any standard interface that we ought to obey/implement instead? ICollection?
+    {
+        void Append(byte[] buffer, int count);
+
+        byte[] GrabAsArray();
+    }
+
+    internal class DataStoreList : DataStore
+    {
+        private readonly List<byte> data;
+
+        public DataStoreList(int expectedContentLength)
+        {
+            this.data = new List<byte>(expectedContentLength);
+        }
+
+        public virtual void Append(byte[] buffer, int count)
+        {
+            ListAppendArrayPart(data, buffer, count);
+        }
 
         /// <remarks>
         /// Ugh, this is using a raw loop
@@ -262,5 +283,15 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
             }
 #endif
         }
-	}
+
+        public virtual byte[] GrabAsArray()
+        {
+            byte[] array;
+
+            array = data.ToArray();
+            data.Clear();
+
+            return array;
+        }
+    }
 }
