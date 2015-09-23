@@ -77,11 +77,20 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 
         private static void ListAppendArrayPart(List<byte> list, byte[] data, int count)
         {
-            if (list.Capacity < list.Count + count)
-                list.Capacity = list.Count + count;
+            var requiredMinimumCapacity = list.Count + count;
+            ListEnsureCapacity(list, requiredMinimumCapacity);
             for (int i = 0; i < count; ++i)
             {
                 list.Add(data[i]);
+            }
+        }
+
+        private static void ListEnsureCapacity(List<byte> list, int requiredMinimumCapacity)
+        {
+            bool needEnlargeCapacity = (list.Capacity < requiredMinimumCapacity);
+            if (needEnlargeCapacity)
+            {
+                list.Capacity = requiredMinimumCapacity;
             }
         }
 	}
