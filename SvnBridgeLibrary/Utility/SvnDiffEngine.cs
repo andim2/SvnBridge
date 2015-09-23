@@ -190,12 +190,6 @@ namespace SvnBridge.Utility
             return svnDiff;
         }
 
-        public static SvnDiffWindow[] ParseSvnDiff(byte[] data)
-        {
-            MemoryStream stream = new MemoryStream(data);
-            return ParseSvnDiff(stream);
-        }
-
         public static SvnDiffWindow[] ParseSvnDiff(Stream inputStream)
         {
             BinaryReaderSvnDiff reader = new BinaryReaderSvnDiff(inputStream);
