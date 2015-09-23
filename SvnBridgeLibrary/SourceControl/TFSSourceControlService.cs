@@ -1316,13 +1316,39 @@ namespace SvnBridge.SourceControl
             }
         }
 
+        /// <summary>
+        /// Nearly comment-only helper -
+        /// central construction helper
+        /// which constructs an object which is *not* yet usable
+        /// since it is to be assigned its final value *later*
+        /// (e.g. in a very tight hotpath loop).
+        private static ChangesetVersionSpec ChangesetVersionSpecConstructRawObject()
+        {
+            return VersionSpec.FromChangeset(-1);
+        }
+
+        /// <summary>
+        /// Nearly comment-only helper
+        /// to be able to efficiently reuse an existing ChangesetVersionSpec
+        /// (avoid likely more expensive reconstruction via new).
+        /// </summary>
+        private static void ChangesetVersionSpecSetVersion(
+            ref ChangesetVersionSpec versionSpecChangeset,
+            int changesetId)
+        {
+            versionSpecChangeset.cs = changesetId;
+        }
+
         public void QueryHistory_sanitize(
             ref Changeset[] changesets)
         {
+            ChangesetVersionSpec versionSpecChangeset = ChangesetVersionSpecConstructRawObject();
             int dbgCs = 0;
             foreach (var changeset in changesets)
             {
-                VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset.cset);
+                ChangesetVersionSpecSetVersion(
+                    ref versionSpecChangeset,
+                    changeset.cset);
 
                 int dbgCg = 0;
                 foreach (var change in changeset.Changes)
@@ -1355,13 +1381,16 @@ namespace SvnBridge.SourceControl
 
         public void QueryItems_sanitize(ref SourceItem[] sourceItems)
         {
+            ChangesetVersionSpec versionSpecItem = ChangesetVersionSpecConstructRawObject();
             int dbgSi = 0;
             foreach (var sourceItem in sourceItems)
             {
                 bool needCheckChange = true;
                 if (needCheckChange)
                 {
-                    VersionSpec versionSpecItem = VersionSpec.FromChangeset(sourceItem.RemoteChangesetId);
+                    ChangesetVersionSpecSetVersion(
+                        ref versionSpecItem,
+                        sourceItem.RemoteChangesetId);
                     TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_Bracketed.EnsureItemPathSanitized(bugSanitizer, ref sourceItem.RemoteName, versionSpecItem, sourceItem.ItemType);
                 }
                 DebugMaintainLoopPositionHint(ref dbgSi);
@@ -1370,6 +1399,7 @@ namespace SvnBridge.SourceControl
 
         public void QueryItems_sanitize(ref ItemSet[] itemSets)
         {
+            ChangesetVersionSpec versionSpecItem = ChangesetVersionSpecConstructRawObject();
             int dbgSi = 0;
             foreach (var itemSet in itemSets)
             {
@@ -1379,7 +1409,9 @@ namespace SvnBridge.SourceControl
                     bool needCheckChange = true;
                     if (needCheckChange)
                     {
-                        VersionSpec versionSpecItem = VersionSpec.FromChangeset(item.cs);
+                        ChangesetVersionSpecSetVersion(
+                            ref versionSpecItem,
+                            item.cs);
                         try
                         {
                             bugSanitizer.CheckNeedItemPathSanitize(item.item, versionSpecItem, item.type);
@@ -1397,6 +1429,7 @@ namespace SvnBridge.SourceControl
 
         public void QueryItemsExtended_sanitize(ref ExtendedItem[][] extendedItemsArrays)
         {
+            ChangesetVersionSpec versionSpecItem = ChangesetVersionSpecConstructRawObject();
             int dbgEia = 0;
             foreach (var extendedItemArray in extendedItemsArrays)
             {
@@ -1407,7 +1440,9 @@ namespace SvnBridge.SourceControl
                     if (needCheckChange)
                     {
                         Helper.DebugUsefulBreakpointLocation(); // FIXME: .latest or .lver??
-                        VersionSpec versionSpecItem = VersionSpec.FromChangeset(extendedItem.latest);
+                        ChangesetVersionSpecSetVersion(
+                            ref versionSpecItem,
+                            extendedItem.latest);
                         Helper.DebugUsefulBreakpointLocation(); // FIXME: .titem or .sitem??
                         // According to MSDN ExtendedItem docs, it seems:
                         // sitem == SourceServerItem  Gets the path to the source server item.
@@ -1434,10 +1469,13 @@ namespace SvnBridge.SourceControl
 
         private void SourceItemHistory_sanitize(ref SourceItemHistory[] itemHistories)
         {
+            ChangesetVersionSpec versionSpecChangeset = ChangesetVersionSpecConstructRawObject();
             int dbgIh = 0;
             foreach (var itemHistory in itemHistories)
             {
-                VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(itemHistory.ChangeSetID);
+                ChangesetVersionSpecSetVersion(
+                    ref versionSpecChangeset,
+                    itemHistory.ChangeSetID);
                 int dbgIc = 0;
                 foreach (var change in itemHistory.Changes)
                 {
