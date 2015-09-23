@@ -106,6 +106,36 @@ namespace CodePlex.TfsLibrary.ObjectModel.Util
 			}
 		}
 
+        /// <remarks>
+        /// Ugh, this is using a raw loop
+        /// rather than using something like .AddRange().
+        /// Can't use .AddRange() since that operates on whole arrays only
+        /// (and even ArraySegment which is said to segmentize arrays
+        /// will NOT work properly
+        /// since the *whole* content of the backing .Array
+        /// *will* still be copied).
+        /// And we most certainly don't want
+        /// to create a (properly length-correct)
+        /// partial Array from original array
+        /// via ugly copying.
+        /// Alternative would be LINQ stuff
+        /// (which is a version dependency
+        /// which I'd dearly want to avoid)
+        /// or hand-crafting our own IEnumerable-supporting wrapper
+        /// (in which case it most definitely would be no faster
+        /// than the short manual loop here).
+        /// Or perhaps get rid of target List
+        /// and use a MemoryStream instead -
+        /// but that seems to bring its own can of worms ermmm problems
+        /// (see e.g. http://www.codeproject.com/Articles/348590/A-replacement-for-MemoryStream ).
+        /// Potentially helpful references:
+        /// http://stackoverflow.com/questions/582550/c-sharp-begin-endreceive-how-do-i-read-large-data
+        /// http://stackoverflow.com/questions/406485/array-slices-in-c-sharp
+        /// http://stackoverflow.com/questions/733243/how-to-copy-part-of-an-array-to-another-array-in-c
+        /// http://stackoverflow.com/questions/5756692/arraysegment-returning-the-actual-segment-c-sharp
+        /// "Copy data from Array to List"
+        ///   http://www.databaseforum.info/25/676730.aspx
+        /// </remarks>
         private static void ListAppendArrayPart(List<byte> list, byte[] data, int count)
         {
             var requiredMinimumCapacity = list.Count + count;
