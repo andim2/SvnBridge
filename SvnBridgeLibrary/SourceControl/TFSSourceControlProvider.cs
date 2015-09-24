@@ -531,6 +531,11 @@ namespace SvnBridge.SourceControl
             SVNPathStripLeadingSlash(ref path);
 
             string serverPath = MakeTfsPath(path);
+
+            VersionSpec itemVersionSpec = VersionSpec.Latest;
+            if (itemVersion != LATEST_VERSION)
+                itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
+
             // SVNBRIDGE_WARNING_REF_RECURSION
             RecursionType recursionType = RecursionType.None;
             switch (recursion)
@@ -547,10 +552,6 @@ namespace SvnBridge.SourceControl
                     recursionType = RecursionType.Full;
                     break;
             }
-
-            VersionSpec itemVersionSpec = VersionSpec.Latest;
-            if (itemVersion != LATEST_VERSION)
-                itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
 
             // WARNING: TFS08 QueryHistory() is very problematic! (see comments in next inner layer)
             SourceItemHistory[] histories = QueryHistory(
