@@ -1871,9 +1871,10 @@ namespace SvnBridge.SourceControl
                     else
                     {
                         string itemFirstPath = tempChangesets[0].Changes[0].Item.item; // debug helper
+                        VersionSpec versionSpecLatestToBeQueried = VersionSpec.FromChangeset(latestVersionToBeQueried); // NOT necessarily == VersionSpec.Latest!
                         changesetsTotal = QueryChangesets_TFS_sanitize_querylimit_etc(
                             itemFirstPath,
-                            VersionSpec.FromChangeset(latestVersionToBeQueried),
+                            versionSpecLatestToBeQueried,
                             1,
                             latestVersionToBeQueried,
                             RecursionType.Full,
