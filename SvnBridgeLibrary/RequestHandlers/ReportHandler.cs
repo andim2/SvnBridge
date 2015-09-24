@@ -193,13 +193,7 @@ namespace SvnBridge.Handlers
 
             using (var output = CreateStreamWriter(response.OutputStream))
             {
-                output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-                output.Write("<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n");
-                output.Write("<C:error/>\n");
-                output.Write("<m:human-readable errcode=\"200007\">\n");
-                output.Write("The requested report is unknown.\n");
-                output.Write("</m:human-readable>\n");
-                output.Write("</D:error>\n");
+                WriteHumanReadableError(output, 200007, "The requested report is unknown."); // yup, _with_ trailing dot.
                 return;
             }
         }
@@ -211,13 +205,7 @@ namespace SvnBridge.Handlers
 
             using (var output = CreateStreamWriter(response.OutputStream))
             {
-                output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-                output.Write("<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n");
-                output.Write("<C:error/>\n");
-                output.Write("<m:human-readable errcode=\"160005\">\n");
-                output.Write("Target path does not exist\n");
-                output.Write("</m:human-readable>\n");
-                output.Write("</D:error>\n");
+                WriteHumanReadableError(output, 160005, "Target path does not exist"); // yup, _without_ trailing dot.
                 return;
             }
         }
@@ -410,14 +398,12 @@ namespace SvnBridge.Handlers
         {
             response.StatusCode = (int) HttpStatusCode.InternalServerError;
             response.ContentType = "text/xml; charset=\"utf-8\"";
-            WriteToResponse(response,
-                            @"<?xml version=""1.0"" encoding=""utf-8""?>
-<D:error xmlns:D=""DAV:"" xmlns:m=""http://apache.org/dav/xmlns"" xmlns:C=""svn:"">
-<C:error/>
-<m:human-readable errcode=""160017"">
-'" + serverPath + @"' is not a file
-</m:human-readable>
-</D:error>");
+            using (var output = CreateStreamWriter(response.OutputStream))
+            {
+                string error_string = "'" + serverPath + "' is not a file"; // yup, _without_ trailing dot.
+                WriteHumanReadableError(output, 160017, error_string);
+                return;
+            }
         }
 
         private void GetDatedRevReport(TFSSourceControlProvider sourceControlProvider, DatedRevReportData data, TextWriter output)

@@ -50,15 +50,12 @@ namespace SvnBridge.Handlers
                 // which it expects. A normal HTML 404 message does not suffice. Also note
                 // that IIS seems to be rewriting the 404 message, so using 400 still allows
                 // the conversion process to continue.
-                string output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                              "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
-                              "<C:error/>\n" +
-                              "<m:human-readable errcode=\"160013\">\n" +
-                              "Path does not exist in repository.\n" +
-                              "</m:human-readable>\n" +
-                              "</D:error>\n";
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 400);
-                WriteToResponse(response, output);
+                using (StreamWriter output = CreateStreamWriter(response.OutputStream))
+                {
+                    string error_string = "Path does not exist in repository."; // _with_ trailing dot, right?
+                    WriteHumanReadableError(output, 160013, error_string);
+                }
                 return;
             }
             else if (requestPath.StartsWith("/!svn/bc/"))

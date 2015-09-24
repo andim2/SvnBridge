@@ -35,15 +35,10 @@ namespace SvnBridge.Handlers
 			catch (ConflictException ex)
 			{
 				SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 409);
-				string responseContent =
-					"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-					"<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
-					"<C:error/>\n" +
-					"<m:human-readable errcode=\"160024\">\n" +
-					ex.Message + "\n" +
-					"</m:human-readable>\n" +
-					"</D:error>\n";
-				WriteToResponse(response, responseContent);
+                using (StreamWriter output = CreateStreamWriter(response.OutputStream))
+                {
+                    WriteHumanReadableError(output, 160024, ex.Message);
+                }
 			}
 		}
 

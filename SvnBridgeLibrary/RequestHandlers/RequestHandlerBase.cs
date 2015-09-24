@@ -165,6 +165,22 @@ namespace SvnBridge.Handlers
             return recursion;
         }
 
+        protected static void WriteHumanReadableError(TextWriter output, int svn_error_code, string error_string)
+        {
+            string responseContent =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
+                "<C:error/>\n" +
+                "<m:human-readable errcode=\"" + svn_error_code.ToString() + "\">\n" +
+                error_string + "\n" +
+                "</m:human-readable>\n" +
+                "</D:error>\n";
+            output.Write(responseContent);
+            // Perhaps in addition we should actively do an output.Close() directly within this method,
+            // since it's possible that the SVN protocol implies that such an error is always
+            // the very last communication part that gets sent, thus the Close() should be made hard behaviour?
+        }
+
         protected void WriteFileNotFoundResponse(IHttpRequest request, IHttpResponse response)
         {
             response.StatusCode = (int)HttpStatusCode.NotFound;
