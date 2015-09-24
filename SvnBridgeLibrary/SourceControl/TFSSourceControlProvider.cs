@@ -249,7 +249,7 @@ namespace SvnBridge.SourceControl
             if (itemVersion != -1)
                 itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
 
-            LogItem logItem = GetLogItem(serverPath, itemVersionSpec, versionFrom, versionTo, recursionType, maxCount);
+            LogItem logItem = GetLogItem(serverPath, itemVersionSpec, versionFrom, versionTo, recursionType, maxCount, sortAscending);
 
             foreach (SourceItemHistory history in logItem.History)
             {
@@ -388,7 +388,7 @@ namespace SvnBridge.SourceControl
             return history;
         }
 
-        private LogItem GetLogItem(string serverPath, VersionSpec itemVersion, int versionFrom, int versionTo, RecursionType recursionType, int maxCount)
+        private LogItem GetLogItem(string serverPath, VersionSpec itemVersion, int versionFrom, int versionTo, RecursionType recursionType, int maxCount, bool sortAscending)
         {
             const int QUERY_LIMIT = 256;
 
@@ -397,7 +397,7 @@ namespace SvnBridge.SourceControl
             List<SourceItemHistory> histories;
             try
             {
-                changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false, false);
+                changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(versionTo), maxCount, true, false, false, sortAscending);
             }
             catch (SoapException ex)
             {
@@ -405,7 +405,7 @@ namespace SvnBridge.SourceControl
                 {
                     // Workaround for bug in TFS2008sp1
                     int latestVersion = GetLatestVersion();
-                    LogItem log = GetLogItem(serverPath, itemVersion, 1, latestVersion, RecursionType.None, 2);
+                    LogItem log = GetLogItem(serverPath, itemVersion, 1, latestVersion, RecursionType.None, 2, sortAscending /* is this the value to pass to have this workaround still work properly? */);
                     if (log.History[0].Changes[0].ChangeType == ChangeType.Delete && log.History.Length == 2)
                         latestVersion = log.History[1].ChangeSetID;
 
@@ -418,7 +418,7 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        LogItem result = GetLogItem(log.History[0].Changes[0].Item.RemoteName, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue);
+                        LogItem result = GetLogItem(log.History[0].Changes[0].Item.RemoteName, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue, sortAscending);
                         histories = new List<SourceItemHistory>(result.History);
                     }
 
@@ -448,7 +448,7 @@ namespace SvnBridge.SourceControl
                     if (earliestVersionFound == versionFrom)
                         break;
 
-                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false, false);
+                    changes = sourceControlService.QueryHistory(serverUrl, credentials, null, null, itemSpec, itemVersion, null, VersionSpec.FromChangeset(versionFrom), VersionSpec.FromChangeset(earliestVersionFound), maxCount, true, false, false, sortAscending);
                     temp = ConvertChangesetsToSourceItemHistory(changes);
                     histories.AddRange(temp);
                     logItemsCount = temp.Count;
