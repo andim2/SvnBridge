@@ -588,22 +588,7 @@ namespace SvnBridge.SourceControl
             if (itemVersion != LATEST_VERSION)
                 itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
 
-            // SVNBRIDGE_WARNING_REF_RECURSION
-            RecursionType recursionType = RecursionType.None;
-            switch (recursion)
-            {
-                case Recursion.OneLevel:
-                    // Hmm, why is this translated to .None here?
-                    // There was neither a comment here nor was it encapsulated into a self-explanatory
-                    // helper method.
-                    // Perhaps it's for correcting OneLevel requests
-                    // which probably don't make sense with log-type SVN queries... right?
-                    recursionType = RecursionType.None;
-                    break;
-                case Recursion.Full:
-                    recursionType = RecursionType.Full;
-                    break;
-            }
+            RecursionType recursionType = GetLogRecursionType(recursion);
 
             // WARNING: TFS08 QueryHistory() is very problematic! (see comments in next inner layer)
             SourceItemHistory[] histories = QueryHistory(
@@ -754,6 +739,27 @@ namespace SvnBridge.SourceControl
             LogItem logItem = new LogItem(null, serverPath, histories);
 
             return logItem;
+        }
+
+        private static RecursionType GetLogRecursionType(Recursion recursion)
+        {
+            // SVNBRIDGE_WARNING_REF_RECURSION
+            RecursionType recursionType = RecursionType.None;
+            switch (recursion)
+            {
+                case Recursion.OneLevel:
+                    // Hmm, why is this translated to .None here?
+                    // There was neither a comment here nor was it encapsulated into a self-explanatory
+                    // helper method.
+                    // Perhaps it's for correcting OneLevel requests
+                    // which probably don't make sense with log-type SVN queries... right?
+                    recursionType = RecursionType.None;
+                    break;
+                case Recursion.Full:
+                    recursionType = RecursionType.Full;
+                    break;
+            }
+            return recursionType;
         }
 
         /// <summary>
