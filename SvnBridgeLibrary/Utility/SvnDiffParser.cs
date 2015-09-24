@@ -81,16 +81,25 @@ namespace SvnBridge.Utility
         /// </remarks>
         private static MemoryStream GetSvnDiffDataStream(Stream dataStream)
         {
+            var dataInLen = dataStream.CanSeek ? dataStream.Length : 0;
             int diff_chunk_size_max = DiffChunkSizeMax;
+            var estimatedDiffDataLen = (0 < dataInLen) ? GetEstimatedDiffDataLength((int)dataInLen, diff_chunk_size_max) : 0;
             // Technically spoken the length of SVN signature below
             // is in _addition_ to the chunk size - it may exceed stream size.
             // But due to severe LOH issues our focus lies on equal alloc sizes
             // (_always_ doing equally-sized (Non-)LOH blocks)
             // thus we do prefer paying a potential stream resizing (doubling) penalty.
+            // NOPE, we will NOT specify an initial capacity!!
+            // Constructing with specific capacity will disable duplicate-growing
+            // and thus yield a much worse increment-only (single-byte!?) growing!!
+            // Well, yes we will specify an initial capacity:
+            // a sufficiently properly estimated total size
+            // of the resulting stream,
+            // to try hard to completely avoid *any* reallocations.
 
             // BinaryWriter using/IDispose specifics:
             // https://social.msdn.microsoft.com/Forums/en-US/81bb7197-60a1-4f2b-a6d8-1501a369b527/binarywriter-and-stream?forum=csharpgeneral
-            MemoryStream svnDiffStream = new MemoryStream(diff_chunk_size_max);
+            MemoryStream svnDiffStream = new MemoryStream(estimatedDiffDataLen /* diff_chunk_size_max */);
             // Side note (warning): "using" of a BinaryWriter
             // will have caused
             // not only a Flush, but actually a Close() of underlying stream
@@ -120,6 +129,13 @@ namespace SvnBridge.Utility
             svnDiffStream.Seek(0, SeekOrigin.Begin); // DON'T FORGET POSITION RESET!!
             return svnDiffStream;
 #endif
+        }
+
+        private static int GetEstimatedDiffDataLength(int dataLength, int diff_chunk_size_max)
+        {
+            var numDiffs = (dataLength / diff_chunk_size_max) + 1;
+            int numBogusManagementStructureLength = 128; // whatever certain diff windows are estimated to maximally require...
+            return dataLength + (numDiffs * numBogusManagementStructureLength);
         }
 
         private static int DiffChunkSizeMax
