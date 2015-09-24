@@ -51,11 +51,27 @@ namespace SvnBridge.SourceControl
         /// <summary>
         /// Adopts item data loaded from SCM,
         /// by calculating internal members.
+        /// Input data param *may* be handed in as null value
+        /// (e.g. to properly indicate final retrieval failure
+        /// to the item consumer side).
         /// </summary>
         public virtual void ContentDataAdopt(byte[] dataIn)
         {
-            Base64DiffData = SvnDiffParser.GetBase64SvnDiffData(dataIn);
-            Md5Hash = Helper.GetMd5Checksum(dataIn);
+            string base64 = null;
+            string md5 = null;
+            if (null != dataIn)
+            {
+                base64 = SvnDiffParser.GetBase64SvnDiffData(dataIn);
+                md5 = Helper.GetMd5Checksum(dataIn);
+            }
+            else
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
+            // Now centrally assign members
+            Base64DiffData = base64;
+            Md5Hash = md5;
+            // Indicate successful completion even in case of retrieval failure:
             DataLoaded = true; // IMPORTANT MARKER - SET LAST!
         }
 
@@ -65,12 +81,33 @@ namespace SvnBridge.SourceControl
         /// </summary>
         public virtual string ContentDataRobAsBase64(out string md5Hash)
         {
+            bool isDataValid = (DataLoaded && (null != Base64DiffData) && (null != Md5Hash));
+            if (!(isDataValid))
+            {
+                throw new ItemHasInvalidDataException(
+                    this);
+            }
+
             var base64DiffData = Base64DiffData;
             md5Hash = Md5Hash;
 
             ContentDataRelease();
 
             return base64DiffData;
+        }
+
+        /// <summary>
+        /// Make sure to have an improper result
+        /// aggressively communicated to consumer side
+        /// (via exception, since it is an exceptional case).
+        /// </summary>
+        public sealed class ItemHasInvalidDataException : InvalidOperationException
+        {
+            public ItemHasInvalidDataException(
+                ItemMetaData item)
+                : base("Item (" + item + ") does not contain valid data - retrieval failure!?")
+            {
+            }
         }
 
         /// <summary>
@@ -92,7 +129,11 @@ namespace SvnBridge.SourceControl
 
                 if (DataLoaded)
                 {
-                    length = Base64DiffData.Length;
+                    // Handle "load failure" case (.DataLoaded true / data null)
+                    if (null != Base64DiffData)
+                    {
+                        length = Base64DiffData.Length;
+                    }
                 }
 
                 return length;

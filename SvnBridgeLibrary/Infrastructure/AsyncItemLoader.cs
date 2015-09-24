@@ -782,25 +782,55 @@ namespace SvnBridge.Infrastructure
             // within the *callback-invoking outer* part (toolkit)!
             // To conveniently debug catching exception cases,
             // use the usual MSVS Exceptions dialog (Ctrl-Alt-E).
+
+            // Note (rather crucial) requirements
+            // in both order *and* amount of required operations:
+            // - we need to get at the item that belongs to the current ar
+            // - no matter what happens (i.e. --> "finally"),
+            //   EndReadFile() *must* be called, and the current slot must be released
             ItemMetaData item = null;
             try
             {
                 byte[] data = null;
+                try
+                {
+                    TryDetermineItemAndData(
+                        ar,
+                        out item,
+                        out data);
+                }
+                catch
+                {
+                    //System.Diagnostics.Debugger.Launch();
+                    Helper.DebugUsefulBreakpointLocation();
 
-                TryDetermineItemAndData(
-                    ar,
-                    out item,
-                    out data);
-
-                ItemContentDataAdopt(
-                    item,
-                    data);
-            }
-            catch
-            {
-                Helper.DebugUsefulBreakpointLocation();
-
-                throw;
+                    throw;
+                }
+                finally
+                {
+                    // I would have dearly wanted to avoid this ugly manual null check
+                    // in hotpath (by doing things via properly separated exception frame sub scoping
+                    // to avoid having to handle a null item
+                    // since the *item fetching part* already cleanly bailed out completely),
+                    // however since we (need to) grab both item and data
+                    // *atomically within the same Monitor lock*,
+                    // we will end up with a single throw:ing processing unit
+                    // for *both* item and data, thus I do need to *manually*
+                    // (non-exception-path checks)
+                    // discern *multiple* potential failure cases
+                    // (item null --> not doable, or
+                    // data null --> need to proceed with assigning null value!)
+                    // here :(
+                    // OK, we could cleanly solve telling apart
+                    // different failure cases via
+                    // different exception types, but.....
+                    if (null != item)
+                    {
+                        ItemContentDataAdopt(
+                            item,
+                            data);
+                    }
+                }
             }
             finally
             {
@@ -840,6 +870,10 @@ namespace SvnBridge.Infrastructure
                     {
                         item = (ItemMetaData)monitoredComm.RequestSlotGet(
                             ar);
+                        if (null == item)
+                        {
+                            throw new ItemNotQueuedException();
+                        }
                     }
                     finally
                     {
@@ -883,6 +917,14 @@ namespace SvnBridge.Infrastructure
 
         /// <remarks>
         /// http://stackoverflow.com/a/229584
+        /// Note: EndReadFile() may analyze failure
+        /// and thus subsequently report that
+        /// via an exception (AFAIK).
+        /// This seems to happen in case TFS (or other interim layers)
+        /// cannot carry out the download successfully -
+        /// ar.exception will then contain WebException.Message
+        /// "Der Remoteserver hat einen Fehler zurückgegeben: (401) Nicht autorisiert."
+        /// (most likely generated within EndReadFile() handling)
         /// </remarks>
         private byte[] EndDownloadItemData(
             IAsyncResult ar)
@@ -891,10 +933,40 @@ namespace SvnBridge.Infrastructure
                 ar);
         }
 
+        public sealed class ItemNotQueuedException : InvalidOperationException
+        {
+            public ItemNotQueuedException()
+                : base("Item not found in crawler queue")
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
+        }
+
+        /// <summary>
+        /// Comment-only helper.
+        /// </summary>
         private static void ItemContentDataAdopt(
             ItemMetaData item,
             byte[] data)
         {
+            // FIXME: sometimes we cannot (or will even skip to)
+            // successfully complete the item (complete the handler) here:
+            // I've seen cases where download handling produced an exception
+            // (one quite likely reason seems to be:
+            // "somewhat" bigger items, e.g. to the tune of 8MB,
+            // which might possibly seem to pose some problems already
+            // to the chunked gzipped TFS transfer)
+            // which we then failed to acknowledge -
+            // implementation should probably be corrected
+            // to requeue the download effort for a couple attempts
+            // (after all the consumer is unconditionally waiting
+            // for our download to succeed, i.e. it will *keep hanging*
+            // waiting for successful data fetch!),
+            // then proceed to final failure
+            // (e.g. by suitably notifying the consumer of final download failure,
+            // which could be done by throwing an exception in
+            // inner data fetcher
+            // in case DataLoaded true yet data null).
             item.ContentDataAdopt(
                 data);
         }
@@ -1038,10 +1110,17 @@ namespace SvnBridge.Infrastructure
         {
             string base64DiffData;
 
-            base64DiffData = item.ContentDataRobAsBase64(
-                out md5Hash);
-            NotifyCrawlerItemConsumed(
-                item);
+            try
+            {
+                // will throw exception when determining outright failure to load data:
+                base64DiffData = item.ContentDataRobAsBase64(
+                    out md5Hash);
+            }
+            finally
+            {
+                NotifyCrawlerItemConsumed(
+                    item);
+            }
 
             return base64DiffData;
         }
