@@ -197,7 +197,7 @@ namespace SvnBridge.Utility
             CheckSvnDiffSignatureAndSupportedVersion(reader);
 
             List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
-            while (!EOF(reader))
+            while (HaveDataRemain(reader))
             {
                 SvnDiffWindow diff = new SvnDiffWindow();
 
@@ -259,7 +259,7 @@ namespace SvnBridge.Utility
 
         private static SvnDiffInstruction ReadInstruction(BinaryReaderSvnDiff reader)
         {
-            if (EOF(reader))
+            if (!(HaveDataRemain(reader)))
             {
                 return null;
             }
@@ -365,9 +365,13 @@ namespace SvnBridge.Utility
             }
         }
 
-        private static bool EOF(BinaryReaderSvnDiff reader)
+        private static bool HaveDataRemain(BinaryReaderSvnDiff reader)
         {
-            return reader.EOF;
+            bool haveDataRemain;
+
+            haveDataRemain = !(reader.EOF);
+
+            return haveDataRemain;
         }
     }
 }
