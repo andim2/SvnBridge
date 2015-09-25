@@ -46,8 +46,10 @@ namespace SvnBridge.Utility
 
         public static byte[] ApplySvnDiff(SvnDiffWindow svnDiffWindow, byte[] source, int sourceDataStartIndex)
         {
-            MemoryStream instructionStream = new MemoryStream(svnDiffWindow.InstructionSectionBytes);
-            MemoryStream dataStream = new MemoryStream(svnDiffWindow.DataSectionBytes);
+            var instructionSection = svnDiffWindow.InstructionSectionBytes;
+            MemoryStream instructionStream = new MemoryStream(instructionSection.Array, instructionSection.Offset, instructionSection.Count, false);
+            var dataSection = svnDiffWindow.DataSectionBytes;
+            MemoryStream dataStream = new MemoryStream(dataSection.Array, dataSection.Offset, dataSection.Count, false);
             BinaryReader dataReader = new BinaryReader(dataStream);
 
             //BinaryReaderSvnDiff instructionReader = new BinaryReaderSvnDiff(instructionStream);
@@ -176,19 +178,21 @@ namespace SvnBridge.Utility
                 svnDiff.SourceViewLength = 0;
                 svnDiff.TargetViewLength = (ulong)length;
 
-                svnDiff.DataSectionBytes = Helper.ArraySegmentToArray(arrSeg);
-
                 SvnDiffInstruction instruction = new SvnDiffInstruction();
                 instruction.OpCode = SvnDiffInstructionOpCode.CopyFromNewData;
                 instruction.Length = (ulong)length;
 
-                MemoryStream instructionStream = new Utility.MemoryStreamLOHSanitized();
-                using (BinaryWriter instructionWriter = new BinaryWriter(instructionStream))
+                MemoryStream replaceDiffStream = new Utility.MemoryStreamLOHSanitized();
+                using (BinaryWriter replaceDiffWriter = new BinaryWriter(replaceDiffStream))
                 {
-                    WriteInstruction(instructionWriter, instruction);
+                    replaceDiffStream.Write(arrSeg.Array, arrSeg.Offset, arrSeg.Count);
+                    svnDiff.DataSectionBytes = new ArraySegment<byte>(replaceDiffStream.GetBuffer(), 0, arrSeg.Count);
+
+                    var idxPrev = svnDiff.DataSectionBytes.Count;
+                    WriteInstruction(replaceDiffWriter, instruction);
+                    svnDiff.InstructionSectionBytes = new ArraySegment<byte>(replaceDiffStream.GetBuffer(), idxPrev, (int)replaceDiffStream.Length - idxPrev);
                     // Flush() (and Close()) guaranteed by "using"
                 }
-                svnDiff.InstructionSectionBytes = instructionStream.ToArray();
             }
             return svnDiff;
         }
@@ -210,8 +214,9 @@ namespace SvnBridge.Utility
                 int instructionSectionLength = (int)ReadInt(reader);
                 int dataSectionLength = (int)ReadInt(reader);
 
-                diff.InstructionSectionBytes = reader.ReadBytes(instructionSectionLength);
-                diff.DataSectionBytes = reader.ReadBytes(dataSectionLength);
+                var instructionPlusData = reader.ReadBytes(instructionSectionLength + dataSectionLength);
+                diff.InstructionSectionBytes = new ArraySegment<byte>(instructionPlusData, 0, instructionSectionLength);
+                diff.DataSectionBytes = new ArraySegment<byte>(instructionPlusData, instructionSectionLength, dataSectionLength);
 
                 diffs.Add(diff);
             }
@@ -248,15 +253,17 @@ namespace SvnBridge.Utility
         {
             if (svnDiff != null)
             {
+                var instructionSection = svnDiff.InstructionSectionBytes;
+                var dataSection = svnDiff.DataSectionBytes;
                 int bytesWritten;
                 WriteInt(output, svnDiff.SourceViewOffset, out bytesWritten);
                 WriteInt(output, svnDiff.SourceViewLength, out bytesWritten);
                 WriteInt(output, svnDiff.TargetViewLength, out bytesWritten);
-                WriteInt(output, (ulong)svnDiff.InstructionSectionBytes.Length, out bytesWritten);
-                WriteInt(output, (ulong)svnDiff.DataSectionBytes.Length, out bytesWritten);
+                WriteInt(output, (ulong)instructionSection.Count, out bytesWritten);
+                WriteInt(output, (ulong)dataSection.Count, out bytesWritten);
 
-                output.Write(svnDiff.InstructionSectionBytes);
-                output.Write(svnDiff.DataSectionBytes);
+                output.Write(instructionSection.Array, instructionSection.Offset, instructionSection.Count);
+                output.Write(dataSection.Array, dataSection.Offset, dataSection.Count);
 
                 output.Flush(); // Likely very important in case of huge-data memory pressure (frees internally amassed buffer data?)
             }

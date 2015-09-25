@@ -13,10 +13,15 @@ namespace UnitTests
         {
             SvnDiffWindow svnDiff = new SvnDiffWindow();
 
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = instructions;
+            svnDiff.DataSectionBytes = ToArraySegment(data);
+            svnDiff.InstructionSectionBytes = ToArraySegment(instructions);
 
             return svnDiff;
+        }
+
+        private static ArraySegment<T> ToArraySegment<T>(T[] data)
+        {
+            return new ArraySegment<T>(data, 0, data.Length);
         }
 
         [Fact]

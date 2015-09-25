@@ -1,3 +1,5 @@
+using System; // ArraySegment
+
 namespace SvnBridge.Utility
 {
     public sealed class SvnDiffWindow
@@ -5,7 +7,7 @@ namespace SvnBridge.Utility
         public ulong SourceViewOffset;
         public ulong SourceViewLength;
         public ulong TargetViewLength;
-        public byte[] InstructionSectionBytes;
-        public byte[] DataSectionBytes;
+        public ArraySegment<byte> InstructionSectionBytes;
+        public ArraySegment<byte> DataSectionBytes;
     }
 }
