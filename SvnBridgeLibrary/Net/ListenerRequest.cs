@@ -211,7 +211,8 @@ namespace SvnBridge.Net
             {
                 bool isReadOK = ReadToBuffer(
                     stream,
-                    buffer);
+                    buffer,
+                    missing);
                 if (!(isReadOK))
                 {
                     return;
@@ -232,15 +233,54 @@ namespace SvnBridge.Net
 		private static bool ReadToBuffer(Stream stream,
 										 MemoryStream buffer)
 		{
-			byte[] bytes = new byte[Constants.BufferSize];
-
-            int bytesRead = ReadToBufferIncremental(
+            return ReadToBuffer(
                 stream,
                 buffer,
-                bytes);
+                -1);
+        }
+
+        private static bool ReadToBuffer(
+            Stream stream,
+            MemoryStream buffer,
+            long numToBeReadTotal)
+        {
+            long bytesReadTotal = 0;
+
+			byte[] bytes = new byte[Constants.BufferSize];
+
+            bool haveProperTransferLengthInfo = (-1 != numToBeReadTotal);
+            var segmentSize = bytes.Length;
+            for (; ; )
+            {
+                int bytesToBeReadThisTime = GetNumBytesToBeReadThisTime(
+                    numToBeReadTotal,
+                    bytesReadTotal,
+                    segmentSize,
+                    haveProperTransferLengthInfo);
+
+                bool needMoreData = (0 < bytesToBeReadThisTime);
+                if (!(needMoreData))
+                {
+                    break;
+                }
+
+                int bytesReadThisTime = ReadToBufferIncremental(
+                    stream,
+                    buffer,
+                    bytes,
+                    bytesToBeReadThisTime);
+
+                bool wasSuccessfulRead = (0 < bytesReadThisTime);
+                if (!(wasSuccessfulRead))
+                {
+                    break;
+                }
+
+                bytesReadTotal += bytesReadThisTime;
+            }
 
             bool isConnectionOK = IsConnectionOK(
-                bytesRead);
+                bytesReadTotal);
 
             if (!(isConnectionOK))
             {
@@ -251,12 +291,47 @@ namespace SvnBridge.Net
             return true;
 		}
 
+        /// <remarks>
+        /// NetworkStream.Read() will block
+        /// in case there's no data to be read
+        /// (unless .ReceiveTimeout is hackishly/manually set to a low value).
+        /// While we could manually check NetworkStream.DataAvailable property,
+        /// for a generic-Stream interface this is not possible.
+        /// Thus, for cases where we improperly do not know
+        /// the length to be expected,
+        /// we'll have to do a single read only
+        /// (and thus potentially miss a part of receive data
+        /// due to reading into a limited buffer only).
+        /// </remarks>
+        private static int GetNumBytesToBeReadThisTime(
+            long numToBeReadTotal,
+            long bytesReadTotal,
+            int segmentSize,
+            bool haveProperTransferLengthInfo)
+        {
+            int numBytesToBeReadThisTime;
+
+            if (haveProperTransferLengthInfo)
+            {
+                int numBytesToBeReadRemaining = (int)(numToBeReadTotal - bytesReadTotal);
+                numBytesToBeReadThisTime = Math.Min(segmentSize, numBytesToBeReadRemaining);
+            }
+            else
+            {
+                bool havePriorSuccessfulRead = (0 != bytesReadTotal);
+                numBytesToBeReadThisTime = (havePriorSuccessfulRead) ? 0 : segmentSize;
+            }
+
+            return numBytesToBeReadThisTime;
+        }
+
         private static int ReadToBufferIncremental(
             Stream stream,
             MemoryStream buffer,
-            byte[] bytes)
+            byte[] bytes,
+            int bytesToBeRead)
         {
-			int bytesRead = stream.Read(bytes, 0, bytes.Length);
+			int bytesRead = stream.Read(bytes, 0, bytesToBeRead);
 
             ArraySegment<byte> arrSeg = new ArraySegment<byte>(bytes, 0, bytesRead);
             Helper.AppendToStream(buffer, arrSeg);
@@ -273,7 +348,7 @@ namespace SvnBridge.Net
         ///  (otherwise it will block until there is at least one byte)."
         /// </remarks>
         private static bool IsConnectionOK(
-            int bytesReadTotal)
+            long bytesReadTotal)
         {
             bool isConnectionOK = false;
 
@@ -393,7 +468,7 @@ namespace SvnBridge.Net
 					break;
 				}
 
-				bool isReadOK = ReadToBuffer(stream, buffer);
+				bool isReadOK = ReadToBuffer(stream, buffer, contentLengthMissing);
 				if (!(isReadOK))
 				{
 					break;
