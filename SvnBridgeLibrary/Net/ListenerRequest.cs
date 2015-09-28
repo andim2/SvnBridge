@@ -256,9 +256,10 @@ namespace SvnBridge.Net
 		{
 			int contentLength = GetContentLength();
 
+            var posStart = buffer.Position;
 			for (; ; )
 			{
-                var contentLengthRead = buffer.Length - buffer.Position;
+                var contentLengthRead = buffer.Length - posStart;
                 var contentLengthMissing = contentLength - contentLengthRead;
 				bool needNewData = (0 < contentLengthMissing);
 
@@ -274,18 +275,19 @@ namespace SvnBridge.Net
 				}
 			}
 
-      // Optimized(?) handling details:
-      // Create a buffer precisely sized to content length,
-      // to be directly placed into a newly constructed
-      // precisely sized *readonly* output stream,
-      // while actively accessing
-      // only a minor *part* of a potentially largish source stream.
-			byte[] messageBody = new byte[contentLength];
-
-			buffer.Read(messageBody, 0, messageBody.Length);
-
-			inputStream = new MemoryStream(messageBody, false);
+      ArraySegment<byte> arrSeg = new ArraySegment<byte>(buffer.GetBuffer(), (int)posStart, contentLength);
+			AdoptAsReadOnlyInputStream(arrSeg);
 		}
+
+        /// <remarks>
+        /// Optimized(?) handling details:
+        /// pass stream's buffer into a newly created
+        /// precisely sized *readonly* output stream.
+        /// </remarks>
+        private void AdoptAsReadOnlyInputStream(ArraySegment<byte> arrSeg)
+        {
+            inputStream = new MemoryStream(arrSeg.Array, arrSeg.Offset, arrSeg.Count, false);
+        }
 
 		private int GetContentLength()
 		{
