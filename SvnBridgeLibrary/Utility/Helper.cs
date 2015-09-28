@@ -171,7 +171,7 @@ namespace SvnBridge.Utility
 
         public static void WriteToStreamYetKeepPosUnchanged(MemoryStream stream, long positionWriteStart, byte[] data, int numToBeWritten)
         {
-            var requiredMinimumCapacity = positionWriteStart + numToBeWritten;
+            var requiredMinimumCapacity = Math.Max(positionWriteStart + numToBeWritten, stream.Length);
             StreamEnsureCapacity(stream, requiredMinimumCapacity);
 
             var positionBackup = stream.Position;
