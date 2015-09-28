@@ -200,7 +200,10 @@ namespace SvnBridge.Net
 		{
 			byte[] bytes = new byte[Constants.BufferSize];
 
-			int bytesRead = stream.Read(bytes, 0, bytes.Length);
+            int bytesRead = ReadToBufferIncremental(
+                stream,
+                buffer,
+                bytes);
 
             bool isConnectionOK = IsConnectionOK(
                 bytesRead);
@@ -211,10 +214,20 @@ namespace SvnBridge.Net
                 return false;
             }
 
-            Helper.AppendToStream(buffer, bytes, bytesRead);
-
             return true;
 		}
+
+        private static int ReadToBufferIncremental(
+            Stream stream,
+            MemoryStream buffer,
+            byte[] bytes)
+        {
+			int bytesRead = stream.Read(bytes, 0, bytes.Length);
+
+            Helper.AppendToStream(buffer, bytes, bytesRead);
+
+            return bytesRead;
+        }
 
         /// <summary>
         /// Almost comment-only helper.
