@@ -303,6 +303,65 @@ namespace SvnBridge.Utility
             }
         }
 
+        /// <remarks>
+        /// http://stackoverflow.com/questions/1540658/net-asynchronous-stream-read-write
+        /// </remarks>
+        public static void StreamCopyViaAsync(
+            Stream source,
+            Stream target)
+        {
+            int BUFFER_SIZE = StreamCopyBufferSize();
+
+            byte[] readbuffer = new byte[BUFFER_SIZE];
+            byte[] writebuffer = new byte[BUFFER_SIZE];
+            IAsyncResult asyncResult = null;
+
+            // This should work down to ~0.01kb/sec
+            int minSpeedBytesPerSec = 16; // Prefer a nicely dividable (modulo!) value
+            var writeTimeoutSec = CalculateWriteTimeoutForStreamCopyViaAsync(writebuffer.Length, minSpeedBytesPerSec);
+            var writeTimeoutMS = 1000 * writeTimeoutSec;
+            for (; ; )
+            {
+                // Read data into the readbuffer.  The previous call to BeginWrite, if any,
+                //  is executing in the background..
+                int read = source.Read(readbuffer, 0, readbuffer.Length);
+
+                // Ok, we have read some data and we're ready to write it, so wait here
+                //  to make sure that the previous write is done before we write again.
+                if (asyncResult != null)
+                {
+                    asyncResult.AsyncWaitHandle.WaitOne(writeTimeoutMS);
+                    target.EndWrite(asyncResult); // Last step to the 'write'.
+                    bool isCompleted = asyncResult.IsCompleted;
+                    if (!(isCompleted)) // Make sure the write really completed.
+                    {
+                        throw new IOException("Stream write failed.");
+                    }
+                }
+
+                bool haveReadData = (0 < read);
+                if (!(haveReadData))
+                {
+                    return;
+                }
+
+                // Swap the read and write buffers so we can write what we read,
+                // and we can then use the other buffer for our next read.
+                byte[] tbuf = writebuffer;
+                writebuffer = readbuffer;
+                readbuffer = tbuf;
+
+                // Asynchronously write the data, asyncResult.AsyncWaitHandle will
+                // be set when done.
+                asyncResult = target.BeginWrite(writebuffer, 0, read, null, null);
+            }
+        }
+
+        private static int CalculateWriteTimeoutForStreamCopyViaAsync(int numToBeWritten, int minSpeedBytesPerSec)
+        {
+            return (numToBeWritten / minSpeedBytesPerSec);
+        }
+
         /// <summary>
         /// Chooses a suitable size for temporary buffers
         /// used for copy transfers.

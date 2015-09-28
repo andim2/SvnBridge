@@ -51,7 +51,8 @@ namespace SvnBridge.Infrastructure
             StreamWriter output,
             Stream result_Base64DiffDataStream)
         {
-            Helper.StreamCopy(
+            //Helper.StreamCopy(
+            Helper.StreamCopyViaAsync(
                 result_Base64DiffDataStream,
                 Helper.AccessStreamWriterBaseStreamSanitized(
                     output));
