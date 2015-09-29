@@ -182,16 +182,22 @@ namespace SvnBridge.Utility
             StreamEnsureCapacity(stream, requiredMinimumCapacity);
 
             var positionBackup = stream.Position;
-            // http://stackoverflow.com/a/7239011
-            //stream.Seek(0, SeekOrigin.End);
-            stream.Position = positionWriteStart;
-            int dataOffset = 0;
-            // MSDN MemoryStream.Write():
-            // "If the write operation is successful,
-            // the current position within the stream
-            // is advanced by the number of bytes written."
-            stream.Write(data, dataOffset, numToBeWritten);
-            stream.Position = positionBackup;
+            try
+            {
+                // http://stackoverflow.com/a/7239011
+                //stream.Seek(0, SeekOrigin.End);
+                stream.Position = positionWriteStart;
+                int dataOffset = 0;
+                // MSDN MemoryStream.Write():
+                // "If the write operation is successful,
+                // the current position within the stream
+                // is advanced by the number of bytes written."
+                stream.Write(data, dataOffset, numToBeWritten);
+            }
+            finally
+            {
+                stream.Position = positionBackup;
+            }
         }
 
         /// <remarks>
