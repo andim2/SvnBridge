@@ -634,9 +634,17 @@ namespace SvnBridge.SourceControl
                         // FIXME: hmm, are we really supposed to actively Delete a non-isLastPathElem item
                         // rather than indicating a MissingItemMetaData!?
                         // After all the actual delete operation is expected to be carried out (possibly later) properly, too...
+                        // Nope - while I think we *do* need to mark it as processed (via Missing),
+                        // I have the expectation
+                        // that a later Change of this final (last-elem) item
+                        // will transform it into its permanent type.
+#if false
                         item = new DeleteFolderMetaData();
                         item.Name = itemPath;
                         item.ItemRevision = itemFetchRevision;
+#else
+                        item = new MissingItemMetaData(itemPath, itemFetchRevision, false);
+#endif
                     }
                     else
                     {
