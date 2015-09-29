@@ -115,7 +115,7 @@ namespace SvnBridge.Net
 				ParseHeaderLine(headerLine);
 			}
 
-			ReadMessageBody(stream, buffer);
+			ReadMessageBody_linear(stream, buffer);
 
             // Now that all content has been read (and actively parsed) into buffer,
             // we're finally able to have it trace logged if requested:
@@ -252,9 +252,10 @@ namespace SvnBridge.Net
             return isConnectionOK;
         }
 
-		private void ReadMessageBody(Stream stream,
-									 MemoryStream buffer)
-		{
+        private void ReadMessageBody_linear(
+            Stream stream,
+            MemoryStream buffer)
+        {
 			int contentLength = GetContentLength();
 
             var posStart = buffer.Position;
