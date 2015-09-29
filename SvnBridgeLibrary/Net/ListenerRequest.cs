@@ -109,11 +109,20 @@ namespace SvnBridge.Net
 
         private static string SnitchStringFromStream(Stream stream)
         {
-            long position = stream.Position;
-            stream.Position = 0;
-            StreamReader reader = new StreamReader(stream);
-            string content = reader.ReadToEnd();
-            stream.Position = position;
+            string content;
+
+            var positionBackup = stream.Position;
+            try
+            {
+                stream.Position = 0;
+                StreamReader reader = new StreamReader(stream);
+                content = reader.ReadToEnd();
+            }
+            finally
+            {
+                stream.Position = positionBackup;
+            }
+
             return content;
         }
 
