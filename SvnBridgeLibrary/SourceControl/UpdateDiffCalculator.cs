@@ -230,11 +230,11 @@ namespace SvnBridge.SourceControl
                 foreach (EntryData data in updateReportData.Entries)
                 {
                     int itemVersionFrom = int.Parse(data.Rev);
-                    if (itemVersionFrom < versionFrom)
+                    if (itemVersionFrom < versionTo)
                     {
                         string targetPath = FilesysHelpers.PathJoin(pathUpdateTargetBase, data.path);
 
-                        CalculateChangeBetweenVersions(projectRootPath, targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionFrom);
+                        CalculateChangeBetweenVersions(projectRootPath, targetPath, itemVersionFrom, checkoutRoot, itemVersionFrom, versionTo);
                     }
                 }
             }

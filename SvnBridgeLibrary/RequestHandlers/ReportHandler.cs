@@ -468,7 +468,7 @@ namespace SvnBridge.Handlers
 		{
 			string srcPath = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
 			if (updateReportRequest.UpdateTarget != null)
-				return srcPath + "/" + updateReportRequest.UpdateTarget;
+				return Helper.CombinePath(srcPath, updateReportRequest.UpdateTarget);
 			return srcPath;
 		}
 

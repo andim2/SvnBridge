@@ -220,7 +220,10 @@ namespace SvnBridge.SourceControl
         /// </summary>
         public static string PathJoin(string path, string pathElem)
         {
-            string append = (path != "" && !path.EndsWith(repo_separator_s)) ?
+            bool isSomeArgNotSet = (string.IsNullOrEmpty(path) || (string.IsNullOrEmpty(pathElem)));
+            bool isBothArgsValid = !(isSomeArgNotSet);
+            bool needSeparator = (isBothArgsValid && !path.EndsWith(repo_separator_s));
+            string append = needSeparator ?
                 repo_separator_s + pathElem :
                 pathElem;
 
@@ -1311,7 +1314,12 @@ namespace SvnBridge.SourceControl
                 // did determine path via .SrcPath after all,
                 // but that kind of handling is terribly asymmetric :(
                 // (evaluating reportData stuff outside *and* then here again)
-                string targetPath = "/" + Helper.CombinePath(path, reportData.UpdateTarget);
+                //
+                // Should NOT add leading '/' here,
+                // since items are not leading-'/'-based anyway!
+                // Also, CombinePath() erroneously(?) adds leading slash
+                // in case of empty arg1.
+                string targetPath = /* "/" + */ Helper.CombinePath(path, reportData.UpdateTarget);
                 // [cannot easily use List.RemoveAll() here]
                 foreach (ItemMetaData item in new List<ItemMetaData>(root.Items))
                 {

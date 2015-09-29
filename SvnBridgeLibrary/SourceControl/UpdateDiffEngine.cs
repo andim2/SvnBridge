@@ -262,7 +262,7 @@ namespace SvnBridge.SourceControl
 
         private void PerformAddOrUpdate(SourceItemChange change, bool edit, bool updatingForwardInTime)
         {
-            string remoteName = change.Item.RemoteName;
+            string remoteName = updatingForwardInTime ? change.Item.RemoteName : RenameDetermineItemOldName(change);
 
             bool propertyChange = false;
 
