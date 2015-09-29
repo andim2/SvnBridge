@@ -315,13 +315,13 @@ namespace SvnBridge.Net
             // Some search keywords: "ServicePoint", "HttpBehaviour", "DefaultConnectionLimit", "DefaultPersistentConnectionLimit".
 
             bool requestedHttpKeepAlive = false; // globally persistent state (KEEP SCOPE OUT OF LOOP)
-            bool needClose = true; // globally persistent state (KEEP SCOPE OUT OF LOOP)
+            bool serveFurtherRequests = false; // globally persistent state (KEEP SCOPE OUT OF LOOP)
             for (int numRequestsHandled = 0; ; ++numRequestsHandled)
             {
                 bool wasSuccessfulRequest = TryHandleOneHttpMethodRequest(
                     networkStream,
                     ref requestedHttpKeepAlive,
-                    ref needClose);
+                    ref serveFurtherRequests);
 
                 if (!(wasSuccessfulRequest))
                 {
@@ -335,7 +335,7 @@ namespace SvnBridge.Net
                 // http://go4answers.webhost4life.com/Example/net4-tcpclient-fails-81091.aspx
                 // Possibly relevant: http://stackoverflow.com/a/1980554/1222997
                 //   "The HTTP protocol has the status code Request Timeout which you can send to the client if it seems dead."
-                if (!(requestedHttpKeepAlive))
+                if (!(serveFurtherRequests))
                 {
                     break;
                 }
@@ -345,7 +345,7 @@ namespace SvnBridge.Net
         private bool TryHandleOneHttpMethodRequest(
             NetworkStream networkStream,
             ref bool requestedHttpKeepAlive,
-            ref bool needClose)
+            ref bool serveFurtherRequests)
         {
             IHttpContext context = new ListenerContext(
                 networkStream,
@@ -367,7 +367,7 @@ namespace SvnBridge.Net
                 context,
                 networkStream,
                 ref requestedHttpKeepAlive,
-                ref needClose);
+                ref serveFurtherRequests);
 
             return true;
         }
@@ -376,7 +376,7 @@ namespace SvnBridge.Net
             IHttpContext context,
             NetworkStream networkStream,
             ref bool requestedHttpKeepAlive,
-            ref bool needClose)
+            ref bool serveFurtherRequests)
         {
             // Make sure to parse Connection header value
             // unconditionally in *all* iterations
@@ -390,6 +390,19 @@ namespace SvnBridge.Net
 
             var response = context.Response;
             bool doSupportHttpKeepAlive = (supportHttpKeepAlive);
+
+            // Handle Connection-close evaluation and announcement
+            // outside of Keep-Alive handling!
+            // (required for both KA and legacy non-KA)
+            // And append all headers *prior* to doing handling of the requests below
+            // (once we return here after connection handling below
+            // it's already done and sent to client).
+            if (foundConnectionClose)
+            {
+                serveFurtherRequests = false;
+                doSupportHttpKeepAlive = false;
+            }
+
             // See also http://www.w3.org/Protocols/HTTP/Issues/http-persist.html
             // http://stackoverflow.com/questions/140765/how-do-i-know-when-to-close-an-http-1-1-keep-alive-connection?rq=1
             if (doSupportHttpKeepAlive)
@@ -423,25 +436,14 @@ namespace SvnBridge.Net
                         StringWriter writer = new StringWriter();
                         writer.Write("timeout={0}, max={1}", httpKeepAliveTimeoutSec, httpKeepAliveMaxConnections);
                         response.AppendHeader("Keep-Alive", writer.ToString());
-                        // TODO: make needClose behaviour dynamic!
+                        // TODO: make serveFurtherRequests behaviour dynamic!
                         // (activate upon last iteration of httpKeepAliveMaxConnections)
-                        needClose = false;
+                        serveFurtherRequests = true;
                     }
                 }
             }
 
-            // Handle Connection-close evaluation and announcement
-            // outside of Keep-Alive handling!
-            // (required for both KA and legacy non-KA)
-            // And append all headers *prior* to doing handling of the requests below
-            // (once we return here after connection handling below
-            // it's already done and sent to client).
-            if (foundConnectionClose)
-            {
-                needClose = true;
-            }
-
-            if (needClose)
+            if (!(serveFurtherRequests))
             {
                 ConnectionIndicateNonPersistent(
                     response);
