@@ -107,8 +107,8 @@ namespace SvnBridge.Net
             for (; ; )
             {
                 string headerLine = ReadLine(stream, buffer);
-                bool finished = (0 == headerLine.Length);
-                if (finished)
+                bool needContinueParsing = (0 != headerLine.Length);
+                if (!(needContinueParsing))
                 {
                     break;
                 }
@@ -260,9 +260,9 @@ namespace SvnBridge.Net
 			{
                 var contentLengthRead = buffer.Length - buffer.Position;
                 var contentLengthMissing = contentLength - contentLengthRead;
-				bool finished = (0 >= contentLengthMissing);
+				bool needNewData = (0 < contentLengthMissing);
 
-				if (finished)
+				if (!(needNewData))
 				{
 					break;
 				}
