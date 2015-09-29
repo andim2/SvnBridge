@@ -315,11 +315,13 @@ namespace SvnBridge.Net
             // Some search keywords: "ServicePoint", "HttpBehaviour", "DefaultConnectionLimit", "DefaultPersistentConnectionLimit".
 
             bool requestedHttpKeepAlive = false; // globally persistent state (KEEP SCOPE OUT OF LOOP)
+            bool needClose = true; // globally persistent state (KEEP SCOPE OUT OF LOOP)
             for (int numRequestsHandled = 0; ; ++numRequestsHandled)
             {
                 bool wasSuccessfulRequest = TryHandleOneHttpMethodRequest(
                     networkStream,
-                    ref requestedHttpKeepAlive);
+                    ref requestedHttpKeepAlive,
+                    ref needClose);
 
                 if (!(wasSuccessfulRequest))
                 {
@@ -342,7 +344,8 @@ namespace SvnBridge.Net
 
         private bool TryHandleOneHttpMethodRequest(
             NetworkStream networkStream,
-            ref bool requestedHttpKeepAlive)
+            ref bool requestedHttpKeepAlive,
+            ref bool needClose)
         {
             IHttpContext context = new ListenerContext(
                 networkStream,
@@ -363,7 +366,8 @@ namespace SvnBridge.Net
             HandlePerHttpMethodRequestContext(
                 context,
                 networkStream,
-                ref requestedHttpKeepAlive);
+                ref requestedHttpKeepAlive,
+                ref needClose);
 
             return true;
         }
@@ -371,7 +375,8 @@ namespace SvnBridge.Net
         private void HandlePerHttpMethodRequestContext(
             IHttpContext context,
             NetworkStream networkStream,
-            ref bool requestedHttpKeepAlive)
+            ref bool requestedHttpKeepAlive,
+            ref bool needClose)
         {
             var response = context.Response;
             bool doSupportHttpKeepAlive = (supportHttpKeepAlive);
@@ -415,10 +420,20 @@ namespace SvnBridge.Net
                         StringWriter writer = new StringWriter();
                         writer.Write("timeout={0}, max={1}", httpKeepAliveTimeoutSec, httpKeepAliveMaxConnections);
                         response.AppendHeader("Keep-Alive", writer.ToString());
+                        // TODO: make needClose behaviour dynamic!
+                        // (activate upon last iteration of httpKeepAliveMaxConnections)
+                        needClose = false;
                     }
                 }
             }
-            else
+
+            // Handle Connection-close announcement
+            // outside of Keep-Alive handling!
+            // (required for both KA and legacy non-KA)
+            // And append all headers *prior* to doing handling of the requests below
+            // (once we return here after connection handling below
+            // it's already done and sent to client).
+            if (needClose)
             {
                 ConnectionIndicateNonPersistent(
                     response);
