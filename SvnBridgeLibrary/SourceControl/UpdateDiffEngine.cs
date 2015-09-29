@@ -558,10 +558,8 @@ namespace SvnBridge.SourceControl
             {
                 if (isLastPathElem)
                 {
-                    if (change.Item.ItemType == ItemType.File)
-                        item = new DeleteMetaData();
-                    else
-                        item = new DeleteFolderMetaData();
+                    item = ConstructDeletedItem(
+                        (ItemType.File != change.Item.ItemType));
 
                     item.Name = remoteName;
                     item.ItemRevision = change.Item.RemoteChangesetId;
@@ -597,10 +595,8 @@ namespace SvnBridge.SourceControl
                 var processedVersion = _targetVersion;
                 if (itemPrev.OriginallyDeleted) // convert back into a delete
                 {
-                    if (change.Item.ItemType == ItemType.File)
-                        item = new DeleteMetaData();
-                    else
-                        item = new DeleteFolderMetaData();
+                    item = ConstructDeletedItem(
+                        (ItemType.File != change.Item.ItemType));
 
                     item.Name = remoteName;
                     item.ItemRevision = change.Item.RemoteChangesetId;
@@ -615,9 +611,8 @@ namespace SvnBridge.SourceControl
                 }
                 else if (IsAdditionForPropertyChangeOnly(itemPrev))
                 {
-                    ItemMetaData itemDelete = itemPrev is FolderMetaData
-                                                    ? (ItemMetaData)new DeleteFolderMetaData()
-                                                    : new DeleteMetaData();
+                    ItemMetaData itemDelete = ConstructDeletedItem(
+                        itemPrev is FolderMetaData);
                     itemDelete.Name = itemPrev.Name;
                     itemDelete.ItemRevision = processedVersion;
                     Folder_ReplaceItem(folder, itemPrev, itemDelete);
@@ -663,6 +658,14 @@ namespace SvnBridge.SourceControl
             subPath = isRootSpecified ? path.Substring(root.Length + 1) : path;
 
             return subPath;
+        }
+
+        private static ItemMetaData ConstructDeletedItem(
+            bool isFolder)
+        {
+            return isFolder ?
+                (ItemMetaData)new DeleteFolderMetaData() :
+                new DeleteMetaData();
         }
 
         private bool RemoveMissingItem(string name, FolderMetaData folder)
