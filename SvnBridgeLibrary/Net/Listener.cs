@@ -14,6 +14,7 @@ namespace SvnBridge.Net
 {
     public class Listener
     {
+        private static int tcpKeepAliveTimeSeconds = Configuration.TfsTcpKeepAliveSeconds;
         private HttpContextDispatcher dispatcher;
         private bool isListening;
         private readonly DefaultLogger logger;
@@ -788,6 +789,14 @@ namespace SvnBridge.Net
         /// http://blog.fastmail.fm/2011/06/28/http-keep-alive-connection-timeouts/
         /// says that some firewalls have a 2 minute state timeout
         /// --> might want to safely stay quite a bit below this value.
+        /// Hmm, well, that article also says
+        /// that the reason that some applications (e.g.: Chrome)
+        /// dare risking choosing outrageously high HTTP KA timeouts
+        /// is that they have TCP KA configured
+        /// which ensures sufficiently keeping up the connection,
+        /// even for proxies which usually have a 2min timeout
+        /// which we would have to obey
+        /// if TCP KA did not come to our rescue.
         ///
         /// References:
         /// http://stackoverflow.com/questions/4139379/http-keep-alive-in-the-modern-age
@@ -802,14 +811,55 @@ namespace SvnBridge.Net
         }
 
         /// <summary>
+        /// Tries to return a sufficiently correct TCP Keep-Alive time value.
+        /// </summary>
+        /// <remarks>
+        /// According to some internet sources
+        /// it seems that a Socket (TcpClient.Client)
+        /// is set up to do TCP KA by default in C#,
+        /// so do pretend to indicate something like this.
+        /// Also, there is ServicePointManager.SetTcpKeepAlive()
+        /// in <see cref="BootStrapper"/>.
+        /// Since I assume this setting to be application-global
+        /// we'll simply figure out the values
+        /// from the config settings
+        /// that were used to configure that.
+        /// References:
+        /// https://social.msdn.microsoft.com/Forums/en-US/d5b6ae25-eac8-4e3d-9782-53059de04628/tcp-keepalive-settings-problem
+        ///   "Latest versions of Windows have built in support for
+        ///   keepalive using TCPKeepAlive...the default keepalive values
+        ///   are taken from registry."
+        /// http://www.extensionmethod.net/csharp/net/setsocketkeepalivevalues
+        /// "understand KeepAlive issues on Socket programing in C#"
+        ///   http://www.tech-archive.net/Archive/DotNet/microsoft.public.dotnet.languages.csharp/2006-08/msg03978.html
+        /// </remarks>
+        private static int GetTcpKeepAliveTimeSeconds()
+        {
+            return tcpKeepAliveTimeSeconds;
+        }
+
+        /// <summary>
         /// Helper to decide on a convenient yet safe
         /// HTTP KA timeout value.
         /// </summary>
+        /// <remarks>
+        /// For SvnBridge it's especially important
+        /// to have large HTTP KA timeout settings
+        /// (it easily hits timeouts
+        /// since it has very complex and slow conversion processing efforts).
+        /// </remarks>
         private static int GetHttpKeepAliveTimeoutSeconds()
         {
             int httpKeepAliveTimeoutSec;
 
-            httpKeepAliveTimeoutSec = 45;
+            int httpKeepAliveTimeoutSecWithoutTcpKeepAlive = 45;
+            int httpKeepAliveTimeoutSecChrome = 300; // said to be something > 300
+            int httpKeepAliveTimeoutSecEstimatedSafeValueWhenEnjoyingTcpKeepAlive = httpKeepAliveTimeoutSecChrome;
+            var tcpKeepAliveTimeSeconds = GetTcpKeepAliveTimeSeconds();
+            bool haveTcpKeepAlive = (0 < tcpKeepAliveTimeSeconds);
+            httpKeepAliveTimeoutSec = (haveTcpKeepAlive) ?
+                httpKeepAliveTimeoutSecEstimatedSafeValueWhenEnjoyingTcpKeepAlive :
+                httpKeepAliveTimeoutSecWithoutTcpKeepAlive;
 
             return httpKeepAliveTimeoutSec;
         }
