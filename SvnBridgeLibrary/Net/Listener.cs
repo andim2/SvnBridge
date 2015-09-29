@@ -417,6 +417,9 @@ namespace SvnBridge.Net
                     if (foundKeepAlive && !foundConnectionClose)
                     {
                         requestedHttpKeepAlive = true;
+                        // TODO: make serveFurtherRequests behaviour dynamic!
+                        // (activate upon last iteration of httpKeepAliveMaxConnections)
+                        serveFurtherRequests = true;
                     }
                     bool setupHttpKeepAlive = (requestedHttpKeepAlive);
                     if (setupHttpKeepAlive)
@@ -436,9 +439,6 @@ namespace SvnBridge.Net
                         StringWriter writer = new StringWriter();
                         writer.Write("timeout={0}, max={1}", httpKeepAliveTimeoutSec, httpKeepAliveMaxConnections);
                         response.AppendHeader("Keep-Alive", writer.ToString());
-                        // TODO: make serveFurtherRequests behaviour dynamic!
-                        // (activate upon last iteration of httpKeepAliveMaxConnections)
-                        serveFurtherRequests = true;
                     }
                 }
             }
