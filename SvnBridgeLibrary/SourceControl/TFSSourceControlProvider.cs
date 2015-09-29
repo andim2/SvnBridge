@@ -587,11 +587,18 @@ namespace SvnBridge.SourceControl
             bool didHitPossiblyPrematureLimit = ((logItemsCount_ThisRun == TFS_QUERY_LIMIT) && (maxCount > TFS_QUERY_LIMIT));
             if (didHitPossiblyPrematureLimit)
             {
-                // Confirmed! We *did* get TFS_QUERY_LIMIT entries, yet request *was* larger than that,
-                // so there might be further entries remaining...
-
-                do
+                for (; ; )
                 {
+                    didHitPossiblyPrematureLimit = (TFS_QUERY_LIMIT == logItemsCount_ThisRun);
+                    bool needContinueQuery = (didHitPossiblyPrematureLimit);
+                    if (!(needContinueQuery))
+                    {
+                        break;
+                    }
+                    // Confirmed! We *did* get TFS_QUERY_LIMIT entries this time,
+                    // yet request *was* larger than that,
+                    // so there might be further entries remaining...
+
                     int earliestVersionFound = changesets[changesets.Length - 1].cset - 1;
                     if (earliestVersionFound == versionFrom)
                         break;
@@ -604,7 +611,6 @@ namespace SvnBridge.SourceControl
                     changesetsTotal.AddRange(changesets);
                     logItemsCount_ThisRun = changesets.Length;
                 }
-                while (TFS_QUERY_LIMIT == logItemsCount_ThisRun);
             }
 
             histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray());
