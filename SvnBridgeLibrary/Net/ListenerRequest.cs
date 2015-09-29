@@ -224,7 +224,8 @@ namespace SvnBridge.Net
         {
 			int bytesRead = stream.Read(bytes, 0, bytes.Length);
 
-            Helper.AppendToStream(buffer, bytes, bytesRead);
+            ArraySegment<byte> arrSeg = new ArraySegment<byte>(bytes, 0, bytesRead);
+            Helper.AppendToStream(buffer, arrSeg);
 
             return bytesRead;
         }

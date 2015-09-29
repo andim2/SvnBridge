@@ -158,26 +158,29 @@ namespace SvnBridge.Utility
 
         public static void AppendToStream(MemoryStream stream, byte[] data)
         {
-            AppendToStream(stream, data, data.Length);
+            ArraySegment<byte> arrSeg = new ArraySegment<byte>(data, 0, data.Length);
+            AppendToStream(stream, arrSeg);
         }
 
         /// <summary>
         /// Will append a certain number of data bytes
+        /// (as passed in in a flexible/args-optimized manner
+        /// via usual ArraySegment helper)
         /// to the *end* of a *resizeable* MemoryStream
         /// in a controlled manner, i.e.:
         /// - preserving current (i.e. restoring original) stream position (i.e. it will NOT have changed .Position after Write()!)
         /// - resize (enlarge) stream if needed (avoid .Write() out-of-range ArgumentException)
         /// </summary>
-        public static void AppendToStream(MemoryStream stream, byte[] data, int dataCountToBeWritten)
+        public static void AppendToStream(MemoryStream stream, ArraySegment<byte> arrSeg)
         {
             var streamLengthOrig = stream.Length;
             var positionWriteStart = streamLengthOrig;
-            var numToBeAppended = dataCountToBeWritten;
-            WriteToStreamYetKeepPosUnchanged(stream, positionWriteStart, data, numToBeAppended);
+            WriteToStreamYetKeepPosUnchanged(stream, positionWriteStart, arrSeg);
         }
 
-        public static void WriteToStreamYetKeepPosUnchanged(MemoryStream stream, long positionWriteStart, byte[] data, int numToBeWritten)
+        public static void WriteToStreamYetKeepPosUnchanged(MemoryStream stream, long positionWriteStart, ArraySegment<byte> arrSeg)
         {
+            var numToBeWritten = arrSeg.Count;
             var requiredMinimumCapacity = Math.Max(positionWriteStart + numToBeWritten, stream.Length);
             StreamEnsureCapacity(stream, requiredMinimumCapacity);
 
@@ -187,12 +190,11 @@ namespace SvnBridge.Utility
                 // http://stackoverflow.com/a/7239011
                 //stream.Seek(0, SeekOrigin.End);
                 stream.Position = positionWriteStart;
-                int dataOffset = 0;
                 // MSDN MemoryStream.Write():
                 // "If the write operation is successful,
                 // the current position within the stream
                 // is advanced by the number of bytes written."
-                stream.Write(data, dataOffset, numToBeWritten);
+                stream.Write(arrSeg.Array, arrSeg.Offset, numToBeWritten);
             }
             finally
             {
