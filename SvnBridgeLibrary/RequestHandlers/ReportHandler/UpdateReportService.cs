@@ -295,11 +295,20 @@ namespace SvnBridge.Infrastructure
 
 		private bool ItemExistsAtTheClient(ItemMetaData item, int clientRevisionForItem)
 		{
+            bool existsAtClient = false;
+
 			// Prefer implementing the order of conditional checks
 			// from fastest to slowest...
-			return HaveItemExistingAtClient(
-                item.Name) &&
-          ItemExistsAtRevision(item, clientRevisionForItem);
+			existsAtClient = HaveItemExistingAtClient(
+                item.Name);
+          if (existsAtClient)
+          {
+              bool isItemExistingInSCM = ItemExistsAtRevision(item, clientRevisionForItem);
+
+              existsAtClient = isItemExistingInSCM;
+          }
+
+          return existsAtClient;
 		}
 
         /// <summary>
@@ -328,8 +337,16 @@ namespace SvnBridge.Infrastructure
         private bool HaveItemExistingAtClient(
             string itemPath)
         {
-            return updateReportRequest.IsCheckOut == false &&
-                IsMissing(updateReportRequest, srcPath, itemPath) == false;
+            bool existsAtClient = false;
+
+            bool isCleanSlate = (updateReportRequest.IsCheckOut != false);
+            bool needCheckClient = !(isCleanSlate);
+            if (needCheckClient)
+            {
+                existsAtClient = (IsMissing(updateReportRequest, srcPath, itemPath) == false);
+            }
+
+            return existsAtClient;
         }
 
         private void UpdateReportWriteItemAttributes(TextWriter output, ItemMetaData item)
