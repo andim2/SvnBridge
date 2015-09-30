@@ -56,26 +56,46 @@ namespace SvnBridge.Infrastructure
         }
     }
 
-	internal class UpdateReportService
-	{
-		private readonly RequestHandlerBase handler;
+    /// <summary>
+    /// Internal class for recursion-based hierarchy-crawling
+    /// which will generate format-specific output
+    /// from various attributes
+    /// which have been passed for this request-to-be-processed
+    /// and will be kept as fixed members
+    /// during our recursion implementation.
+    /// </summary>
+    internal class UpdateReportGenerator
+    {
+        private readonly StreamWriter output;
+        private readonly UpdateReportData updateReportRequest;
+        private readonly string srcPath;
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly RequestHandlerBase handler;
+        private readonly FolderMetaData root;
+        private readonly bool requestedTxDelta;
 
-        public UpdateReportService(RequestHandlerBase handler, TFSSourceControlProvider sourceControlProvider)
-		{
-			this.handler = handler;
-			this.sourceControlProvider = sourceControlProvider;
-		}
-
-        /// <summary>
-        /// Helper to minimize externally visible interface changes (hide recursion-specific parameters)
-        /// </summary>
-        public void ProcessUpdateReport(UpdateReportData updateReportRequest, FolderMetaData folder, StreamWriter output)
+        public UpdateReportGenerator(
+            StreamWriter output,
+            UpdateReportData updateReportRequest,
+            TFSSourceControlProvider sourceControlProvider,
+            RequestHandlerBase handler,
+            FolderMetaData root)
         {
-            ProcessUpdateReportForDirectory(updateReportRequest, folder, output, true, false);
+            this.output = output;
+            this.updateReportRequest = updateReportRequest;
+            this.srcPath = DetermineSrcPath(handler, updateReportRequest);
+            this.handler = handler;
+            this.sourceControlProvider = sourceControlProvider;
+            this.root = root;
+            this.requestedTxDelta = HaveRequestTxDelta(updateReportRequest);
         }
 
-		private void ProcessUpdateReportForDirectory(UpdateReportData updateReportRequest, FolderMetaData folder, TextWriter output, bool isRootFolder, bool parentFolderWasDeleted)
+        public void Generate()
+        {
+            ProcessUpdateReportForDirectory(root, false);
+        }
+
+		private void ProcessUpdateReportForDirectory(FolderMetaData folder, bool parentFolderWasDeleted)
 		{
 			if (folder is DeleteFolderMetaData)
 			{
@@ -86,6 +106,7 @@ namespace SvnBridge.Infrastructure
 			}
 			else
 			{
+                bool isRootFolder = (folder == root);
 				bool isExistingFolder = false;
                 bool folderWasDeleted = parentFolderWasDeleted;
                 if (isRootFolder)
@@ -95,19 +116,16 @@ namespace SvnBridge.Infrastructure
 				}
 				else
 				{
-					string srcPath = GetSrcPath(updateReportRequest);
                     int clientRevisionForItem = GetClientRevisionFor(
-                        folder,
-                        updateReportRequest,
-                        srcPath);
-					if (ItemExistsAtTheClient(folder, updateReportRequest, srcPath, clientRevisionForItem))
+                        folder);
+					if (ItemExistsAtTheClient(folder, clientRevisionForItem))
 					{
 						isExistingFolder = true;
 					}
 
           string itemNameEncoded = URSHelpers.GetEncodedNamePart(folder);
 					// If another item with the same name already exists, need to remove it first.
-					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, isExistingFolder))
+					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, clientRevisionForItem, isExistingFolder))
 					{
 						output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
                         folderWasDeleted = true;
@@ -136,11 +154,11 @@ namespace SvnBridge.Infrastructure
           bool isFolder = (null != subFolder);
 					if (isFolder)
 					{
-						ProcessUpdateReportForDirectory(updateReportRequest, subFolder, output, false, folderWasDeleted);
+						ProcessUpdateReportForDirectory(subFolder, folderWasDeleted);
 					}
 					else
 					{
-						ProcessUpdateReportForFile(updateReportRequest, item, output, folderWasDeleted);
+						ProcessUpdateReportForFile(item, folderWasDeleted);
 					}
 				}
 				output.Write("<S:prop></S:prop>\n");
@@ -155,7 +173,7 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
-		private void ProcessUpdateReportForFile(UpdateReportData updateReportRequest, ItemMetaData item, TextWriter output, bool parentFolderWasDeleted)
+		private void ProcessUpdateReportForFile(ItemMetaData item, bool parentFolderWasDeleted)
 		{
 			if (item is DeleteMetaData)
 			{
@@ -167,19 +185,16 @@ namespace SvnBridge.Infrastructure
 			else
 			{
 				bool isExistingFile = false;
-				string srcPath = GetSrcPath(updateReportRequest);
                 int clientRevisionForItem = GetClientRevisionFor(
-                    item,
-                    updateReportRequest,
-                    srcPath);
-				if (ItemExistsAtTheClient(item, updateReportRequest, srcPath, clientRevisionForItem))
+                    item);
+				if (ItemExistsAtTheClient(item, clientRevisionForItem))
 				{
 					isExistingFile = true;
 				}
 
         string itemNameEncoded = URSHelpers.GetEncodedNamePart(item);
 				// If another item with the same name already exists, need to remove it first.
-				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, isExistingFile))
+				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, clientRevisionForItem, isExistingFile))
 				{
 					output.Write("<S:delete-entry name=\"" + itemNameEncoded + "\"/>\n");
 				}
@@ -195,8 +210,6 @@ namespace SvnBridge.Infrastructure
 				}
 
         UpdateReportWriteItemAttributes(output, item);
-
-                bool requestedTxDelta = HaveRequestTxDelta(updateReportRequest);
 
 				// wait for data (required by *both* txdelta [optional] and md5 below!)
 				while (item.DataLoaded == false)
@@ -258,7 +271,7 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
-		private string GetSrcPath(UpdateReportData updateReportRequest)
+		private static string DetermineSrcPath(RequestHandlerBase handler, UpdateReportData updateReportRequest)
 		{
 			string srcPath = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
 			if (updateReportRequest.UpdateTarget != null)
@@ -266,23 +279,19 @@ namespace SvnBridge.Infrastructure
 			return srcPath;
 		}
 
-        private static int GetClientRevisionFor(
-            ItemMetaData item,
-            UpdateReportData updateReportRequest,
-            string srcPath)
+        private int GetClientRevisionFor(
+            ItemMetaData item)
         {
             return GetClientRevisionFor(
                 updateReportRequest.Entries,
                 FilesysHelpers.StripBasePath(item.Name, srcPath));
         }
 
-		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
+		private bool ItemExistsAtTheClient(ItemMetaData item, int clientRevisionForItem)
 		{
 			// Prefer implementing the order of conditional checks
 			// from fastest to slowest...
 			return HaveItemExistingAtClient(
-                updateReportRequest,
-                srcPath,
                 item.Name) &&
 			       // we need to check both name and id to ensure that the item was not renamed
 			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem) &&
@@ -290,22 +299,16 @@ namespace SvnBridge.Infrastructure
 		}
 
 		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData item,
-			UpdateReportData updateReportRequest,
-			string srcPath,
 			int clientRevisionForItem,
 			bool isExistingItem)
 		{
 			return isExistingItem == false &&
                 HaveItemExistingAtClient(
-                    updateReportRequest,
-                    srcPath,
                     item.Name) &&
 				   sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
 		}
 
-        private static bool HaveItemExistingAtClient(
-            UpdateReportData updateReportRequest,
-            string srcPath,
+        private bool HaveItemExistingAtClient(
             string itemPath)
         {
             return updateReportRequest.IsCheckOut == false &&
@@ -348,8 +351,6 @@ namespace SvnBridge.Infrastructure
         /// </remarks>
         private static bool HaveRequestTxDelta(UpdateReportData updateReportRequest)
         {
-            // TODO: this bool should best be made a class _member_
-            // (which requires updateReportRequest to be a proper class member, too).
             bool requestedSendAll = (true == updateReportRequest.SendAll);
             bool requestedTxDelta = (requestedSendAll);
             return requestedTxDelta;
@@ -401,6 +402,36 @@ namespace SvnBridge.Infrastructure
                     return true;
             }
             return false;
+        }
+    }
+
+	internal class UpdateReportService
+	{
+		private readonly RequestHandlerBase handler;
+        private readonly TFSSourceControlProvider sourceControlProvider;
+
+        public UpdateReportService(RequestHandlerBase handler, TFSSourceControlProvider sourceControlProvider)
+		{
+			this.handler = handler;
+			this.sourceControlProvider = sourceControlProvider;
+		}
+
+        /// <summary>
+        /// Helper to minimize externally visible interface changes (hide recursion-specific parameters)
+        /// </summary>
+        public void ProcessUpdateReport(
+            UpdateReportData updateReportRequest,
+            FolderMetaData folder,
+            StreamWriter output)
+        {
+            UpdateReportGenerator generator = new UpdateReportGenerator(
+                output,
+                updateReportRequest,
+                sourceControlProvider,
+                handler,
+                folder);
+
+            generator.Generate();
         }
     }
 }
