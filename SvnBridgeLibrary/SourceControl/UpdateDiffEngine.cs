@@ -217,11 +217,12 @@ namespace SvnBridge.SourceControl
 
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)
         {
-            bool alreadyInClientCurrentState = IsChangeAlreadyCurrentInClientState(ChangeType.Add,
-                                                                                   remoteName,
-                                                                                   change.Item.RemoteChangesetId,
-                                                                                   clientExistingFiles,
-                                                                                   clientMissingFiles);
+            bool alreadyInClientCurrentState = IsChangeAlreadyCurrentInClientState(
+                ChangeType.Add,
+                remoteName,
+                change.Item.RemoteChangesetId,
+                clientExistingFiles,
+                clientMissingFiles);
             if (alreadyInClientCurrentState)
             {
                 return;
@@ -426,11 +427,12 @@ namespace SvnBridge.SourceControl
 
         private void ProcessDeletedItem(string remoteName, SourceItemChange change)
         {
-            bool alreadyChangedInCurrentClientState = IsChangeAlreadyCurrentInClientState(ChangeType.Delete,
-                                                                                          remoteName,
-                                                                                          change.Item.RemoteChangesetId,
-                                                                                          clientExistingFiles,
-                                                                                          clientMissingFiles);
+            bool alreadyChangedInCurrentClientState = IsChangeAlreadyCurrentInClientState(
+                ChangeType.Delete,
+                remoteName,
+                change.Item.RemoteChangesetId,
+                clientExistingFiles,
+                clientMissingFiles);
             if (alreadyChangedInCurrentClientState)
             {
                 RemoveMissingItem(remoteName, _root);
