@@ -170,6 +170,9 @@ namespace SvnBridge.Infrastructure
 
         UpdateReportWriteItemAttributes(output, item);
 
+                bool requestedTxDelta = HaveRequestTxDelta(updateReportRequest);
+
+				// wait for data (required by *both* txdelta [optional] and md5 below!)
 				while (item.DataLoaded == false)
 					Helper.CooperativeSleep(100);
                                 var base64DiffData = item.Base64DiffData;
@@ -178,6 +181,8 @@ namespace SvnBridge.Infrastructure
                                 item.DataLoaded = false;
                                 item.Base64DiffData = null;
 
+                if (requestedTxDelta)
+                {
 				output.Write("<S:txdelta>");
                 // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
                 URSHelpers.PushTxDeltaData(
@@ -185,6 +190,7 @@ namespace SvnBridge.Infrastructure
                     base64DiffData);
 				output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                 output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
+                }
                 output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");
 
                 if (isExistingFile)
@@ -257,6 +263,22 @@ namespace SvnBridge.Infrastructure
             {
                 output.Write("<S:set-prop name=\"" + property.Key + "\">" + property.Value + "</S:set-prop>\n");
             }
+        }
+
+        /// <summary>
+        /// Almost comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// http://grokbase.com/p/subversion/dev/122axpnndm/error-while-checking-out-git-repository
+        ///   "The txdelta element should only be delivered to the client when send-all=true."
+        /// </remarks>
+        private static bool HaveRequestTxDelta(UpdateReportData updateReportRequest)
+        {
+            // TODO: this bool should best be made a class _member_
+            // (which requires updateReportRequest to be a proper class member, too).
+            bool requestedSendAll = (true == updateReportRequest.SendAll);
+            bool requestedTxDelta = (requestedSendAll);
+            return requestedTxDelta;
         }
 
 		private static string GetFileName(string path)
