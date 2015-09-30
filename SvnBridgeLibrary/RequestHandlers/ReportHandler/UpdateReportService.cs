@@ -299,10 +299,21 @@ namespace SvnBridge.Infrastructure
 			// from fastest to slowest...
 			return HaveItemExistingAtClient(
                 item.Name) &&
-			       // we need to check both name and id to ensure that the item was not renamed
-			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem) &&
-			       sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
+          ItemExistsAtRevision(item, clientRevisionForItem);
 		}
+
+        /// <summary>
+        /// This method might need to be offered more centrally
+        /// (while not at the provider,
+        /// since this would cause the provider interface to not be orthogonal,
+        /// some outer wrapper [SVN provider?] could provide that).
+        /// </summary>
+        private bool ItemExistsAtRevision(ItemMetaData item, int clientRevisionForItem)
+        {
+            // we need to check both name and id to ensure that the item was not renamed
+            return sourceControlProvider.ItemExists(item.Id, clientRevisionForItem) &&
+                   sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
+        }
 
 		private bool ShouldDeleteItemBeforeSendingToClient(ItemMetaData item,
 			int clientRevisionForItem,
