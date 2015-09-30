@@ -252,10 +252,10 @@ namespace SvnBridge.Infrastructure
 
 		private string GetSrcPath(UpdateReportData updateReportRequest)
 		{
-			string url = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
+			string srcPath = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
 			if (updateReportRequest.UpdateTarget != null)
-				return url + "/" + updateReportRequest.UpdateTarget;
-			return url;
+				return srcPath + "/" + updateReportRequest.UpdateTarget;
+			return srcPath;
 		}
 
         private static int GetClientRevisionFor(
