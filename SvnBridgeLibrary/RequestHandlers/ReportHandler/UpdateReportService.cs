@@ -212,8 +212,10 @@ namespace SvnBridge.Infrastructure
 
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
 		{
-			return updateReportRequest.IsCheckOut == false &&
-                   IsMissing(updateReportRequest, srcPath, item.Name) == false &&
+			return HaveItemExistingAtClient(
+                updateReportRequest,
+                srcPath,
+                item.Name) &&
 			       // we need to check both name and id to ensure that the item was not renamed
 			       sourceControlProvider.ItemExists(item.Name, clientRevisionForItem) &&
 			       sourceControlProvider.ItemExists(item.Id, clientRevisionForItem);
@@ -225,10 +227,22 @@ namespace SvnBridge.Infrastructure
 			int clientRevisionForItem,
 			bool isExistingItem)
 		{
-			return isExistingItem == false && updateReportRequest.IsCheckOut == false &&
-                   IsMissing(updateReportRequest, srcPath, item.Name) == false &&
+			return isExistingItem == false &&
+                HaveItemExistingAtClient(
+                    updateReportRequest,
+                    srcPath,
+                    item.Name) &&
 				   sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
 		}
+
+        private static bool HaveItemExistingAtClient(
+            UpdateReportData updateReportRequest,
+            string srcPath,
+            string itemPath)
+        {
+            return updateReportRequest.IsCheckOut == false &&
+                IsMissing(updateReportRequest, srcPath, itemPath) == false;
+        }
 
         private void UpdateReportWriteItemAttributes(TextWriter output, ItemMetaData item)
         {
