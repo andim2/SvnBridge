@@ -76,7 +76,10 @@ namespace SvnBridge.Infrastructure
 				else
 				{
 					string srcPath = GetSrcPath(updateReportRequest);
-                    int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(folder, srcPath));
+                    int clientRevisionForItem = GetClientRevisionFor(
+                        folder,
+                        updateReportRequest,
+                        srcPath);
 					if (ItemExistsAtTheClient(folder, updateReportRequest, srcPath, clientRevisionForItem))
 					{
 						isExistingFolder = true;
@@ -145,7 +148,10 @@ namespace SvnBridge.Infrastructure
 			{
 				bool isExistingFile = false;
 				string srcPath = GetSrcPath(updateReportRequest);
-                int clientRevisionForItem = GetClientRevisionFor(updateReportRequest.Entries, StripBasePath(item, srcPath));
+                int clientRevisionForItem = GetClientRevisionFor(
+                    item,
+                    updateReportRequest,
+                    srcPath);
 				if (ItemExistsAtTheClient(item, updateReportRequest, srcPath, clientRevisionForItem))
 				{
 					isExistingFile = true;
@@ -244,6 +250,16 @@ namespace SvnBridge.Infrastructure
 				return url + "/" + updateReportRequest.UpdateTarget;
 			return url;
 		}
+
+        private static int GetClientRevisionFor(
+            ItemMetaData item,
+            UpdateReportData updateReportRequest,
+            string srcPath)
+        {
+            return GetClientRevisionFor(
+                updateReportRequest.Entries,
+                StripBasePath(item, srcPath));
+        }
 
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
 		{
