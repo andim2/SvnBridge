@@ -1,7 +1,7 @@
 using System; // IntPtr.Size
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.CooperativeSleep()
+using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.Infrastructure
 {
@@ -41,6 +41,10 @@ namespace SvnBridge.Infrastructure
 
                 bool haveUnusedItemLoadBufferCapacity = false;
 
+                // Q&D HACK to ensure that this crawler resource will bail out at least eventually
+                // in case of a problem (e.g. missing consumer-side fetching).
+                long timeoutInSeconds = TimeoutAwaitAnyConsumptionActivity;
+                long retry = 0;
                 for (; ; )
                 {
                     var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
@@ -53,9 +57,17 @@ namespace SvnBridge.Infrastructure
                     if (cancelOperation)
                         break;
 
+                    if (++retry > timeoutInSeconds)
+                    {
+                        ReportErrorItemDataConsumptionTimeout();
+                    }
+
                     // Do some waiting until hopefully parts of totalLoadedItemsSize
                     // got consumed (by consumer side, obviously).
                     Helper.CooperativeSleep(1000);
+
+                    if (cancelOperation)
+                        break;
                 }
 
                 if (cancelOperation)
@@ -84,6 +96,27 @@ namespace SvnBridge.Infrastructure
             }
 
             return haveUnusedItemLoadBufferCapacity;
+        }
+
+        /// <remarks>
+        /// A timeout of 1 hour ought to be more than enough
+        /// to expect a client
+        /// (which simply is waiting for us to produce things,
+        /// as opposed to us having to go through *hugely* complex
+        /// TFS <-> SVN conversion processes)
+        /// to have fetched data.
+        ///
+        /// Well, hmm, but OTOH in pathological cases
+        /// even this timeout *will* get exceeded
+        /// since some very large requests (>10M total) may happen
+        /// where the consumer is waiting for the last parts -
+        /// crawler will hit limit, and consumer will never get its last file served.
+        /// We will have to drastically rework things to handle file crawling
+        /// in a more robust way.
+        /// </remarks>
+        private static long TimeoutAwaitAnyConsumptionActivity
+        {
+            get { return 3600; }
         }
 
         /// <summary>
@@ -116,6 +149,12 @@ namespace SvnBridge.Infrastructure
             {
                 return cacheTotalSizeLimit;
             }
+        }
+
+        private static void ReportErrorItemDataConsumptionTimeout()
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new TimeoutException("Timeout while waiting for consumption of filesystem item data");
         }
     }
 }

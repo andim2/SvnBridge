@@ -6,7 +6,7 @@ using SvnBridge.Handlers;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.Encode() etc.
+using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {
@@ -213,8 +213,15 @@ namespace SvnBridge.Infrastructure
         UpdateReportWriteItemAttributes(output, item);
 
 				// wait for data (required by *both* txdelta [optional] and md5 below!)
+                long retry = 0;
 				while (item.DataLoaded == false)
+                {
+                    if (++retry > 3000)
+                    {
+                        ReportErrorItemDataRetrievalTimeout();
+                    }
 					Helper.CooperativeSleep(100);
+                }
                                 var base64DiffData = item.Base64DiffData;
                                 // Immediately release data memory from item's reach
                                 // (reduce GC memory management pressure)
@@ -271,6 +278,12 @@ namespace SvnBridge.Infrastructure
 				}
 			}
 		}
+
+        private static void ReportErrorItemDataRetrievalTimeout()
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new TimeoutException("Timeout while waiting for retrieval of filesystem item data");
+        }
 
         private int GetClientRevisionFor(
             ItemMetaData item)
