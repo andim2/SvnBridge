@@ -258,7 +258,7 @@ namespace SvnBridge.Infrastructure
         {
             return GetClientRevisionFor(
                 updateReportRequest.Entries,
-                StripBasePath(item, srcPath));
+                StripBasePath(item.Name, srcPath));
         }
 
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
@@ -346,10 +346,8 @@ namespace SvnBridge.Infrastructure
 			return path.Substring(slashIndex + 1);
 		}
 
-        private static string StripBasePath(ItemMetaData item, string basePath)
+        private static string StripBasePath(string name, string basePath)
         {
-            string name = item.Name;
-
             FilesysHelpers.StripRootSlash(ref name);
 
             FilesysHelpers.StripRootSlash(ref basePath);
