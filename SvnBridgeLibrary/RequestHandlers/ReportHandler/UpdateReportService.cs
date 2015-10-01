@@ -20,6 +20,19 @@ namespace SvnBridge.Infrastructure
     /// </remarks>
     internal class URSHelpers
     {
+        private static char[] path_separators = new char[] { '/', '\\' };
+
+        public static string GetEncodedNamePart(ItemMetaData item)
+        {
+            return Helper.EncodeB(GetFileName(item.Name));
+        }
+
+        private static string GetFileName(string path)
+        {
+            int slashIndex = path.LastIndexOfAny(path_separators);
+            return path.Substring(slashIndex + 1);
+        }
+
         public static void StreamItemDataAsTxDelta(
             StreamWriter output,
             TFSSourceControlProvider sourceControlProvider,
@@ -47,7 +60,6 @@ namespace SvnBridge.Infrastructure
 	{
 		private readonly RequestHandlerBase handler;
         private readonly TFSSourceControlProvider sourceControlProvider;
-        private static char[] path_separators = new char[] { '/', '\\' };
 
         public UpdateReportService(RequestHandlerBase handler, TFSSourceControlProvider sourceControlProvider)
 		{
@@ -61,7 +73,7 @@ namespace SvnBridge.Infrastructure
 			{
                 if (!parentFolderWasDeleted)
                 {
-                    output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
+                    output.Write("<S:delete-entry name=\"" + URSHelpers.GetEncodedNamePart(folder) + "\"/>\n");
                 }
 			}
 			else
@@ -85,7 +97,7 @@ namespace SvnBridge.Infrastructure
 						isExistingFolder = true;
 					}
 
-          string itemNameEncoded = GetEncodedNamePart(folder);
+          string itemNameEncoded = URSHelpers.GetEncodedNamePart(folder);
 					// If another item with the same name already exists, need to remove it first.
 					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, isExistingFolder))
 					{
@@ -141,7 +153,7 @@ namespace SvnBridge.Infrastructure
 			{
                 if (!parentFolderWasDeleted)
                 {
-                    output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(item) + "\"/>\n");
+                    output.Write("<S:delete-entry name=\"" + URSHelpers.GetEncodedNamePart(item) + "\"/>\n");
                 }
 			}
 			else
@@ -157,7 +169,7 @@ namespace SvnBridge.Infrastructure
 					isExistingFile = true;
 				}
 
-        string itemNameEncoded = GetEncodedNamePart(item);
+        string itemNameEncoded = URSHelpers.GetEncodedNamePart(item);
 				// If another item with the same name already exists, need to remove it first.
 				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, isExistingFile))
 				{
@@ -238,11 +250,6 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
-        private static string GetEncodedNamePart(ItemMetaData item)
-        {
-            return Helper.EncodeB(GetFileName(item.Name));
-        }
-
 		private string GetSrcPath(UpdateReportData updateReportRequest)
 		{
 			string url = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
@@ -258,7 +265,7 @@ namespace SvnBridge.Infrastructure
         {
             return GetClientRevisionFor(
                 updateReportRequest.Entries,
-                StripBasePath(item.Name, srcPath));
+                FilesysHelpers.StripBasePath(item.Name, srcPath));
         }
 
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
@@ -338,28 +345,6 @@ namespace SvnBridge.Infrastructure
             bool requestedSendAll = (true == updateReportRequest.SendAll);
             bool requestedTxDelta = (requestedSendAll);
             return requestedTxDelta;
-        }
-
-		private static string GetFileName(string path)
-		{
-			int slashIndex = path.LastIndexOfAny(path_separators);
-			return path.Substring(slashIndex + 1);
-		}
-
-        private static string StripBasePath(string name, string basePath)
-        {
-            FilesysHelpers.StripRootSlash(ref name);
-
-            FilesysHelpers.StripRootSlash(ref basePath);
-
-            basePath = basePath + "/";
-
-            if (name.StartsWith(basePath))
-            {
-                name = name.Substring(basePath.Length);
-                FilesysHelpers.StripRootSlash(ref name);
-            }
-            return name;
         }
 
         private static int GetClientRevisionFor(List<EntryData> entries, string name)

@@ -38,6 +38,22 @@ namespace SvnBridge.SourceControl
                 path = path.Substring(1);
         }
 
+        public static string StripBasePath(string name, string basePath)
+        {
+            StripRootSlash(ref name);
+
+            StripRootSlash(ref basePath);
+
+            basePath = basePath + "/";
+
+            if (name.StartsWith(basePath))
+            {
+                name = name.Substring(basePath.Length);
+                StripRootSlash(ref name);
+            }
+            return name;
+        }
+
         /// <summary>
         /// Helper to abstract/hide away the *internal* decision
         /// on whether names of filesystem items ought to be case-mangled
