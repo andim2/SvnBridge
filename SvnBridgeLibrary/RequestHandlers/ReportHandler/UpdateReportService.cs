@@ -77,13 +77,14 @@ namespace SvnBridge.Infrastructure
         public UpdateReportGenerator(
             StreamWriter output,
             UpdateReportData updateReportRequest,
+            string srcPath,
             TFSSourceControlProvider sourceControlProvider,
             RequestHandlerBase handler,
             FolderMetaData root)
         {
             this.output = output;
             this.updateReportRequest = updateReportRequest;
-            this.srcPath = DetermineSrcPath(handler, updateReportRequest);
+            this.srcPath = srcPath;
             this.handler = handler;
             this.sourceControlProvider = sourceControlProvider;
             this.root = root;
@@ -271,14 +272,6 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
-		private static string DetermineSrcPath(RequestHandlerBase handler, UpdateReportData updateReportRequest)
-		{
-			string srcPath = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
-			if (updateReportRequest.UpdateTarget != null)
-				return srcPath + "/" + updateReportRequest.UpdateTarget;
-			return srcPath;
-		}
-
         private int GetClientRevisionFor(
             ItemMetaData item)
         {
@@ -421,12 +414,14 @@ namespace SvnBridge.Infrastructure
         /// </summary>
         public void ProcessUpdateReport(
             UpdateReportData updateReportRequest,
+            string srcPath,
             FolderMetaData folder,
             StreamWriter output)
         {
             UpdateReportGenerator generator = new UpdateReportGenerator(
                 output,
                 updateReportRequest,
+                srcPath,
                 sourceControlProvider,
                 handler,
                 folder);

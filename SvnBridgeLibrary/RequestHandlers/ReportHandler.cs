@@ -473,10 +473,19 @@ namespace SvnBridge.Handlers
             output.Write("<S:target-revision rev=\"" + targetRevision + "\"/>\n");
 
             UpdateReportService updateReportService = new UpdateReportService(this, sourceControlProvider);
-            updateReportService.ProcessUpdateReport(updatereport, metadata, output);
+            var srcPath = DetermineSrcPath(this, updatereport);
+            updateReportService.ProcessUpdateReport(updatereport, srcPath, metadata, output);
 
             output.Write("</S:update-report>\n");
         }
+
+		private static string DetermineSrcPath(RequestHandlerBase handler, UpdateReportData updateReportRequest)
+		{
+			string srcPath = handler.GetLocalPathFromUrl(updateReportRequest.SrcPath);
+			if (updateReportRequest.UpdateTarget != null)
+				return srcPath + "/" + updateReportRequest.UpdateTarget;
+			return srcPath;
+		}
 
         private FolderMetaData GetMetadataForUpdate(IHttpRequest request, UpdateReportData updatereport, TFSSourceControlProvider sourceControlProvider, out int targetRevision)
         {
