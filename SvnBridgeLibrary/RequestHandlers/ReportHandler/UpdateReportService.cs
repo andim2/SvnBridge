@@ -54,6 +54,43 @@ namespace SvnBridge.Infrastructure
             output.Write(
                 result_Base64DiffData);
         }
+
+        /// <summary>
+        /// Grabs Base64 diff data and MD5 hash of an item.
+        /// Will wait for the crawler thread to have provided that data.
+        /// </summary>
+        /// <param name="item">The item which the data is to be fetched of</param>
+        /// <param name="base64DiffData">Item content data (base64 diff)</param>
+        /// <param name="Md5Hash">MD5 hash of item content data</param>
+        public static void GrabItemDeltaAndHash(
+            AsyncItemLoader loader,
+            ItemMetaData item,
+            out string item_Base64DiffData,
+            out string item_Md5Hash)
+        {
+            TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
+            bool gotData = loader.WaitForItemLoaded(
+                item,
+                spanLoadTimeout);
+            if (!(gotData))
+            {
+                ReportErrorItemDataRetrievalTimeout();
+            }
+
+            item_Base64DiffData = item.Base64DiffData;
+            // Immediately release data memory from item's reach
+            // (reduce GC memory management pressure)
+            item.DataLoaded = false;
+            item.Base64DiffData = null;
+
+            item_Md5Hash = item.Md5Hash;
+        }
+
+        private static void ReportErrorItemDataRetrievalTimeout()
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new TimeoutException("Timeout while waiting for retrieval of filesystem item data");
+        }
     }
 
     /// <summary>
@@ -215,20 +252,13 @@ namespace SvnBridge.Infrastructure
 
         UpdateReportWriteItemAttributes(output, item);
 
-				// wait for data (required by *both* txdelta [optional] and md5 below!)
-                TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
-                bool gotData = loader.WaitForItemLoaded(
+                string result_Md5Hash;
+                string result_Base64DiffData;
+                URSHelpers.GrabItemDeltaAndHash(
+                    loader,
                     item,
-                    spanLoadTimeout);
-                if (!(gotData))
-                {
-                    ReportErrorItemDataRetrievalTimeout();
-                }
-                                var base64DiffData = item.Base64DiffData;
-                                // Immediately release data memory from item's reach
-                                // (reduce GC memory management pressure)
-                                item.DataLoaded = false;
-                                item.Base64DiffData = null;
+                    out result_Base64DiffData,
+                    out result_Md5Hash);
 
                 if (requestedTxDelta)
                 {
@@ -236,7 +266,7 @@ namespace SvnBridge.Infrastructure
                 // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
                 URSHelpers.PushTxDeltaData(
                     output,
-                    base64DiffData);
+                    result_Base64DiffData);
 				output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                 output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
                 }
@@ -268,7 +298,7 @@ namespace SvnBridge.Infrastructure
                         output.Write("/>\n");
                     }
                 }
-                output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");
+                output.Write("<S:prop><V:md5-checksum>" + result_Md5Hash + "</V:md5-checksum></S:prop>\n");
 
                 if (isExistingFile)
 				{
@@ -280,12 +310,6 @@ namespace SvnBridge.Infrastructure
 				}
 			}
 		}
-
-        private static void ReportErrorItemDataRetrievalTimeout()
-        {
-            Helper.DebugUsefulBreakpointLocation();
-            throw new TimeoutException("Timeout while waiting for retrieval of filesystem item data");
-        }
 
         private int GetClientRevisionFor(
             ItemMetaData item)
