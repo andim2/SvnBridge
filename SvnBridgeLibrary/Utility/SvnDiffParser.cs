@@ -61,9 +61,15 @@ namespace SvnBridge.Utility
             {
                 SvnDiffEngine.WriteSvnDiffSignature(svnDiffWriter);
                 int index = 0;
-                while (index < data.Length)
+                for (; ; )
                 {
                     int length = data.Length - index;
+                    bool haveFurtherData = (0 < length);
+                    if (!(haveFurtherData))
+                    {
+                        break;
+                    }
+
                     if (length > diff_chunk_size_max)
                         length = diff_chunk_size_max;
 
