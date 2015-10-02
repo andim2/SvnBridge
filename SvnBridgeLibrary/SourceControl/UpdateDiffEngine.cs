@@ -217,13 +217,13 @@ namespace SvnBridge.SourceControl
 
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)
         {
-            bool alreadyInClientCurrentState = IsChangeAlreadyCurrentInClientState(
+            bool isChangeAlreadyCurrentInClientState = IsChangeAlreadyCurrentInClientState(
                 ChangeType.Add,
                 remoteName,
                 change.Item.RemoteChangesetId,
                 clientExistingFiles,
                 clientMissingFiles);
-            if (alreadyInClientCurrentState)
+            if (isChangeAlreadyCurrentInClientState)
             {
                 return;
             }
@@ -427,13 +427,13 @@ namespace SvnBridge.SourceControl
 
         private void ProcessDeletedItem(string remoteName, SourceItemChange change)
         {
-            bool alreadyChangedInCurrentClientState = IsChangeAlreadyCurrentInClientState(
+            bool isChangeAlreadyCurrentInClientState = IsChangeAlreadyCurrentInClientState(
                 ChangeType.Delete,
                 remoteName,
                 change.Item.RemoteChangesetId,
                 clientExistingFiles,
                 clientMissingFiles);
-            if (alreadyChangedInCurrentClientState)
+            if (isChangeAlreadyCurrentInClientState)
             {
                 RemoveMissingItem(remoteName, _root);
                 return;
