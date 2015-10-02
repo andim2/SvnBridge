@@ -386,7 +386,7 @@ namespace SvnBridge.SourceControl
                         }
                         if (!isLastPathElem)
                         {
-                            item = WrapFolderAsStubFolder((FolderMetaData)item);
+                            item = ProvideHelperFolderWhileItsChangeStatusNonFinal((FolderMetaData)item);
                         }
                         Folder_AddItem(folder, item);
                         SetAdditionForPropertyChangeOnly(item, propertyChange);
@@ -559,13 +559,9 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        // This item is NOT the final one (isLastPathElem == true), only a helper,
-                        // thus it certainly shouldn't
-                        // directly indicate real actions (add/delete) yet
-                        // within the currently processed Changeset,
-                        // which it would if we now queued the live item directly rather than
-                        // providing a StubFolderMetaData indirection for it...
-                        item = WrapFolderAsStubFolder((FolderMetaData)item);
+                        // This item type is NOT a final one (isLastPathElem == true),
+                        // only a temporarily necessary base (container) management helper.
+                        item = ProvideHelperFolderWhileItsChangeStatusNonFinal((FolderMetaData)item);
                     }
                 }
                 Folder_AddItem(folder, item);
@@ -673,14 +669,36 @@ namespace SvnBridge.SourceControl
           return (item is DeleteFolderMetaData || item is DeleteMetaData);
         }
 
+        /// <summary>
+        /// Almost comment-only helper.
+        /// Returns a temporary, helper folder
+        /// for interim base / container folder purposes.
+        /// </summary>
+        /// <remarks>
+        /// This helper wraps the temporary item information as gotten from SCM
+        /// as long as during processing
+        /// there was no actual Change encountered yet
+        /// for this-hierarchy item proper
+        /// (IOW once there *will be* an actual SCM Change for this item processed
+        /// this stub folder definitely needs to be unwrapped!!).
+        /// The item passed here is NOT a final one (isLastPathElem == true),
+        /// IOW only a temporarily necessary base (container) management helper
+        /// to contain child items,
+        /// thus it certainly shouldn't
+        /// directly indicate real Changes (Add/Delete) yet
+        /// within the currently processed Changeset,
+        /// which it would
+        /// if we now queued the live item type directly
+        /// rather than providing a StubFolderMetaData-typed indirection for it...
+        /// </remarks>
+        private static FolderMetaData ProvideHelperFolderWhileItsChangeStatusNonFinal(FolderMetaData folderFetched)
+        {
+            return ItemHelpers.WrapFolderAsStubFolder(folderFetched);
+        }
+
         // Folder operation encapsulation helpers:
         // may be needed to be able to centrally apply
         // certain precisely controlled housekeeping activities.
-
-        private static FolderMetaData WrapFolderAsStubFolder(FolderMetaData folder)
-        {
-            return ItemHelpers.WrapFolderAsStubFolder(folder);
-        }
 
         private static void Folder_ReplaceItem(FolderMetaData folder, ItemMetaData itemVictim, ItemMetaData itemWinner)
         {
