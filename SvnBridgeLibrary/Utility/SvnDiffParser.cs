@@ -65,20 +65,21 @@ namespace SvnBridge.Utility
                 int dataLen = data.Length;
                 for (; ; )
                 {
-                    int length = dataLen - index;
-                    bool haveFurtherData = (0 < length);
+                    int lengthRemain = dataLen - index;
+                    bool haveFurtherData = (0 < lengthRemain);
                     if (!(haveFurtherData))
                     {
                         break;
                     }
 
-                    if (length > diff_chunk_size_max)
-                        length = diff_chunk_size_max;
+                    int lengthThisTime = lengthRemain;
+                    if (lengthThisTime > diff_chunk_size_max)
+                        lengthThisTime = diff_chunk_size_max;
 
-                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(data, index, length);
+                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(data, index, lengthThisTime);
                     SvnDiffEngine.WriteSvnDiffWindow(svnDiff, svnDiffWriter);
 
-                    index += length;
+                    index += lengthThisTime;
                 }
 
                 // Prefer passing direct GetBuffer()
