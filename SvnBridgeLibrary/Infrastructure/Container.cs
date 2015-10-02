@@ -86,7 +86,7 @@ namespace SvnBridge.Infrastructure
             {
                 object instance = CreateInstance(impl);
                 List<IInterceptor> interceptors = GetInterceptors(interceptorTypes);
-                bool haveInterceptors = (0 != interceptors.Count);
+                bool haveInterceptors = (null != interceptors);
                 if (!(haveInterceptors))
                     return instance;
                 return ProxyFactory.Create(service, instance, interceptors.ToArray());
@@ -95,11 +95,17 @@ namespace SvnBridge.Infrastructure
 
         private List<IInterceptor> GetInterceptors(List<Type> interceptorTypes)
         {
-            List<IInterceptor> interceptors = new List<IInterceptor>();
+            List<IInterceptor> interceptors = null;
 
-            foreach (Type interceptorType in interceptorTypes)
+            bool haveInterceptorTypes = (0 != interceptorTypes.Count);
+            if (haveInterceptorTypes)
             {
-                interceptors.Add((IInterceptor)ResolveType(interceptorType));
+                interceptors = new List<IInterceptor>();
+
+                foreach (Type interceptorType in interceptorTypes)
+                {
+                    interceptors.Add((IInterceptor)ResolveType(interceptorType));
+                }
             }
 
             return interceptors;
@@ -108,7 +114,7 @@ namespace SvnBridge.Infrastructure
         private object CreateInstance(Type type)
         {
             List<object> args = GetCreateInstanceArgs(type);
-            bool haveArgs = (args.Count > 0);
+            bool haveArgs = (null != args);
             if (haveArgs)
             {
                 return Activator.CreateInstance(type, args.ToArray());
@@ -121,7 +127,7 @@ namespace SvnBridge.Infrastructure
 
         private List<object> GetCreateInstanceArgs(Type type)
         {
-            List<object> args = new List<object>();
+            List<object> args = null;
 
             ConstructorInfo[] constructors = type.GetConstructors();
             if (constructors.Length != 0)
@@ -142,11 +148,17 @@ namespace SvnBridge.Infrastructure
 
         private List<object> GetMethodArgsFromParameterInfos(ParameterInfo[] infos)
         {
-            List<object> args = new List<object>();
+            List<object> args = null;
 
-            foreach (ParameterInfo info in infos)
+            bool haveParams = (0 < infos.Length);
+            if (haveParams)
             {
-                args.Add(GetMethodArgFromParameterInfo(info));
+                args = new List<object>();
+
+                foreach (ParameterInfo info in infos)
+                {
+                    args.Add(GetMethodArgFromParameterInfo(info));
+                }
             }
 
             return args;
