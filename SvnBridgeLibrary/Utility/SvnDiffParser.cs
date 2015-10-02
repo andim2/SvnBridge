@@ -44,6 +44,31 @@ namespace SvnBridge.Utility
 
         public static string GetBase64SvnDiffData(byte[] data)
         {
+            MemoryStream dataStream = new MemoryStream(data, false);
+            MemoryStream svnDiffStream = GetSvnDiffDataStream(dataStream);
+
+            // Prefer passing direct GetBuffer()
+            // to the array/offset/length variant of ToBase64String()
+            // rather than passing a ToArray() _copy_ to ToBase64String(array).
+            // See also
+            // http://www.hightechtalks.com/dotnet-framework-winforms-controls/serializing-image-base64-string-best-222259.html
+            var base64SvnDiffData = Convert.ToBase64String(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length);
+            var base64SvnDiffDataLength = base64SvnDiffData.Length;
+            return base64SvnDiffData;
+        }
+
+        /// <remarks>
+        /// Provides svn diff chunk data as a MemoryStream,
+        /// wholly converted from an item data input stream.
+        /// This helper is now at least *quite a bit* better
+        /// than the previous implementation -
+        /// however to enable properly fully incrementally streamy operation
+        /// this conversion handling
+        /// instead ought to be implemented
+        /// as a *custom* Stream class doing on-the-fly conversion.
+        /// </remarks>
+        private static MemoryStream GetSvnDiffDataStream(Stream dataStream)
+        {
             int diff_chunk_size_max = DiffChunkSizeMax;
             // Technically spoken the length of SVN signature below
             // is in _addition_ to the chunk size - it may exceed stream size.
@@ -53,44 +78,30 @@ namespace SvnBridge.Utility
 
             // BinaryWriter using/IDispose specifics:
             // https://social.msdn.microsoft.com/Forums/en-US/81bb7197-60a1-4f2b-a6d8-1501a369b527/binarywriter-and-stream?forum=csharpgeneral
-            using (MemoryStream svnDiffStream = new MemoryStream(diff_chunk_size_max))
+            MemoryStream svnDiffStream = new MemoryStream(diff_chunk_size_max);
             // Side note (warning): "using" of a BinaryWriter
             // will have caused
             // not only a Flush, but actually a Close() of underlying stream
             // once beyond disposal!
-            using (BinaryWriter svnDiffWriter = new BinaryWriter(svnDiffStream))
+            /* using */ BinaryWriter svnDiffWriter = new BinaryWriter(svnDiffStream);
             {
                 SvnDiffEngine.WriteSvnDiffSignature(svnDiffWriter);
-                int index = 0;
-                int dataLen = data.Length;
+                byte[] diff_chunk = new byte[diff_chunk_size_max];
                 for (; ; )
                 {
-                    int lengthRemain = dataLen - index;
-                    bool haveFurtherData = (0 < lengthRemain);
+                    var lengthThisTime = dataStream.Read(diff_chunk, 0, diff_chunk.Length);
+                    bool haveFurtherData = (0 < lengthThisTime);
                     if (!(haveFurtherData))
                     {
                         break;
                     }
-
-                    int lengthThisTime = lengthRemain;
-                    if (lengthThisTime > diff_chunk_size_max)
-                        lengthThisTime = diff_chunk_size_max;
-
-                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(data, index, lengthThisTime);
+                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(diff_chunk, 0, lengthThisTime);
                     SvnDiffEngine.WriteSvnDiffWindow(svnDiff, svnDiffWriter);
-
-                    index += lengthThisTime;
                 }
-
-                // Prefer passing direct GetBuffer()
-                // to the array/offset/length variant of ToBase64String()
-                // rather than passing a ToArray() _copy_ to ToBase64String(array).
-                // See also
-                // http://www.hightechtalks.com/dotnet-framework-winforms-controls/serializing-image-base64-string-best-222259.html
-                var base64SvnDiffData = Convert.ToBase64String(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length);
-                var base64SvnDiffDataLength = base64SvnDiffData.Length;
-                return base64SvnDiffData;
             }
+
+            svnDiffStream.Seek(0, SeekOrigin.Begin); // DON'T FORGET POSITION RESET!!
+            return svnDiffStream;
         }
 
         private static int DiffChunkSizeMax
