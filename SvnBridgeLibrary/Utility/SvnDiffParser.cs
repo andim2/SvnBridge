@@ -107,7 +107,9 @@ namespace SvnBridge.Utility
                     {
                         break;
                     }
-                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(diff_chunk, 0, lengthThisTime);
+                    ArraySegment<byte> arrSeg = new ArraySegment<byte>(diff_chunk, 0, lengthThisTime);
+
+                    SvnDiffWindow svnDiff = SvnDiffEngine.CreateReplaceDiff(arrSeg);
                     SvnDiffEngine.WriteSvnDiffWindow(svnDiff, svnDiffWriter);
                 }
             }

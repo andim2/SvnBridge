@@ -156,9 +156,18 @@ namespace SvnBridge.Utility
             targetIndex += instructionLength;
         }
 
+        /// <summary>
+        /// Deprecated API variant (prefer efficiently forwarding ArraySegment-based one).
+        /// </summary>
         public static SvnDiffWindow CreateReplaceDiff(byte[] data, int index, int length)
         {
+            return CreateReplaceDiff(new ArraySegment<byte>(data, index, length));
+        }
+
+        public static SvnDiffWindow CreateReplaceDiff(ArraySegment<byte> arrSeg)
+        {
             SvnDiffWindow svnDiff = null;
+            var length = arrSeg.Count;
             if (length > 0)
             {
                 svnDiff = new SvnDiffWindow();
@@ -167,13 +176,7 @@ namespace SvnBridge.Utility
                 svnDiff.SourceViewLength = 0;
                 svnDiff.TargetViewLength = (ulong)length;
 
-                MemoryStream dataStream = new Utility.MemoryStreamLOHSanitized();
-                using (BinaryWriter dataWriter = new BinaryWriter(dataStream))
-                {
-                    dataWriter.Write(data, index, length);
-                    // Flush() (and Close()) guaranteed by "using"
-                }
-                svnDiff.DataSectionBytes = dataStream.ToArray();
+                svnDiff.DataSectionBytes = Helper.ArraySegmentToArray(arrSeg);
 
                 SvnDiffInstruction instruction = new SvnDiffInstruction();
                 instruction.OpCode = SvnDiffInstructionOpCode.CopyFromNewData;

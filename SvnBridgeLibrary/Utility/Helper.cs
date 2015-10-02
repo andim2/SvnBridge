@@ -320,6 +320,27 @@ namespace SvnBridge.Utility
             return 64 * 1024;
         }
 
+        /// <summary>
+        /// Clean encapsulation helper
+        /// to return an array *copy* of the precise range
+        /// described by ArraySegment (within its original array).
+        /// To avoid such possibly superfluous copying
+        /// (i.e., ideally achieve zero-copy operation),
+        /// in many cases you should probably decide
+        /// to instead pass the original ArraySegment
+        /// between layers/methods.
+        /// </summary>
+        /// <remarks>
+        /// http://stackoverflow.com/questions/19868007/return-part-of-array
+        /// </remarks>
+        public static T[] ArraySegmentToArray<T>(ArraySegment<T> arrSeg)
+        {
+            var length = arrSeg.Count;
+            T[] realArray = new T[length];
+            Array.Copy(arrSeg.Array, arrSeg.Offset, realArray, 0, length);
+            return realArray;
+        }
+
         /// <remarks>
         /// WARNING: Q&amp;D implementation!
         /// Does not even care about .Position or other stuff!
