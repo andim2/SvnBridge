@@ -84,8 +84,35 @@ namespace EndToEndTests
 		public ConcurrentTestCommand(string testUrl, MethodInfo method)
 		{
 			this.testUrl = testUrl;
-            this.testCommand = new TestCommand(Xunit.Sdk.Reflector.Wrap(method));
+            this.testCommand = ConstructITestCommand(method);
 		}
+
+        /// <summary>
+        /// Almost comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// Using TestCommand this is not compilable any more
+        /// on newer xUnit (xunit.net_1.9.2-build-1705,
+        /// which thus seems to be xUnit protocol v2 rather than v1 -
+        /// previous version is 1.4.9.1446),
+        /// probably due to design correction
+        /// (TestCommand::Execute() has been made abstract).
+        /// Given that the related test class ConcurrentActionsTest
+        /// references SvnBridgeFactAttribute (FactAttribute),
+        /// I'd want to guess
+        /// that FactCommand is the proper replacement here.
+        /// Hmm, well, nope, FactCommand is not available in *older* xUnit.
+        /// And since conditional compile (compile-time evaluation)
+        /// branching on available interfaces or assembly versions
+        /// seems to be non-existent / very complicated,
+        /// we'll have to keep using the *older* API.
+        /// :(
+        /// </remarks>
+        private ITestCommand ConstructITestCommand(MethodInfo method)
+        {
+            return new TestCommand(Xunit.Sdk.Reflector.Wrap(method));
+            //return new FactCommand(Xunit.Sdk.Reflector.Wrap(method));
+        }
 
 		public MethodResult Execute(object testClass)
 		{
@@ -101,6 +128,14 @@ namespace EndToEndTests
         public bool ShouldCreateInstance
         {
             get { throw new NotImplementedException(); }
+        }
+
+        public int Timeout
+        {
+            get
+            {
+                return 0; // 0 == no timeout active; would we want this?
+            }
         }
 
         public System.Xml.XmlNode ToStartXml()

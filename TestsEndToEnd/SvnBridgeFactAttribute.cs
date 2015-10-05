@@ -83,6 +83,14 @@ namespace EndToEndTests
             get { return command.ShouldCreateInstance; }
         }
 
+        public int Timeout
+        {
+            get
+            {
+                return 0; // 0 == no timeout active; would we want this?
+            }
+        }
+
         public System.Xml.XmlNode ToStartXml()
         {
             return command.ToStartXml();
