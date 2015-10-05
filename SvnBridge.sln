@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge", "SvnBridge\SvnB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.TCPTrace", "TCPTrace\Tools.TCPTrace.csproj", "{8ED37441-BF40-4CE1-A514-27182894CE90}"
 EndProject
+Project("{00000000-0000-0000-0000-000000000000}") = "SvnBridgeViaIis", "SvnBridgeViaIis\SvnBridgeViaIis.csproj", "{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge.Library", "SvnBridgeLibrary\SvnBridge.Library.csproj", "{95E4E16B-0975-4705-B3A0-83700DE483C2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnBridge.PerfCounter.Installer", "SvnBridge.PerfCounter.Installer\SvnBridge.PerfCounter.Installer.csproj", "{13020B7B-21DD-48F4-8F30-DC18AEABAC02}"
@@ -29,6 +31,10 @@ Global
 		{8ED37441-BF40-4CE1-A514-27182894CE90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8ED37441-BF40-4CE1-A514-27182894CE90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8ED37441-BF40-4CE1-A514-27182894CE90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D9B38FE-25A4-41A2-B6F8-2ACC1F5D261B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{95E4E16B-0975-4705-B3A0-83700DE483C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{95E4E16B-0975-4705-B3A0-83700DE483C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95E4E16B-0975-4705-B3A0-83700DE483C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
