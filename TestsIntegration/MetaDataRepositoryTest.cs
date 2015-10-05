@@ -58,7 +58,9 @@ namespace IntegrationTests
 				RecursionType.None,
 				VersionSpec.FromChangeset(_lastCommitRevision),
 				DeletedState.Any,
-				ItemType.Any);
+				ItemType.Any,
+                false,
+                0);
 
 			AssertEquals(sourceItems, items);
 		}
@@ -76,7 +78,9 @@ namespace IntegrationTests
 				RecursionType.OneLevel,
 				VersionSpec.FromChangeset(_lastCommitRevision),
 				DeletedState.NonDeleted,
-				ItemType.Any);
+				ItemType.Any,
+                false,
+                0);
 
 			AssertEquals(sourceItems, items);
 		}
@@ -94,7 +98,9 @@ namespace IntegrationTests
 				RecursionType.Full,
 				VersionSpec.FromChangeset(_lastCommitRevision),
 				DeletedState.NonDeleted,
-				ItemType.Any);
+				ItemType.Any,
+                false,
+                0);
 
 			AssertEquals(sourceItems, items);
 		}

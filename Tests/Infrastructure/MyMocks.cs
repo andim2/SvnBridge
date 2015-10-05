@@ -57,7 +57,7 @@ namespace Tests
         public delegate ItemMetaData GetItemInActivity(string activityId, string path);
         public delegate ItemMetaData GetItems(int version, string path, Recursion recursion);
         public delegate int GetLatestVersion();
-        public delegate LogItem GetLog(string path, int versionFrom, int versionTo, Recursion recursion, int maxCount);
+        public delegate LogItem GetLog(string path, int versionFrom, int versionTo, Recursion recursion, int maxCount, bool sortAscending);
         public delegate bool IsDirectory(int version, string path);
         public delegate bool ItemExists(string path, int version);
         public delegate void MakeActivity(string activityId);

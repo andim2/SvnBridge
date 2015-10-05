@@ -16,10 +16,10 @@ namespace UnitTests
 
         public StubTFSSourceControlService() : base(null, null, null, null, null) { }
 
-        public override SourceItem[] QueryItems(string tfsUrl, ICredentials credentials, string serverPath, RecursionType recursion, VersionSpec version, DeletedState deletedState, ItemType itemType)
+        public override SourceItem[] QueryItems(string tfsUrl, ICredentials credentials, string serverPath, RecursionType recursion, VersionSpec version, DeletedState deletedState, ItemType itemType, bool sortAscending, int options)
         {
             if (QueryItems_ReturnDelegate != null)
-                return (SourceItem[])QueryItems_ReturnDelegate(new object[] { tfsUrl, credentials, serverPath, recursion, version, deletedState, itemType });
+                return (SourceItem[])QueryItems_ReturnDelegate(new object[] { tfsUrl, credentials, serverPath, recursion, version, deletedState, itemType, sortAscending, options });
 
             return QueryItems_Return.ToArray();
         }

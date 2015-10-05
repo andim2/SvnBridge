@@ -57,10 +57,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\AttachFramework.dll</HintPath>
     </Reference>
-    <Reference Include="CodePlex.TfsLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\CodePlex.TfsLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -142,6 +138,10 @@
     <ProjectReference Include="..\Tests\TestsUnit.csproj">
       <Project>{A374829E-4BE3-4DF5-9CCF-6EE9794D34A7}</Project>
       <Name>TestsUnit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TfsLibrary\TfsLibrary.csproj">
+      <Project>{CBCD3EEF-6492-4089-937B-8068E2B81A7D}</Project>
+      <Name>TfsLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

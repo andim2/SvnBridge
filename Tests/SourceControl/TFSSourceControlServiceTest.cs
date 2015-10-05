@@ -19,7 +19,7 @@ namespace UnitTests
 
             try
             {
-				service.QueryItemsExtended(null, null, null, null, DeletedState.Any, ItemType.Folder);
+				service.QueryItemsExtended(null, null, null, null, DeletedState.Any, ItemType.Folder, 0);
             }
             catch (NetworkAccessDeniedException)
             {

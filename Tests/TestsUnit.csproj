@@ -57,10 +57,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\References\AttachFramework.dll</HintPath>
     </Reference>
-    <Reference Include="CodePlex.TfsLibrary, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\CodePlex.TfsLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="Moq">
       <HintPath>..\References\Moq.dll</HintPath>
     </Reference>
@@ -141,6 +137,10 @@
     <ProjectReference Include="..\SvnBridge\SvnBridge.csproj">
       <Project>{22D15920-C064-457D-889B-F7A2E16F3E05}</Project>
       <Name>SvnBridge</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TfsLibrary\TfsLibrary.csproj">
+      <Project>{CBCD3EEF-6492-4089-937B-8068E2B81A7D}</Project>
+      <Name>TfsLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

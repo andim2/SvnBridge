@@ -78,10 +78,10 @@ namespace IntegrationTests
 
         public TFSSourceControlProvider CreateSourceControlProvider(string projectName)
 		{
-			RegistrationWebSvcFactory factory = new RegistrationWebSvcFactory();
+			RegistrationWebSvcFactory factory = new RegistrationWebSvcFactory(60000);
 			FileSystem system = new FileSystem();
 			RegistrationService service = new RegistrationService(factory);
-			RepositoryWebSvcFactory factory1 = new RepositoryWebSvcFactory(factory);
+			RepositoryWebSvcFactory factory1 = new RepositoryWebSvcFactory(factory, 60000);
 			WebTransferService webTransferService = new WebTransferService(system);
 			TFSSourceControlService tfsSourceControlService = new TFSSourceControlService(service, factory1, webTransferService, system, stubs.CreateObject<DefaultLogger>());
             ICredentials credentials = GetCredentials();
