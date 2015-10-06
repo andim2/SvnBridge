@@ -130,14 +130,25 @@ namespace UnitTests
             Assert.Equal(new byte[] { 2, 3 }, resultBytes);
         }
 
+        private static MemoryStream GetSvnDiffDataStream(
+            byte[] source)
+        {
+            string diff = SvnDiffParser.GetBase64SvnDiffData(
+                source);
+
+            MemoryStream diffDataStream = new MemoryStream(
+                Convert.FromBase64String(diff));
+
+            return diffDataStream;
+        }
+
         [Fact]
         public void GetBase64SvnDiffData()
         {
             byte[] source = new byte[4] { 1, 2, 3, 4 };
 
-            string diff = SvnDiffParser.GetBase64SvnDiffData(source);
-
-            MemoryStream diffStream = new MemoryStream(Convert.FromBase64String(diff));
+            var diffStream = GetSvnDiffDataStream(
+                source);
             byte[] result = SvnDiffParser.ApplySvnDiffsFromStream(diffStream, new byte[0]);
             Assert.Equal(source, result);
         }
@@ -149,9 +160,8 @@ namespace UnitTests
             for (int i = 0; i < source.Length; i++)
                 source[i] = (byte)(i % 255);
 
-            string diff = SvnDiffParser.GetBase64SvnDiffData(source);
-            
-            MemoryStream diffStream = new MemoryStream(Convert.FromBase64String(diff));
+            var diffStream = GetSvnDiffDataStream(
+                source);
             byte[] result = SvnDiffParser.ApplySvnDiffsFromStream(diffStream, new byte[0]);
             Assert.Equal(source, result);
         }
@@ -163,9 +173,8 @@ namespace UnitTests
             for (int i = 0; i < source.Length; i++)
                 source[i] = (byte)(i % 255);
 
-            string diff = SvnDiffParser.GetBase64SvnDiffData(source);
-
-            MemoryStream diffStream = new MemoryStream(Convert.FromBase64String(diff));
+            var diffStream = GetSvnDiffDataStream(
+                source);
             SvnDiffWindow[] diffs = SvnDiffEngine.ParseSvnDiff(diffStream);
 
             Assert.Equal(2, diffs.Length);
@@ -181,7 +190,8 @@ namespace UnitTests
         {
             byte[] source = new byte[] { };
 
-            string diff = SvnDiffParser.GetBase64SvnDiffData(source);
+            string diff = SvnDiffParser.GetBase64SvnDiffData(
+                source);
 
             byte[] expected = new byte[] { (byte)'S', (byte)'V', (byte)'N', (byte)0 };
             Assert.Equal(Convert.ToBase64String(expected), diff);
@@ -193,7 +203,8 @@ namespace UnitTests
             byte[] source = new byte[] { 1, 2, 3, 4 };
             List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             diffs.Add(SvnDiffEngine.CreateReplaceDiff(source, 0, source.Length));
-            MemoryStream stream = new MemoryStream(Convert.FromBase64String(SvnDiffParser.GetBase64SvnDiffData(source)));
+            var stream = GetSvnDiffDataStream(
+                source);
 
             byte[] result = SvnDiffParser.ApplySvnDiffsFromStream(stream, new byte[0]);
 
@@ -207,7 +218,8 @@ namespace UnitTests
             List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
             diffs.Add(SvnDiffEngine.CreateReplaceDiff(source, 0, 4));
             diffs.Add(SvnDiffEngine.CreateReplaceDiff(source, 4, 4));
-            MemoryStream stream = new MemoryStream(Convert.FromBase64String(SvnDiffParser.GetBase64SvnDiffData(source)));
+            var stream = GetSvnDiffDataStream(
+                source);
 
             byte[] result = SvnDiffParser.ApplySvnDiffsFromStream(stream, new byte[0]);
 
@@ -219,7 +231,8 @@ namespace UnitTests
         {
             byte[] source = new byte[] { };
             List<SvnDiffWindow> diffs = new List<SvnDiffWindow>();
-            MemoryStream stream = new MemoryStream(Convert.FromBase64String(SvnDiffParser.GetBase64SvnDiffData(source)));
+            var stream = GetSvnDiffDataStream(
+                source);
 
             byte[] result = SvnDiffParser.ApplySvnDiffsFromStream(stream, new byte[0]);
 
