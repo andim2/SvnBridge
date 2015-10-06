@@ -43,9 +43,9 @@ namespace UnitTests
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            string output = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(
-                output.Contains(
+                result.Contains(
                     "Checked-out resource //!svn/wrk/f86c2543-a3d3-d04f-b458-8924481e51c6/A%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',~%60..txt"));
         }
 

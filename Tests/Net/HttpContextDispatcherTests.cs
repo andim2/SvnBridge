@@ -99,8 +99,8 @@ namespace UnitTests
         //        "</update-report>";
         //    dispatcher.Dispatch(context);
 
-        //    string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
-        //    System.Diagnostics.Debug.WriteLine(output);
+        //    string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+        //    System.Diagnostics.Debug.WriteLine(result);
         //}
 
 //        [Fact]
@@ -157,8 +157,8 @@ namespace UnitTests
 //"</update-report>";
 //            dispatcher.Dispatch(context);
 
-//            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
-//            System.Diagnostics.Debug.WriteLine(output);
+//            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+//            System.Diagnostics.Debug.WriteLine(result);
 //        }
 
 //        [Fact]
@@ -189,8 +189,8 @@ namespace UnitTests
 
 //            dispatcher.Dispatch(context);
 
-//            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
-//            System.Diagnostics.Debug.WriteLine(output);
+//            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+//            System.Diagnostics.Debug.WriteLine(result);
 //        }
 
         [Fact]

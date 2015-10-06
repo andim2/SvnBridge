@@ -34,9 +34,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084</S:src-path><S:target-revision>5734</S:target-revision><S:entry rev=\"5733\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:delete-entry name=\"F !@#$%^&amp;()_-+={[}];',.~`.txt\"/>"));
+            Assert.True(result.Contains("<S:delete-entry name=\"F !@#$%^&amp;()_-+={[}];',.~`.txt\"/>"));
         }
 
         [Fact]
@@ -56,9 +56,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084</S:src-path><S:target-revision>5734</S:target-revision><S:entry rev=\"5733\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:delete-entry name=\"B !@#$%^&amp;()_-+={[}];',.~`\"/>"));
+            Assert.True(result.Contains("<S:delete-entry name=\"B !@#$%^&amp;()_-+={[}];',.~`\"/>"));
         }
 
         [Fact(Skip="Temporary disable (ReadFileAsync now unused)")]
@@ -84,9 +84,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084</S:src-path><S:target-revision>5734</S:target-revision><S:entry rev=\"5733\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:open-file name=\"G !@#$%^&amp;()_-+={[}];',.~`.txt\" rev=\"5733\">"));
+            Assert.True(result.Contains("<S:open-file name=\"G !@#$%^&amp;()_-+={[}];',.~`.txt\" rev=\"5733\">"));
         }
 
         [Fact(Skip="Temporary disable (ReadFileAsync now unused)")]
@@ -111,10 +111,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084/Test</S:src-path><S:target-revision>5722</S:target-revision><S:entry rev=\"5722\"  start-empty=\"true\"></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
             Assert.True(
-                output.Contains(
+                result.Contains(
                     "<D:checked-in><D:href>/!svn/ver/5722/Test/B%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60</D:href></D:checked-in>"));
         }
 
@@ -140,10 +140,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084/Test</S:src-path><S:target-revision>5722</S:target-revision><S:entry rev=\"5722\"  start-empty=\"true\"></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
             Assert.True(
-                output.Contains(
+                result.Contains(
                     "<S:add-directory name=\"B !@#$%^&amp;()_-+={[}];',.~`\" bc-url=\"/!svn/bc/5722/Test/B%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60\">"));
         }
 
@@ -169,10 +169,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084/Test</S:src-path><S:target-revision>5722</S:target-revision><S:entry rev=\"5722\"  start-empty=\"true\"></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
             Assert.True(
-                output.Contains(
+                result.Contains(
                     "<D:checked-in><D:href>/!svn/ver/5722/Test/C%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60..txt</D:href></D:checked-in>"));
         }
 
@@ -198,9 +198,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8084/Test</S:src-path><S:target-revision>5722</S:target-revision><S:entry rev=\"5722\"  start-empty=\"true\"></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:add-file name=\"C !@#$%^&amp;()_-+={[}];',.~`..txt\">"));
+            Assert.True(result.Contains("<S:add-file name=\"C !@#$%^&amp;()_-+={[}];',.~`..txt\">"));
         }
 
         [Fact(Skip="Temporary disable (ReadFileAsync now unused)")]
@@ -379,9 +379,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080/svn</S:src-path><S:entry rev=\"5780\" ></S:entry><S:entry rev=\"5781\" >Commerce.MVC.sln</S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:open-file name=\"Commerce.MVC.sln\" rev=\"5781\">"));
+            Assert.True(result.Contains("<S:open-file name=\"Commerce.MVC.sln\" rev=\"5781\">"));
         }
 
         [Fact(Skip="Temporary disable (ReadFileAsync now unused)")]
@@ -434,9 +434,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://127.0.0.1:25169/Test</S:src-path><S:target-revision>5733</S:target-revision><S:entry rev=\"5733\" ></S:entry><S:missing>foo</S:missing></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:add-directory name=\"foo\""));
+            Assert.True(result.Contains("<S:add-directory name=\"foo\""));
         }
 
         [Fact]
@@ -457,9 +457,9 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://127.0.0.1:25169/svn</S:src-path><S:target-revision>5733</S:target-revision><S:entry rev=\"5733\" ></S:entry><S:missing>Test</S:missing></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:add-directory name=\"Test\""));
+            Assert.True(result.Contains("<S:add-directory name=\"Test\""));
         }
 
         [Fact]
@@ -472,10 +472,10 @@ namespace UnitTests
                 "<update-report xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" send-all=\"true\" xmlns=\"svn:\"><entry rev=\"5795\" start-empty=\"true\" /><src-path>http://localhost:8080/svn/robots.txt</src-path><target-revision>5795</target-revision></update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
             Assert.Equal(500, response.StatusCode);
-            Assert.True(output.Contains("<m:human-readable errcode=\"160005\">\nTarget path does not exist\n</m:human-readable>\n"));
+            Assert.True(result.Contains("<m:human-readable errcode=\"160005\">\nTarget path does not exist\n</m:human-readable>\n"));
         }
 
         [Fact(Skip="Temporary disable (ReadFileAsync now unused)")]
@@ -516,10 +516,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
-            Assert.False(output.Contains("<S:delete-entry name=\"test1.txt\"/>"));
+            Assert.True(result.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(result.Contains("<S:delete-entry name=\"test1.txt\"/>"));
         }
 
         [Fact]
@@ -556,10 +556,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
-            Assert.False(output.Contains("<S:delete-entry name=\"test1.txt\"/>"));
+            Assert.True(result.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(result.Contains("<S:delete-entry name=\"test1.txt\"/>"));
         }
 
         [Fact]
@@ -598,10 +598,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
-            Assert.False(output.Contains("<S:delete-entry name=\"test2\"/>"));
+            Assert.True(result.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(result.Contains("<S:delete-entry name=\"test2\"/>"));
         }
 
         [Fact]
@@ -638,10 +638,10 @@ namespace UnitTests
                 "<S:update-report send-all=\"true\" xmlns:S=\"svn:\"><S:src-path>http://localhost:8080</S:src-path><S:target-revision>5810</S:target-revision><S:depth>unknown</S:depth><S:send-copyfrom-args>yes</S:send-copyfrom-args><S:entry rev=\"5808\" depth=\"infinity\" ></S:entry></S:update-report>";
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string output = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
 
-            Assert.True(output.Contains("<S:delete-entry name=\"test\"/>"));
-            Assert.False(output.Contains("<S:delete-entry name=\"test2\"/>"));
+            Assert.True(result.Contains("<S:delete-entry name=\"test\"/>"));
+            Assert.False(result.Contains("<S:delete-entry name=\"test2\"/>"));
         }
     }
 }
