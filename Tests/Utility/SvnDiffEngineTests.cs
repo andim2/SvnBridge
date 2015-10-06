@@ -9,16 +9,24 @@ namespace UnitTests
 {
     public class SvnDiffEngineTests
     {
+        private static SvnDiffWindow ConstructSvnDiffWindow(byte[] data, byte[] instructions)
+        {
+            SvnDiffWindow svnDiff = new SvnDiffWindow();
+
+            svnDiff.DataSectionBytes = data;
+            svnDiff.InstructionSectionBytes = instructions;
+
+            return svnDiff;
+        }
+
         [Fact]
         public void ApplySvnDiff_ThatWillExpand()
         {
             byte[] source = new byte[5002];
             source[5001] = 1;
-            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[0];
-            byte[] instructions = new byte[4] {0x00 | 0, 0xA7, 0x0A, 0}; // 10100111 00001010
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = instructions;
+            byte[] instructions = new byte[4] { 0x00 | 0, 0xA7, 0x0A, 0 }; // 10100111 00001010
+            SvnDiffWindow svnDiff = ConstructSvnDiffWindow(data, instructions);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(svnDiff, source, 0);
 
@@ -29,11 +37,9 @@ namespace UnitTests
         [Fact]
         public void ApplySvnDiff_WhereCopyFromTargetOverlapsWithDestination()
         {
-            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[2] {1, 2};
             byte[] instructions = new byte[3] {0x80 | 2, 0x40 | 4, 0};
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = instructions;
+            SvnDiffWindow svnDiff = ConstructSvnDiffWindow(data, instructions);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(svnDiff, new byte[0], 0);
 
@@ -44,11 +50,9 @@ namespace UnitTests
         public void ApplySvnDiff_WithCopyFromData()
         {
             byte[] source = new byte[0];
-            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[2] {1, 2};
             byte[] instructions = new byte[1] {0x80 | 2};
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = instructions;
+            SvnDiffWindow svnDiff = ConstructSvnDiffWindow(data, instructions);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(svnDiff, source, 0);
 
@@ -59,11 +63,9 @@ namespace UnitTests
         public void ApplySvnDiff_WithCopyFromSource()
         {
             byte[] source = new byte[4] {1, 2, 3, 4};
-            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[0];
             byte[] instructions = new byte[2] {0x00 | 2, 2};
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = instructions;
+            SvnDiffWindow svnDiff = ConstructSvnDiffWindow(data, instructions);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(svnDiff, source, 0);
 
@@ -73,11 +75,9 @@ namespace UnitTests
         [Fact]
         public void ApplySvnDiff_WithCopyFromTarget()
         {
-            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[1] {5};
             byte[] instructions = new byte[3] {0x80 | 1, 0x40 | 1, 0};
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = instructions;
+            SvnDiffWindow svnDiff = ConstructSvnDiffWindow(data, instructions);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(svnDiff, new byte[0], 0);
 
@@ -88,11 +88,9 @@ namespace UnitTests
         public void ApplySvnDiff_WithSourceDataIndex()
         {
             byte[] source = new byte[4] {1, 2, 3, 4};
-            SvnDiffWindow svnDiff = new SvnDiffWindow();
             byte[] data = new byte[0];
             byte[] opCodeAndLength = new byte[2] {2, 1};
-            svnDiff.DataSectionBytes = data;
-            svnDiff.InstructionSectionBytes = opCodeAndLength;
+            SvnDiffWindow svnDiff = ConstructSvnDiffWindow(data, opCodeAndLength);
 
             byte[] resultBytes = SvnDiffEngine.ApplySvnDiff(svnDiff, source, 1);
 
