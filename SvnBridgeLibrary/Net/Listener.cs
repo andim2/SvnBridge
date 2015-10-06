@@ -142,8 +142,11 @@ namespace SvnBridge.Net
         /// <param name="tcpClient">The TCP client to be processed</param>
         private void ProcessClient(TcpClient tcpClient)
         {
-            ProcessClientStream(
-                tcpClient.GetStream());
+            using (var networkStream = tcpClient.GetStream())
+            {
+                ProcessClientStream(
+                    networkStream);
+            }
         }
 
         /// <remarks>
