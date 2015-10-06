@@ -23,7 +23,7 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            string result = response.Output;
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
 
             string expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<D:options-response xmlns:D=\"DAV:\">\n" +
@@ -42,7 +42,7 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            string result = response.Output;
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
 
             string expected = "";
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO; // MemoryStream
 using System.Text;
 using SvnBridge.Infrastructure;
 using SvnBridge.SourceControl;
@@ -39,7 +40,7 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            string result = response.Output;
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -72,7 +73,7 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            string result = response.Output;
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
 
             Assert.True(result.Contains("<S:added-path node-kind=\"unknown\">/filename</S:added-path>"));
         }
