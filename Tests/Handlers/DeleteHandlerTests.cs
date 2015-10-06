@@ -61,6 +61,8 @@ namespace UnitTests
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+
             string expected =
                 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
                 "<html><head>\n" +
@@ -71,7 +73,7 @@ namespace UnitTests
                 "<hr>\n" +
                 "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at localhost Port 8082</address>\n" +
                 "</body></html>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal(404, response.StatusCode);
             Assert.Equal("text/html; charset=iso-8859-1", response.ContentType);
         }

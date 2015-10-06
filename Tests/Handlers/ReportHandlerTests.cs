@@ -39,6 +39,8 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
+            string result = response.Output;
+
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
@@ -48,7 +50,7 @@ namespace UnitTests
                 "</m:human-readable>\n" +
                 "</D:error>\n";
 
-            Assert.Equal(expected, response.Output);
+            Assert.Equal(expected, result);
             Assert.Equal(501, response.StatusCode);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.Equal("close", response.GetHeader("Connection"));
@@ -70,7 +72,9 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            Assert.True(response.Output.Contains("<S:added-path node-kind=\"unknown\">/filename</S:added-path>"));
+            string result = response.Output;
+
+            Assert.True(result.Contains("<S:added-path node-kind=\"unknown\">/filename</S:added-path>"));
         }
 
         [Fact]

@@ -33,9 +33,11 @@ namespace UnitTests
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+
             // We only expect an HTTP header back from the server, response should be empty
             string expected = string.Empty;
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal("text/plain", response.ContentType);
             Assert.Equal(Helper.FormatDateB(Clock.Now), response.GetHeader("Last-Modified"));
             Assert.Equal("\"1234//Foo/Bar.txt\"", response.GetHeader("ETag"));

@@ -68,6 +68,8 @@ namespace UnitTests
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
+            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
@@ -76,7 +78,7 @@ namespace UnitTests
                 "Conflict at '/Test.txt'\n" +
                 "</m:human-readable>\n" +
                 "</D:error>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal(409, response.StatusCode);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.True(response.Headers.Contains(new KeyValuePair<string, string>("Cache-Control", "no-cache")));

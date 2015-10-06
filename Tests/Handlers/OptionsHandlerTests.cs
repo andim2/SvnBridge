@@ -23,11 +23,13 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
+            string result = response.Output;
+
             string expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<D:options-response xmlns:D=\"DAV:\">\n" +
                 "<D:activity-collection-set><D:href>/!svn/act/</D:href></D:activity-collection-set></D:options-response>\n";
 
-            Assert.Equal(expected, response.Output);
+            Assert.Equal(expected, result);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
         }
 
@@ -40,7 +42,11 @@ namespace UnitTests
 
             handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
-            Assert.Equal("", response.Output);
+            string result = response.Output;
+
+            string expected = "";
+
+            Assert.Equal(expected, result);
             Assert.Equal("text/plain", response.ContentType);
         }
 
