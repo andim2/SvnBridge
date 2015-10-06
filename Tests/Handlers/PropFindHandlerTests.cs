@@ -322,7 +322,7 @@ namespace UnitTests
             request.Path = "http://localhost:8080/Quick%20Starts";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/><resourcetype xmlns=\"DAV:\"/><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/><repository-uuid xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
 
-            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null); });
+            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
 
             Assert.NotNull(RequestCache.Items["RequestBody"]);
         }

@@ -27,7 +27,7 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5696</S:peg-revision><S:location-revision>5597</S:location-revision></S:get-locations>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -49,7 +49,7 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5696</S:peg-revision><S:location-revision>5573</S:location-revision></S:get-locations>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -68,7 +68,7 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5788</S:peg-revision><S:location-revision>5787</S:location-revision><S:location-revision>5788</S:location-revision></S:get-locations>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath("http://tfsserver"), null);
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
