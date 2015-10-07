@@ -4,7 +4,7 @@ using System.Net; // ICredentials
 using System.Text; // Encoding
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.EncodeB()
+using SvnBridge.Utility; // Helper.Encode*()
 using SvnBridge.Infrastructure;
 
 namespace SvnBridge.Handlers
@@ -279,4 +279,21 @@ namespace SvnBridge.Handlers
             return "<lp1:getetag>W/\"" + itemRevision + "//" + Helper.EncodeB(itemLocation) + "\"</lp1:getetag>";
         }
 	}
+
+    /// <summary>
+    /// Contains generic helpers for SVN-specific stream generation etc.
+    /// </summary>
+    public class SVNGeneratorHelpers
+    {
+        public static string GetSvnVerFromRevisionLocation(int revision, string itemLocation, bool isItemLocationRelativePath)
+        {
+            // *We* are about to assemble a '/'-separated path *here*,
+            // thus it's *here* that *we* are supposed to be escaping (encoding)
+            // any payload (non-protocol) content
+            // which might contain e.g. slashes as well.
+            string itemLocationEncoded = Helper.Encode(itemLocation, true);
+            string svnVerPath = "/!svn/ver/" + revision + (isItemLocationRelativePath ? "/" : "") + itemLocationEncoded;
+            return svnVerPath;
+        }
+    }
 }

@@ -178,8 +178,7 @@ namespace SvnBridge.Handlers
 
         private string GetSvnVerLocalPath(ItemMetaData item)
         {
-          string svnVerLocalPath = GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
-          return svnVerLocalPath;
+		return GetLocalPath(SVNGeneratorHelpers.GetSvnVerFromRevisionLocation(item.Revision, item.Name, true));
         }
 
         private void WriteAllPropForFolder(TextWriter writer, string requestPath, ItemMetaData item, bool bcPath, TFSSourceControlProvider sourceControlProvider)

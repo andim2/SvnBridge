@@ -77,9 +77,7 @@ namespace SvnBridge.Handlers
 
 				output.Write("<D:checked-in><D:href>");
 
-				output.Write(GetLocalPath("/!svn/ver/" +
-							mergeResponse.Version +
-							Helper.Encode(item.Path, true)));
+				output.Write(GetLocalPath(SVNGeneratorHelpers.GetSvnVerFromRevisionLocation(mergeResponse.Version, item.Path, false)));
 
 				output.Write("</D:href></D:checked-in>\n");
 

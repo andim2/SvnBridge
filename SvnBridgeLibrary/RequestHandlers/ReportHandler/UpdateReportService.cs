@@ -246,8 +246,8 @@ namespace SvnBridge.Infrastructure
 
         private void UpdateReportWriteItemAttributes(TextWriter output, ItemMetaData item)
         {
-            string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
-            output.Write("<D:checked-in><D:href>" + svnVerLocalPath + "</D:href></D:checked-in>\n");
+            string svnVer = handler.GetLocalPath(SVNGeneratorHelpers.GetSvnVerFromRevisionLocation(item.Revision, item.Name, true));
+            output.Write("<D:checked-in><D:href>" + svnVer + "</D:href></D:checked-in>\n");
             output.Write("<S:set-prop name=\"svn:entry:committed-rev\">" + item.Revision + "</S:set-prop>\n");
             output.Write("<S:set-prop name=\"svn:entry:committed-date\">" + Helper.FormatDate(item.LastModifiedDate) + "</S:set-prop>\n");
             output.Write("<S:set-prop name=\"svn:entry:last-author\">" + item.Author + "</S:set-prop>\n");
