@@ -367,6 +367,17 @@ namespace SvnBridge.Utility
             }
         }
 
+        /// <summary>
+        /// Determines whether the underlying stream of this reader
+        /// has some data remaining to be read.
+        /// </summary>
+        /// <remarks>
+        /// Condition determined by using .Position and .Length properties.
+        /// Doing such checks will fail for those stream types
+        /// which don't support seeking, though.
+        /// See also
+        /// http://stackoverflow.com/questions/3752968/endofstream-for-binaryreader
+        /// </remarks>
         private static bool HaveDataRemain(BinaryReaderSvnDiff reader)
         {
             bool haveDataRemain;

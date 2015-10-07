@@ -3062,6 +3062,20 @@ namespace SvnBridge.SourceControl
             return result.ToArray();
         }
 
+        /// <remarks>
+        /// XXX Note that there's a bug remaining:
+        /// It seems for folders (as opposed to files!),
+        /// ItemSet[] TFSSourceControlService.QueryItems()
+        /// will return the item's *creation* rev rather than *update* rev,
+        /// and we'll thus do lookup on the creation rev.
+        /// TortoiseSVN repo browser will thus display the current rev value
+        /// in combination with the author of the creation rev. WTH???
+        /// While certain requests will go here for a certain rev
+        /// which we could use to do our queries on,
+        /// I am not convinced that this will help and/or be correct.
+        /// OTOH we could do such a workaround
+        /// for the imprecision faced with folder-type items only.
+        /// </remarks>
         private List<ItemMetaData> ConvertSourceItemsWithAuthorship_LookupAuthor(
             SourceItem[] sourceItems)
         {

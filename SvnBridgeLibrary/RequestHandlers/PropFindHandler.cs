@@ -185,6 +185,16 @@ namespace SvnBridge.Handlers
                 return sourceControlProvider.GetItemsWithoutProperties(version, itemPath, recursion);
         }
 
+        /// <remarks>
+        /// RFC3253 "3.11 Additional PROPFIND Semantics":
+        /// "
+        /// A DAV:allprop PROPFIND request SHOULD NOT return any of the
+        /// properties defined by this document.  This allows a versioning server
+        /// to perform efficiently when a naive client, which does not understand
+        /// the cost of asking a server to compute all possible live properties,
+        /// issues a DAV:allprop PROPFIND request.
+        /// "
+        /// </remarks>
         private void HandleAllProp(TFSSourceControlProvider sourceControlProvider, string requestPath, StreamWriter output)
         {
             int revision;

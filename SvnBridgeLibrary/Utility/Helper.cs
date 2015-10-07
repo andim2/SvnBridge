@@ -239,6 +239,44 @@ namespace SvnBridge.Utility
             }
         }
 
+        /// <remarks>
+        /// Important related usage side note:
+        /// E.g. for classes derived from TextWriter
+        /// (StreamWriter, StringWriter)
+        /// It seems to be much preferable
+        /// to be doing multiple
+        ///     output.Write(string1);
+        ///     output.Write(string2);
+        ///     output.Write(string3);
+        /// rather than
+        ///     output.Write(string1 + string2 + string3);
+        /// i.e. having string data appending / concatenation efforts
+        /// done internally in appropriate/optimized/*central* toolkit layers
+        /// should be generally preferred to doing
+        /// potentially allocation-prone / GC-taxing
+        /// manual (user side) string concatenation efforts.
+        /// MSDN KB306822:
+        /// "
+        /// * If you are in an environment that supports streaming the
+        ///   data, such as in an ASPX Web Form or your application is
+        ///   writing the data to disk, consider avoiding the buffer
+        ///   overhead of concatenation or the StringBuilder, and write the
+        ///   data directly to the stream through the Response.Write method
+        ///   or the appropriate method for the stream in question.
+        ///
+        /// * Try to reuse the existing StringBuilder class rather than
+        ///   reallocate each time you need one. This limits the growth of
+        ///   the heap and reduces garbage collection. In either case, using
+        ///   the StringBuilder class makes more efficient use of the heap
+        ///   than using the + operator.
+        /// "
+        ///
+        /// Related very important/detailed StringWriter counter-points:
+        /// - http://stackoverflow.com/a/11048978
+        ///   ( http://stackoverflow.com/questions/602279/stringwriter-or-stringbuilder )
+        /// - http://stackoverflow.com/a/2980953
+        ///   ( http://stackoverflow.com/questions/2980805/string-assembly-by-stringbuilder-vs-stringwriter-and-printwriter )
+        /// </remarks>
         public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
         {
             Encoding utf8WithoutBOM = new UTF8Encoding(false);
