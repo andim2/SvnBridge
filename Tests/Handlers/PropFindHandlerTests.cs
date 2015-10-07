@@ -22,8 +22,18 @@ namespace UnitTests
     	public PropFindHandlerTests()
     	{
     		handler = new PropFindHandler();
-            handler.Initialize(context, new PathParserSingleServerWithProjectInPath(tfsUrl));
+            HandlerInitializeWorkaround(handler);
     	}
+
+        /// <remarks>
+        /// Required by *some* tests
+        /// (e.g. TestBcFileNodeHrefForFolder)
+        /// which happen to skip (don't need to be) calling Handle().
+        /// </remarks>
+        private void HandlerInitializeWorkaround(RequestHandlerBase handler)
+        {
+            handler.Initialize(context, new PathParserSingleServerWithProjectInPath(tfsUrl));
+        }
 
         [Fact]
         public void TestBcFileNodeHrefForFolder()
