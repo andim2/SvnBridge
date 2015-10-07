@@ -71,7 +71,7 @@ namespace TestsRequiringTfsClient
         }
 
         [SvnBridgeFact]
-        public void AssociatingSingleCheckInWithMultiplyWorkItems()
+        public void AssociatingSingleCheckInWithMultipleWorkItems()
         {
             int oldWorkItemId = workItemId;
             int latestChangeSetId;

@@ -84,7 +84,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void ApplySvnDiff_WithSouceDataIndex()
+        public void ApplySvnDiff_WithSourceDataIndex()
         {
             byte[] source = new byte[4] {1, 2, 3, 4};
             SvnDiff svnDiff = new SvnDiff();

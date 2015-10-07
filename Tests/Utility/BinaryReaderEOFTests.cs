@@ -108,7 +108,7 @@ namespace UnitTests
         }
 
         [Fact]
-        public void TestReadBytesReadsCorrectBytesWhenReadsLargerThenBufferSize()
+        public void TestReadBytesReadsCorrectBytesWhenReadsLargerThanBufferSize()
         {
             byte[] testData = CreateTestData(BinaryReaderEOF.BUF_SIZE*3);
             BinaryReaderEOF reader = new BinaryReaderEOF(new MemoryStream(testData));

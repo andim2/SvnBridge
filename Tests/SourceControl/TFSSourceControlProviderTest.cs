@@ -81,7 +81,7 @@ Work Items: 15, 16, 17";
         }
 
         [Fact]
-        public void CanAssociateOnMultiplyLines()
+        public void CanAssociateOnMultipleLines()
         {
             Results r1 = stubs.Attach(associateWorkItemWithChangeSet.Associate);
             Results r2 = stubs.Attach(associateWorkItemWithChangeSet.SetWorkItemFixed);
