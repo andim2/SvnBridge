@@ -387,11 +387,13 @@ namespace SvnBridge.Net
                 if (!(requestedHttpKeepAlive))
                 {
                     bool foundKeepAlive;
+                    bool foundConnectionClose;
                     GetHttpHeaderConnectionConfig(
                         context.Request,
-                        out foundKeepAlive);
+                        out foundKeepAlive,
+                        out foundConnectionClose);
 
-                    if (foundKeepAlive)
+                    if (foundKeepAlive && !foundConnectionClose)
                     {
                         requestedHttpKeepAlive = true;
                     }
@@ -459,24 +461,29 @@ namespace SvnBridge.Net
 
         private static void GetHttpHeaderConnectionConfig(
             IHttpRequest request,
-            out bool foundKeepAlive)
+            out bool foundKeepAlive,
+            out bool foundConnectionClose)
         {
             foundKeepAlive = false;
+            foundConnectionClose = false;
 
             string connectionHeader = request.Headers["Connection"];
             if (null != connectionHeader)
             {
                 ParseHttpHeaderConnection(
                     connectionHeader,
-                    out foundKeepAlive);
+                    out foundKeepAlive,
+                    out foundConnectionClose);
             }
         }
 
         private static void ParseHttpHeaderConnection(
             string connectionHeader,
-            out bool foundKeepAlive)
+            out bool foundKeepAlive,
+            out bool foundConnectionClose)
         {
             foundKeepAlive = false;
+            foundConnectionClose = false;
 
             string[] connectionHeaderParts = connectionHeader.Split(',');
             foreach (string directive in connectionHeaderParts)
@@ -487,6 +494,11 @@ namespace SvnBridge.Net
                 {
                     foundKeepAlive = true;
                     break;
+                }
+                else
+                if (directiveStart.Equals("close", StringComparison.OrdinalIgnoreCase))
+                {
+                    foundConnectionClose = true;
                 }
             }
         }
