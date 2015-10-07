@@ -483,7 +483,7 @@ namespace SvnBridge.Handlers
                     }
                     else if ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename)
                     {
-                        var renamedItem = (RenamedSourceItem) change.Item;
+                        var renamedItem = (RenamedSourceItem)change.Item;
                         output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
                                      "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
                                      Helper.EncodeB(change.Item.RemoteName) + "</S:added-path>\n");
@@ -492,7 +492,7 @@ namespace SvnBridge.Handlers
                     }
                     else if ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch)
                     {
-                        var renamedItem = (RenamedSourceItem) change.Item;
+                        var renamedItem = (RenamedSourceItem)change.Item;
                         output.Write("<S:added-path copyfrom-path=\"/" + Helper.EncodeB(renamedItem.OriginalRemoteName) +
                                      "\" copyfrom-rev=\"" + renamedItem.OriginalRevision + "\">/" +
                                      Helper.EncodeB(change.Item.RemoteName) + "</S:added-path>\n");

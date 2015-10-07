@@ -278,7 +278,7 @@ namespace SvnBridge.SourceControl
                     var oldItemsById = new Dictionary<int, ItemMetaData>();
                     for (var i = 0; i < renamedItems.Count; i++)
                     {
-                        if(oldItems[i] != null)
+                        if (oldItems[i] != null)
                             oldItemsById[renamedItems[i].ItemId] = oldItems[i];
                     }
 

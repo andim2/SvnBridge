@@ -46,7 +46,7 @@ namespace SvnBridge.Cache
                 else
                 {
                     result = cache.Get(key);
-                    if(result!=null)
+                    if(result != null)
                     {
                         // we have to store it back in the per request, to ensure that we
                         // wouldn't lose it during this request

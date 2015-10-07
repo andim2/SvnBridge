@@ -8,7 +8,7 @@ namespace SvnBridge
 		public static void OnWebRequest(WebRequest request)
 		{
 			HttpWebRequest httpWebRequest = request as HttpWebRequest;
-			if (httpWebRequest!=null)
+			if (httpWebRequest != null)
 			{
                 httpWebRequest.UnsafeAuthenticatedConnectionSharing = false;
 			}

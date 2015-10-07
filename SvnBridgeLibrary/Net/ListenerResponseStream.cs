@@ -149,7 +149,7 @@ namespace SvnBridge.Net
                         statusCodeDescription = "Method Not Implemented";
                         break;
                     default:
-                        statusCodeDescription = ((HttpStatusCode) response.StatusCode).ToString();
+                        statusCodeDescription = ((HttpStatusCode)response.StatusCode).ToString();
                         break;
                 }
 
