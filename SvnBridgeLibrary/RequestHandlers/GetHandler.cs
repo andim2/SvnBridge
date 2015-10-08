@@ -104,17 +104,17 @@ namespace SvnBridge.Handlers
                 {
                     SetResponseSettings(response, "text/html; charset=iso-8859-1", Encoding.UTF8, 301);
                     response.AppendHeader("Location", request.Url + "/");
-                    using (StreamWriter writer = CreateStreamWriter(response.OutputStream))
+                    using (StreamWriter output = CreateStreamWriter(response.OutputStream))
                     {
-                        writer.Write("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-                        writer.Write("<html><head>\n");
-                        writer.Write("<title>301 Moved Permanently</title>\n");
-                        writer.Write("</head><body>\n");
-                        writer.Write("<h1>Moved Permanently</h1>\n");
-                        writer.Write("<p>The document has moved <a href=\"" + request.Url + "/\">here</a>.</p>\n");
-                        writer.Write("<hr>\n");
-                        writer.Write("<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n");
-                        writer.Write("</body></html>\n");
+                        output.Write("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
+                        output.Write("<html><head>\n");
+                        output.Write("<title>301 Moved Permanently</title>\n");
+                        output.Write("</head><body>\n");
+                        output.Write("<h1>Moved Permanently</h1>\n");
+                        output.Write("<p>The document has moved <a href=\"" + request.Url + "/\">here</a>.</p>\n");
+                        output.Write("<hr>\n");
+                        output.Write("<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n");
+                        output.Write("</body></html>\n");
                     }
                 }
                 else
@@ -153,17 +153,17 @@ namespace SvnBridge.Handlers
             response.AppendHeader("ETag", "W/\"" + folder.ItemRevision + "//" + Helper.EncodeB(folder.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
 
-            using (StreamWriter writer = CreateStreamWriter(response.OutputStream))
+            using (StreamWriter output = CreateStreamWriter(response.OutputStream))
             {
-                writer.Write("<html><head><title>");
-                writer.Write("Revision " + latestVersion + ": /" + folder.Name);
-                writer.Write("</title></head>\n");
-                writer.Write("<body>\n");
-                writer.Write(" <h2>Revision " + latestVersion + ": /" + folder.Name + "</h2>\n");
-                writer.Write(" <ul>\n");
+                output.Write("<html><head><title>");
+                output.Write("Revision " + latestVersion + ": /" + folder.Name);
+                output.Write("</title></head>\n");
+                output.Write("<body>\n");
+                output.Write(" <h2>Revision " + latestVersion + ": /" + folder.Name + "</h2>\n");
+                output.Write(" <ul>\n");
                 if (folder.Name != "")
                 {
-                    writer.Write("  <li><a href=\"../\">..</a></li>\n");
+                    output.Write("  <li><a href=\"../\">..</a></li>\n");
                 }
                 foreach (ItemMetaData item in folder.Items)
                 {
@@ -171,21 +171,21 @@ namespace SvnBridge.Handlers
                     if (itemName.Contains("/"))
                         itemName = itemName.Substring(itemName.LastIndexOf("/") + 1);
 
-                    writer.Write("  <li><a href=\"");
-                    writer.Write(Helper.Encode(itemName));
+                    output.Write("  <li><a href=\"");
+                    output.Write(Helper.Encode(itemName));
                     if (item.ItemType == ItemType.Folder)
-                        writer.Write("/");
-                    writer.Write("\">");
-                    writer.Write(Helper.EncodeB(itemName));
+                        output.Write("/");
+                    output.Write("\">");
+                    output.Write(Helper.EncodeB(itemName));
                     if (item.ItemType == ItemType.Folder)
-                        writer.Write("/");
-                    writer.Write("</a></li>\n");
+                        output.Write("/");
+                    output.Write("</a></li>\n");
                 }
-                writer.Write(" </ul>\n");
-                //writer.Write(" <hr noshade><em>Powered by <a href=\"http://subversion.tigris.org/\">Subversion</a> version 1.4.2 (r22196).</em>\n");
-                writer.Write(" <hr noshade><em><a href=\"http://www.codeplex.com/\">CodePlex</a> powered by <a href=\"http://svnbridge.codeplex.com\">SvnBridge</a></em>\n");
-                writer.Write("</body></html>");
-                writer.Flush();
+                output.Write(" </ul>\n");
+                //output.Write(" <hr noshade><em>Powered by <a href=\"http://subversion.tigris.org/\">Subversion</a> version 1.4.2 (r22196).</em>\n");
+                output.Write(" <hr noshade><em><a href=\"http://www.codeplex.com/\">CodePlex</a> powered by <a href=\"http://svnbridge.codeplex.com\">SvnBridge</a></em>\n");
+                output.Write("</body></html>");
+                output.Flush();
             }
          }
 	}

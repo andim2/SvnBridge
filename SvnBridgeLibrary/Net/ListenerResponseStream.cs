@@ -243,12 +243,12 @@ namespace SvnBridge.Net
             string statusCodeDescription = GetStatusCodeDescription(response.StatusCode);
 
             // Use ctor variant for implicit (*internal*) StringBuilder:
-            StringWriter writer = new StringWriter();
+            StringWriter output = new StringWriter();
 
-            writer.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
+            output.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
 
-            writer.WriteLine("Date: {0}", GetDateHeaderValue());
-            writer.WriteLine("Server: " + Constants.SVNServerIdentificationString);
+            output.WriteLine("Date: {0}", GetDateHeaderValue());
+            output.WriteLine("Server: " + Constants.SVNServerIdentificationString);
 
             List<KeyValuePair<string, string>> headers = response.Headers;
 
@@ -269,34 +269,34 @@ namespace SvnBridge.Net
                 }
                 else
                 {
-                    writer.WriteLine("{0}: {1}", header.Key, header.Value);
+                    output.WriteLine("{0}: {1}", header.Key, header.Value);
                 }
             }
 
             if (!response.SendChunked)
             {
-                writer.WriteLine("Content-Length: {0}", streamBuffer.Length);
+                output.WriteLine("Content-Length: {0}", streamBuffer.Length);
             }
             else
             {
-                writer.WriteLine("Transfer-Encoding: chunked");
+                output.WriteLine("Transfer-Encoding: chunked");
             }
 
             if (connection != null)
             {
-                writer.WriteLine("Connection: {0}", connection);
+                output.WriteLine("Connection: {0}", connection);
             }
 
-            writer.WriteLine("Content-Type: {0}", response.ContentType);
+            output.WriteLine("Content-Type: {0}", response.ContentType);
 
             if (!String.IsNullOrEmpty(xPadHeader))
             {
-                writer.WriteLine("X-Pad: {0}", xPadHeader);
+                output.WriteLine("X-Pad: {0}", xPadHeader);
             }
 
-            writer.WriteLine("");
+            output.WriteLine("");
 
-            string headersString = writer.ToString(); // debug convenience
+            string headersString = output.ToString(); // debug convenience
             byte[] bufferBytes = Encoding.UTF8.GetBytes(headersString);
 
             stream.Write(bufferBytes, 0, bufferBytes.Length);

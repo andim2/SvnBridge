@@ -451,11 +451,11 @@ namespace SvnBridge.Handlers
             output.Write("</D:version-name></S:dated-rev-report>");
         }
 
-        private static void GetLocksReport(StreamWriter writer)
+        private static void GetLocksReport(StreamWriter output)
         {
-            writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-            writer.Write("<S:get-locks-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
-            writer.Write("</S:get-locks-report>\n");
+            output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+            output.Write("<S:get-locks-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n");
+            output.Write("</S:get-locks-report>\n");
         }
 
         private static void GetLocationsReport(TFSSourceControlProvider sourceControlProvider, GetLocationsReportData getLocationsReport, string requestPath, StreamWriter output)

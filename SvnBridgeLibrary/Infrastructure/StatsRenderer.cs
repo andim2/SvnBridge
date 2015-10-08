@@ -15,21 +15,21 @@ namespace SvnBridge.Handlers.Renderers
 
         public void Render(IHttpContext context)
         {
-            using (var writer = new StreamWriter(context.Response.OutputStream))
+            using (var output = new StreamWriter(context.Response.OutputStream))
             {
-                writer.Write("<html><head><title>SvnBridge Stats</title></head>");
-                writer.Write("<h1>Statistics</h1>");
-                writer.Write("<table>");
+                output.Write("<html><head><title>SvnBridge Stats</title></head>");
+                output.Write("<h1>Statistics</h1>");
+                output.Write("<table>");
                 foreach (var stat in actionTracking.GetStatistics())
                 {
-                    writer.Write("<tr><td>");
-                    writer.Write(stat.Key);
-                    writer.Write("</td><td>");
-                    writer.Write(stat.Value);
-                    writer.Write("</td></tr>");
+                    output.Write("<tr><td>");
+                    output.Write(stat.Key);
+                    output.Write("</td><td>");
+                    output.Write(stat.Value);
+                    output.Write("</td></tr>");
                 }
-                writer.Write("</table>");
-                writer.Write("</html>");
+                output.Write("</table>");
+                output.Write("</html>");
             }
         }
     }

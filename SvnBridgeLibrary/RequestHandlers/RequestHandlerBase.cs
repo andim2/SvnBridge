@@ -54,9 +54,9 @@ namespace SvnBridge.Handlers
 
 		protected static void WriteToResponse(IHttpResponse response, string content)
 		{
-			using (StreamWriter writer = CreateStreamWriter(response.OutputStream))
+			using (StreamWriter output = CreateStreamWriter(response.OutputStream))
 			{
-				writer.Write(content);
+				output.Write(content);
 			}
 		}
 

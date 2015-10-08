@@ -231,29 +231,29 @@ namespace SvnBridge.Utility
             }
         }
 
-        public static void WriteSvnDiffSignature(BinaryWriter writer)
+        public static void WriteSvnDiffSignature(BinaryWriter output)
         {
             byte[] signature = new byte[] { (byte)'S', (byte)'V', (byte)'N' };
             byte version = 0;
-            writer.Write(signature);
-            writer.Write(version);
+            output.Write(signature);
+            output.Write(version);
         }
 
-        public static void WriteSvnDiffWindow(SvnDiffWindow svnDiff, BinaryWriter writer)
+        public static void WriteSvnDiffWindow(SvnDiffWindow svnDiff, BinaryWriter output)
         {
             if (svnDiff != null)
             {
                 int bytesWritten;
-                WriteInt(writer, svnDiff.SourceViewOffset, out bytesWritten);
-                WriteInt(writer, svnDiff.SourceViewLength, out bytesWritten);
-                WriteInt(writer, svnDiff.TargetViewLength, out bytesWritten);
-                WriteInt(writer, (ulong)svnDiff.InstructionSectionBytes.Length, out bytesWritten);
-                WriteInt(writer, (ulong)svnDiff.DataSectionBytes.Length, out bytesWritten);
+                WriteInt(output, svnDiff.SourceViewOffset, out bytesWritten);
+                WriteInt(output, svnDiff.SourceViewLength, out bytesWritten);
+                WriteInt(output, svnDiff.TargetViewLength, out bytesWritten);
+                WriteInt(output, (ulong)svnDiff.InstructionSectionBytes.Length, out bytesWritten);
+                WriteInt(output, (ulong)svnDiff.DataSectionBytes.Length, out bytesWritten);
 
-                writer.Write(svnDiff.InstructionSectionBytes);
-                writer.Write(svnDiff.DataSectionBytes);
+                output.Write(svnDiff.InstructionSectionBytes);
+                output.Write(svnDiff.DataSectionBytes);
 
-                writer.Flush(); // Likely very important in case of huge-data memory pressure (frees internally amassed buffer data?)
+                output.Flush(); // Likely very important in case of huge-data memory pressure (frees internally amassed buffer data?)
             }
         }
 
@@ -289,7 +289,7 @@ namespace SvnBridge.Utility
             return instruction;
         }
 
-        private static void WriteInstruction(BinaryWriter writer, SvnDiffInstruction instruction)
+        private static void WriteInstruction(BinaryWriter output, SvnDiffInstruction instruction)
         {
             byte opCodeAndLength = (byte) ((int) instruction.OpCode << 6);
             int bytesWritten = 0;
@@ -298,18 +298,18 @@ namespace SvnBridge.Utility
             {
                 opCodeAndLength |= (byte) (instruction.Length & 0x3F);
 
-                writer.Write(opCodeAndLength);
+                output.Write(opCodeAndLength);
             }
             else
             {
-                writer.Write(opCodeAndLength);
-                WriteInt(writer, instruction.Length, out bytesWritten);
+                output.Write(opCodeAndLength);
+                WriteInt(output, instruction.Length, out bytesWritten);
             }
 
             if (instruction.OpCode == SvnDiffInstructionOpCode.CopyFromSource ||
                 instruction.OpCode == SvnDiffInstructionOpCode.CopyFromTarget)
             {
-                WriteInt(writer, instruction.Offset, out bytesWritten);
+                WriteInt(output, instruction.Offset, out bytesWritten);
             }
         }
 
@@ -342,7 +342,7 @@ namespace SvnBridge.Utility
             return value;
         }
 
-        private static void WriteInt(BinaryWriter writer, ulong intValue, out int bytesWritten)
+        private static void WriteInt(BinaryWriter output, ulong intValue, out int bytesWritten)
         {
             int count = 1;
             ulong temp = intValue >> 7;
@@ -361,7 +361,7 @@ namespace SvnBridge.Utility
                     b |= 0x80;
                 }
 
-                writer.Write(b);
+                output.Write(b);
             }
         }
 
