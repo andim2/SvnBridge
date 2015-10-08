@@ -96,7 +96,7 @@
     <Compile Include="Handlers\ReportHandlerLogReportTests.cs" />
     <Compile Include="Handlers\ReportHandlerTests.cs" />
     <Compile Include="Handlers\ReportHandlerUpdateReportTests.cs" />
-    <Compile Include="Infrastructure\AsyncitemLoaderTests.cs" />
+    <Compile Include="Infrastructure\AsyncItemLoaderTests.cs" />
     <Compile Include="Infrastructure\HandlerTestsBase.cs" />
     <Compile Include="Infrastructure\ReadWriteMemoryStream.cs" />
     <Compile Include="Infrastructure\TestHelper.cs" />
