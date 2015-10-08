@@ -38,8 +38,18 @@ namespace SvnBridge.Infrastructure
                 // Wanted to move size check/data reading into a helper,
                 // but then the cancel handling below
                 // would have to be implemented in an awkward more indirect way...
-                while (CalculateLoadedItemsSize(folderInfo) >= CacheTotalSizeLimit)
+
+                bool haveUnusedItemLoadBufferCapacity = false;
+
+                for (; ; )
                 {
+                    var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
+                    haveUnusedItemLoadBufferCapacity = HaveUnusedItemLoadBufferCapacity(totalLoadedItemsSize);
+                    if (haveUnusedItemLoadBufferCapacity)
+                    {
+                        break;
+                    }
+
                     if (cancelOperation)
                         break;
 
@@ -60,6 +70,20 @@ namespace SvnBridge.Infrastructure
                     sourceControlProvider.ReadFileAsync(item);
                 }
             }
+        }
+
+        private bool HaveUnusedItemLoadBufferCapacity(long totalLoadedItemsSize)
+        {
+            bool haveUnusedItemLoadBufferCapacity = false;
+
+            var unusedItemLoadBufferCapacity = (CacheTotalSizeLimit - totalLoadedItemsSize);
+
+            if (0 < unusedItemLoadBufferCapacity)
+            {
+                haveUnusedItemLoadBufferCapacity = true;
+            }
+
+            return haveUnusedItemLoadBufferCapacity;
         }
 
         /// <summary>
