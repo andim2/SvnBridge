@@ -56,6 +56,29 @@ namespace SvnBridge.Utility
 			}
 		}
 
+		public static byte[] SerializeXml<T>(T request)
+		{
+			XmlWriterSettings settings = new XmlWriterSettings();
+			settings.CloseOutput = false;
+			settings.Encoding = Encoding.UTF8;
+			MemoryStream xml = new MemoryStream();
+			XmlWriter writer = XmlWriter.Create(xml, settings);
+			XmlSerializer serializer = new XmlSerializer(typeof(T));
+			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+			serializer.Serialize(writer, request, ns);
+			writer.Flush();
+			return xml.ToArray();
+		}
+
+		public static string SerializeXmlString(object request)
+		{
+			StringWriter sw = new StringWriter();
+			XmlSerializer serializer = new XmlSerializer(request.GetType());
+			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+			serializer.Serialize(sw, request, ns);
+			return sw.GetStringBuilder().ToString();
+		}
+
 		public static bool IsValidPort(string port)
 		{
 			int portAsInt;
@@ -157,29 +180,6 @@ namespace SvnBridge.Utility
 		public static NetworkCredential GetUnsafeNetworkCredential()
 		{
 			return CredentialCache.DefaultNetworkCredentials;
-		}
-
-		public static byte[] SerializeXml<T>(T request)
-		{
-			XmlWriterSettings settings = new XmlWriterSettings();
-			settings.CloseOutput = false;
-			settings.Encoding = Encoding.UTF8;
-			MemoryStream xml = new MemoryStream();
-			XmlWriter writer = XmlWriter.Create(xml, settings);
-			XmlSerializer serializer = new XmlSerializer(typeof(T));
-			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-			serializer.Serialize(writer, request, ns);
-			writer.Flush();
-			return xml.ToArray();
-		}
-
-		public static string SerializeXmlString(object request)
-		{
-			StringWriter sw = new StringWriter();
-			XmlSerializer serializer = new XmlSerializer(request.GetType());
-			XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-			serializer.Serialize(sw, request, ns);
-			return sw.GetStringBuilder().ToString();
 		}
 
         public static string GetMd5Checksum(Stream data)
