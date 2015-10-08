@@ -38,9 +38,9 @@ namespace SvnBridge.Handlers
                     {
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.SendChunked = true;
-                        using (var writer = new StreamWriter(response.OutputStream))
+                        using (var output = new StreamWriter(response.OutputStream))
                         {
-                            GetLocksReport(writer);
+                            GetLocksReport(output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "update-report")

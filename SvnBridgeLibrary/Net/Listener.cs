@@ -145,7 +145,7 @@ namespace SvnBridge.Net
                 	try
                 	{
                 		connection.Response.StatusCode = 500;
-                		using (StreamWriter sw = new StreamWriter(connection.Response.OutputStream))
+                		using (StreamWriter output = new StreamWriter(connection.Response.OutputStream))
                 		{
                 			Guid guid = Guid.NewGuid();
 
@@ -158,7 +158,7 @@ namespace SvnBridge.Net
 
                 			                 "</m:human-readable>\n" +
                 			                 "</D:error>\n";
-                			sw.Write(message);
+                			output.Write(message);
 
                 			LogError(guid, exception);
                 		}
