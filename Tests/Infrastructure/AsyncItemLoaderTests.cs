@@ -2,6 +2,7 @@
 using Attach;
 using SvnBridge.Infrastructure;
 using SvnBridge.SourceControl;
+using SvnBridge.Utility; // Helper.GetCacheBufferTotalSizeRecommendedLimit()
 using Tests;
 using Xunit;
 
@@ -20,7 +21,7 @@ namespace UnitTests
             folder.Items.Add(new ItemMetaData());
 
             TFSSourceControlProvider tfsProvider = stubs.CreateTFSSourceControlProviderStub();
-            var loader = new AsyncItemLoader(folder, tfsProvider);
+            var loader = new AsyncItemLoader(folder, tfsProvider, Helper.GetCacheBufferTotalSizeRecommendedLimit());
             stubs.Attach(tfsProvider.ReadFileAsync, Return.DelegateResult(delegate
                                                                               {
                                                                                   Thread.Sleep(1000);
@@ -41,9 +42,10 @@ namespace UnitTests
         {
             var folder = new FolderMetaData();
             TFSSourceControlProvider tfsProvider = stubs.CreateTFSSourceControlProviderStub();
+            var cacheSizeLimit = Helper.GetCacheBufferTotalSizeRecommendedLimit();
             folder.Items.Add(new ItemMetaData
-                                 {DataLoaded = true, Base64DiffData = string.Empty.PadRight(100000001, '0')});
-            var loader = new AsyncItemLoader(folder, tfsProvider);
+                                 {DataLoaded = true, Base64DiffData = string.Empty.PadRight((int)cacheSizeLimit + 1, '0')});
+            var loader = new AsyncItemLoader(folder, tfsProvider, cacheSizeLimit);
             stubs.Attach(tfsProvider.ReadFileAsync, Return.DelegateResult(delegate
                                                     {
                                                         Thread.Sleep(1000);

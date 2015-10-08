@@ -8,6 +8,7 @@ using Attach;
 using SvnBridge.Net;
 using SvnBridge.Handlers;
 using SvnBridge.PathParsing;
+using SvnBridge.Utility; // Helper.GetCacheBufferTotalSizeRecommendedLimit()
 using Tests;
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
@@ -84,7 +85,7 @@ namespace UnitTests
         public void Cancel_LoaderHasBeenInitialized_CancelsLoader()
         {
             TestableReportHandler reportHandler = new TestableReportHandler();
-            AsyncItemLoader loader = stubs.CreateObject<AsyncItemLoader>(null, null);
+            AsyncItemLoader loader = stubs.CreateObject<AsyncItemLoader>(null, null, Helper.GetCacheBufferTotalSizeRecommendedLimit());
             Results cancelMethod = stubs.Attach((MyMocks.Cancel)loader.Cancel, Return.Nothing);
             reportHandler.Loader = loader;
 

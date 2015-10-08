@@ -436,7 +436,7 @@ namespace SvnBridge.Handlers
             }
             if (metadata != null)
             {
-                loader = new AsyncItemLoader(metadata, sourceControlProvider);
+                loader = new AsyncItemLoader(metadata, sourceControlProvider, Helper.GetCacheBufferTotalSizeRecommendedLimit());
                 ThreadPool.QueueUserWorkItem(state => loader.Start());
             }
             return metadata;

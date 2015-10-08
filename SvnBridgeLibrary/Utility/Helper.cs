@@ -435,5 +435,22 @@ namespace SvnBridge.Utility
             // will block *all* potential clients of this process,
             // which is something that one might want to avoid...
         }
+
+        /// <summary>
+        /// Returns the size (in bytes)
+        /// which a cache buffer mechanism
+        /// is recommended/advised to maximally have in total,
+        /// in order to try to avoid
+        /// running into excessive GC issues
+        /// (generation promoting, LOH).
+        /// </summary>
+        public static long GetCacheBufferTotalSizeRecommendedLimit()
+        {
+            long limit;
+
+            limit = 100000000;
+
+            return limit;
+        }
 	}
 }

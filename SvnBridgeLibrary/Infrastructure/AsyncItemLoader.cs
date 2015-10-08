@@ -6,16 +6,16 @@ namespace SvnBridge.Infrastructure
 {
     public class AsyncItemLoader
     {
-        private const long MAX_BUFFER_SIZE = 100000000;
-
         private readonly FolderMetaData folderInfo;
         private readonly TFSSourceControlProvider sourceControlProvider;
+        private readonly long cacheTotalSizeLimit;
         private bool cancelOperation;
 
-        public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider)
+        public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider, long cacheTotalSizeLimit)
         {
             this.folderInfo = folderInfo;
             this.sourceControlProvider = sourceControlProvider;
+            this.cacheTotalSizeLimit = cacheTotalSizeLimit;
         }
 
         public void Start()
@@ -32,7 +32,7 @@ namespace SvnBridge.Infrastructure
         {
             foreach (ItemMetaData item in folder.Items)
             {
-                while (CalculateLoadedItemsSize(folderInfo) > MAX_BUFFER_SIZE)
+                while (CalculateLoadedItemsSize(folderInfo) > CacheTotalSizeLimit)
                 {
                     if (cancelOperation)
                         break;
@@ -70,6 +70,14 @@ namespace SvnBridge.Infrastructure
                 }
             }
             return itemsSize;
+        }
+
+        private long CacheTotalSizeLimit
+        {
+            get
+            {
+                return cacheTotalSizeLimit;
+            }
         }
     }
 }
