@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading; // Thread.Join()
 using System.Web;
 using System.Xml;
 using System.Xml.Serialization;
@@ -808,22 +807,6 @@ namespace SvnBridge.Utility
                 isPreciseMismatch = !(isCaseSensitiveMatch);
             }
             return isPreciseMismatch;
-        }
-
-        public static void CooperativeSleep(int millisecondsTimeout)
-        {
-            // We will NOT use Thread.Sleep(), since that one is strictly blocking.
-            // Thread.Join(), however, keeps doing standard COM and SendMessage() pumping,
-            // which means that GC of COM objects is improved/possible.
-            // See:
-            // "C# How to report nonspecific memory usage" http://stackoverflow.com/a/3840190/1222997
-            // http://support.microsoft.com/kb/828988
-            //   "If you must use STA threads to create COM components,
-            //    the STA threads must pump messages regularly.
-            //    To pump messages for a short time, call the Thread.Join method, as follows:"
-            // http://bytes.com/topic/c-sharp/answers/470374-thread-sleep-vs-thread-join
-            // http://bytes.com/topic/c-sharp/answers/484585-contextswitchdeadlock
-            Thread.CurrentThread.Join(millisecondsTimeout);
         }
 
         /// <summary>

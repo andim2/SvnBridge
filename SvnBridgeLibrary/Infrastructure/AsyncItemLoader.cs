@@ -2,7 +2,7 @@ using System; // IntPtr.Size
 using System.Threading; // AutoResetEvent
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.DebugUsefulBreakpointLocation()
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.Infrastructure
 {
@@ -19,6 +19,11 @@ namespace SvnBridge.Infrastructure
         private readonly AutoResetEvent finishedOne;
         private readonly WaitHandle[] finishedOneArray;
 
+        private readonly AutoResetEvent crawlerEvent;
+        private readonly WaitHandle[] crawlerEventArray;
+
+        private readonly TimeSpan spanTimeoutTryWaitConsumptionStep;
+
         public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider, long cacheTotalSizeLimit)
         {
             this.folderInfo = folderInfo;
@@ -29,6 +34,11 @@ namespace SvnBridge.Infrastructure
             // to enable direct (non-dereferenced) fast access.
             this.finishedOne = new AutoResetEvent(false);
             this.finishedOneArray = new WaitHandle[] { finishedOne };
+
+            this.crawlerEvent = new AutoResetEvent(false);
+            this.crawlerEventArray = new WaitHandle[] { crawlerEvent };
+
+            this.spanTimeoutTryWaitConsumptionStep = DefineTimeoutTryWaitConsumptionStep();
         }
 
         public void Start()
@@ -46,6 +56,12 @@ namespace SvnBridge.Infrastructure
         public virtual void Cancel()
         {
             cancelOperation = true;
+            NotifyCrawler();
+        }
+
+        private void NotifyCrawler()
+        {
+            crawlerEvent.Set();
         }
 
         private void CheckCancel()
@@ -116,7 +132,8 @@ namespace SvnBridge.Infrastructure
 
                 // Do some waiting until hopefully parts of totalLoadedItemsSize
                 // got consumed (by consumer side, obviously).
-                Helper.CooperativeSleep(1000);
+                bool isWaitSuccess = WaitNotify(
+                    spanTimeoutTryWaitConsumptionStep);
 
                 CheckCancel();
             }
@@ -157,6 +174,39 @@ namespace SvnBridge.Infrastructure
         private static long TimeoutAwaitAnyConsumptionActivity
         {
             get { return 3600*4; }
+        }
+
+        private bool WaitNotify(
+            TimeSpan spanTimeout)
+        {
+            bool isWaitSuccess = false;
+
+            int idxEvent = WaitHandle.WaitAny(crawlerEventArray, spanTimeout);
+            bool isTimeout = (WaitHandle.WaitTimeout == idxEvent);
+            isWaitSuccess = !(isTimeout);
+
+            return isWaitSuccess;
+        }
+
+        /// <remarks>
+        /// Since we now have proper notification of item consumption
+        /// (producer gets notified once an item was fetched by consumer)
+        /// and we act on it,
+        /// we (usually...) should get properly notified,
+        /// thus we can now have a much larger timeout
+        /// (and make it drastically large,
+        /// to be able to prominently notice implementation failure:
+        /// e.g. that we failed to get notified
+        /// on an item-consumption wait -
+        /// but don't use an infinite or even overly large timeout
+        /// since that would break service quality
+        /// on such a "negligible" implementation failure),
+        /// to avoid power-management-hampering useless wakeups.
+        /// </remarks>
+        private static TimeSpan DefineTimeoutTryWaitConsumptionStep()
+        {
+            //return TimeSpan.FromSeconds(1);
+            return TimeSpan.FromMinutes(30);
         }
 
         /// <summary>
@@ -329,8 +379,19 @@ namespace SvnBridge.Infrastructure
 
             base64DiffData = item.ContentDataRobAsBase64(
                 out md5Hash);
+            NotifyCrawlerItemConsumed(
+                item);
 
             return base64DiffData;
+        }
+
+        /// <remarks>
+        /// One item down, 9999 to go...
+        /// </remarks>
+        private void NotifyCrawlerItemConsumed(
+            ItemMetaData item)
+        {
+            NotifyCrawler();
         }
     }
 }
