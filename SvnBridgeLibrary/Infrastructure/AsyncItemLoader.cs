@@ -7,8 +7,245 @@ using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.Infrastructure
 {
-    public sealed class AsyncItemLoaderExceptionCancel : Exception
+    public sealed class MonitoredCommBaseExceptionCancel : Exception
     {
+    }
+
+    /// <summary>
+    /// Single, central thread communication class
+    /// which enables to properly atomically wait (block)
+    /// on a *single* point
+    /// which may be notified for *several* different reasons.
+    /// Chose to implement things this way
+    /// since C# offers such functionality in a way (via Monitors)
+    /// which somewhat differs from usual/known POSIX condition variable handling
+    /// (i.e. a global select loop for properly waiting on multiple conditions,
+    /// with properly atomic condition variable 3-way-handshake handling).
+    /// http://www.java2s.com/Tutorial/CSharp/0420__Thread/UselockandMonitortocoordinateProducerandConsumer.htm
+    /// says
+    ///   "When selecting an object on which to synchronize,
+    ///   you should lock only on private or internal objects.
+    ///   Locking on external objects might result in deadlocks,
+    ///   because unrelated code could choose the same objects to lock on
+    ///   for different purposes."
+    /// </summary>
+    public class MonitoredCommBase
+    {
+        private bool cancelOperation /* = false */;
+
+        public MonitoredCommBase()
+        {
+        }
+
+        /// <summary>
+        /// Needs to own lock(), else SynchronizationLockException...
+        /// </summary>
+        protected void Pulse()
+        {
+            // No need to have Monitor.IsEntered() check here
+            // (.Wait throws SynchronizationLockException if not locked).
+            Monitor.Pulse(this);
+        }
+
+        /// <summary>
+        /// Needs to own lock(), else SynchronizationLockException...
+        /// </summary>
+        protected bool Wait(
+            TimeSpan spanTimeout)
+        {
+            bool isWaitSuccess = false;
+
+            // No need to have Monitor.IsEntered() check here
+            // (.Wait throws SynchronizationLockException if not locked).
+            // IMPORTANT NOTE (for those who don't know it):
+            //   while .Wait()ing the lock will be *cleanly atomically unlocked*.
+            isWaitSuccess = Monitor.Wait(
+                this,
+                spanTimeout);
+
+            return isWaitSuccess;
+        }
+
+        public void CheckCancel()
+        {
+            lock (this)
+            {
+                CheckCancel_i();
+            }
+        }
+
+        private void CheckCancel_i()
+        {
+            if (cancelOperation)
+            {
+                Helper.DebugUsefulBreakpointLocation();
+                throw new MonitoredCommBaseExceptionCancel();
+            }
+        }
+
+        public void Cancel()
+        {
+            lock (this)
+            {
+                Cancel_i();
+            }
+        }
+
+        private void Cancel_i()
+        {
+            cancelOperation = true;
+            Pulse();
+        }
+    }
+
+    internal sealed class MonitoredCommAsyncItemLoader : MonitoredCommBase
+    {
+        private int requestsInflight;
+        private readonly int requestsInflightMax;
+        private readonly DateTime timeUtcExpireProduction;
+
+        /// NOTE Monitor handling:
+        /// lock() (of this class's *scope*!)
+        /// should always (/usually?) be enacted
+        /// right where entering this class,
+        /// i.e. fully symmetrically in all *public* methods.
+        public MonitoredCommAsyncItemLoader(
+            DateTime timeUtcExpireProduction,
+            int requestsInflightMax)
+        {
+            this.requestsInflight = 0;
+            this.requestsInflightMax = requestsInflightMax;
+            this.timeUtcExpireProduction = timeUtcExpireProduction;
+        }
+
+        private TimeSpan GetSpanExpire()
+        {
+            return timeUtcExpireProduction - DateTime.UtcNow;
+        }
+
+        public void RequestSlotOccupy()
+        {
+            lock (this)
+            {
+                RequestSlotOccupy_i();
+            }
+        }
+
+        private void RequestSlotOccupy_i()
+        {
+            ThrottleSlots();
+            ++requestsInflight;
+        }
+
+        private void ThrottleSlots()
+        {
+            for (;;)
+            {
+                bool haveIdleSlots = (requestsInflight < requestsInflightMax);
+                // IMPORTANT: definitely remember to do an *initial* status check
+                // directly prior to first wait.
+                if (haveIdleSlots)
+                {
+                    break;
+                }
+
+                WaitEvent();
+                CheckCancel();
+            }
+        }
+
+        private void WaitEvent()
+        {
+            bool isWaitSuccess = Wait(
+                GetSpanExpire());
+            if (!(isWaitSuccess))
+            {
+                ReportErrorItemDataProductionTimeout();
+            }
+        }
+
+        public void RequestSlotRelease()
+        {
+            lock (this)
+            {
+                RequestSlotRelease_i();
+            }
+        }
+
+        private void RequestSlotRelease_i()
+        {
+            try
+            {
+                RequestSlotRelease_Do();
+            }
+            // I guess we should signal activity unconditionally
+            // (both when successful and when not).
+            finally
+            {
+                Pulse();
+            }
+        }
+
+        private void RequestSlotRelease_Do()
+        {
+            bool haveSlotsRemaining = (0 < requestsInflight);
+            if (haveSlotsRemaining)
+            {
+                --requestsInflight;
+            }
+            else
+            {
+                ReportErrorNoRequestSlotsRemaining();
+            }
+        }
+
+        public void WaitFinished()
+        {
+            lock (this)
+            {
+                WaitFinished_i();
+            }
+        }
+
+        private void WaitFinished_i()
+        {
+            WaitFinishedImpl();
+        }
+
+        private void WaitFinishedImpl()
+        {
+            WaitFinishedImpl_ConsumeSlots();
+        }
+
+        private void WaitFinishedImpl_ConsumeSlots()
+        {
+            // ".NET Reverse Semaphore?" http://stackoverflow.com/a/1965589
+            // So, *consume up all the counters*,
+            // but do all this while properly obeying the global timeout.
+            int slotsConsumed = 0; // Keep track *locally*, of the slots we managed to consume (block) successfully
+            for (;;)
+            {
+                RequestSlotOccupy_i();
+
+                bool consumedAllSlots = (++slotsConsumed >= requestsInflightMax);
+                if (consumedAllSlots)
+                {
+                    break;
+                }
+            }
+        }
+
+        private static void ReportErrorItemDataProductionTimeout()
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new TimeoutException("Timeout while waiting for filesystem item data production to be completed");
+        }
+
+        private static void ReportErrorNoRequestSlotsRemaining()
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new InvalidOperationException("no request slots remaining!?");
+        }
     }
 
     public /* no "sealed" here (class subsequently derived by Tests) */ class AsyncItemLoader
@@ -16,18 +253,18 @@ namespace SvnBridge.Infrastructure
         private readonly FolderMetaData folderInfo;
         private readonly TFSSourceControlProvider sourceControlProvider;
         private readonly long cacheTotalSizeLimit;
-        private bool cancelOperation /* = false */;
 
-        private const int requestsInflightMax = 1;
-        private int requestsInflightCounter;
+        // Have a precisely bounded timeout endpoint to compare against:
+        private readonly DateTime timeUtcExpireProduction;
+
+        private readonly MonitoredCommAsyncItemLoader monitoredComm;
+
+        private readonly AsyncCallback callback;
+
         // Need a separate dictionary
         // (we cannot submit an IAsyncResult-derived class
         // since this IAsyncResult is generated by foreign layers!).
         private readonly Dictionary<IAsyncResult, ItemMetaData> dictAsync = new Dictionary<IAsyncResult, ItemMetaData>();
-
-        private readonly TimeSpan spanExpireProduction;
-
-        private readonly AsyncCallback callback;
 
         private readonly AutoResetEvent finishedOne;
         private readonly WaitHandle[] finishedOneArray;
@@ -45,9 +282,13 @@ namespace SvnBridge.Infrastructure
             this.sourceControlProvider = sourceControlProvider;
             this.cacheTotalSizeLimit = cacheTotalSizeLimit;
 
-            this.requestsInflightCounter = 0;
+            TimeSpan spanExpireProduction = TimeoutExpireProduction;
+            this.timeUtcExpireProduction = DateTime.UtcNow + spanExpireProduction;
 
-            this.spanExpireProduction = TimeoutExpireProduction;
+            var tfsRequestsPendingMax = 8;
+            this.monitoredComm = new MonitoredCommAsyncItemLoader(
+                timeUtcExpireProduction,
+                tfsRequestsPendingMax);
 
             this.callback = new AsyncCallback(
                 OnItemDataDownloadEnded);
@@ -72,20 +313,22 @@ namespace SvnBridge.Infrastructure
             {
                 ReadItemsInFolder(folderInfo);
             }
-            catch (AsyncItemLoaderExceptionCancel)
+            catch (MonitoredCommBaseExceptionCancel)
             {
                 // Nothing to be done other than cleanly bailing out
             }
             finally
             {
+                // FIXME: this does not fully cleanly restore things I guess
+                // (think of cancelling pending async activity once a Cancel got received...).
                 WaitFinished();
             }
         }
 
         public virtual void Cancel()
         {
-            cancelOperation = true;
-            NotifyCrawler();
+            monitoredComm.Cancel();
+            NotifyCrawler(); // FIXME: ugly workaround to also notify the *other* wait parts...
         }
 
         private void NotifyCrawler()
@@ -95,48 +338,12 @@ namespace SvnBridge.Infrastructure
 
         private void CheckCancel()
         {
-            if (cancelOperation)
-            {
-                Helper.DebugUsefulBreakpointLocation();
-                throw new AsyncItemLoaderExceptionCancel();
-            }
+            monitoredComm.CheckCancel();
         }
 
         private void WaitFinished()
         {
-            if (0 == requestsInflightCounter) // overhead-avoiding shortcut
-            {
-                return;
-            }
-
-            DateTime timeUtcStart = DateTime.UtcNow;
-            DateTime timeUtcExpire = timeUtcStart + spanExpireProduction;
-
-            TimeSpan spanTimeoutRemain = spanExpireProduction;
-
-            while (requestsInflightCounter > 0)
-            {
-                bool isWaitSuccess = WaitNotify(
-                    spanTimeoutRemain);
-                if (!(isWaitSuccess))
-                {
-                    ReportErrorItemDataProductionTimeout();
-                }
-
-                if (cancelOperation)
-                {
-                    return;
-                }
-
-                // Performance: implement grabbing current timestamp ALAP, to have strict timeout-side handling.
-                DateTime timeUtcNow = DateTime.UtcNow; // debug helper
-
-                // Make sure to have the timeout value variable updated for next round above:
-                // And make sure to have handling be focussed on a precise final timepoint
-                // to have a precisely bounded timeout endpoint
-                // (i.e., avoid annoying accumulation of added-up multi-wait scheduling delays imprecision).
-                spanTimeoutRemain = timeUtcExpire - timeUtcNow;
-            }
+            monitoredComm.WaitFinished();
         }
 
         /// <remarks>
@@ -156,12 +363,6 @@ namespace SvnBridge.Infrastructure
                 return TimeSpan.FromHours(
                     4);
             }
-        }
-
-        private static void ReportErrorItemDataProductionTimeout()
-        {
-            Helper.DebugUsefulBreakpointLocation();
-            throw new TimeoutException("Timeout while waiting for filesystem item data production to be completed");
         }
 
         private void ReadItemsInFolder(FolderMetaData folder)
@@ -292,20 +493,8 @@ namespace SvnBridge.Infrastructure
         {
             bool maySubmit = false;
 
-            TimeSpan spanTimeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-            while (requestsInflightCounter >= requestsInflightMax)
-            {
-                if (WaitNotify(spanTimeout))
-                {
-                    CheckCancel();
-                    if (requestsInflightCounter < requestsInflightMax)
-                    {
-                        Interlocked.Increment(ref requestsInflightCounter);
-                        maySubmit = true;
-                        break;
-                    }
-                }
-            }
+            monitoredComm.RequestSlotOccupy();
+            maySubmit = true;
             CheckCancel();
 
             return maySubmit;
@@ -372,8 +561,7 @@ namespace SvnBridge.Infrastructure
             }
             finally
             {
-                Interlocked.Decrement(ref requestsInflightCounter); // freed slot
-                NotifyCrawler(); // crawler may fill freed slot
+                monitoredComm.RequestSlotRelease();
 
                 // Ultimately, make damn sure to *always* notify
                 // the infinitely waiting consumer,
