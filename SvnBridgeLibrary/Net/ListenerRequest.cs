@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
-using SvnBridge.Utility; // Utility.MemoryStreamLOHSanitized
+using SvnBridge.Utility; // Helper.AppendToStream(), Utility.MemoryStreamLOHSanitized
 
 namespace SvnBridge.Net
 {
@@ -211,39 +211,7 @@ namespace SvnBridge.Net
                 return false;
             }
 
-      var positionWriteStart = buffer.Length;
-      var numToBeWritten = bytesRead;
-      var requiredMinimumCapacity = positionWriteStart + numToBeWritten;
-
-      bool needEnlargeCapacity = (buffer.Capacity < requiredMinimumCapacity);
-			if (needEnlargeCapacity)
-			{
-#if false
-            // AWFUL Capacity handling!! (GC catastrophy)
-            // .Capacity value should most definitely *NEVER* be directly (manually) modified,
-            // since framework ought to know best
-            // how to increment .Capacity value in suitably future-proof-sized steps!
-            // (read: it's NOT useful
-            // to keep incrementing [read: keep actively reallocating!!]
-            // a continuously aggregated perhaps 8MB .Capacity
-            // by some perhaps 4273 Bytes each!)
-            //
-            // --> use .SetLength() API
-            // since it internally calculates (whenever needed)
-            // the next suitable .Capacity value.
-				buffer.Capacity = requiredMinimumCapacity;
-#else
-          buffer.SetLength(requiredMinimumCapacity);
-#endif
-			}
-
-			var originalPosition = buffer.Position;
-
-			buffer.Position = positionWriteStart;
-
-			buffer.Write(bytes, 0, numToBeWritten);
-
-			buffer.Position = originalPosition;
+            Helper.AppendToStream(buffer, bytes, bytesRead);
 
             return true;
 		}

@@ -156,6 +156,57 @@ namespace SvnBridge.Utility
             return combined;
         }
 
+        public static void AppendToStream(MemoryStream stream, byte[] data)
+        {
+            AppendToStream(stream, data, data.Length);
+        }
+
+        public static void AppendToStream(MemoryStream stream, byte[] data, int dataCountToBeWritten)
+        {
+            var streamLengthOrig = stream.Length;
+            var positionWriteStart = streamLengthOrig;
+            var numToBeAppended = dataCountToBeWritten;
+            WriteToStreamYetKeepPosUnchanged(stream, positionWriteStart, data, numToBeAppended);
+        }
+
+        public static void WriteToStreamYetKeepPosUnchanged(MemoryStream stream, long positionWriteStart, byte[] data, int numToBeWritten)
+        {
+            var requiredMinimumCapacity = positionWriteStart + numToBeWritten;
+            StreamEnsureCapacity(stream, requiredMinimumCapacity);
+
+            var positionBackup = stream.Position;
+            stream.Position = positionWriteStart;
+            int dataOffset = 0;
+            stream.Write(data, dataOffset, numToBeWritten);
+            stream.Position = positionBackup;
+        }
+
+        /// <remarks>
+        /// Certain inner C# handlers are said to be called "EnsureCapacity",
+        /// so let's use compatible naming.
+        /// </remarks>
+        public static void StreamEnsureCapacity(MemoryStream stream, long requiredMinimumCapacity)
+        {
+            bool needEnlargeCapacity = (stream.Capacity < requiredMinimumCapacity);
+            if (needEnlargeCapacity)
+            {
+                // Important comment, to avoid the following issue:
+                // AWFUL Capacity handling!! (GC catastrophy)
+                // .Capacity should most definitely *NEVER* be directly (manually) modified,
+                // since framework ought to know best
+                // how to increment .Capacity in suitably future-proof-sized steps!
+                // (read: it's NOT useful
+                // to keep incrementing [read: reallocating!!]
+                // a continuously aggregated perhaps 8MB .Capacity
+                // by some perhaps 4273 Bytes each!)
+                //
+                // --> use .SetLength() API
+                // since it internally calculates (whenever needed)
+                // the next suitable .Capacity value.
+                stream.SetLength(requiredMinimumCapacity);
+            }
+        }
+
         public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
         {
             Encoding utf8WithoutBOM = new UTF8Encoding(false);
