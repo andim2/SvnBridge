@@ -125,28 +125,30 @@ namespace SvnBridge.Utility
             byte[] buffer,
             ref int targetIndex)
         {
+            int instructionLength = (int) instruction.Length;
+            int instructionOffs = (int) instruction.Offset;
             switch (instruction.OpCode)
             {
                 case SvnDiffInstructionOpCode.CopyFromSource:
                     Array.Copy(source,
-                               (int) instruction.Offset + sourceDataStartIndex,
+                               instructionOffs + sourceDataStartIndex,
                                buffer,
                                targetIndex,
-                               (int) instruction.Length);
+                               instructionLength);
                     break;
 
                 case SvnDiffInstructionOpCode.CopyFromTarget:
                     // Cannot use Array.Copy because Offset + Length may be greater than starting targetIndex
-                    for (int i = 0; i < (int) instruction.Length; i++)
+                    for (int i = 0; i < instructionLength; i++)
                     {
-                        buffer[targetIndex + i] = buffer[(int) instruction.Offset + i];
+                        buffer[targetIndex + i] = buffer[instructionOffs + i];
                     }
                     break;
 
                 case SvnDiffInstructionOpCode.CopyFromNewData:
-                    //byte[] newData = dataReader.ReadBytes((int) instruction.Length);
+                    //byte[] newData = dataReader.ReadBytes(instructionLength);
                     //Array.Copy(newData, 0, buffer, targetIndex, newData.Length);
-                    dataReader.BaseStream.Read(buffer, targetIndex, (int) instruction.Length);
+                    dataReader.BaseStream.Read(buffer, targetIndex, instructionLength);
                     break;
 
                 default:
@@ -154,7 +156,7 @@ namespace SvnBridge.Utility
                     throw new NotImplementedException();
                     //break;
             }
-            targetIndex += (int) instruction.Length;
+            targetIndex += instructionLength;
         }
 
         public static SvnDiffWindow CreateReplaceDiff(byte[] data, int index, int length)
