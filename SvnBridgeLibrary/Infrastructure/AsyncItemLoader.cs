@@ -6,6 +6,10 @@ using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.DebugUsefulBreakpo
 
 namespace SvnBridge.Infrastructure
 {
+    public sealed class AsyncItemLoaderExceptionCancel : Exception
+    {
+    }
+
     public /* no "sealed" here (class subsequently derived by Tests) */ class AsyncItemLoader
     {
         private readonly FolderMetaData folderInfo;
@@ -29,12 +33,28 @@ namespace SvnBridge.Infrastructure
 
         public void Start()
         {
-            ReadItemsInFolder(folderInfo);
+            try
+            {
+                ReadItemsInFolder(folderInfo);
+            }
+            catch (AsyncItemLoaderExceptionCancel)
+            {
+                // Nothing to be done other than cleanly bailing out
+            }
         }
 
         public virtual void Cancel()
         {
             cancelOperation = true;
+        }
+
+        private void CheckCancel()
+        {
+            if (cancelOperation)
+            {
+                Helper.DebugUsefulBreakpointLocation();
+                throw new AsyncItemLoaderExceptionCancel();
+            }
         }
 
         private void ReadItemsInFolder(FolderMetaData folder)
@@ -62,8 +82,7 @@ namespace SvnBridge.Infrastructure
                         break;
                     }
 
-                    if (cancelOperation)
-                        break;
+                    CheckCancel();
 
                     if (++retry > timeoutInSeconds)
                     {
@@ -74,8 +93,7 @@ namespace SvnBridge.Infrastructure
                     // got consumed (by consumer side, obviously).
                     Helper.CooperativeSleep(1000);
 
-                    if (cancelOperation)
-                        break;
+                    CheckCancel();
                 }
 
                 if (!(haveUnusedItemLoadBufferCapacity))
@@ -83,8 +101,7 @@ namespace SvnBridge.Infrastructure
                     break;
                 }
 
-                if (cancelOperation)
-                    break;
+                CheckCancel();
 
                 if (item.ItemType == ItemType.Folder)
                 {
