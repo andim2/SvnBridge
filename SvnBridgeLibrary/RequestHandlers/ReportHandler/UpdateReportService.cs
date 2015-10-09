@@ -27,7 +27,7 @@ namespace SvnBridge.Infrastructure
 			{
                 if (!parentFolderWasDeleted)
                 {
-                    output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\"/>\n");
+                    output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(item) + "\"/>\n");
                 }
 			}
 			else
@@ -43,17 +43,17 @@ namespace SvnBridge.Infrastructure
 				//another item with the same name already exists, need to remove it.
 				if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(item, updateReportRequest, srcPath, clientRevisionForItem, existingFile))
 				{
-					output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\"/>\n");
+					output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(item) + "\"/>\n");
 				}
 
 				if (existingFile)
 				{
-					output.Write("<S:open-file name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\" rev=\"" +
+					output.Write("<S:open-file name=\"" + GetEncodedNamePart(item) + "\" rev=\"" +
                                  clientRevisionForItem + "\">\n");
 				}
 				else
 				{
-					output.Write("<S:add-file name=\"" + Helper.EncodeB(GetFileName(item.Name)) + "\">\n");
+					output.Write("<S:add-file name=\"" + GetEncodedNamePart(item) + "\">\n");
 				}
 
 				string svnVerLocalPath = handler.GetLocalPath("/!svn/ver/" + item.Revision + "/" + Helper.Encode(item.Name, true));
@@ -90,6 +90,11 @@ namespace SvnBridge.Infrastructure
 			}
 		}
 
+        private static string GetEncodedNamePart(ItemMetaData item)
+        {
+            return Helper.EncodeB(GetFileName(item.Name));
+        }
+
 		private bool ItemExistsAtTheClient(ItemMetaData item, UpdateReportData updateReportRequest, string srcPath, int clientRevisionForItem)
 		{
 			return updateReportRequest.IsCheckOut == false &&
@@ -113,7 +118,7 @@ namespace SvnBridge.Infrastructure
 			{
                 if (!parentFolderWasDeleted)
                 {
-                    output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(folder.Name)) + "\"/>\n");
+                    output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
                 }
 			}
 			else
@@ -136,18 +141,18 @@ namespace SvnBridge.Infrastructure
 					//another item with the same name already exists, need to remove it.
 					if (!parentFolderWasDeleted && ShouldDeleteItemBeforeSendingToClient(folder, updateReportRequest, srcPath, clientRevisionForItem, existingFolder))
 					{
-						output.Write("<S:delete-entry name=\"" + Helper.EncodeB(GetFileName(folder.Name)) + "\"/>\n");
+						output.Write("<S:delete-entry name=\"" + GetEncodedNamePart(folder) + "\"/>\n");
                         folderWasDeleted = true;
 					}
 
 					if (existingFolder)
 					{
-						output.Write("<S:open-directory name=\"" + Helper.EncodeB(GetFileName(folder.Name)) +
+						output.Write("<S:open-directory name=\"" + GetEncodedNamePart(folder) +
 									 "\" rev=\"" + updateReportRequest.Entries[0].Rev + "\">\n");
 					}
 					else
 					{
-						output.Write("<S:add-directory name=\"" + Helper.EncodeB(GetFileName(folder.Name)) +
+						output.Write("<S:add-directory name=\"" + GetEncodedNamePart(folder) +
 									 "\" bc-url=\"" + handler.GetLocalPath("/!svn/bc/" + folder.Revision + "/" + Helper.Encode(folder.Name, true)) +
 									 "\">\n");
 					}
