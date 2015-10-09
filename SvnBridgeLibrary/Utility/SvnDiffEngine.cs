@@ -70,9 +70,16 @@ namespace SvnBridge.Utility
             byte[] buffer = new byte[BUFFER_EXPAND_SIZE];
             int targetIndex = 0;
 
-            SvnDiffInstruction instruction = ReadInstruction(instructionReader);
-            while (instruction != null)
+            for (; ; )
             {
+                SvnDiffInstruction instruction = ReadInstruction(instructionReader);
+
+                bool haveInstruction = (null != instruction);
+                if (!(haveInstruction))
+                {
+                    break;
+                }
+
                 EnsureRequiredLengthOfWorkBuffer(
                     ref buffer,
                     targetIndex,
@@ -85,8 +92,6 @@ namespace SvnBridge.Utility
                     sourceDataStartIndex,
                     buffer,
                     ref targetIndex);
-
-                instruction = ReadInstruction(instructionReader);
             }
 
             Array.Resize(ref buffer, targetIndex);
