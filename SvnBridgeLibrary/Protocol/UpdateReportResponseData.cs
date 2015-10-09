@@ -10,10 +10,9 @@ namespace SvnBridge.Protocol
         [XmlElement("open-directory", Namespace = WebDav.Namespaces.SVN)] public List<OpenDirectoryData> OpenDirectories
             = new List<OpenDirectoryData>();
 
-        [XmlAttribute("send-all", DataType = "boolean", Form = XmlSchemaForm.Unqualified)] public bool SendAll = false;
+        [XmlAttribute("send-all", DataType = "boolean", Form = XmlSchemaForm.Unqualified)] public bool SendAll /* = false */;
 
-        [XmlElement("target-revision", Namespace = WebDav.Namespaces.SVN)] public TargetRevisionData TargetRevision =
-            null;
+        [XmlElement("target-revision", Namespace = WebDav.Namespaces.SVN)] public TargetRevisionData TargetRevision /* = null */;
 
         public UpdateReportResponseData()
         {

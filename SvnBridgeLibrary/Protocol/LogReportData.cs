@@ -6,17 +6,16 @@ namespace SvnBridge.Protocol
     public class LogReportData
     {
         [XmlElement("discover-changed-paths", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string
-            DiscoverChangedPaths = null;
+            DiscoverChangedPaths /* = null */;
 
-        [XmlElement("end-revision", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string EndRevision =
-            null;
+        [XmlElement("end-revision", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string EndRevision /* = null */;
 
-        [XmlElement("limit", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string Limit = null;
+        [XmlElement("limit", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string Limit /* = null */;
 
-        [XmlElement("path", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string Path = null;
+        [XmlElement("path", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string Path /* = null */;
 
         [XmlElement("start-revision", Namespace = WebDav.Namespaces.SVN, DataType = "string")] public string
-            StartRevision = null;
+            StartRevision /* = null */;
 
         public LogReportData()
         {

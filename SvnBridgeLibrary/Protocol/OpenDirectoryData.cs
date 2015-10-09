@@ -12,9 +12,9 @@ namespace SvnBridge.Protocol
         [XmlElement("add-file", Namespace = WebDav.Namespaces.SVN)] public List<AddFileData> AddFile =
             new List<AddFileData>();
 
-        [XmlElement("checked-in", Namespace = WebDav.Namespaces.DAV)] public CheckedInData CheckedIn = null;
+        [XmlElement("checked-in", Namespace = WebDav.Namespaces.DAV)] public CheckedInData CheckedIn /* = null */;
 
-        [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev = null;
+        [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev /* = null */;
 
         [XmlElement("set-prop", Namespace = WebDav.Namespaces.SVN)] public List<SetPropData> SetProp =
             new List<SetPropData>();

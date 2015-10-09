@@ -10,7 +10,7 @@ namespace SvnBridge.Infrastructure
         private readonly FolderMetaData folderInfo;
         private readonly TFSSourceControlProvider sourceControlProvider;
         private readonly long cacheTotalSizeLimit;
-        private bool cancelOperation;
+        private bool cancelOperation /* = false */;
 
         public AsyncItemLoader(FolderMetaData folderInfo, TFSSourceControlProvider sourceControlProvider, long cacheTotalSizeLimit)
         {

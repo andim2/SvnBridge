@@ -9,6 +9,6 @@ namespace SvnBridge.Protocol
     public class OptionsData
     {
         [XmlElement("activity-collection-set", Namespace = WebDav.Namespaces.DAV, DataType = "string")]
-        public string ActivityCollectionSet = null;
+        public string ActivityCollectionSet /* = null */;
     }
 }

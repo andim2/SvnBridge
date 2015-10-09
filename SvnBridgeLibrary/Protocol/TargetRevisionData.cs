@@ -5,7 +5,7 @@ namespace SvnBridge.Protocol
 {
     public class TargetRevisionData
     {
-        [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev = null;
+        [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev /* = null */;
 
         public TargetRevisionData()
         {

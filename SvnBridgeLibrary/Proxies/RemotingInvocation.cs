@@ -18,7 +18,7 @@ namespace SvnBridge.Proxies
         private readonly RealProxy realProxy;
         private readonly IInterceptor[] interceptors;
         private readonly object[] args;
-        private int interceptorIndex = 0;
+        private int interceptorIndex /* = 0 */;
 
         public RemotingInvocation(RealProxy realProxy, IInterceptor[] interceptors, IMethodCallMessage message, object target)
         {

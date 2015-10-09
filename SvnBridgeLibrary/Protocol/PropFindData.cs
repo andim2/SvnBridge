@@ -7,11 +7,11 @@ namespace SvnBridge.Protocol
     [XmlRoot("propfind", Namespace = WebDav.Namespaces.DAV)]
     public class PropFindData
     {
-        [XmlElement("allprop", Namespace = WebDav.Namespaces.DAV)] public AllPropData AllProp = null;
+        [XmlElement("allprop", Namespace = WebDav.Namespaces.DAV)] public AllPropData AllProp /* = null */;
 
-        [XmlElement("prop", Namespace = WebDav.Namespaces.DAV)] public PropData Prop = null;
+        [XmlElement("prop", Namespace = WebDav.Namespaces.DAV)] public PropData Prop /* = null */;
 
-        [XmlElement("propname", Namespace = WebDav.Namespaces.DAV)] public PropNameData PropName = null;
+        [XmlElement("propname", Namespace = WebDav.Namespaces.DAV)] public PropNameData PropName /* = null */;
 
         public PropFindData()
         {

@@ -18,8 +18,8 @@ namespace SvnBridge.Net
     /// </summary>
     public class ListenerResponseStream : Stream
     {
-        protected bool flushed = false;
-        protected bool headerWritten = false;
+        protected bool flushed /* = false */;
+        protected bool headerWritten /* = false */;
         protected ListenerRequest request;
         protected ListenerResponse response;
         protected Stream stream;

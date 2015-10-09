@@ -15,7 +15,7 @@ namespace SvnBridge.Handlers
 {
     public class PropFindHandler : RequestHandlerBase
     {
-        private static bool _doLogFile = false;
+        private static bool _doLogFile /* = false */ = false /* CS0649 */;
 
         protected override void Handle(
             IHttpContext context,

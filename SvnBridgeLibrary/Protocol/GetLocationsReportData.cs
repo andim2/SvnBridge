@@ -7,12 +7,12 @@ namespace SvnBridge.Protocol
     public class GetLocationsReportData
     {
         [XmlElement("location-revision", Namespace = WebDav.Namespaces.SVN)]
-        public List<string> LocationRevision = null;
+        public List<string> LocationRevision /* = null */;
 
         [XmlElement("path", Namespace = WebDav.Namespaces.SVN, DataType = "string")] 
-        public string Path = null;
+        public string Path /* = null */;
 
         [XmlElement("peg-revision", Namespace = WebDav.Namespaces.SVN, DataType = "string")] 
-        public string PegRevision = null;
+        public string PegRevision /* = null */;
     }
 }

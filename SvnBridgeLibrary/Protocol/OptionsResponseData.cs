@@ -6,7 +6,7 @@ namespace SvnBridge.Protocol
     public class OptionsResponseData
     {
         [XmlElement("activity-collection-set", Namespace = WebDav.Namespaces.DAV)] public ActivityCollectionSetData
-            ActivityCollectionSet = null;
+            ActivityCollectionSet /* = null */;
 
         public OptionsResponseData()
         {

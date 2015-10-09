@@ -11,22 +11,22 @@ namespace SvnBridge.Protocol
     public class UpdateReportData
     {
         [XmlElement("entry", Namespace = WebDav.Namespaces.SVN)]
-        public List<EntryData> Entries = null;
+        public List<EntryData> Entries /* = null */;
 
         [XmlElement("missing", Namespace = WebDav.Namespaces.SVN)]
-        public List<string> Missing = null;
+        public List<string> Missing /* = null */;
 
         [XmlAttribute("send-all", DataType = "boolean", Form = XmlSchemaForm.Unqualified)]
-        public bool SendAll = false;
+        public bool SendAll /* = false */;
 
         [XmlElement("src-path", Namespace = WebDav.Namespaces.SVN, DataType = "string")]
-        public string SrcPath = null;
+        public string SrcPath /* = null */;
 
         [XmlElement("target-revision", Namespace = WebDav.Namespaces.SVN, DataType = "string")]
-        public string TargetRevision = null;
+        public string TargetRevision /* = null */;
 
         [XmlElement("update-target", Namespace = WebDav.Namespaces.SVN, DataType = "string")]
-        public string UpdateTarget = null;
+        public string UpdateTarget /* = null */;
 
         public bool IsCheckOut
         {

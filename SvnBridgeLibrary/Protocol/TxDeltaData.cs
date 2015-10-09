@@ -4,7 +4,7 @@ namespace SvnBridge.Protocol
 {
     public class TxDeltaData
     {
-        [XmlText(DataType = "string")] public string Data = null;
+        [XmlText(DataType = "string")] public string Data /* = null */;
 
         public TxDeltaData()
         {

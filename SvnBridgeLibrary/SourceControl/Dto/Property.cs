@@ -2,8 +2,8 @@
 {
     public class Property
     {
-        public string Name = null;
-        public string Value = null;
+        public string Name /* = null */;
+        public string Value /* = null */;
 
         public Property()
         {

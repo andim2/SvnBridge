@@ -7,10 +7,9 @@ namespace SvnBridge.Protocol
     {
         [XmlText()] public string path;
 
-        [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev = null;
+        [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev /* = null */;
 
-        [XmlAttribute("start-empty", DataType = "boolean", Form = XmlSchemaForm.Unqualified)] public bool StartEmpty =
-            false;
+        [XmlAttribute("start-empty", DataType = "boolean", Form = XmlSchemaForm.Unqualified)] public bool StartEmpty /* = false */;
 
         public EntryData()
         {

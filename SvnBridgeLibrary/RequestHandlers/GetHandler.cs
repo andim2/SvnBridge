@@ -10,7 +10,7 @@ namespace SvnBridge.Handlers
 {
 	public class GetHandler : RequestHandlerBase
 	{
-        private bool isHeadOnly = false;
+        private bool isHeadOnly /* = false */;
 
         public GetHandler(bool headOnly)
         {
@@ -29,7 +29,6 @@ namespace SvnBridge.Handlers
         /// </summary>
         public GetHandler()
         {
-            this.isHeadOnly = false;
         }
 
         protected override void Handle(
