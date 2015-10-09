@@ -63,6 +63,7 @@ namespace SvnBridge.Infrastructure
             isWaitSuccess = Monitor.Wait(
                 this,
                 spanTimeout);
+            CheckCancel();
 
             return isWaitSuccess;
         }
@@ -167,7 +168,6 @@ namespace SvnBridge.Infrastructure
                 }
 
                 WaitEvent();
-                CheckCancel();
             }
         }
 
@@ -440,27 +440,16 @@ namespace SvnBridge.Infrastructure
 
                     // Do the below-size-limit check within the scope and right before
                     // the single place which actually is going to read more data.
-                    bool haveUnusedItemLoadBufferCapacity = WaitForUnusedItemLoadBufferCapacity();
+                    WaitForUnusedItemLoadBufferCapacity();
 
-                    if (!(haveUnusedItemLoadBufferCapacity))
-                    {
-                        break;
-                    }
-
-                    bool isSubmitted = SubmitOne(
+                    SubmitOne(
                         item);
-                    if (!(isSubmitted))
-                    {
-                        break;
-                    }
                 }
             }
         }
 
-        private bool WaitForUnusedItemLoadBufferCapacity()
+        private void WaitForUnusedItemLoadBufferCapacity()
         {
-            bool haveUnusedItemLoadBufferCapacity = false;
-
             // Ensure that this crawler resource will bail out at least eventually
             // in case of a problem (e.g. missing consumer-side fetching).
             // And make sure to keep calculating this expire time *locally*,
@@ -471,13 +460,11 @@ namespace SvnBridge.Infrastructure
             for (; ; )
             {
                 var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
-                haveUnusedItemLoadBufferCapacity = HaveUnusedItemLoadBufferCapacity(totalLoadedItemsSize);
+                bool haveUnusedItemLoadBufferCapacity = HaveUnusedItemLoadBufferCapacity(totalLoadedItemsSize);
                 if (haveUnusedItemLoadBufferCapacity)
                 {
                     break;
                 }
-
-                CheckCancel();
 
                 DateTime timeUtcNow = DateTime.UtcNow; // debug helper
                 bool isWaitExceeded = (timeUtcNow >= timeUtcExpireAwaitAnyConsumptionActivity);
@@ -491,11 +478,7 @@ namespace SvnBridge.Infrastructure
                 // got consumed (by consumer side, obviously).
                 bool isWaitSuccess = WaitNotify(
                     spanTimeoutTryWaitConsumptionStep);
-
-                CheckCancel();
             }
-
-            return haveUnusedItemLoadBufferCapacity;
         }
 
         private bool HaveUnusedItemLoadBufferCapacity(long totalLoadedItemsSize)
@@ -533,37 +516,24 @@ namespace SvnBridge.Infrastructure
             get { return TimeSpan.FromHours(4); }
         }
 
-        private bool SubmitOne(
+        private void SubmitOne(
             ItemMetaData item)
         {
-            bool isSubmitted = false;
+            WaitSubmitOne();
 
-            bool maySubmit = WaitSubmitOne();
-            if (maySubmit)
-            {
-                isSubmitted = SubmitOne_Do(
+            SubmitOne_Do(
                     item);
-            }
-
-            return isSubmitted;
         }
 
-        private bool WaitSubmitOne()
+        private void WaitSubmitOne()
         {
-            bool maySubmit = false;
-
             monitoredComm.RequestSlotOccupy();
-            maySubmit = true;
-            CheckCancel();
-
-            return maySubmit;
+            //CheckCancel(); // NO CheckCancel() here due to ugly race window (once we got a slot, corresponding slot release via callback processing MUST get activated!)
         }
 
-        private bool SubmitOne_Do(
+        private void SubmitOne_Do(
             ItemMetaData item)
         {
-            bool isSubmitted = false;
-
             // Warning: potential race window!
             // Since BeginReadFile() might happen to fully process things instantly (who knows...),
             // this might result in the callback getting called prior to us
@@ -576,9 +546,6 @@ namespace SvnBridge.Infrastructure
                 SubmitOne_Do_i(
                     item);
             }
-            isSubmitted = true;
-
-            return isSubmitted;
         }
 
         private void SubmitOne_Do_i(
@@ -596,9 +563,13 @@ namespace SvnBridge.Infrastructure
         {
             bool isWaitSuccess = false;
 
+            CheckCancel();
+
             int idxEvent = WaitHandle.WaitAny(crawlerEventArray, spanTimeout);
             bool isTimeout = (WaitHandle.WaitTimeout == idxEvent);
             isWaitSuccess = !(isTimeout);
+
+            CheckCancel();
 
             return isWaitSuccess;
         }
@@ -764,6 +735,8 @@ namespace SvnBridge.Infrastructure
         {
             long itemsSize = 0;
 
+            CheckCancel();
+
             foreach (ItemMetaData item in folder.Items)
             {
                 if (item.ItemType == ItemType.Folder)
@@ -775,6 +748,9 @@ namespace SvnBridge.Infrastructure
                     itemsSize += item.Base64DiffData.Length;
                 }
             }
+
+            CheckCancel();
+
             return itemsSize;
         }
 
