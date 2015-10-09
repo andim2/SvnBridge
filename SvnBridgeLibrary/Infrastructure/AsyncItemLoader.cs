@@ -11,6 +11,10 @@ namespace SvnBridge.Infrastructure
     {
     }
 
+    public sealed class MonitoredCommBaseExceptionTimeout : Exception
+    {
+    }
+
     /// <summary>
     /// Single, central thread communication class
     /// which enables to properly atomically wait (block)
@@ -50,8 +54,9 @@ namespace SvnBridge.Infrastructure
 
         /// <summary>
         /// Needs to own lock(), else SynchronizationLockException...
+        /// Will throw exceptions on cancel or timeout.
         /// </summary>
-        protected bool Wait(
+        protected void Wait(
             TimeSpan spanTimeout)
         {
             bool isWaitSuccess = false;
@@ -64,9 +69,23 @@ namespace SvnBridge.Infrastructure
             isWaitSuccess = Monitor.Wait(
                 this,
                 spanTimeout);
+
+            // Hrmm... probably rather common execution order problem:
+            // for the case of encountering timeout,
+            // are we supposed to check for cancel first (i.e. cancel exception comes first),
+            // or throw timeout exception first?
             CheckCancel();
 
-            return isWaitSuccess;
+            // Unfortunately there likely is no
+            // exception-based variant of Monitor.Wait() -
+            // otherwise we could have nicely clean error-path-only handling
+            // (catch its timeout exception
+            // and convert to our outer-layer exception type).
+            if (!(isWaitSuccess))
+            {
+                Helper.DebugUsefulBreakpointLocation();
+                throw new MonitoredCommBaseExceptionTimeout();
+            }
         }
 
         public void CheckCancel()
@@ -187,11 +206,15 @@ namespace SvnBridge.Infrastructure
 
         private void WaitEvent()
         {
-            bool isWaitSuccess = Wait(
-                GetSpanExpire());
-            if (!(isWaitSuccess))
+            try
             {
-                ReportErrorItemDataProductionTimeout();
+                Wait(
+                    GetSpanExpire());
+            }
+            catch (MonitoredCommBaseExceptionTimeout e)
+            {
+                ReportErrorItemDataProductionTimeout(
+                    e);
             }
         }
 
@@ -288,10 +311,11 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-        private static void ReportErrorItemDataProductionTimeout()
+        private static void ReportErrorItemDataProductionTimeout(
+            Exception inner)
         {
             Helper.DebugUsefulBreakpointLocation();
-            throw new TimeoutException("Timeout while waiting for filesystem item data production to be completed");
+            throw new TimeoutException("Timeout while waiting for filesystem item data production to be completed", inner);
         }
 
         private static void ReportErrorNoRequestSlotsRemaining()
