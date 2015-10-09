@@ -86,36 +86,36 @@ namespace SvnBridge.Infrastructure
 
         private bool WaitForUnusedItemLoadBufferCapacity()
         {
-                bool haveUnusedItemLoadBufferCapacity = false;
+            bool haveUnusedItemLoadBufferCapacity = false;
 
-                // Q&D HACK to ensure that this crawler resource will bail out at least eventually
-                // in case of a problem (e.g. missing consumer-side fetching).
-                long timeoutInSeconds = TimeoutAwaitAnyConsumptionActivity;
-                long retry = 0;
-                for (; ; )
+            // Q&D HACK to ensure that this crawler resource will bail out at least eventually
+            // in case of a problem (e.g. missing consumer-side fetching).
+            long timeoutInSeconds = TimeoutAwaitAnyConsumptionActivity;
+            long retry = 0;
+            for (; ; )
+            {
+                var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
+                haveUnusedItemLoadBufferCapacity = HaveUnusedItemLoadBufferCapacity(totalLoadedItemsSize);
+                if (haveUnusedItemLoadBufferCapacity)
                 {
-                    var totalLoadedItemsSize = CalculateLoadedItemsSize(folderInfo);
-                    haveUnusedItemLoadBufferCapacity = HaveUnusedItemLoadBufferCapacity(totalLoadedItemsSize);
-                    if (haveUnusedItemLoadBufferCapacity)
-                    {
-                        break;
-                    }
-
-                    CheckCancel();
-
-                    if (++retry > timeoutInSeconds)
-                    {
-                        ReportErrorItemDataConsumptionTimeout();
-                    }
-
-                    // Do some waiting until hopefully parts of totalLoadedItemsSize
-                    // got consumed (by consumer side, obviously).
-                    Helper.CooperativeSleep(1000);
-
-                    CheckCancel();
+                    break;
                 }
 
-                return haveUnusedItemLoadBufferCapacity;
+                CheckCancel();
+
+                if (++retry > timeoutInSeconds)
+                {
+                    ReportErrorItemDataConsumptionTimeout();
+                }
+
+                // Do some waiting until hopefully parts of totalLoadedItemsSize
+                // got consumed (by consumer side, obviously).
+                Helper.CooperativeSleep(1000);
+
+                CheckCancel();
+            }
+
+            return haveUnusedItemLoadBufferCapacity;
         }
 
         private bool HaveUnusedItemLoadBufferCapacity(long totalLoadedItemsSize)
