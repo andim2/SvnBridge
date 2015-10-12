@@ -18,7 +18,7 @@ namespace SvnBridge.Utility
         public BinaryReaderEOF(Stream input)
         {
             _reader = new BinaryReader(input);
-            FillBuffer(BUF_SIZE);
+            TryFillReadahead();
         }
 
         public bool EOF
@@ -27,7 +27,7 @@ namespace SvnBridge.Utility
             {
                 if (_position == _count)
                 {
-                    FillBuffer(BUF_SIZE);
+                    TryFillReadahead();
                 }
 
                 if (_count == 0)
@@ -39,6 +39,11 @@ namespace SvnBridge.Utility
                     return false;
                 }
             }
+        }
+
+        private void TryFillReadahead()
+        {
+            FillBuffer(BUF_SIZE);
         }
 
         private void FillBuffer(int size)
@@ -56,7 +61,7 @@ namespace SvnBridge.Utility
         {
             if (_position >= _count)
             {
-                FillBuffer(BUF_SIZE);
+                TryFillReadahead();
             }
 
             return _buffer[_position++];
