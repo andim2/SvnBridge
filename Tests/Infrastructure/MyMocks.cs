@@ -182,7 +182,7 @@ namespace Tests
         {
             return base.Attach((Delegate)method, Return.DelegateResult(delegate(object[] parameters)
             {
-                ((ItemMetaData)parameters[0]).Base64DiffData = SvnDiffParser.GetBase64SvnDiffData(fileData);
+                ((ItemMetaData)parameters[0]).Data = fileData;
                 ((ItemMetaData)parameters[0]).Md5Hash = Helper.GetMd5Checksum(fileData);
                 ((ItemMetaData)parameters[0]).DataLoaded = true;
                 return null;

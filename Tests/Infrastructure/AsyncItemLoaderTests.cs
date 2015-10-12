@@ -44,7 +44,7 @@ namespace UnitTests
             TFSSourceControlProvider tfsProvider = stubs.CreateTFSSourceControlProviderStub();
             var cacheSizeLimit = Helper.GetCacheBufferTotalSizeRecommendedLimit();
             folder.Items.Add(new ItemMetaData
-                                 {DataLoaded = true, Base64DiffData = string.Empty.PadRight((int)cacheSizeLimit + 1, '0')});
+                                 {DataLoaded = true, Data = new byte[cacheSizeLimit]});
             var loader = new AsyncItemLoader(folder, tfsProvider, cacheSizeLimit);
             stubs.Attach(tfsProvider.ReadFileAsync, Return.DelegateResult(delegate
                                                     {

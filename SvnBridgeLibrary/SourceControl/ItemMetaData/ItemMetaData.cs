@@ -48,7 +48,7 @@ namespace SvnBridge.SourceControl
         // renames, ..
         public bool NewlyAdded /* = false */;
         public bool DataLoaded /* = false */;
-        public string Base64DiffData /* = null */;
+        public byte[] Data /* = null */;
         public string Md5Hash /* = null */; // Important helper to support maintaining a properly end-to-end checksummed data chain
         //public Exception DataLoadedError;
         public string DownloadUrl /* = null */;
@@ -93,11 +93,11 @@ namespace SvnBridge.SourceControl
         /// </summary>
         public virtual void ContentDataAdopt(byte[] dataIn)
         {
-            string base64 = null;
+            byte[] dataCooked = null;
             string md5 = null;
             if (null != dataIn)
             {
-                base64 = SvnDiffParser.GetBase64SvnDiffData(dataIn);
+                dataCooked = dataIn;
                 md5 = Helper.GetMd5Checksum(dataIn);
             }
             else
@@ -105,7 +105,7 @@ namespace SvnBridge.SourceControl
                 Helper.DebugUsefulBreakpointLocation();
             }
             // Now centrally assign members
-            Base64DiffData = base64;
+            Data = dataCooked;
             Md5Hash = md5;
             // Indicate successful completion even in case of retrieval failure:
             DataLoaded = true; // IMPORTANT MARKER - SET LAST!
@@ -117,20 +117,25 @@ namespace SvnBridge.SourceControl
         /// </summary>
         public virtual string ContentDataRobAsBase64(out string md5Hash)
         {
-            bool isDataValid = (DataLoaded && (null != Base64DiffData) && (null != Md5Hash));
+            bool isDataValid = (DataLoaded && (null != Data) && (null != Md5Hash));
             if (!(isDataValid))
             {
                 throw new ItemHasInvalidDataException(
                     this);
             }
 
-            var base64DiffData = Base64DiffData;
+            var base64DiffData = EncodeAsBase64SvnDiffData(Data);
             var base64DiffDataLength = base64DiffData.Length; // debug convenience helper
             md5Hash = Md5Hash;
 
             ContentDataRelease();
 
             return base64DiffData;
+        }
+
+        private static string EncodeAsBase64SvnDiffData(byte[] data)
+        {
+            return SvnDiffParser.GetBase64SvnDiffData(data);
         }
 
         /// <summary>
@@ -154,7 +159,7 @@ namespace SvnBridge.SourceControl
         private void ContentDataRelease()
         {
             DataLoaded = false; // IMPORTANT MARKER - CLEAR FIRST!
-            Base64DiffData = null;
+            Data = null;
             Md5Hash = null;
         }
 
@@ -167,9 +172,9 @@ namespace SvnBridge.SourceControl
                 if (DataLoaded)
                 {
                     // Handle "load failure" case (.DataLoaded true / data null)
-                    if (null != Base64DiffData)
+                    if (null != Data)
                     {
-                        length = Base64DiffData.Length;
+                        length = Data.Length;
                     }
                 }
 
