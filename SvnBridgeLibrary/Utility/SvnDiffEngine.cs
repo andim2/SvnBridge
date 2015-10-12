@@ -73,32 +73,32 @@ namespace SvnBridge.Utility
             byte[] buffer,
             ref int targetIndex)
         {
-                switch (instruction.OpCode)
-                {
-                    case SvnDiffInstructionOpCode.CopyFromSource:
-                        Array.Copy(source,
-                                   (int) instruction.Offset + sourceDataStartIndex,
-                                   buffer,
-                                   targetIndex,
-                                   (int) instruction.Length);
-                        targetIndex += (int) instruction.Length;
-                        break;
+            switch (instruction.OpCode)
+            {
+                case SvnDiffInstructionOpCode.CopyFromSource:
+                    Array.Copy(source,
+                               (int) instruction.Offset + sourceDataStartIndex,
+                               buffer,
+                               targetIndex,
+                               (int) instruction.Length);
+                    targetIndex += (int) instruction.Length;
+                    break;
 
-                    case SvnDiffInstructionOpCode.CopyFromTarget:
-                        // Cannot use Array.Copy because Offset + Length may be greater than starting targetIndex
-                        for (int i = 0; i < (int) instruction.Length; i++)
-                        {
-                            buffer[targetIndex] = buffer[(int) instruction.Offset + i];
-                            targetIndex++;
-                        }
-                        break;
+                case SvnDiffInstructionOpCode.CopyFromTarget:
+                    // Cannot use Array.Copy because Offset + Length may be greater than starting targetIndex
+                    for (int i = 0; i < (int) instruction.Length; i++)
+                    {
+                        buffer[targetIndex] = buffer[(int) instruction.Offset + i];
+                        targetIndex++;
+                    }
+                    break;
 
-                    case SvnDiffInstructionOpCode.CopyFromNewData:
-                        byte[] newData = dataReader.ReadBytes((int) instruction.Length);
-                        Array.Copy(newData, 0, buffer, targetIndex, newData.Length);
-                        targetIndex += newData.Length;
-                        break;
-                }
+                case SvnDiffInstructionOpCode.CopyFromNewData:
+                    byte[] newData = dataReader.ReadBytes((int) instruction.Length);
+                    Array.Copy(newData, 0, buffer, targetIndex, newData.Length);
+                    targetIndex += newData.Length;
+                    break;
+            }
         }
 
         public static SvnDiff CreateReplaceDiff(byte[] bytes, int index, int length)
