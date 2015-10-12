@@ -8,14 +8,27 @@ namespace SvnBridge.Utility
     {
         public static byte[] ApplySvnDiff(SvnDiff svnDiff, byte[] source, int sourceDataStartIndex)
         {
-            const int BUFFER_EXPAND_SIZE = 5000;
-            byte[] buffer = new byte[BUFFER_EXPAND_SIZE];
-            int targetIndex = 0;
-
             MemoryStream instructionStream = new MemoryStream(svnDiff.InstructionSectionBytes);
             BinaryReaderEOF instructionReader = new BinaryReaderEOF(instructionStream);
             MemoryStream dataStream = new MemoryStream(svnDiff.DataSectionBytes);
             BinaryReader dataReader = new BinaryReader(dataStream);
+
+            return ApplySvnDiffInstructions(
+                instructionReader,
+                dataReader,
+                source,
+                sourceDataStartIndex);
+        }
+
+        private static byte[] ApplySvnDiffInstructions(
+            BinaryReaderEOF instructionReader,
+            BinaryReader dataReader,
+            byte[] source,
+            int sourceDataStartIndex)
+        {
+            const int BUFFER_EXPAND_SIZE = 5000;
+            byte[] buffer = new byte[BUFFER_EXPAND_SIZE];
+            int targetIndex = 0;
 
             SvnDiffInstruction instruction = ReadInstruction(instructionReader);
             while (instruction != null)
