@@ -4,6 +4,25 @@ using System.Collections.Generic;
 
 namespace SvnBridge.Utility
 {
+    internal class BinaryReaderSvnDiffEOF : BinaryReaderEOF
+    {
+        public BinaryReaderSvnDiffEOF(Stream input)
+            : base(input)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Alias class (~ typedef, "using").
+    /// </summary>
+    internal class BinaryReaderSvnDiff : BinaryReaderSvnDiffEOF
+    {
+        public BinaryReaderSvnDiff(Stream input)
+            : base(input)
+        {
+        }
+    }
+
     public class SvnDiffEngine
     {
         private const int BUFFER_EXPAND_SIZE = 5000;
@@ -11,7 +30,7 @@ namespace SvnBridge.Utility
         public static byte[] ApplySvnDiff(SvnDiff svnDiff, byte[] source, int sourceDataStartIndex)
         {
             MemoryStream instructionStream = new MemoryStream(svnDiff.InstructionSectionBytes);
-            BinaryReaderEOF instructionReader = new BinaryReaderEOF(instructionStream);
+            BinaryReaderSvnDiff instructionReader = new BinaryReaderSvnDiff(instructionStream);
             MemoryStream dataStream = new MemoryStream(svnDiff.DataSectionBytes);
             BinaryReader dataReader = new BinaryReader(dataStream);
 
@@ -23,7 +42,7 @@ namespace SvnBridge.Utility
         }
 
         private static byte[] ApplySvnDiffInstructions(
-            BinaryReaderEOF instructionReader,
+            BinaryReaderSvnDiff instructionReader,
             BinaryReader dataReader,
             byte[] source,
             int sourceDataStartIndex)
@@ -142,7 +161,7 @@ namespace SvnBridge.Utility
 
         public static SvnDiff[] ParseSvnDiff(Stream inputStream)
         {
-            BinaryReaderEOF reader = new BinaryReaderEOF(inputStream);
+            BinaryReaderSvnDiff reader = new BinaryReaderSvnDiff(inputStream);
 
             byte[] signature = reader.ReadBytes(3);
             byte version = reader.ReadByte();
@@ -157,7 +176,7 @@ namespace SvnBridge.Utility
             }
 
             List<SvnDiff> diffs = new List<SvnDiff>();
-            while (!reader.EOF)
+            while (!EOF(reader))
             {
                 SvnDiff diff = new SvnDiff();
 
@@ -206,9 +225,9 @@ namespace SvnBridge.Utility
             writer.Flush();
         }
 
-        private static SvnDiffInstruction ReadInstruction(BinaryReaderEOF reader)
+        private static SvnDiffInstruction ReadInstruction(BinaryReaderSvnDiff reader)
         {
-            if (reader.EOF)
+            if (EOF(reader))
             {
                 return null;
             }
@@ -262,13 +281,13 @@ namespace SvnBridge.Utility
             }
         }
 
-        private static ulong ReadInt(BinaryReaderEOF reader)
+        private static ulong ReadInt(BinaryReaderSvnDiff reader)
         {
             int bytesRead;
             return ReadInt(reader, out bytesRead);
         }
 
-        private static ulong ReadInt(BinaryReaderEOF reader, out int bytesRead)
+        private static ulong ReadInt(BinaryReaderSvnDiff reader, out int bytesRead)
         {
             ulong value = 0;
 
@@ -312,6 +331,11 @@ namespace SvnBridge.Utility
 
                 writer.Write(b);
             }
+        }
+
+        private static bool EOF(BinaryReaderSvnDiff reader)
+        {
+            return reader.EOF;
         }
     }
 }
