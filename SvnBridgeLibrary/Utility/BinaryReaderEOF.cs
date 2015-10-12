@@ -3,6 +3,10 @@ using System.IO;
 
 namespace SvnBridge.Utility
 {
+    /// <remarks>
+    /// WARNING: buggy class
+    /// (see ReadBytes() comment)
+    /// </remarks>
     public class BinaryReaderEOF
     {
         public const int BUF_SIZE = 1024;
@@ -58,6 +62,22 @@ namespace SvnBridge.Utility
             return _buffer[_position++];
         }
 
+        /// <remarks>
+        /// WARNING: ReadBytes() is terribly buggy
+        /// since it does not handle
+        /// the "read more bytes than buffer member size" case
+        /// (no _loop_ implemented!).
+        /// This is why BinaryReaderEOF is now completely removed from
+        /// all user code (with no harmful effects observed on a
+        /// somewhat larger repo, I might add).
+        /// Reasons:
+        /// - original bug report had a very different discussion
+        /// - this class got committed out of the blue, it was not
+        ///   obvious at all that things had to be fixed like that
+        ///   (no documentation / reasoning on the bug report)
+        /// - almost no Changeset comment (merely the bug tracker link
+        ///   was mentioned, fortunately)
+        /// </remarks>
         public byte[] ReadBytes(int count)
         {
             byte[] result = new byte[count];

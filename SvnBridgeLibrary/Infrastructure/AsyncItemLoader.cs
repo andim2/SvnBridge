@@ -1,3 +1,4 @@
+using System; // IntPtr.Size
 using System.Threading; // Thread.Sleep()
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;

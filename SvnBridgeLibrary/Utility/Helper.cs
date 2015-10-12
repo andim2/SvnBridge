@@ -16,6 +16,7 @@ namespace SvnBridge.Utility
 {
 	public static class Helper
 	{
+		private static readonly byte[] _emptyBuffer = new byte[0];
 		private static readonly string[] DECODED = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`", "&" };
 		private static readonly string[] DECODED_B = new string[] { "&", "<", ">" };
 		private static readonly string[] DECODED_C = new string[] { "%", "#", " ", "^", "{", "[", "}", "]", ";", "`" };
@@ -33,6 +34,12 @@ namespace SvnBridge.Utility
 
 		public static T DeserializeXml<T>(XmlReader reader)
 		{
+                        // Side note: XmlSerializer is known to be easily leaky.
+                        // However, since this class is using "simple"
+                        // ctor variants only which don't exhibit such
+                        // leaks (see
+                        // http://msdn.microsoft.com/en-us/library/system.xml.serialization.xmlserializer.aspx
+                        // ), it's no problem here.
 			XmlSerializer requestSerializer = new XmlSerializer(typeof(T));
 			return (T)requestSerializer.Deserialize(reader);
 		}
@@ -126,8 +133,8 @@ namespace SvnBridge.Utility
 				request.Timeout = 60000;
 
 				using (WebResponse response = request.GetResponse())
+				using (StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
 				{
-					StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
 					string output = reader.ReadToEnd();
 					return (output.Contains("Team Foundation Registration web service"));
 				}
@@ -185,6 +192,10 @@ namespace SvnBridge.Utility
 
         public static string GetMd5Checksum(Stream data)
         {
+            // FIXME: ermm, there is a Stream-parameterized variant
+            // of MD5::ComputeHash() as well - why don't we simply
+            // make use of that instead,
+            // just like the Array-parameterized variant below??
             MD5 md5 = MD5.Create();
             int num;
             byte[] buffer = new byte[0x1000];
@@ -199,27 +210,41 @@ namespace SvnBridge.Utility
             while (num > 0);
             md5.TransformFinalBlock(buffer, 0, num);
 
+            return GetMd5ChecksumString(md5.Hash);
+        }
+
+        // And a variant for "jagged array" input,
+        // suitable to avoid large LOH-destined allocation sizes.
+        public static string GetMd5Checksum(byte[][] jagged)
+        {
+            // Useful discussion:
+            //   http://stackoverflow.com/questions/878837/salting-a-c-sharp-md5-computehash-on-a-stream
+            MD5 md5 = MD5.Create();
+            foreach(var innerArray in jagged)
+            {
+              md5.TransformBlock(innerArray, 0, innerArray.Length, null, 0);
+            }
+            md5.TransformFinalBlock(_emptyBuffer, 0, 0);
+
+            return GetMd5ChecksumString(md5.Hash);
+        }
+
+		public static string GetMd5Checksum(byte[] data)
+		{
+			MD5 md5 = MD5.Create();
+                        return GetMd5ChecksumString(md5.ComputeHash(data));
+		}
+
+        private static string GetMd5ChecksumString(byte[] hash)
+        {
             StringBuilder sb = new StringBuilder();
-            foreach (byte b in md5.Hash)
+            foreach (byte b in hash)
             {
                 sb.Append(b.ToString("x2").ToLower());
             }
 
             return sb.ToString();
         }
-
-		public static string GetMd5Checksum(byte[] data)
-		{
-			MD5 md5 = MD5.Create();
-			StringBuilder sb = new StringBuilder();
-
-			foreach (byte b in md5.ComputeHash(data))
-			{
-				sb.Append(b.ToString("x2").ToLower());
-			}
-
-			return sb.ToString();
-		}
 
 		private static string Encode(string[] encoded, string[] decoded, string value, bool capitalize)
 		{
@@ -302,6 +327,9 @@ namespace SvnBridge.Utility
 
 		public static string UrlEncodeIfNecessary(string href)
 		{
+                        // Hmm... why can't we use the venerable
+                        // Uri.EscapeUriString() method instead?
+                        // Surely would be much faster, too...
 			StringBuilder sb = new StringBuilder();
 			foreach (char c in href)
 			{
@@ -444,13 +472,33 @@ namespace SvnBridge.Utility
         /// running into excessive GC issues
         /// (generation promoting, LOH).
         /// </summary>
+        /// <remarks>
+        /// On 32bit systems, there are severe LOH fragmentation
+        /// issues, thus make sure to retain allocations for short
+        /// amounts of time only (avoid GC generation "midlife crisis"),
+        /// by strongly reducing amount of advance buffering/caching.
+        /// </remarks>
         public static long GetCacheBufferTotalSizeRecommendedLimit()
         {
             long limit;
 
-            limit = 100000000;
+            long BUFFER_SIZE_LIMIT_64BIT = 100000000;
+            long BUFFER_SIZE_LIMIT_32BIT = 10000000;
+
+            limit = NeedAvoidLongLivedMemoryFragmentation ? BUFFER_SIZE_LIMIT_32BIT : BUFFER_SIZE_LIMIT_64BIT;
 
             return limit;
+        }
+
+        public static bool NeedAvoidLongLivedMemoryFragmentation
+        {
+            get
+            {
+                bool isAddressSpace64bitWide = (8 == IntPtr.Size);
+                bool isAddressSpaceSufficientlyLarge = (isAddressSpace64bitWide);
+                bool needAvoidLongLivedMemoryFragmentation = !(isAddressSpaceSufficientlyLarge);
+                return needAvoidLongLivedMemoryFragmentation;
+            }
         }
 	}
 }

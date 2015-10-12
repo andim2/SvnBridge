@@ -169,7 +169,11 @@ namespace UnitTests
             SvnDiff[] diffs = SvnDiffEngine.ParseSvnDiff(diffStream);
 
             Assert.Equal(2, diffs.Length);
-            Assert.Equal(100000, (int)diffs[0].TargetViewLength);
+            // Depending on platform type (32/64bit), limit is either 100000
+            // or 81920 (our standard LOH allocation amount, to combat fragmentation)
+            int dataLength = (int)diffs[0].TargetViewLength;
+            bool amount_ok = ((100000 == dataLength) || (81920 == dataLength));
+            Assert.Equal(true, amount_ok);
         }
 
         [Fact]

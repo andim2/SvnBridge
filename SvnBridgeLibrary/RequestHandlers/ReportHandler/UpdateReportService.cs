@@ -60,16 +60,18 @@ namespace SvnBridge.Infrastructure
 
 				while (item.DataLoaded == false)
 					Thread.Sleep(100);
+                                var base64DiffData = item.Base64DiffData;
+                                // Immediately release data memory from item's reach
+                                // (reduce GC memory management pressure)
+                                item.DataLoaded = false;
+                                item.Base64DiffData = null;
 
 				output.Write("<S:txdelta>");
-                output.Write(item.Base64DiffData);
+                // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
+                output.Write(base64DiffData);
 				output.Write("\n</S:txdelta>");
                 output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");
 
-                // Release data memory
-                item.DataLoaded = false;
-                item.Base64DiffData = null;
-                
                 if (existingFile)
 				{
 					output.Write("</S:open-file>\n");

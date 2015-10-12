@@ -275,15 +275,18 @@ namespace SvnBridge.Handlers
                     while (item.DataLoaded == false)
                         Thread.Sleep(100);
 
+                    var base64DiffData = item.Base64DiffData;
+                    // Immediately release data memory from item's reach
+                    // (reduce GC memory management pressure)
+                    item.DataLoaded = false;
+                    item.Base64DiffData = null;
+
                     output.Write("<S:apply-textdelta>");
-                    output.Write(item.Base64DiffData);
+                    // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
+                    output.Write(base64DiffData);
                     output.Write("\n");
                     output.Write("</S:apply-textdelta>\n");
                     output.Write("<S:close-file checksum=\"{0}\"/>\n", item.Md5Hash);
-
-                    // Release data memory
-                    item.DataLoaded = false;
-                    item.Base64DiffData = null;
                 }
             }
             output.Write("<S:close-directory />\n");
@@ -326,15 +329,19 @@ namespace SvnBridge.Handlers
                     foreach (SourceItemChange change in history.Changes)
                     {
                         ItemMetaData item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, change.Item.RemoteName, Recursion.None);
-                        byte[] itemData = sourceControlProvider.ReadFile(item);
-                        string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
 
                         output.Write(@"<S:file-rev path=""" + change.Item.RemoteName + @""" rev=""" +
                             change.Item.RemoteChangesetId + @""">
                             <S:rev-prop name=""svn:log"">" + history.Comment + @"</S:rev-prop>
                             <S:rev-prop name=""svn:author"">" + history.Username + @"</S:rev-prop>
                             <S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
-                            <S:txdelta>" + txdelta + @"</S:txdelta></S:file-rev>");
+                            <S:txdelta>"
+                        );
+                        byte[] itemData = sourceControlProvider.ReadFile(item);
+                        string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
+                        // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
+                        output.Write(txdelta);
+                        output.Write(@"</S:txdelta></S:file-rev>");
                     }
                 }
                 output.Write("</S:file-revs-report>");

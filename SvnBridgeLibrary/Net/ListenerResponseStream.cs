@@ -16,6 +16,8 @@ namespace SvnBridge.Net
         protected Stream stream;
         protected int maxKeepAliveConnections;
         protected MemoryStream streamBuffer;
+        protected static readonly byte[] chunkFooterChunk = Encoding.UTF8.GetBytes("\r\n");
+        protected static readonly byte[] chunkFooterFinalZeroChunk = Encoding.UTF8.GetBytes("0\r\n\r\n");
 
         public ListenerResponseStream(ListenerRequest request,
                                       ListenerResponse response,
@@ -63,8 +65,7 @@ namespace SvnBridge.Net
                 WriteHeaderIfNotAlreadyWritten();
                 if (response.SendChunked)
                 {
-                    byte[] chunkFooter = Encoding.UTF8.GetBytes("0\r\n\r\n");
-                    stream.Write(chunkFooter, 0, chunkFooter.Length);
+                    stream.Write(chunkFooterFinalZeroChunk, 0, chunkFooterFinalZeroChunk.Length);
                 }
                 else
                 {
@@ -78,8 +79,10 @@ namespace SvnBridge.Net
 
         private void ForwardStreamBuffer()
         {
-             byte[] buffer = streamBuffer.ToArray();
-             stream.Write(buffer, 0, buffer.Length);
+            //byte[] buffer = streamBuffer.ToArray(); // *copy* of *used* internal container segment
+            //stream.Write(buffer, 0, buffer.Length);
+            //stream.Write(streamBuffer.GetBuffer() /* *non-copy* of full internal container length */, 0, (int)streamBuffer.Length);
+            streamBuffer.WriteTo(stream);
         }
 
         public override int Read(byte[] buffer,
@@ -109,11 +112,10 @@ namespace SvnBridge.Net
                 WriteHeaderIfNotAlreadyWritten();
 
                 byte[] chunkHeader = Encoding.UTF8.GetBytes(string.Format("{0:x}", count) + "\r\n");
-                byte[] chunkFooter = Encoding.UTF8.GetBytes("\r\n");
 
                 stream.Write(chunkHeader, 0, chunkHeader.Length);
                 stream.Write(buffer, offset, count);
-                stream.Write(chunkFooter, 0, chunkFooter.Length);
+                stream.Write(chunkFooterChunk, 0, chunkFooterChunk.Length);
             }
             else
             {

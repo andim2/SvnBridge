@@ -8,6 +8,8 @@ namespace SvnBridge.Net
     public class ListenerResponse : IHttpResponse
     {
         private readonly List<KeyValuePair<string, string>> headers;
+        // XXX: FxCop complains that this class ought to implement IDisposable mechanisms
+        // since member outputStream is IDisposable-based!
         private readonly ListenerResponseStream outputStream;
         private Encoding contentEncoding;
         private string contentType;

@@ -12,10 +12,27 @@ namespace SvnBridge.Utility
         }
     }
 
+    internal class BinaryReaderSvnDiffEOFViaPositionCheck : BinaryReader
+    {
+        public BinaryReaderSvnDiffEOFViaPositionCheck(Stream input)
+            : base(input)
+        {
+        }
+
+        public bool EOF
+        {
+            get
+            {
+                var stream = BaseStream;
+                return (stream.Position >= stream.Length);
+            }
+        }
+    }
+
     /// <summary>
     /// Alias class (~ typedef, "using").
     /// </summary>
-    internal class BinaryReaderSvnDiff : BinaryReaderSvnDiffEOF
+    internal class BinaryReaderSvnDiff : BinaryReaderSvnDiffEOFViaPositionCheck
     {
         public BinaryReaderSvnDiff(Stream input)
             : base(input)
@@ -25,20 +42,23 @@ namespace SvnBridge.Utility
 
     public class SvnDiffEngine
     {
-        private const int BUFFER_EXPAND_SIZE = 5000;
+        private const int BUFFER_EXPAND_SIZE = Constants.AllocSize_AvoidLOHCatastrophy;
 
         public static byte[] ApplySvnDiff(SvnDiff svnDiff, byte[] source, int sourceDataStartIndex)
         {
             MemoryStream instructionStream = new MemoryStream(svnDiff.InstructionSectionBytes);
-            BinaryReaderSvnDiff instructionReader = new BinaryReaderSvnDiff(instructionStream);
             MemoryStream dataStream = new MemoryStream(svnDiff.DataSectionBytes);
             BinaryReader dataReader = new BinaryReader(dataStream);
 
-            return ApplySvnDiffInstructions(
-                instructionReader,
-                dataReader,
-                source,
-                sourceDataStartIndex);
+            //BinaryReaderSvnDiff instructionReader = new BinaryReaderSvnDiff(instructionStream);
+            using (BinaryReaderSvnDiff instructionReader = new BinaryReaderSvnDiff(instructionStream))
+            {
+                return ApplySvnDiffInstructions(
+                    instructionReader,
+                    dataReader,
+                    source,
+                    sourceDataStartIndex);
+            }
         }
 
         private static byte[] ApplySvnDiffInstructions(
@@ -80,7 +100,15 @@ namespace SvnBridge.Utility
         {
             if (targetIndex + instructionLength > buffer.Length)
             {
-                Array.Resize(ref buffer, buffer.Length + instructionLength + BUFFER_EXPAND_SIZE);
+                // Figure out new _exact_ multiple of request size (avoid LOH fragmentation!!):
+                int oldLength = buffer.Length;
+                int newLength = oldLength + BUFFER_EXPAND_SIZE;
+                while (newLength < (oldLength + instructionLength))
+                {
+                  newLength += BUFFER_EXPAND_SIZE;
+                }
+
+                Array.Resize(ref buffer, newLength);
             }
         }
 
@@ -100,24 +128,28 @@ namespace SvnBridge.Utility
                                buffer,
                                targetIndex,
                                (int) instruction.Length);
-                    targetIndex += (int) instruction.Length;
                     break;
 
                 case SvnDiffInstructionOpCode.CopyFromTarget:
                     // Cannot use Array.Copy because Offset + Length may be greater than starting targetIndex
                     for (int i = 0; i < (int) instruction.Length; i++)
                     {
-                        buffer[targetIndex] = buffer[(int) instruction.Offset + i];
-                        targetIndex++;
+                        buffer[targetIndex + i] = buffer[(int) instruction.Offset + i];
                     }
                     break;
 
                 case SvnDiffInstructionOpCode.CopyFromNewData:
-                    byte[] newData = dataReader.ReadBytes((int) instruction.Length);
-                    Array.Copy(newData, 0, buffer, targetIndex, newData.Length);
-                    targetIndex += newData.Length;
+                    //byte[] newData = dataReader.ReadBytes((int) instruction.Length);
+                    //Array.Copy(newData, 0, buffer, targetIndex, newData.Length);
+                    dataReader.BaseStream.Read(buffer, targetIndex, (int) instruction.Length);
                     break;
+
+                default:
+                    // http://stackoverflow.com/questions/1709894/c-sharp-switch-statement
+                    throw new NotImplementedException();
+                    //break;
             }
+            targetIndex += (int) instruction.Length;
         }
 
         public static SvnDiff CreateReplaceDiff(byte[] bytes, int index, int length)
@@ -131,23 +163,24 @@ namespace SvnBridge.Utility
                 svnDiff.SourceViewLength = 0;
                 svnDiff.TargetViewLength = (ulong)length;
 
-                MemoryStream instructionStream = new MemoryStream();
-                BinaryWriter instructionWriter = new BinaryWriter(instructionStream);
                 MemoryStream dataStream = new MemoryStream();
-                BinaryWriter dataWriter = new BinaryWriter(dataStream);
-
-                dataWriter.Write(bytes, index, length);
-                dataWriter.Flush();
-
+                using (BinaryWriter dataWriter = new BinaryWriter(dataStream))
+                {
+                    dataWriter.Write(bytes, index, length);
+                    // Flush() (and Close()) guaranteed by "using"
+                }
                 svnDiff.DataSectionBytes = dataStream.ToArray();
 
                 SvnDiffInstruction instruction = new SvnDiffInstruction();
                 instruction.OpCode = SvnDiffInstructionOpCode.CopyFromNewData;
                 instruction.Length = (ulong)length;
 
-                WriteInstruction(instructionWriter, instruction);
-                instructionWriter.Flush();
-
+                MemoryStream instructionStream = new MemoryStream();
+                using (BinaryWriter instructionWriter = new BinaryWriter(instructionStream))
+                {
+                    WriteInstruction(instructionWriter, instruction);
+                    // Flush() (and Close()) guaranteed by "using"
+                }
                 svnDiff.InstructionSectionBytes = instructionStream.ToArray();
             }
             return svnDiff;
@@ -196,6 +229,7 @@ namespace SvnBridge.Utility
 
         public static void WriteSvnDiffSignature(Stream stream)
         {
+            // NO "using" here (would do unwanted Close() of *external* stream)
             BinaryWriter writer = new BinaryWriter(stream);
 
             byte[] signature = new byte[] { (byte)'S', (byte)'V', (byte)'N' };
@@ -208,6 +242,7 @@ namespace SvnBridge.Utility
 
         public static void WriteSvnDiff(SvnDiff svnDiff, Stream stream)
         {
+            // NO "using" here (would do unwanted Close() of *external* stream)
             BinaryWriter writer = new BinaryWriter(stream);
 
             if (svnDiff != null)

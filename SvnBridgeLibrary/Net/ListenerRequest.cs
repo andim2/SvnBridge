@@ -12,6 +12,8 @@ namespace SvnBridge.Net
 	{
 		private readonly NameValueCollection headers;
 		private string httpMethod;
+    // XXX: FxCop complains that this class ought to implement IDisposable mechanisms
+    // since member inputStream is IDisposable-based!
 		private MemoryStream inputStream;
 		private string path;
 		private Uri url;
@@ -115,6 +117,7 @@ namespace SvnBridge.Net
             try
             {
                 stream.Position = 0;
+                // NO "using" here (would do unwanted Close() of *external* stream)
                 StreamReader reader = new StreamReader(stream);
                 content = reader.ReadToEnd();
             }
