@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography; // CryptoStream
 using System.Text;
 
 namespace SvnBridge.Utility
@@ -42,19 +43,30 @@ namespace SvnBridge.Utility
             return fileData;
         }
 
-        public static string GetBase64SvnDiffData(byte[] data)
+        /// <summary>
+        /// Provides a base64 encoding stream
+        /// for properly streamy, non-huge-blob operation
+        /// (avoid OutOfMemoryException).
+        /// http://stackoverflow.com/questions/19364644/base64-cryptostream-with-streamwriter-vs-convert-tobase64string
+        /// http://stackoverflow.com/questions/2525533/is-there-a-base64stream-for-net-where
+        /// </summary>
+        public static Stream GetBase64SvnDiffDataStream(byte[] data)
         {
+            Stream stream;
+
             MemoryStream dataStream = new MemoryStream(data, false);
             MemoryStream svnDiffStream = GetSvnDiffDataStream(dataStream);
 
-            // Prefer passing direct GetBuffer()
-            // to the array/offset/length variant of ToBase64String()
-            // rather than passing a ToArray() _copy_ to ToBase64String(array).
-            // See also
-            // http://www.hightechtalks.com/dotnet-framework-winforms-controls/serializing-image-base64-string-best-222259.html
-            var base64SvnDiffData = Convert.ToBase64String(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length);
-            var base64SvnDiffDataLength = base64SvnDiffData.Length;
-            return base64SvnDiffData;
+            var cryptoStream = new CryptoStream(svnDiffStream, new ToBase64Transform(), CryptoStreamMode.Read);
+
+            // I had pondered using BufferedStream here,
+            // but since we are usually reading the entire content in one go
+            // (rather than with delays in between),
+            // buffering probably won't help a lot, right?
+
+            stream = cryptoStream;
+
+            return stream;
         }
 
         /// <remarks>
@@ -100,8 +112,12 @@ namespace SvnBridge.Utility
                 }
             }
 
+#if false
+            return new MemoryStream(svnDiffStream.GetBuffer(), 0, (int)svnDiffStream.Length, false);
+#else
             svnDiffStream.Seek(0, SeekOrigin.Begin); // DON'T FORGET POSITION RESET!!
             return svnDiffStream;
+#endif
         }
 
         private static int DiffChunkSizeMax

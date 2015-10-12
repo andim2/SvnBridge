@@ -103,7 +103,7 @@ namespace UnitTests
 
             for (int i = 0; i < result2.Length; i++)
             {
-                Assert.Equal(testData[i + 1024], result2[i]);
+                Assert.Equal(testData[i + BinaryReaderEOF.BUF_SIZE], result2[i]);
             }
         }
 

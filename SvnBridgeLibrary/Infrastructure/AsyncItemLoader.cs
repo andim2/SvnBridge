@@ -1,5 +1,6 @@
 using System; // IntPtr.Size
 using System.Collections.Generic; // Dictionary
+using System.IO; // Stream
 using System.Threading; // AutoResetEvent
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.SourceControl;
@@ -1123,7 +1124,7 @@ namespace SvnBridge.Infrastructure
         public void RobItemData(
             ItemMetaData item,
             TimeSpan spanTimeout,
-            out string base64DiffData,
+            out Stream base64DiffDataStream,
             out string md5Hash)
         {
             try
@@ -1136,7 +1137,7 @@ namespace SvnBridge.Infrastructure
                 monitoredComm_ItemConsumption.Wait(
                     item,
                     spanTimeout);
-                base64DiffData = DoRobItemData(
+                base64DiffDataStream = DoRobItemData(
                     item,
                     out md5Hash);
             }
@@ -1147,16 +1148,16 @@ namespace SvnBridge.Infrastructure
             }
         }
 
-        private string DoRobItemData(
+        private Stream DoRobItemData(
             ItemMetaData item,
             out string md5Hash)
         {
-            string base64DiffData;
+            Stream base64DiffDataStream;
 
             try
             {
                 // will throw exception when determining outright failure to load data:
-                base64DiffData = item.ContentDataRobAsBase64(
+                base64DiffDataStream = item.ContentDataRobAsBase64Stream(
                     out md5Hash);
             }
             finally
@@ -1165,7 +1166,7 @@ namespace SvnBridge.Infrastructure
                     item);
             }
 
-            return base64DiffData;
+            return base64DiffDataStream;
         }
 
         /// <remarks>

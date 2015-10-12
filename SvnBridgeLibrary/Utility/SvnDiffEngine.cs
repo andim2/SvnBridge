@@ -32,7 +32,7 @@ namespace SvnBridge.Utility
     /// <summary>
     /// Alias class (~ typedef, "using").
     /// </summary>
-    internal class BinaryReaderSvnDiff : BinaryReaderSvnDiffEOFViaPositionCheck
+    internal class BinaryReaderSvnDiff : BinaryReaderSvnDiffEOF
     {
         public BinaryReaderSvnDiff(Stream input)
             : base(input)

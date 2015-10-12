@@ -40,19 +40,21 @@ namespace SvnBridge.Infrastructure
         {
             byte[] itemData = sourceControlProvider.ReadFile(item);
             item = null; // enable release (large object)
-            string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
+            Stream txdeltaStream = SvnDiffParser.GetBase64SvnDiffDataStream(itemData);
             itemData = null; // enable release (large object)
             PushTxDeltaData(
                 output,
-                txdelta);
+                txdeltaStream);
         }
 
         public static void PushTxDeltaData(
-            TextWriter output,
-            string result_Base64DiffData)
+            StreamWriter output,
+            Stream result_Base64DiffDataStream)
         {
-            output.Write(
-                result_Base64DiffData);
+            Helper.StreamCopy(
+                result_Base64DiffDataStream,
+                Helper.AccessStreamWriterBaseStreamSanitized(
+                    output));
         }
 
         /// <summary>
@@ -65,11 +67,11 @@ namespace SvnBridge.Infrastructure
         public static void GrabItemDeltaAndHash(
             AsyncItemLoader loader,
             ItemMetaData item,
-            out string item_Base64DiffData,
+            out Stream item_Base64DiffDataStream,
             out string item_Md5Hash)
         {
             TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
-            item_Base64DiffData = null;
+            item_Base64DiffDataStream = null;
             item_Md5Hash = null;
             // This may throw exceptions -
             // I believe we can simply leave them rippling through unhandled,
@@ -77,7 +79,7 @@ namespace SvnBridge.Infrastructure
             loader.RobItemData(
                 item,
                 spanLoadTimeout,
-                out item_Base64DiffData,
+                out item_Base64DiffDataStream,
                 out item_Md5Hash);
         }
     }
@@ -252,18 +254,18 @@ namespace SvnBridge.Infrastructure
                 string result_Md5Hash;
                 if (requestedTxDelta)
                 {
-                    string result_Base64DiffData;
+                    Stream result_Base64DiffDataStream;
                     URSHelpers.GrabItemDeltaAndHash(
                         loader,
                         item,
-                        out result_Base64DiffData,
+                        out result_Base64DiffDataStream,
                         out result_Md5Hash);
 
 				output.Write("<S:txdelta>");
                 // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
                 URSHelpers.PushTxDeltaData(
                     output,
-                    result_Base64DiffData);
+                    result_Base64DiffDataStream);
 				output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                 output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
                 }
@@ -296,13 +298,13 @@ namespace SvnBridge.Infrastructure
                     }
                     // Request result item data only *after* our base item query above,
                     // since fetching gets (hopefully got) done (in parallel??) by crawler thread...
-                    string result_Base64DiffData;
+                    Stream result_Base64DiffDataStream;
                     URSHelpers.GrabItemDeltaAndHash(
                         loader,
                         item,
-                        out result_Base64DiffData,
+                        out result_Base64DiffDataStream,
                         out result_Md5Hash);
-                    result_Base64DiffData = null; // huge data (we don't need it here)
+                    result_Base64DiffDataStream = null; // huge data (we don't need it here)
                 }
                 output.Write("<S:prop><V:md5-checksum>" + result_Md5Hash + "</V:md5-checksum></S:prop>\n");
 

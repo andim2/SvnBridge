@@ -240,6 +240,156 @@ namespace SvnBridge.Utility
             }
         }
 
+        /// <summary>
+        /// Copy entire input stream content to output stream.
+        /// Does NOT manually do an implicit (layer-violating) Flush()
+        /// (needs to be done by user where desired).
+        /// </summary>
+        /// <remarks>
+        /// http://stackoverflow.com/questions/10664458/memorystream-writetostream-destinationstream-versus-stream-copytostream-desti
+        /// "Stream to Stream Copy"
+        ///   http://computer-programming-forum.com/4-csharp/1ea2ff52ad65efc1.htm
+        /// http://codesnippets.fesslersoft.de/copy-one-stream-to-another/
+        /// http://bytes.com/topic/asp-net/answers/309519-how-save-stream-data-file-using-filestream
+        /// "When is GetBuffer() on MemoryStream ever useful?"
+        ///   http://stackoverflow.com/a/13477396
+        /// "MemoryStream.WriteTo(Stream destinationStream) versus
+        /// Stream.CopyTo(Stream destinationStream)"
+        ///   http://stackoverflow.com/a/10665486
+        /// While of course we aren't able to do a zero-copy mechanism
+        /// (c.f. Linux network driver infrastructure)
+        /// in cases where one stream *needs* to be transferred to another,
+        /// we should still try to achieve maximally efficient handling.
+        ///
+        /// While there is MemoryStream.WriteTo()
+        /// which could be used in case of a MemoryStream type,
+        /// this would need casting,
+        /// thus it's probably better
+        /// to keep one generic open-coded variant
+        /// for all Stream types.
+        ///
+        /// I strongly suspect
+        /// that we do not want to implement this transfer
+        /// via a (inefficient?)
+        /// BinaryReader/Writer abstraction layer:
+        /// http://stackoverflow.com/a/23696270
+        /// </remarks>
+        public static void StreamCopy(
+            Stream source,
+            Stream target)
+        {
+            int BUFFER_SIZE = StreamCopyBufferSize();
+
+            byte[] buffer = new byte[BUFFER_SIZE];
+
+            int count;
+            try
+            {
+                for (;;)
+                {
+                    count = source.Read(buffer, 0, BUFFER_SIZE /* ==(!) buffer.Length */);
+                    bool haveData = (0 != count);
+                    if (!(haveData))
+                    {
+                        break;
+                    }
+
+                    target.Write(buffer, 0, count);
+                }
+            }
+            finally
+            {
+                //target.Flush(); // when used: definitely within an exception-finally{}!!
+            }
+        }
+
+        /// <summary>
+        /// Chooses a suitable size for temporary buffers
+        /// used for copy transfers.
+        /// </summary>
+        /// <remarks>
+        /// http://stackoverflow.com/questions/10664458/memorystream-writetostream-destinationstream-versus-stream-copytostream-desti#comment13837116_10665486
+        /// Should choose a size which is sufficiently large (efficient copy),
+        /// but avoid very excessive size:
+        /// - stay below LOH threshold
+        /// - may lose memory non-pressure benefits
+        ///   of a fully incrementally streamy operation
+        /// </remarks>
+        private static int StreamCopyBufferSize()
+        {
+            return 64 * 1024;
+        }
+
+        /// <remarks>
+        /// WARNING: Q&amp;D implementation!
+        /// Does not even care about .Position or other stuff!
+        /// </remarks>
+        public static bool StreamCompare(
+            Stream s1,
+            Stream s2)
+        {
+            bool isMatch = true;
+
+            byte[] d1 = new byte[4096];
+            byte[] d2 = new byte[4096];
+
+            for (; ; )
+            {
+                var c1 = s1.Read(d1, 0, d1.Length);
+                var c2 = s2.Read(d2, 0, d2.Length);
+
+                bool isMatchingReadCount = (c1 == c2);
+                if (!(isMatchingReadCount))
+                {
+                    isMatch = false;
+                    break;
+                }
+
+                bool haveMoreData = (0 != c1);
+                if (!(haveMoreData))
+                {
+                    break;
+                }
+
+                isMatch = ArrayCompare(
+                    d1,
+                    d2,
+                    c1);
+            }
+
+            return isMatch;
+        }
+
+        public static bool ArrayCompare(byte[] a1, byte[] a2, int count)
+        {
+            bool isMatch = true;
+
+            for (int i = 0; i < count; ++i)
+            {
+                var d1 = a1[i];
+                var d2 = a2[i];
+                if (d1 != d2)
+                {
+                    isMatch = false;
+                    break;
+                }
+            }
+
+            return isMatch;
+        }
+
+        /// <remarks>
+        /// http://stackoverflow.com/questions/472906/converting-a-string-to-byte-array-without-using-an-encoding-byte-by-byte
+        /// Note that output will usually end up as 16bit values!!
+        /// </remarks>
+        public static byte[] GetBytes(
+            string str)
+        {
+            byte[] bytes = new byte[str.Length * sizeof(char)];
+            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
+
         /// <remarks>
         /// Important related usage side note:
         /// E.g. for classes derived from TextWriter

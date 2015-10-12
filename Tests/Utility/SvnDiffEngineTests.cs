@@ -1,8 +1,9 @@
 using Xunit;
-using SvnBridge.Utility;
+using SvnBridge.Utility; // Helper.StreamCompare()
 using System.IO;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography; // CryptoStream
 
 namespace UnitTests
 {
@@ -130,14 +131,18 @@ namespace UnitTests
             Assert.Equal(new byte[] { 2, 3 }, resultBytes);
         }
 
-        private static MemoryStream GetSvnDiffDataStream(
+        private static Stream GetSvnDiffDataStream(
             byte[] source)
         {
-            string diff = SvnDiffParser.GetBase64SvnDiffData(
+            var diffStream = SvnDiffParser.GetBase64SvnDiffDataStream(
                 source);
 
-            MemoryStream diffDataStream = new MemoryStream(
-                Convert.FromBase64String(diff));
+            var cryptoStream = new CryptoStream(
+                diffStream,
+                new FromBase64Transform(),
+                CryptoStreamMode.Read);
+
+            var diffDataStream = cryptoStream;
 
             return diffDataStream;
         }
@@ -190,11 +195,14 @@ namespace UnitTests
         {
             byte[] source = new byte[] { };
 
-            string diff = SvnDiffParser.GetBase64SvnDiffData(
+            var diffStream = GetSvnDiffDataStream(
                 source);
 
             byte[] expected = new byte[] { (byte)'S', (byte)'V', (byte)'N', (byte)0 };
-            Assert.Equal(Convert.ToBase64String(expected), diff);
+            MemoryStream expectedStream = new MemoryStream(expected, false);
+            Assert.Equal(true, Helper.StreamCompare(
+                diffStream,
+                expectedStream));
         }
 
         [Fact]

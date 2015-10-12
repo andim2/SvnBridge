@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics; // Debug.WriteLine()
+using System.IO; // Stream
 using System.Text; // StringBuilder
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure; // Configuration
@@ -116,7 +117,8 @@ namespace SvnBridge.SourceControl
         /// Clean helper to ensure proper "bracketing"
         /// of data "fetching and releasing" ("robbing") ops.
         /// </summary>
-        public virtual string ContentDataRobAsBase64(out string md5Hash)
+        public virtual Stream ContentDataRobAsBase64Stream(
+            out string md5Hash)
         {
             bool isDataValid = (DataLoaded && (null != Data) && (null != Md5Hash));
             if (!(isDataValid))
@@ -125,18 +127,21 @@ namespace SvnBridge.SourceControl
                     this);
             }
 
-            var base64DiffData = EncodeAsBase64SvnDiffData(Data);
-            var base64DiffDataLength = base64DiffData.Length; // debug convenience helper
+            var base64DiffDataStream = GetBase64SvnDiffDataStream(
+                Data);
+            var base64DiffDataLength = base64DiffDataStream.CanSeek ? base64DiffDataStream.Length : 0; // debug convenience helper
             md5Hash = Md5Hash;
 
             ContentDataRelease();
 
-            return base64DiffData;
+            return base64DiffDataStream;
         }
 
-        private static string EncodeAsBase64SvnDiffData(byte[] data)
+        private static Stream GetBase64SvnDiffDataStream(
+            byte[] data)
         {
-            return SvnDiffParser.GetBase64SvnDiffData(data);
+            return SvnDiffParser.GetBase64SvnDiffDataStream(
+                data);
         }
 
         /// <summary>

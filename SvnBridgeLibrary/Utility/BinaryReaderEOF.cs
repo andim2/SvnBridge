@@ -3,13 +3,20 @@ using System.IO;
 
 namespace SvnBridge.Utility
 {
+    /// <summary>
+    /// This class appears to be a helper
+    /// to be able to support an EOF query
+    /// even with non-.CanSeek stream types
+    /// (e.g. CryptoStream rather than MemoryStream),
+    /// by doing read-ahead into a local buffer.
+    /// </summary>
     /// <remarks>
-    /// WARNING: buggy class
+    /// WARNING: possibly still buggy class
     /// (see ReadBytes() comment)
     /// </remarks>
-    public class BinaryReaderEOF
+    public class BinaryReaderEOF : IDisposable
     {
-        public const int BUF_SIZE = 1024;
+        public const int BUF_SIZE = Constants.AllocSize_AvoidLOHCatastrophy;
         private byte[] _buffer = new byte[BUF_SIZE];
         private int _count;
         private int _position;
@@ -25,10 +32,7 @@ namespace SvnBridge.Utility
         {
             get
             {
-                if (_position == _count)
-                {
-                    TryFillReadahead();
-                }
+                TryFillReadaheadIfNeeded();
 
                 if (_count == 0)
                 {
@@ -41,34 +45,50 @@ namespace SvnBridge.Utility
             }
         }
 
-        private void TryFillReadahead()
+        public Stream BaseStream
         {
-            FillBuffer(BUF_SIZE);
+            get
+            {
+                return _reader.BaseStream;
+            }
         }
 
-        private void FillBuffer(int size)
+        public void Dispose()
         {
-            if (_buffer.Length < size)
-            {
-                _buffer = new byte[size];
-            }
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
+        protected virtual void Dispose(
+            bool disposing)
+        {
+            //_reader.Dispose(disposing);
+        }
+
+        private void TryFillReadaheadIfNeeded()
+        {
+            if (_position >= _count)
+            {
+                TryFillReadahead();
+            }
+        }
+
+        private void TryFillReadahead()
+        {
             _count = _reader.Read(_buffer, 0, _buffer.Length);
             _position = 0;
         }
 
         public byte ReadByte()
         {
-            if (_position >= _count)
-            {
-                TryFillReadahead();
-            }
+            TryFillReadaheadIfNeeded();
 
             return _buffer[_position++];
         }
 
         /// <remarks>
         /// WARNING: ReadBytes() is terribly buggy
+        /// (UPDATE: hopefully now fully corrected...)
         /// since it does not handle
         /// the "read more bytes than buffer member size" case
         /// (no _loop_ implemented!).
@@ -86,22 +106,46 @@ namespace SvnBridge.Utility
         public byte[] ReadBytes(int count)
         {
             byte[] result = new byte[count];
-            int bytesToRead = count;
+            int bytesToBeReadTotal = count;
             int index = 0;
 
-            if (_position + bytesToRead > _count)
+            for (; ; )
             {
+                bool needMoreData = (0 < bytesToBeReadTotal);
+                if (!(needMoreData))
+                {
+                    break;
+                }
+
+                TryFillReadaheadIfNeeded();
+
                 int availableBytes = _count - _position;
-                Array.Copy(_buffer, _position, result, index, availableBytes);
-                bytesToRead -= availableBytes;
-                index += availableBytes;
-                FillBuffer(bytesToRead);
+
+                bool haveData = (0 < availableBytes);
+
+                if (!(haveData))
+                {
+                    throw new CouldNotReadRequiredAmountException();
+                }
+
+                var bytesToBeCopiedThisTime = Math.Min(availableBytes, bytesToBeReadTotal);
+                Array.Copy(_buffer, _position, result, index, bytesToBeCopiedThisTime);
+                _position += bytesToBeCopiedThisTime;
+
+                bytesToBeReadTotal -= bytesToBeCopiedThisTime;
+                index += bytesToBeCopiedThisTime;
             }
 
-            Array.Copy(_buffer, _position, result, index, bytesToRead);
-            _position += bytesToRead;
-
             return result;
+        }
+
+        public sealed class CouldNotReadRequiredAmountException : IOException
+        {
+            public CouldNotReadRequiredAmountException()
+                : base(
+                    "Could not read required amount of data")
+            {
+            }
         }
     }
 }

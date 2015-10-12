@@ -255,7 +255,7 @@ namespace SvnBridge.Handlers
                 }
         }
 
-        private void OutputEditorReport(TFSSourceControlProvider sourceControlProvider, FolderMetaData folder, int revision, bool isRoot, TextWriter output)
+        private void OutputEditorReport(TFSSourceControlProvider sourceControlProvider, FolderMetaData folder, int revision, bool isRoot, StreamWriter output)
         {
             if (isRoot)
             {
@@ -304,7 +304,7 @@ namespace SvnBridge.Handlers
 
                     FlushWriter(output);
 
-                    string base64DiffData;
+                    Stream base64DiffDataStream;
                     string md5Hash;
                     // This may throw exceptions -
                     // I believe we can simply leave them rippling through unhandled,
@@ -312,14 +312,14 @@ namespace SvnBridge.Handlers
                     loader.RobItemData(
                         item,
                         spanLoadTimeout,
-                        out base64DiffData,
+                        out base64DiffDataStream,
                         out md5Hash);
 
                     output.Write("<S:apply-textdelta>");
                     // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
                     URSHelpers.PushTxDeltaData(
                         output,
-                        base64DiffData);
+                        base64DiffDataStream);
                     output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                     output.Write("</S:apply-textdelta>\n");
                     output.Write("<S:close-file checksum=\"{0}\"/>\n", md5Hash);
