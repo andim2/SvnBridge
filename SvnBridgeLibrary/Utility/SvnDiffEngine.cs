@@ -6,6 +6,8 @@ namespace SvnBridge.Utility
 {
     public class SvnDiffEngine
     {
+        private const int BUFFER_EXPAND_SIZE = 5000;
+
         public static byte[] ApplySvnDiff(SvnDiff svnDiff, byte[] source, int sourceDataStartIndex)
         {
             MemoryStream instructionStream = new MemoryStream(svnDiff.InstructionSectionBytes);
@@ -26,18 +28,51 @@ namespace SvnBridge.Utility
             byte[] source,
             int sourceDataStartIndex)
         {
-            const int BUFFER_EXPAND_SIZE = 5000;
             byte[] buffer = new byte[BUFFER_EXPAND_SIZE];
             int targetIndex = 0;
 
             SvnDiffInstruction instruction = ReadInstruction(instructionReader);
             while (instruction != null)
             {
-                if (targetIndex + (int) instruction.Length > buffer.Length)
-                {
-                    Array.Resize(ref buffer, buffer.Length + (int) instruction.Length + BUFFER_EXPAND_SIZE);
-                }
+                EnsureRequiredLengthOfWorkBuffer(
+                    ref buffer,
+                    targetIndex,
+                    (int) instruction.Length);
 
+                ApplySvnDiffInstruction(
+                    instruction,
+                    dataReader,
+                    source,
+                    sourceDataStartIndex,
+                    buffer,
+                    ref targetIndex);
+
+                instruction = ReadInstruction(instructionReader);
+            }
+
+            Array.Resize(ref buffer, targetIndex);
+            return buffer;
+        }
+
+        private static void EnsureRequiredLengthOfWorkBuffer(
+            ref byte[] buffer,
+            int targetIndex,
+            int instructionLength)
+        {
+            if (targetIndex + instructionLength > buffer.Length)
+            {
+                Array.Resize(ref buffer, buffer.Length + instructionLength + BUFFER_EXPAND_SIZE);
+            }
+        }
+
+        private static void ApplySvnDiffInstruction(
+            SvnDiffInstruction instruction,
+            BinaryReader dataReader,
+            byte[] source,
+            int sourceDataStartIndex,
+            byte[] buffer,
+            ref int targetIndex)
+        {
                 switch (instruction.OpCode)
                 {
                     case SvnDiffInstructionOpCode.CopyFromSource:
@@ -64,12 +99,6 @@ namespace SvnBridge.Utility
                         targetIndex += newData.Length;
                         break;
                 }
-
-                instruction = ReadInstruction(instructionReader);
-            }
-
-            Array.Resize(ref buffer, targetIndex);
-            return buffer;
         }
 
         public static SvnDiff CreateReplaceDiff(byte[] bytes, int index, int length)
