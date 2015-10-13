@@ -329,8 +329,7 @@ namespace SvnBridge.SourceControl
                 string remoteNameStart = _checkoutRootPath;
                 string itemPath = remoteNameStart;
 
-                string pathSub = GetSubPath_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
-                string[] pathElems = pathSub.Split('/');
+                string[] pathElems = GetSubPathElems_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
                 int pathElemsCount = pathElems.Length;
                 for (int i = 0; i < pathElemsCount; i++)
                 {
@@ -530,8 +529,7 @@ namespace SvnBridge.SourceControl
             string remoteNameStart = _checkoutRootPath;
             string itemPath = remoteNameStart;
 
-            string pathSub = GetSubPath_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
-            string[] pathElems = pathSub.Split('/');
+            string[] pathElems = GetSubPathElems_PossiblyBelowSpecificRoot(remoteNameStart, remoteName);
             int pathElemsCount = pathElems.Length;
             for (int i = 0; i < pathElemsCount; i++)
             {
@@ -649,6 +647,16 @@ namespace SvnBridge.SourceControl
             }
             folder = (item as FolderMetaData) ?? folder;
             return false;
+        }
+
+        private static string[] GetSubPathElems_PossiblyBelowSpecificRoot(string root, string path)
+        {
+            string[] pathElems;
+
+            string pathSub = GetSubPath_PossiblyBelowSpecificRoot(root, path);
+            pathElems = pathSub.Split('/');
+
+            return pathElems;
         }
 
         private static string GetSubPath_PossiblyBelowSpecificRoot(string root, string path)
