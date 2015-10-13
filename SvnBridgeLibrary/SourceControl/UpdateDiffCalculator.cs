@@ -157,32 +157,32 @@ namespace SvnBridge.SourceControl
 
         private void CalculateChangeViaSourceItemHistories(IList<SourceItemHistory> historiesSorted, string checkoutRootPath, FolderMetaData root, bool updatingForwardInTime, ref int lastVersion)
         {
-                foreach (SourceItemHistory history in historiesSorted)
+            foreach (SourceItemHistory history in historiesSorted)
+            {
+                lastVersion = history.ChangeSetID;
+                if (updatingForwardInTime == false)
                 {
-                    lastVersion = history.ChangeSetID;
-                    if (updatingForwardInTime == false)
-                    {
-                        lastVersion -= 1;
-                    }
-
-                    // we need to go over the changeset in reverse order so we will process
-                    // all the files first, and build the folder hierarchy that way
-                    for (int i = history.Changes.Count - 1; i >= 0; i--)
-                    {
-                        SourceItemChange change = history.Changes[i];
-
-                        if (ShouldBeIgnored(change.Item.RemoteName))
-                            continue;
-
-                        // Fixed MEGA BUG: the UpdateDiffEngine's "target" version
-                        // should be the one of the current Changeset i.e. lastVersion!!
-                        // (since this specific loop iteration is supposed to apply changes relevant to this Changeset only,
-                        // and *not* the targetVersion of the global loop processing).
-                        UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, lastVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
-
-                        ApplyChangeOps(engine, change, updatingForwardInTime);
-                    }
+                    lastVersion -= 1;
                 }
+
+                // we need to go over the changeset in reverse order so we will process
+                // all the files first, and build the folder hierarchy that way
+                for (int i = history.Changes.Count - 1; i >= 0; i--)
+                {
+                    SourceItemChange change = history.Changes[i];
+
+                    if (ShouldBeIgnored(change.Item.RemoteName))
+                        continue;
+
+                    // Fixed MEGA BUG: the UpdateDiffEngine's "target" version
+                    // should be the one of the current Changeset i.e. lastVersion!!
+                    // (since this specific loop iteration is supposed to apply changes relevant to this Changeset only,
+                    // and *not* the targetVersion of the global loop processing).
+                    UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, lastVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
+
+                    ApplyChangeOps(engine, change, updatingForwardInTime);
+                }
+            }
         }
 
         /// <summary>
