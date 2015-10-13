@@ -11,8 +11,7 @@ namespace SvnBridge.SourceControl
     public class UpdateDiffEngine
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
-        private readonly Dictionary<string, int> clientExistingFiles;
-        private readonly Dictionary<string, string> clientMissingFiles;
+        private readonly ClientStateTracker clientStateTracker;
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren;
         private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly;
         private readonly FolderMetaData _root;
@@ -24,8 +23,7 @@ namespace SvnBridge.SourceControl
                     string checkoutRootPath,
                     int targetVersion,
                     TFSSourceControlProvider sourceControlProvider,
-                    Dictionary<string, int> clientExistingFiles,
-                    Dictionary<string, string> clientMissingFiles,
+                    ClientStateTracker clientStateTracker,
                     Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly,
                     List<string> renamedItemsToBeCheckedForDeletedChildren)
         {
@@ -34,8 +32,7 @@ namespace SvnBridge.SourceControl
             this._targetVersion = targetVersion;
             this.debugRandomActivator = new DebugRandomActivator();
             this.sourceControlProvider = sourceControlProvider;
-            this.clientExistingFiles = clientExistingFiles;
-            this.clientMissingFiles = clientMissingFiles;
+            this.clientStateTracker = clientStateTracker;
             this.additionForPropertyChangeOnly = additionForPropertyChangeOnly;
             this.renamedItemsToBeCheckedForDeletedChildren = renamedItemsToBeCheckedForDeletedChildren;
         }
@@ -303,12 +300,10 @@ namespace SvnBridge.SourceControl
 
         private void ProcessAddedOrUpdatedItem(string remoteName, SourceItemChange change, bool propertyChange, bool edit, bool updatingForwardInTime)
         {
-            bool isChangeAlreadyCurrentInClientState = IsChangeAlreadyCurrentInClientState(
+            bool isChangeAlreadyCurrentInClientState = clientStateTracker.IsChangeAlreadyCurrentInClientState(
                 ChangeType.Add,
                 remoteName,
-                change.Item.RemoteChangesetId,
-                clientExistingFiles,
-                clientMissingFiles);
+                change.Item.RemoteChangesetId);
             if (isChangeAlreadyCurrentInClientState)
             {
                 return;
@@ -511,12 +506,10 @@ namespace SvnBridge.SourceControl
 
         private void ProcessDeletedItem(string remoteName, SourceItemChange change)
         {
-            bool isChangeAlreadyCurrentInClientState = IsChangeAlreadyCurrentInClientState(
+            bool isChangeAlreadyCurrentInClientState = clientStateTracker.IsChangeAlreadyCurrentInClientState(
                 ChangeType.Delete,
                 remoteName,
-                change.Item.RemoteChangesetId,
-                clientExistingFiles,
-                clientMissingFiles);
+                change.Item.RemoteChangesetId);
             if (isChangeAlreadyCurrentInClientState)
             {
                 RemoveMissingItem(remoteName, _root);
@@ -674,51 +667,6 @@ namespace SvnBridge.SourceControl
             subPath = isRootSpecified ? path.Substring(root.Length + 1) : path;
 
             return subPath;
-        }
-
-        private static bool IsChangeAlreadyCurrentInClientState(ChangeType changeType,
-                                                                string itemPath,
-                                                                int itemRevision,
-                                                                IDictionary<string, int> clientExistingFiles,
-                                                                IDictionary<string, string> clientDeletedFiles)
-        {
-            string changePath = itemPath;
-            if (changePath.StartsWith("/") == false)
-                changePath = "/" + changePath;
-            if (((changeType & ChangeType.Add) == ChangeType.Add) ||
-                ((changeType & ChangeType.Edit) == ChangeType.Edit))
-            {
-                if ((clientExistingFiles.ContainsKey(changePath)) && (clientExistingFiles[changePath] >= itemRevision))
-                {
-                    return true;
-                }
-
-                foreach (string clientExistingFile in clientExistingFiles.Keys)
-                {
-                    if (changePath.StartsWith(clientExistingFile + "/") &&
-                        (clientExistingFiles[clientExistingFile] >= itemRevision))
-                    {
-                        return true;
-                    }
-                }
-            }
-            else if ((changeType & ChangeType.Delete) == ChangeType.Delete)
-            {
-                if (clientDeletedFiles.ContainsKey(changePath) ||
-                    (clientExistingFiles.ContainsKey(changePath) && (clientExistingFiles[changePath] >= itemRevision)))
-                {
-                    return true;
-                }
-
-                foreach (string clientDeletedFile in clientDeletedFiles.Keys)
-                {
-                    if (changePath.StartsWith(clientDeletedFile + "/"))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
 
         private bool RemoveMissingItem(string name, FolderMetaData folder)

@@ -12,6 +12,97 @@ namespace SvnBridge.SourceControl
     using ClientExistingFiles = Dictionary<string, int>;
     using ClientMissingFiles = Dictionary<string, string>;
 
+    public sealed class ClientStateTracker
+    {
+        private readonly ClientExistingFiles clientExistingFiles;
+        private readonly ClientMissingFiles clientMissingFiles;
+
+        public ClientStateTracker(
+            ClientExistingFiles clientExistingFiles,
+            ClientMissingFiles clientMissingFiles)
+        {
+            this.clientExistingFiles = clientExistingFiles;
+            this.clientMissingFiles = clientMissingFiles;
+        }
+
+        public ClientStateTracker(
+            )
+        {
+            this.clientExistingFiles = new ClientExistingFiles();
+            this.clientMissingFiles = new ClientMissingFiles();
+        }
+
+        public void SetFileExisting(
+            string itemPath,
+            int revision)
+        {
+            clientExistingFiles.Add(
+                itemPath,
+                revision);
+        }
+
+        public void SetFileMissing(
+            string itemPath,
+            string itemFileName)
+        {
+            clientMissingFiles.Add(
+                itemPath,
+                itemFileName);
+        }
+
+        public bool IsChangeAlreadyCurrentInClientState(
+            ChangeType changeType,
+            string itemPath,
+            int itemRevision)
+        {
+            string changePath = itemPath;
+            if (changePath.StartsWith("/") == false)
+                changePath = "/" + changePath;
+            if (((changeType & ChangeType.Add) == ChangeType.Add) ||
+                ((changeType & ChangeType.Edit) == ChangeType.Edit))
+            {
+                if ((clientExistingFiles.ContainsKey(changePath)) && (clientExistingFiles[changePath] >= itemRevision))
+                {
+                    return true;
+                }
+
+                foreach (string clientExistingFile in clientExistingFiles.Keys)
+                {
+                    if (changePath.StartsWith(clientExistingFile + "/") &&
+                        (clientExistingFiles[clientExistingFile] >= itemRevision))
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if ((changeType & ChangeType.Delete) == ChangeType.Delete)
+            {
+                if (clientMissingFiles.ContainsKey(changePath) ||
+                    (clientExistingFiles.ContainsKey(changePath) && (clientExistingFiles[changePath] >= itemRevision)))
+                {
+                    return true;
+                }
+
+                foreach (string clientDeletedFile in clientMissingFiles.Keys)
+                {
+                    if (changePath.StartsWith(clientDeletedFile + "/"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public ClientMissingFiles ClientMissingFiles
+        {
+            get
+            {
+                return clientMissingFiles;
+            }
+        }
+    }
+
     public class ChangeTypeAnalyzer
     {
         public static bool IsRenameOperation(SourceItemChange change)
@@ -105,8 +196,7 @@ namespace SvnBridge.SourceControl
     public class UpdateDiffCalculator
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
-        private ClientExistingFiles clientExistingFiles;
-        private ClientMissingFiles clientMissingFiles;
+        private ClientStateTracker clientStateTracker;
         private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
         private string debugInterceptCheck /* = null */ = null /* CS0649 */;
@@ -118,8 +208,11 @@ namespace SvnBridge.SourceControl
 
         public void CalculateDiff(string checkoutRootPath, int versionTo, int versionFrom, FolderMetaData checkoutRoot, UpdateReportData updateReportData)
         {
-            clientExistingFiles = GetClientExistingFiles(checkoutRootPath, updateReportData);
-            clientMissingFiles = GetClientMissingFiles(checkoutRootPath, updateReportData);
+            // Initially populate our _member_ variable:
+            clientStateTracker = ConstructClientStateFromSVNUpdateReportData(
+                checkoutRootPath,
+                updateReportData);
+
             string projectRootPath = GetProjectRoot(checkoutRootPath);
 
             if (updateReportData.Entries != null)
@@ -161,6 +254,7 @@ namespace SvnBridge.SourceControl
                 CalculateChangeBetweenVersions(projectRootPath, TFSSourceControlProvider.LATEST_VERSION, projectRoot, versionFrom, versionTo);
             }
 
+            ClientMissingFiles clientMissingFiles = clientStateTracker.ClientMissingFiles;
             foreach (string missingItem in clientMissingFiles.Values)
             {
                 if (sourceControlProvider.ItemExists(checkoutRootPath + "/" + missingItem, versionTo))
@@ -375,8 +469,7 @@ namespace SvnBridge.SourceControl
                     checkoutRootPath,
                     lastVersion,
                     sourceControlProvider,
-                    clientExistingFiles,
-                    clientMissingFiles,
+                    clientStateTracker,
                     additionForPropertyChangeOnly,
                     renamedItemsToBeCheckedForDeletedChildren);
 
@@ -632,6 +725,20 @@ namespace SvnBridge.SourceControl
                 "/" :
                 "/" + path + "/";
             return pathPrefix;
+        }
+
+        private static ClientStateTracker ConstructClientStateFromSVNUpdateReportData(
+            string checkoutRootPath,
+            UpdateReportData updateReportData)
+        {
+            // Prefer constructing ClientStateTracker members here
+            // rather than having a ClientStateTracker ctor which takes UpdateReportData param.
+            // That way we keep the SVN-specific UpdateReportData dependency away from ClientStateTracker.
+            ClientExistingFiles clientExistingFiles = GetClientExistingFiles(checkoutRootPath, updateReportData);
+            ClientMissingFiles clientMissingFiles = GetClientMissingFiles(checkoutRootPath, updateReportData);
+            ClientStateTracker clientStateTracker = new ClientStateTracker(clientExistingFiles, clientMissingFiles);
+
+            return clientStateTracker;
         }
 
         private bool ShouldBeIgnored(string file)

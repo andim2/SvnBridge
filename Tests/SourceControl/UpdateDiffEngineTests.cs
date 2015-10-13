@@ -19,8 +19,7 @@ namespace UnitTests
         string checkoutRootPath = "";
         int targetVersion = 1;
         TFSSourceControlProvider sourceControlProvider = null;
-        Dictionary<string, int> clientExistingFiles = new Dictionary<string, int>();
-        Dictionary<string, string> clientMissingFiles = new Dictionary<string, string>();
+        ClientStateTracker clientStateTracker = new ClientStateTracker();
         List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
         Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
 
@@ -34,8 +33,7 @@ namespace UnitTests
                 checkoutRootPath,
                 targetVersion,
                 sourceControlProvider,
-                clientExistingFiles,
-                clientMissingFiles,
+                clientStateTracker,
                 additionForPropertyChangeOnly,
                 renamedItemsToBeCheckedForDeletedChildren);
         }
@@ -224,7 +222,7 @@ namespace UnitTests
         {
             ItemMetaData item = CreateItem("project/file.txt", 1);
             stub.Attach(sourceControlProvider.GetItems, Return.Value(item));
-            clientExistingFiles.Add("/project/file.txt", 1);
+            clientStateTracker.SetFileExisting("/project/file.txt", 1);
 
             engine.Add(CreateChange(ChangeType.Add, "project/file.txt", 1, ItemType.File));
 
@@ -236,7 +234,7 @@ namespace UnitTests
         {
             ItemMetaData item = CreateItem("project/file.txt", 2);
             stub.Attach(sourceControlProvider.GetItems, Return.Value(item));
-            clientExistingFiles.Add("/project/file.txt", 1);
+            clientStateTracker.SetFileExisting("/project/file.txt", 1);
 
             engine.Add(CreateChange(ChangeType.Add, "project/file.txt", 1, ItemType.File));
             engine.Edit(CreateChange(ChangeType.Edit, "project/file.txt", 2, ItemType.File));
@@ -248,7 +246,7 @@ namespace UnitTests
         [Fact]
         public void DeleteFileWhenClientStateCurrent()
         {
-            clientMissingFiles.Add("/project/file.txt", "file.txt");
+            clientStateTracker.SetFileMissing("/project/file.txt", "file.txt");
 
             engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
 
@@ -260,7 +258,7 @@ namespace UnitTests
         {
             ItemMetaData item = CreateItem("project/file.txt", 1);
             stub.Attach(sourceControlProvider.GetItems, Return.Value(null));
-            clientMissingFiles.Add("/project/file.txt", "file.txt");
+            clientStateTracker.SetFileMissing("/project/file.txt", "file.txt");
 
             engine.Add(CreateChange(ChangeType.Add, "project/file.txt", ItemType.File));
             engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
