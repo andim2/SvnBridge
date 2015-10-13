@@ -282,7 +282,6 @@ namespace SvnBridge.SourceControl
                     FindItemOrCreateItem(checkoutRoot, checkoutRootPath, missingItem, versionTo, Recursion.Full);
                 }
             }
-            FlattenDeletedFolders(checkoutRoot);
             RemoveMissingItemsWhichAreChildrenOfRenamedItem(checkoutRoot);
             checkoutRoot.VerifyNoMissingItemMetaDataRemained();
         }
@@ -497,6 +496,7 @@ namespace SvnBridge.SourceControl
 
                     ApplyChangeOps(engine, change, updatingForwardInTime);
                 }
+                PerCommitPostProcessing(root);
             }
         }
 
@@ -639,9 +639,28 @@ namespace SvnBridge.SourceControl
         }
 
         /// <summary>
+        /// Does per-commit post-processing of all changes within that atomic(!) commit
+        /// (note that one commit is the *atomically scoped* unit
+        /// where all changes within that commit do get taken into account [immediately],
+        /// irrespective of whether the working copy's version change
+        /// is single-commit only or a larger version range,
+        /// IOW such actions in fact need to be done immediately after each commit).
+        /// Its per-commit tasks entail:
+        /// - flattening deleted folders (removing all deleted sub items)
+        /// </summary>
+        private static void PerCommitPostProcessing(FolderMetaData root)
+        {
+            FlattenDeletedFolders(root);
+        }
+
+        /// <summary>
         /// This method ensures that we are not sending useless deletes to the client -
         /// if a folder is to be deleted, all its children are as well, which we remove
-        /// at this phase.
+        /// at this phase:
+        /// namely e.g. when transitioning a per-commit atomicity boundary,
+        /// where a Delete (result of incremental/complementary calculation implementation)
+        /// *is* the final non-revocable item state,
+        /// prior to potential changes of subsequent commits.
         /// </summary>
         /// <param name="parentFolder">Folder where any deleted items ought to be recursively removed from</param>
         private static void FlattenDeletedFolders(FolderMetaData parentFolder)
