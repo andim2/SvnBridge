@@ -29,7 +29,15 @@ namespace UnitTests
         public UpdateDiffEngineTests()
         {
             sourceControlProvider = stub.CreateTFSSourceControlProviderStub();
-            engine = new UpdateDiffEngine(root, checkoutRootPath, targetVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
+            engine = new UpdateDiffEngine(
+                root,
+                checkoutRootPath,
+                targetVersion,
+                sourceControlProvider,
+                clientExistingFiles,
+                clientMissingFiles,
+                additionForPropertyChangeOnly,
+                renamedItemsToBeCheckedForDeletedChildren);
         }
 
         [Fact]

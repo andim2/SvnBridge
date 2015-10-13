@@ -284,7 +284,15 @@ namespace SvnBridge.SourceControl
                 // should be the one of the current Changeset i.e. lastVersion!!
                 // (since this specific loop iteration is supposed to apply changes relevant to this Changeset only,
                 // and *not* the targetVersion of the global loop processing).
-                UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, lastVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
+                UpdateDiffEngine engine = new UpdateDiffEngine(
+                    root,
+                    checkoutRootPath,
+                    lastVersion,
+                    sourceControlProvider,
+                    clientExistingFiles,
+                    clientMissingFiles,
+                    additionForPropertyChangeOnly,
+                    renamedItemsToBeCheckedForDeletedChildren);
 
                 // we need to go over the changeset in reverse order so we will process
                 // all the files first, and build the folder hierarchy that way
