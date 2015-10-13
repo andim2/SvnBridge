@@ -421,6 +421,59 @@ namespace UnitTests
             Assert.Equal(items[3].Id, idItemBarNew);
         }
 
+        [Fact(Skip="Not fully implemented")]
+        [Trait("TestName", "RBDOAEF")]
+        public void CheckNoEditForReverseUpdateOfForeignProjectMerge()
+        {
+            //System.Diagnostics.Debugger.Launch();
+            string pathBarOld = "projectOther/BarOld.txt";
+            int idItemBarOld = 20;
+            string pathBarNew = "project/BarNew.txt";
+            int idItemBarNew = 40;
+            stub.Attach(sourceControlProvider.GetItems, Return.DelegateResult(delegate(object[] parameters)
+            {
+                int version = (int)parameters[0];
+                string path = (string)parameters[1];
+                //var recursion = parameters[2];
+
+                switch (version)
+                {
+                    case 1:
+                        if (pathBarOld == path)
+                        {
+                            ItemMetaData item = CreateItem(path, version);
+                            item.Id = idItemBarOld;
+                            return item;
+                        }
+                        else
+                        if (pathBarNew == path)
+                        {
+                            ItemMetaData item = CreateItem(path, version);
+                            item.Id = idItemBarNew;
+                            return item;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                throw new InvalidOperationException();
+            }));
+
+            engine.Rename(
+                CreateChangeRename(ChangeType.Edit | ChangeType.Encoding | ChangeType.Branch | ChangeType.Merge,
+                    pathBarOld,      0, pathBarNew,  1, ItemType.File),
+                false);
+
+            AssertFolder(root, "project", 0, 4);
+            //var items = root.Items;
+            //AssertDeleteItem(items[0], pathBar);
+            //AssertItem(items[1], pathBarOld, 1);
+            //Assert.Equal(items[1].Id, idItemBar);
+            //AssertDeleteItem(items[2], pathBarNew);
+            //AssertItem(items[3], pathBar, 1);
+            //Assert.Equal(items[3].Id, idItemBarNew);
+        }
+
         [Fact(Skip="Temporary disable (not complete yet)")]
         [Trait("TestName", "BTCIMCCDES")]
         public void BrokenTFSCaseInsensitiveMismatchCommitContentDamageEnsureSanitized()
