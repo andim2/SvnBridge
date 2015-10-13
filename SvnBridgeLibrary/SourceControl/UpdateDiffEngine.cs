@@ -187,8 +187,7 @@ namespace SvnBridge.SourceControl
                          (
                             lastNamePart &&
                             item.Revision < change.Item.RemoteChangesetId &&
-                            !(item is DeleteFolderMetaData) &&
-                            !(item is DeleteMetaData)
+                            !IsDeleteMetaDataKind(item)
                          )
                         )
                     {
@@ -235,7 +234,7 @@ namespace SvnBridge.SourceControl
                         folder.Items.Remove(item);
                         folder.Items.Add(((StubFolderMetaData)item).RealFolder);
                     }
-                    else if (((item is DeleteFolderMetaData) || (item is DeleteMetaData)) && IsAddOperation(change))
+                    else if ((IsDeleteMetaDataKind(item)) && IsAddOperation(change))
                     {
                         if (!propertyChange)
                         {
@@ -318,7 +317,7 @@ namespace SvnBridge.SourceControl
         {
             ItemMetaData item = folder.FindItem(folderName);
             // Shortcut: valid item in our cache, and it's a delete already? We're done :)
-            if (item is DeleteFolderMetaData || item is DeleteMetaData)
+            if (IsDeleteMetaDataKind(item))
                 return true;
 
             if (item == null)
@@ -456,6 +455,11 @@ namespace SvnBridge.SourceControl
                 }
             }
             return false;
+        }
+
+        private static bool IsDeleteMetaDataKind(ItemMetaData item)
+        {
+          return (item is DeleteFolderMetaData || item is DeleteMetaData);
         }
     }
 }
