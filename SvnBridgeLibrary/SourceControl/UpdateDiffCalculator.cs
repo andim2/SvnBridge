@@ -313,7 +313,7 @@ namespace SvnBridge.SourceControl
 
                 // we need to go over the changeset in reverse order so we will process
                 // all the files first, and build the folder hierarchy that way
-                for (int i = history.Changes.Count - 1; i >= 0; i--)
+                for (int i = history.Changes.Count - 1; i >= 0; --i)
                 {
                     SourceItemChange change = history.Changes[i];
 
