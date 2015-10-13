@@ -14,6 +14,15 @@ namespace SvnBridge
 		/// since it is an absolutely extreme hotpath
 		/// (will need to be processed on *every* single one
 		/// of the many, many web requests within this app).
+		/// IMPORTANT PERFORMANCE NOTE:
+		/// for those properties which are global rather than per-request,
+		/// it probably is very preferable
+		/// to have them configured *once* (on app startup, and globally)
+		/// at ServicePointManager,
+		/// rather than setting them in a per-request fine-grained manner
+		/// in this massive hotpath.
+		/// Examples:
+		/// - ServicePoint[Manager].SetTcpKeepAlive()
 		/// </remarks>
 		public static void OnWebRequest(WebRequest request)
 		{

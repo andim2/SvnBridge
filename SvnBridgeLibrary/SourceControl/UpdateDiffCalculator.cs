@@ -400,6 +400,8 @@ namespace SvnBridge.SourceControl
         /// Thus (barring reworking things into a more streamed way of doing things)
         /// there's no cure other than increasing a client's HTTP timeout
         /// (subversion: ~/.subversion/servers http-timeout setting).
+        /// (well, yes there probably is: the TCP Keep-Alive setting
+        /// should suffice to have this pain automatically dealt with).
         ///
         /// Debugging hint:
         /// changeset calc issues may be reproduced more easily
