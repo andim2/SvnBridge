@@ -372,6 +372,12 @@ namespace SvnBridge.SourceControl
                         if (itemPrev != null)
                         {
                             ItemHelpers.FolderOps_RemoveItem(folder, itemPrev);
+                            // FIXME: rather than doing a non-atomic separate Remove/Add,
+                            // should likely be *swapping* related items
+                            // directly in one atomic op,
+                            // to have their existing item status such as .NewlyAdded
+                            // taken into account centrally internally.
+                            newlyAdded = itemPrev.NewlyAdded;
                         }
                         // ...and fetch the updated one
                         // (forward *or* backward change)
