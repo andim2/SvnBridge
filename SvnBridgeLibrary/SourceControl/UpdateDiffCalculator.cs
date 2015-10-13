@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics; // Conditional
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure; // Configuration
@@ -63,6 +64,7 @@ namespace SvnBridge.SourceControl
         private Dictionary<string, string> clientMissingFiles;
         private readonly Dictionary<ItemMetaData, bool> additionForPropertyChangeOnly = new Dictionary<ItemMetaData, bool>();
         private readonly List<string> renamedItemsToBeCheckedForDeletedChildren = new List<string>();
+        private string debugInterceptCheck /* = null */ = null /* CS0649 */;
 
         public UpdateDiffCalculator(TFSSourceControlProvider sourceControlProvider)
         {
@@ -318,6 +320,8 @@ namespace SvnBridge.SourceControl
         /// to the same final item status conclusion...
         private void ApplyChangeOps(UpdateDiffEngine engine, SourceItemChange change, bool updatingForwardInTime)
         {
+            DebugIntercept(change);
+
             // ATTENTION ORDER: IsEditOperation() branch internally checks IsRenameOperation(), TOO!
             // (in general, these comparisons work on a possibly combined multi-bit mask!!)
             if (ChangeTypeAnalyzer.IsAddOperation(change, updatingForwardInTime))
@@ -378,6 +382,55 @@ namespace SvnBridge.SourceControl
                     throw new NotSupportedException("Unsupported change type " + change.ChangeType);
                 }
             }
+        }
+
+        [Conditional("DEBUG")]
+        private void DebugIntercept(SourceItemChange change)
+        {
+            // To be user-modified in debugger watch during live session,
+            // to be able to examine exactly the parts that are interesting.
+            // Also, once it's known that something needs to be fixed,
+            // best have it fixed in a verified manner via an xUnit test case.
+            bool skipPathPatternSearch = (null == debugInterceptCheck);
+            if (skipPathPatternSearch)
+            {
+                return;
+            }
+
+            string pathPattern = debugInterceptCheck;
+            bool checkEndsWith = false;
+            if (pathPattern.StartsWith("*"))
+            {
+                checkEndsWith = true;
+                pathPattern = pathPattern.Substring(1);
+            }
+
+            bool caseInsensitive = true;
+            bool found = SearchString(change.Item.RemoteName, pathPattern, caseInsensitive, checkEndsWith);
+            if (found)
+            {
+                //    // DEBUG_SITE:
+                //    Helper.DebugUsefulBreakpointLocation();
+                //    System.Diagnostics.Debugger.Launch();
+            }
+        }
+
+        private static bool SearchString(string candidate, string pattern, bool caseInsensitive, bool checkEndsWith)
+        {
+            bool found = false;
+
+            string candidateCooked = candidate;
+            string patternCooked = pattern;
+            StringComparison comparison = caseInsensitive ?
+                StringComparison.OrdinalIgnoreCase :
+                StringComparison.Ordinal;
+            // .Contains() does not support StringComparison --> need to use .IndexOf()
+            // (http://stackoverflow.com/a/444818).
+            found = checkEndsWith ?
+                 candidateCooked.EndsWith(patternCooked, comparison) :
+                 (-1 != candidateCooked.IndexOf(patternCooked, comparison));
+
+            return found;
         }
 
         /// <summary>
