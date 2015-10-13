@@ -273,6 +273,42 @@ namespace SvnBridge.SourceControl
             return historiesSorted;
         }
 
+        /// <summary>
+        /// Side note: for larger data (large Changes.Count) processing might take very long,
+        /// which may cause HTTP timeouts on client side.
+        /// Since the data is being compiled by an instance of a clean independent class
+        /// prior to it getting sent, we cannot do any interim "keep going" signalling
+        /// (e.g. by sending XML <!-- ...> comment lines [would that be a valid operation in SVN protocol?]).
+        /// Thus (barring reworking things into a more streamed way of doing things)
+        /// there's no cure other than increasing a client's HTTP timeout
+        /// (subversion: ~/.subversion/servers http-timeout setting).
+        ///
+        /// Debugging hint:
+        /// changeset calc issues may be reproduced more easily
+        /// by using something like
+        /// <c>svn diff --xml --summarize -r rev_prev:rev_next [SPECIFIC_PATH...]</c>
+        /// within an SVN working copy
+        /// (pathspec may be e.g. "." or "SERVER_URL/repo_path" - see "svn info").
+        /// (side note: near-uncurable syntax issues in XML here
+        /// as used by code-doc, see
+        /// http://stackoverflow.com/questions/9101673/android-xml-comments-with-double-dashes )
+        /// Also, it is very useful to directly get a grasp
+        /// of actual TFS-side changeset range differences:
+        /// Snapshot them
+        /// via init of an adhoc git repo within a TFS working copy
+        /// and then doing git show --stat -M,
+        /// to determine the truly authentic set of differences
+        /// that SvnBridge then ought to end up capable
+        /// of reliably producing as well.
+        ///
+        /// we need to go over the changeset in reverse order so we will process
+        /// all the files first, and build the folder hierarchy that way
+        /// Hmm, ok - we could be creating a reverse list in advance
+        /// (and with all to-be-ignored entries already removed, too!),
+        /// but since such reversal allocation likely would be a huge penalty
+        /// for the common case of rather small changesets,
+        /// decide to not do it.
+        /// </summary>
         private void CalculateChangeViaSourceItemHistories(IList<SourceItemHistory> historiesSorted, string checkoutRootPath, FolderMetaData root, bool updatingForwardInTime, ref int lastVersion)
         {
             foreach (SourceItemHistory history in historiesSorted)
@@ -312,8 +348,6 @@ namespace SvnBridge.SourceControl
                     additionForPropertyChangeOnly,
                     renamedItemsToBeCheckedForDeletedChildren);
 
-                // we need to go over the changeset in reverse order so we will process
-                // all the files first, and build the folder hierarchy that way
                 for (int i = history.Changes.Count - 1; i >= 0; --i)
                 {
                     SourceItemChange change = history.Changes[i];

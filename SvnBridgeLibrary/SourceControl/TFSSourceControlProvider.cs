@@ -2207,6 +2207,8 @@ namespace SvnBridge.SourceControl
                 var previousSourceItems = metaDataRepository.QueryItems(
                     previousRevision,
                     previousSourceItemId);
+                // Yes, do actively append this slot even if no result
+                // (caller requires index-consistent behaviour of input vs. result storage)
                 result.Add(previousSourceItems.Length > 0 ? ConvertSourceItem(previousSourceItems[0], rootPath) : null);
             }
             return result.ToArray();
@@ -2219,6 +2221,12 @@ namespace SvnBridge.SourceControl
             {
                 BranchItem[][] thisRevBranches;
                 {
+                    // FIXME: I'm totally in the dark about the reason for doing QueryBranches()/renamedItems.
+                    // Possibly this is required for a different constellation. Please comment properly
+                    // once it's known what this is for.
+                    // FIXME_PERFORMANCE: QueryBranches() is very slow!
+                    // (note that behaviour of this web service request delay seems to be linear:
+                    // about 1 second per 100 items).
                     thisRevBranches = sourceControlService.QueryBranches(serverUrl,
                                                                          credentials,
                                                                          items.Select(item => CreateItemSpec(MakeTfsPath(item.RemoteName), RecursionType.None)).ToArray(),

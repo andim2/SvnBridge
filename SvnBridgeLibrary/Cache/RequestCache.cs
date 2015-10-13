@@ -26,6 +26,9 @@ namespace SvnBridge.Net
 
         public void Dispose()
         {
+            // DEBUG_SITE: may examine full content of cache here
+            // (directly prior to its disposal).
+
             RequestCache.Dispose();
 
             // Hmm, do we need to call GC.SuppressFinalize() here?

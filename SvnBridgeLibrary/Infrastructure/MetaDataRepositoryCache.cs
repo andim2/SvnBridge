@@ -59,6 +59,10 @@ namespace SvnBridge.Infrastructure
 
             string serverPath = GetServerPath(path);
 
+            // Hmm, why (MISSING COMMENT!!!) is there a very manual
+            // root path special-casing (shortcut!?!? guess not really...) here!?
+            // Should really try to get rid of it
+            // once having gathered evidence after testing.
             bool doSpecialCasingOfRootItem = (serverPath == Constants.ServerRootPath && recursion == Recursion.None);
             if (doSpecialCasingOfRootItem)
             {
@@ -79,6 +83,15 @@ namespace SvnBridge.Infrastructure
                     string itemCacheKey = GetItemsListCacheKey(recursion, revision, serverPath);
 
                     list = persistentCache.GetList<SourceItem>(itemCacheKey);
+                    // Hmm, why keep doing sorts *after* cache insertion
+                    // (i.e., on user-side delivery)
+                    // rather than doing one single sort *prior* to starting fetch?
+                    // (i.e., at insertion side already)
+                    // (per-each-request re-sorting might be required
+                    // in case the lists may have gotten extended, though -
+                    // but even that could be handled on the fetch side too)
+                    // And can this post-sorting be done outside of lock (XXX),
+                    // unless member data may be changed at any time??
                     list.Sort(delegate(SourceItem x, SourceItem y)
                     {
                         return x.RemoteName.CompareTo(y.RemoteName);
