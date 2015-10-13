@@ -201,12 +201,13 @@ namespace SvnBridge.SourceControl
                         item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
                         if (item == null)
                         {
-                            // TFS will report renames even for deleted items, 
-                            // since TFS reported that this was renamed, but it doesn't exist
-                            // in this revision, we know it is a case of renaming a deleted file.
-                            // We can safely ignore this and any of its children.
                             if (IsRenameOperation(change))
                             {
+                                // TFS will report renames even for deleted items -
+                                // since TFS reported above that this was renamed,
+                                // but it doesn't exist in this revision,
+                                // we know it is a case of renaming a deleted file.
+                                // We can safely ignore this and any of its children.
                                 return;
                             }
                             if (lastNamePart && propertyChange)
@@ -234,14 +235,29 @@ namespace SvnBridge.SourceControl
                         folder.Items.Remove(item);
                         folder.Items.Add(((StubFolderMetaData)item).RealFolder);
                     }
-                    else if ((IsDeleteMetaDataKind(item)) && IsAddOperation(change))
-                    {
-                        if (!propertyChange)
+                    else if (IsDeleteMetaDataKind(item))
+                    { // former item was a DELETE...
+
+                        // ...and new one then _resurrects_ the (_actually_ deleted) item:
+                        if (IsAddOperation(change))
                         {
-                            folder.Items.Remove(item);
-                            item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
-                            item.OriginallyDeleted = true;
-                            folder.Items.Add(item);
+                          if (!propertyChange)
+                          {
+                              folder.Items.Remove(item);
+                              item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
+                              item.OriginallyDeleted = true;
+                              folder.Items.Add(item);
+                          }
+                        }
+                        // ...or _renames_ the (pseudo-deleted) item!
+                        // (OBEY VERY SPECIAL CASE: _similar-name_ rename (EXISTING ITEM LOOKUP SUCCESSFUL ABOVE!!), i.e. filename-case-only change)
+                        else if (IsRenameOperation(change))
+                        {
+                          // Such TFS-side renames need to be reflected
+                          // as a SVN delete/add (achieve rename *with* history!) operation,
+                          // thus definitely *append* an ADD op to the *existing* DELETE op.
+                          item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemName, Recursion.None);
+                          folder.Items.Add(item);
                         }
                     }
                     if (lastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
