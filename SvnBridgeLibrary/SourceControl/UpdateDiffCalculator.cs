@@ -193,6 +193,10 @@ namespace SvnBridge.SourceControl
         }
     }
 
+    public class ShouldBeIgnoredException : Exception
+    {
+    }
+
     public class UpdateDiffCalculator
     {
         private readonly TFSSourceControlProvider sourceControlProvider;
@@ -465,8 +469,14 @@ namespace SvnBridge.SourceControl
                 {
                     SourceItemChange change = history.Changes[i];
 
-                    if (ShouldBeIgnored(change.Item.RemoteName))
+                    try
+                    {
+                        CheckShouldBeIgnored(change.Item.RemoteName);
+                    }
+                    catch(ShouldBeIgnoredException)
+                    {
                         continue;
+                    }
 
                     ApplyChangeOps(engine, change, updatingForwardInTime);
                 }
@@ -729,7 +739,7 @@ namespace SvnBridge.SourceControl
             return clientStateTracker;
         }
 
-        private static bool ShouldBeIgnored(string file)
+        private static void CheckShouldBeIgnored(string file)
         {
             // This check can be completely disabled
             // since currently(!?) the history fetched from the provider
@@ -738,7 +748,11 @@ namespace SvnBridge.SourceControl
             // any more anyway...
             ////return Path.GetFileName(file).Equals(Constants.PropFolder);
             //return sourceControlProvider.IsPropertyFolder(file);
-            return false;
+            //return false;
+            //if (shouldBeIgnored)
+            //{
+            //    throw new ShouldBeIgnoredException();
+            //}
         }
     }
 }
