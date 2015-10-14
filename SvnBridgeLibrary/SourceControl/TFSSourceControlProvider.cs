@@ -18,7 +18,7 @@ namespace SvnBridge.SourceControl
     using Interfaces; // IMetaDataRepository
     using Protocol; // UpdateReportData only (layer violation?)
     using Proxies; // TracingInterceptor, RetryOnExceptionsInterceptor
-    using Utility; // DebugRandomActivator
+    using Utility; // DebugRandomActivator, Helper.ArrayCombine()
     using SvnBridge.Cache;
     using System.Web.Services.Protocols; // SoapException
     using System.Linq; // System.Array extensions
@@ -1640,11 +1640,7 @@ namespace SvnBridge.SourceControl
                         }
                     }
                     SourceItem[] subFolderProperties = metaDataRepository.QueryItems(version, propertiesForSubFolders.ToArray(), Recursion.None);
-                    List<SourceItem> combinedItems = new List<SourceItem>(sourceItems);
-                    foreach (SourceItem item in subFolderProperties)
-                        combinedItems.Add(item);
-
-                    sourceItems = combinedItems.ToArray();
+                    sourceItems = Helper.ArrayCombine(sourceItems, subFolderProperties);
                 }
             }
 

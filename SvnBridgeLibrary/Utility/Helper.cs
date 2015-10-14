@@ -118,6 +118,43 @@ namespace SvnBridge.Utility
 		private static readonly string[] DECODED_C = new string[] { "%",   "#",   " ",   "^",   "{",   "[",   "}",   "]",   ";",   "`" };
 		private static readonly string[] ENCODED_C = new string[] { "%25", "%23", "%20", "%5e", "%7b", "%5b", "%7d", "%5d", "%3b", "%60" };
 
+        /// <summary>
+        /// Helper for fast, central appending/joining/combining of two arrays.
+        /// Hopefully a lot better/faster than
+        /// and thus preferable to
+        /// using a manual (read: icache-bloating) .Add() loop.
+        /// However, for repeated appending of arrays,
+        /// it might still be better
+        /// to do a repeated .AddRange() on an existing List
+        /// (memory management ought to be more predictable).
+        /// Method specially crafted to be able to easily cope
+        /// with both either first or second arg null.
+        /// </summary>
+        /// <remarks>
+        /// "C#: Merging,Appending, Extending two arrays in .NET (csharp, mono)"
+        ///    https://gist.github.com/lsauer/7919764
+        /// Alternative might be Buffer.BlockCopy()
+        /// (see http://www.dotnetperls.com/combine-arrays ),
+        /// but I doubt that it's better.
+        /// </remarks>
+        public static T[] ArrayCombine<T>(T[] arrayInitial, T[] arrayToBeAppended)
+        {
+            int arrayInitialLength = (null != arrayInitial) ? arrayInitial.Length : 0;
+            int arrayToBeAppendedLength = (null != arrayToBeAppended) ? arrayToBeAppended.Length : 0;
+            T[] combined = new T[arrayInitialLength + arrayToBeAppendedLength];
+            int idxWritePos = 0;
+            if (null != arrayInitial)
+            {
+                arrayInitial.CopyTo(combined, idxWritePos);
+                idxWritePos += arrayInitialLength;
+            }
+            if (null != arrayToBeAppended)
+            {
+                arrayToBeAppended.CopyTo(combined, idxWritePos);
+            }
+            return combined;
+        }
+
         public static StreamWriter ConstructStreamWriterUTF8(Stream outputStream)
         {
             Encoding utf8WithoutBOM = new UTF8Encoding(false);
