@@ -248,6 +248,8 @@ namespace SvnBridge.Infrastructure
 
         UpdateReportWriteItemAttributes(output, item);
 
+        RequestHandlerBase.FlushWriter(output);
+
                 string result_Md5Hash;
                 if (requestedTxDelta)
                 {

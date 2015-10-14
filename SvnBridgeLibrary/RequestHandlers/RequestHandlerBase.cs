@@ -60,6 +60,36 @@ namespace SvnBridge.Handlers
 			}
 		}
 
+        /// <summary>
+        /// Comment-only helper:
+        /// PERFORMANCE tweak: do explicit Flush() of the data
+        /// e.g. *directly prior* to potentially having to wait for the item data to arrive.
+        /// That way network parts may already process prior data in parallel,
+        /// thus given some luck the following may then have happened:
+        /// - asynchronous load of item data
+        ///   will have finished already during Flush() blocking
+        /// - once our newly generated huge data part gets submitted
+        ///   there will no other older data remain to be processed
+        /// Another usage might be to do interim Flush()
+        /// to avoid getting OOM.
+        /// WARNING: when feeding this output into compression,
+        /// frequently doing Flush() may be very harmful
+        /// since it may destroy
+        /// compression dictionary handling efficiency!
+        /// For heavy traffic areas
+        /// it might thus also be useful for optimized efficiency reasons
+        /// to locally keep track of traffic amount
+        /// (total bytes, number of output activities, ...)
+        /// and implement a local ConditionFlush() helper
+        /// to be called at all suitable places
+        /// which would cause flushing
+        /// in case any of these criteria got exceeded again.
+        /// </summary>
+        public static void FlushWriter(TextWriter output)
+        {
+            output.Flush();
+        }
+
         protected DefaultLogger GetDefaultLogger()
         {
             return Container.Resolve<DefaultLogger>();

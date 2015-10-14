@@ -328,6 +328,8 @@ namespace SvnBridge.Handlers
                         output.Write("<S:add-file name=\"{0}\"/>\n", Helper.EncodeB(item.Name));
                     }
 
+                    FlushWriter(output);
+
                     string base64DiffData;
                     string md5Hash;
                     bool gotData = loader.TryRobItemData(
