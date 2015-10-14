@@ -32,6 +32,7 @@ namespace SvnBridge
         public const int AllocSize_AvoidLOHCatastrophy = (64+16)*1024; // 81920
         public const int BufferSize = AllocSize_AvoidLOHCatastrophy; // used to be: 1024 * 32; but changing to a more suitable size is ok...
         public const int MaxPort = 65535;
+        public const string SVNServerIdentificationString = "Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2";
         public const string ServerRootPath = "$/";
         public const string SvnVccPath = "/!svn/vcc/default";
         public const string FolderPropFile = ".sbsvnpropsfile"; // see PropFolder comment

@@ -73,7 +73,7 @@ namespace SvnBridge.Handlers
                 "<h1>Method Not Allowed</h1>\n" +
                 "<p>The requested method MKCOL is not allowed for the URL /" + itemPath + ".</p>\n" +
                 "<hr>\n" +
-                "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + server + " Port " + port + "</address>\n" +
+                "<address>" + GetServerIdentificationString_HostPort(server, port) + "</address>\n" +
                 "</body></html>\n";
 
             WriteToResponse(response, responseContent);

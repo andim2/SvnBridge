@@ -446,9 +446,7 @@ namespace SvnBridge.Net
                              "browser doesn't understand how to supply\n" +
                              "the credentials required.</p>\n" +
                              "<hr>\n" +
-                             "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host + " Port " +
-                             request.Url.Port +
-                             "</address>\n" +
+                             "<address>" + RequestHandlerBase.GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
                              "</body></html>\n";
 
             byte[] buffer = Encoding.UTF8.GetBytes(content);

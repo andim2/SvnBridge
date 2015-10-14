@@ -34,8 +34,7 @@ namespace SvnBridge.Handlers
                     "<h1>Not Found</h1>\n" +
                     "<p>The requested URL /" + Helper.Decode(requestPath) + " was not found on this server.</p>\n" +
                     "<hr>\n" +
-                    "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host + " Port " +
-                    request.Url.Port + "</address>\n" +
+                    "<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
                     "</body></html>\n";
 
                 WriteToResponse(response, responseContent);

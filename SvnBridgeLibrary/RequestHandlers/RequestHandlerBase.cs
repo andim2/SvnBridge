@@ -172,6 +172,20 @@ namespace SvnBridge.Handlers
 			return PathParser.GetLocalPath(httpContext.Request, path);
 		}
 
+        protected static string ServerIdentificationString
+        {
+            get
+            {
+                return Constants.SVNServerIdentificationString;
+            }
+        }
+
+        public static string GetServerIdentificationString_HostPort(string host, string port)
+        {
+            string server_id = ServerIdentificationString + " Server at " + host + " Port " + port;
+            return server_id;
+        }
+
         protected enum WebDAVResourceType
         {
             Resource,
@@ -231,7 +245,7 @@ namespace SvnBridge.Handlers
                                      "<h1>Created</h1>\n" +
                                      "<p>" + resource_type_descr + " " + (needPrependSlash ? "/" : "") + locationHTMLEncoded + " has been created.</p>\n" +
                                      "<hr />\n" +
-                                     "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + server + " Port " + port + "</address>\n" +
+                                     "<address>" + GetServerIdentificationString_HostPort(server, port) + "</address>\n" +
                                      "</body></html>\n";
 
             return responseContent;
@@ -357,7 +371,7 @@ namespace SvnBridge.Handlers
                 "<h1>Not Found</h1>\n" +
                 "<p>The requested URL " + Helper.EncodeB(requestPath) + " was not found on this server.</p>\n" +
                 "<hr>\n" +
-                "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host + " Port " + request.Url.Port + "</address>\n" +
+                "<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
                 "</body></html>\n";
 
             WriteToResponse(response, responseContent);

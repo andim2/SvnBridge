@@ -110,7 +110,7 @@ namespace SvnBridge.Handlers
                         writer.Write("<h1>Moved Permanently</h1>\n");
                         writer.Write("<p>The document has moved <a href=\"" + request.Url + "/\">here</a>.</p>\n");
                         writer.Write("<hr>\n");
-                        writer.Write("<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host + " Port " + request.Url.Port + "</address>\n");
+                        writer.Write("<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n");
                         writer.Write("</body></html>\n");
                     }
                 }
