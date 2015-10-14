@@ -810,36 +810,38 @@ namespace SvnBridge.SourceControl
                     changeset);
                 foreach (Change change in changeset.Changes)
                 {
-                    if (!IsPropertyFolder(change.Item.item))
+                    if (IsPropertyFolder(change.Item.item))
                     {
-                        if (!IsPropertyFile(change.Item.item))
-                        {
-                            SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
-                            ChangeType changeType = change.type;
-                            if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
-                                (changeType == (ChangeType.Add | ChangeType.Encoding)))
-                                changeType = ChangeType.Add;
-                            sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType));
-                        }
-                        else
-                        {
-                            string item = GetItemFileNameFromPropertiesFileName(change.Item.item);
-                            bool itemFileIncludedInChanges = false;
-                            foreach (Change itemChange in changeset.Changes)
-                            {
-                                if (item.Equals(itemChange.Item.item))
-                                {
-                                    itemFileIncludedInChanges = true;
-                                    break;
-                                }
-                            }
-                            if (!itemFileIncludedInChanges)
-                            {
-                                ItemType itemType = change.Item.item.EndsWith(propFolderPlusSlash + Constants.FolderPropFile) ? ItemType.Folder : ItemType.File;
-                                SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
+                        continue;
+                    }
 
-                                sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Edit));
+                    if (!IsPropertyFile(change.Item.item))
+                    {
+                        SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
+                        ChangeType changeType = change.type;
+                        if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
+                            (changeType == (ChangeType.Add | ChangeType.Encoding)))
+                            changeType = ChangeType.Add;
+                        sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, changeType));
+                    }
+                    else
+                    {
+                        string item = GetItemFileNameFromPropertiesFileName(change.Item.item);
+                        bool itemFileIncludedInChanges = false;
+                        foreach (Change itemChange in changeset.Changes)
+                        {
+                            if (item.Equals(itemChange.Item.item))
+                            {
+                                itemFileIncludedInChanges = true;
+                                break;
                             }
+                        }
+                        if (!itemFileIncludedInChanges)
+                        {
+                            ItemType itemType = change.Item.item.EndsWith(propFolderPlusSlash + Constants.FolderPropFile) ? ItemType.Folder : ItemType.File;
+                            SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
+
+                            sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Edit));
                         }
                     }
                 }
