@@ -6,7 +6,6 @@ using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Exceptions;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Handlers;
 
@@ -23,8 +22,8 @@ namespace UnitTests
             request.Path =
                 "http://localhost:8082//!svn/wrk/0eaf3261-5f80-a140-b21d-c1b0316a256a/Spikes/SvnFacade/trunk/New%20Folder%206";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
@@ -51,8 +50,8 @@ namespace UnitTests
             stubs.Attach(provider.MakeCollection, new FolderAlreadyExistsException());
             request.Path = "http://localhost:8082//!svn/wrk/de1ec288-d55c-6146-950d-ceaf2ce9403b/newdir";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
@@ -77,7 +76,8 @@ namespace UnitTests
             request.Path =
                 "http://localhost:8081//!svn/wrk/5b34ae67-87de-3741-a590-8bda26893532/Spikes/SvnFacade/trunk/Empty";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal(1, r.CallCount);
             Assert.Equal("5b34ae67-87de-3741-a590-8bda26893532", r.Parameters[0]);
@@ -90,7 +90,8 @@ namespace UnitTests
             Results r = stubs.Attach(provider.MakeCollection);
             request.Path = "http://localhost:8081//!svn/wrk/0eaf3261-5f80-a140-b21d-c1b0316a256a/Folder%20With%20Spaces";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("/Folder With Spaces", r.Parameters[1]);
         }

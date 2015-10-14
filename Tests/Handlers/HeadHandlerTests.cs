@@ -4,7 +4,6 @@ using Attach;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using System;
 using SvnBridge.Utility;
@@ -31,9 +30,8 @@ namespace UnitTests
             Results readFileResult = stubs.AttachReadFile(provider.ReadFile, Encoding.Default.GetBytes("asdf"));
             request.Path = "http://localhost:8082/!svn/bc/1234/Foo/Bar.txt";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             // We only expect an HTTP header back from the server, response should be empty
             string expected = string.Empty;
@@ -52,7 +50,8 @@ namespace UnitTests
             Results readFileResult = stubs.AttachReadFile(provider.ReadFile, Encoding.Default.GetBytes("asdf"));
             request.Path = "http://localhost:8082/!svn/bc/1234/Foo/NotFound.txt";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             // In this case, we get a 404 Not Found code
             Assert.Equal(404, response.StatusCode);
@@ -67,7 +66,8 @@ namespace UnitTests
             Results readFileResult = stubs.AttachReadFile(provider.ReadFile, Encoding.Default.GetBytes("asdf"));
             request.Path = "http://localhost:8082/!svn/bc/1234/Foo/Bar.txt";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal(1, getItemsResult.CallCount);
             Assert.Equal(1234, getItemsResult.Parameters[0]);

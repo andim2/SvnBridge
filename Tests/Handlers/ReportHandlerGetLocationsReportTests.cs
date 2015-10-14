@@ -8,7 +8,6 @@ using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using Tests;
 using SvnBridge.Handlers;
@@ -27,14 +26,15 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5696</S:peg-revision><S:location-revision>5597</S:location-revision></S:get-locations>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n" +
                 "<S:location rev=\"5597\" path=\"/\"/>\n" +
                 "</S:get-locations-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal(200, context.Response.StatusCode);
             Assert.Equal("text/xml; charset=\"utf-8\"", context.Response.ContentType);
             Assert.Equal(true, context.Response.SendChunked);
@@ -49,14 +49,15 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5696</S:peg-revision><S:location-revision>5573</S:location-revision></S:get-locations>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<S:get-locations-report xmlns:S=\"svn:\" xmlns:D=\"DAV:\">\n" +
                 "<S:location rev=\"5573\" path=\"/Folder1\"/>\n" +
                 "</S:get-locations-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -68,7 +69,8 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><S:get-locations xmlns:S=\"svn:\" xmlns:D=\"DAV:\"><S:path></S:path><S:peg-revision>5788</S:peg-revision><S:location-revision>5787</S:location-revision><S:location-revision>5788</S:location-revision></S:get-locations>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -76,7 +78,7 @@ namespace UnitTests
                 "<S:location rev=\"5787\" path=\"/\"/>\n" +
                 "<S:location rev=\"5788\" path=\"/\"/>\n" +
                 "</S:get-locations-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
         }
     }
 }

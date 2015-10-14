@@ -30,6 +30,14 @@ namespace UnitTests
             RequestCache.Dispose();
         }
 
+        private static void DispatcherDispatch(
+            HttpContextDispatcher dispatcher,
+            IHttpContext context)
+        {
+            dispatcher.Dispatch(
+                context);
+        }
+
         //[Fact]
         //public void Repro()
         //{
@@ -204,7 +212,7 @@ namespace UnitTests
             request.Headers = new NameValueCollection();
             request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("username:password"));
 
-            dispatcher.Dispatch(context);
+            DispatcherDispatch(dispatcher, context);
 
             Assert.Equal(@"username_cp", dispatcher.Handler.Handle_credentials.UserName);
             Assert.Equal(@"snd", dispatcher.Handler.Handle_credentials.Domain);
@@ -222,7 +230,7 @@ namespace UnitTests
             context.Response = response;
             request.Url = new Uri("https://tfs01.codeplex.com");
 
-            dispatcher.Dispatch(context);
+            DispatcherDispatch(dispatcher, context);
 
             Assert.Equal(404, context.Response.StatusCode);
         }
@@ -236,7 +244,7 @@ namespace UnitTests
             context.Request = request;
             request.Url = new Uri("https://tfs01.codeplex.com");
 
-            dispatcher.Dispatch(context);
+            DispatcherDispatch(dispatcher, context);
 
             Assert.Null(dispatcher.Handler.Handle_credentials);
         }
@@ -252,7 +260,7 @@ namespace UnitTests
             request.Url = new Uri("http://tfsserver");
             dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
 
-            dispatcher.Dispatch(context);
+            DispatcherDispatch(dispatcher, context);
 
             Assert.Same(CredentialCache.DefaultCredentials, dispatcher.Handler.Handle_credentials);
         }
@@ -267,7 +275,7 @@ namespace UnitTests
             request.Url = new Uri("http://tfsserver");
             dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
 
-            Exception exception = Record.Exception(delegate { dispatcher.Dispatch(context); });
+            Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
 
             Assert.NotNull(exception);
             Assert.IsType(typeof(NetworkAccessDeniedException), exception);
@@ -283,7 +291,7 @@ namespace UnitTests
             request.Headers["Authorization"] = "abcdef ...";
             request.Url = new Uri("http://tfsserver");
 
-            Exception exception = Record.Exception(delegate { dispatcher.Dispatch(context); } );
+            Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
 
             Assert.NotNull(exception);
         }
@@ -298,7 +306,7 @@ namespace UnitTests
             request.Url = new Uri("https://tfs01.codeplex.com");
             dispatcher.Handler.Handle_Throw = new IOException();
 
-            Exception result = Record.Exception(delegate { dispatcher.Dispatch(context); });
+            Exception result = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
 
             Assert.Null(result);
         }
@@ -313,10 +321,10 @@ namespace UnitTests
             request.Url = new Uri("https://tfs01.codeplex.com");
 
             dispatcher.Handler.Handle_Throw = new HttpException("An error occurred while communicating with the remote host.");
-            Exception result1 = Record.Exception(delegate { dispatcher.Dispatch(context); });
+            Exception result1 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
 
             dispatcher.Handler.Handle_Throw = new HttpException("The remote host closed the connection.");
-            Exception result2 = Record.Exception(delegate { dispatcher.Dispatch(context); });
+            Exception result2 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
 
             Assert.Null(result1);
             Assert.Null(result2);

@@ -4,7 +4,6 @@ using Attach;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Handlers;
 
@@ -20,7 +19,8 @@ namespace UnitTests
             Results r = stubs.Attach(provider.DeleteActivity);
             request.Path = "http://localhost:8082/!svn/act/5b34ae67-87de-3741-a590-8bda26893532";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal(1, r.CallCount);
             Assert.Equal("5b34ae67-87de-3741-a590-8bda26893532", r.Parameters[0]);
@@ -33,7 +33,8 @@ namespace UnitTests
             request.Path =
                 "http://localhost:8082//!svn/wrk/c512ecbe-7577-ce46-939c-a9e81eb4d98e/Spikes/SvnFacade/trunk/Test4.txt";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal(1, r.CallCount);
             Assert.Equal("c512ecbe-7577-ce46-939c-a9e81eb4d98e", r.Parameters[0]);
@@ -47,7 +48,8 @@ namespace UnitTests
             request.Path =
                 "http://localhost:8082//!svn/wrk/125c1a75-a7a6-104d-a661-54689d30dc99/Spikes/SvnFacade/trunk/New%20Folder%206";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("/Spikes/SvnFacade/trunk/New Folder 6", r.Parameters[1]);
         }
@@ -59,9 +61,8 @@ namespace UnitTests
             request.Path =
                 "http://localhost:8082//!svn/wrk/70df3104-9f67-8d4e-add7-6012fe86c03a/Spikes/SvnFacade/trunk/New%20Folder/Test2.txt";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +

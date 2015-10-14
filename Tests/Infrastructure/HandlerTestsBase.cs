@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.IO;
+using System.Text; // Encoding
 using Xunit;
 using SvnBridge.SourceControl;
 using Tests;
@@ -7,7 +8,9 @@ using SvnBridge.Net;
 using Attach;
 using System;
 using SvnBridge;
+using SvnBridge.Handlers; // RequestHandlerBase
 using SvnBridge.Infrastructure;
+using SvnBridge.PathParsing; // PathParserSingleServerWithProjectInPath
 
 namespace UnitTests
 {
@@ -40,6 +43,22 @@ namespace UnitTests
         {
             Clock.FrozenCurrentTime = null;
             Container.Reset();
+        }
+
+        protected string HandlerHandle(RequestHandlerBase handler, string serverUrl)
+        {
+            string result;
+
+            handler.Handle(context, new PathParserSingleServerWithProjectInPath(serverUrl), null);
+
+            result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+
+            return result;
+        }
+
+        protected string HandlerHandle(RequestHandlerBase handler)
+        {
+            return HandlerHandle(handler, tfsUrl);
         }
 
         /// <summary>

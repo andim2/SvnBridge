@@ -5,7 +5,6 @@ using System.Web;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
 using SvnBridge.Handlers;
@@ -46,9 +45,8 @@ namespace UnitTests
             item.Name = "trunk/H !@#$%^&()_-+={[}];',.~`.txt";
             stubs.Attach(provider.GetItems, item);
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:href>/!svn/bc/5775/trunk/H%20!@%23$%25%5e&amp;()_-+=%7b%5b%7d%5d%3b',.~%60.txt</D:href>"));
             Assert.True(result.Contains("<lp1:getetag>\"5774//trunk/H !@#$%^&amp;()_-+={[}];',.~`.txt\"</lp1:getetag>"));
             Assert.True(result.Contains("<lp1:checked-in><D:href>/!svn/ver/5774/trunk/H%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60.txt</D:href></lp1:checked-in>"));
@@ -60,9 +58,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp2:baseline-relative-path>Foo/Bar.txt</lp2:baseline-relative-path>"));
         }
 
@@ -71,9 +68,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp1:checked-in><D:href>/!svn/ver/1234/Foo/Bar.txt</D:href></lp1:checked-in>"));
         }
@@ -83,9 +79,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:getcontentlength>4</lp1:getcontentlength>"));
         }
 
@@ -94,9 +89,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:getcontenttype>text/plain</lp1:getcontenttype>"));
         }
 
@@ -107,9 +101,8 @@ namespace UnitTests
             item.LastModifiedDate = dt;
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:creationdate>" + Helper.FormatDate(dt) + "</lp1:creationdate>"));
         }
 
@@ -118,9 +111,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:creator-displayname>user_foo</lp1:creator-displayname>"));
         }
 
@@ -129,9 +121,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp2:deadprop-count>0</lp2:deadprop-count>"));
         }
 
@@ -140,9 +131,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:getetag>\"1234//Foo/Bar.txt\"</lp1:getetag>"));
         }
 
@@ -153,9 +143,8 @@ namespace UnitTests
             item.LastModifiedDate = dt;
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp1:getlastmodified>" + dt.ToUniversalTime().ToString("R") + "</lp1:getlastmodified>"));
         }
@@ -165,9 +154,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:href>/!svn/bc/1234/Foo/Bar.txt</D:href>"));
         }
 
@@ -177,9 +165,8 @@ namespace UnitTests
             ArrangeRequest();
             request.Path = "http://localhost/!svn/bc/1234/Foo/שלום.txt";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:href>" + Helper.UrlEncodeIfNecessary("/!svn/bc/1234/Foo/שלום.txt") + "</D:href>"));
         }
 
@@ -188,9 +175,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:lockdiscovery/>"));
         }
 
@@ -199,9 +185,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp2:md5-checksum>" + Helper.GetMd5Checksum(new byte[4] {0, 1, 2, 3}) +
                                 "</lp2:md5-checksum>"));
@@ -212,9 +197,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp2:repository-uuid>81a5aebe-f34e-eb42-b435-ac1ecbb335f7</lp2:repository-uuid>"));
         }
@@ -224,9 +208,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:resourcetype/>"));
         }
 
@@ -235,9 +218,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains(
                               "<D:supportedlock>\n" +
                               "<D:lockentry>\n" +
@@ -252,9 +234,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains(
                     "<lp1:version-controlled-configuration><D:href>/!svn/vcc/default</D:href></lp1:version-controlled-configuration>"));
@@ -265,9 +246,8 @@ namespace UnitTests
         {
             ArrangeRequest();
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:version-name>1234</lp1:version-name>"));
         }
     }

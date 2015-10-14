@@ -2,7 +2,6 @@ using Attach;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using System.IO;
 using System.Text;
@@ -21,9 +20,8 @@ namespace UnitTests
             request.Path = "http://localhost:8082/Spikes/SvnFacade/trunk/New%20Folder%207";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:options xmlns:D=\"DAV:\"><D:activity-collection-set/></D:options>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             string expected = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<D:options-response xmlns:D=\"DAV:\">\n" +
@@ -40,9 +38,8 @@ namespace UnitTests
             request.Headers["Content-Type"] = "text/xml";
             request.Path = "http://localhost:8082/Spikes/SvnFacade/trunk/New%20Folder%207";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             string expected = "";
 
@@ -59,7 +56,8 @@ namespace UnitTests
             request.Path = "http://localhost:8082";
 
             //System.Diagnostics.Debugger.Launch();
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("httpd/unix-directory", response.ContentType);
         }
@@ -70,7 +68,8 @@ namespace UnitTests
             Results r = stubs.Attach(provider.ItemExists, true);
             request.Path = "http://localhost:8082/Spikes/SvnFacade/trunk/New%20Folder%207";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("/Spikes/SvnFacade/trunk/New Folder 7", r.Parameters[0]);
         }

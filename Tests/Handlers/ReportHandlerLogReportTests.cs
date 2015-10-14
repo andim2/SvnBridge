@@ -8,7 +8,6 @@ using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using Tests;
 using SvnBridge.Handlers;
@@ -45,7 +44,8 @@ namespace UnitTests
             request.Input =
                 "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5532</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:path></S:path></S:log-report>";
 
-			handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -64,7 +64,7 @@ namespace UnitTests
                 "<S:added-path copyfrom-path=\"/newFolder4/F!@#$%^&amp;()~`_-+={[}];',.txt\" copyfrom-rev=\"5531\" node-kind=\"dir\">/newFolder4/G!@#$%^&amp;()~`_-+={[}];',.txt</S:added-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
         }
 
         [Fact]
@@ -80,7 +80,8 @@ namespace UnitTests
             request.Input =
                 "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5696</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:strict-node-history/><S:path></S:path></S:log-report>";
 
-			handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -93,7 +94,7 @@ namespace UnitTests
                 "<S:deleted-path node-kind=\"dir\">/Folder9</S:deleted-path>\n" +
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal("/", r.Parameters[0]);
             Assert.Equal(1, r.Parameters[1]);
             Assert.Equal(5696, r.Parameters[2]);
@@ -114,7 +115,8 @@ namespace UnitTests
             request.Input =
                 "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5679</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:strict-node-history/><S:path></S:path></S:log-report>";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             // Hmm, why node-kind="dir" rather than "file"?
             // Probably because the Change initially got registered as directory-type,
@@ -131,7 +133,7 @@ namespace UnitTests
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
 
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.Equal(Encoding.UTF8, response.ContentEncoding);
             Assert.Equal(200, response.StatusCode);
@@ -152,7 +154,8 @@ namespace UnitTests
             request.Input =
                 "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5531</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:path></S:path></S:log-report>";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -167,7 +170,7 @@ namespace UnitTests
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
 
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.Equal(Encoding.UTF8, response.ContentEncoding);
             Assert.Equal(200, response.StatusCode);
@@ -193,7 +196,8 @@ namespace UnitTests
             request.Input =
                 "<S:log-report xmlns:S=\"svn:\"><S:start-revision>5531</S:start-revision><S:end-revision>1</S:end-revision><S:limit>100</S:limit><S:discover-changed-paths/><S:path></S:path></S:log-report>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
             string expected =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -207,7 +211,7 @@ namespace UnitTests
                 "</S:log-item>\n" +
                 "</S:log-report>\n";
 
-            Assert.Equal(expected, Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray()));
+            Assert.Equal(expected, result);
             Assert.Equal("text/xml; charset=\"utf-8\"", response.ContentType);
             Assert.Equal(Encoding.UTF8, response.ContentEncoding);
             Assert.Equal(200, response.StatusCode);

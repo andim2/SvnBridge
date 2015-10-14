@@ -5,7 +5,6 @@ using Attach;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Handlers;
 using SvnBridge.Net;
@@ -41,9 +40,8 @@ namespace UnitTests
             request.Input =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains(
                     "Checked-out resource //!svn/wrk/f86c2543-a3d3-d04f-b458-8924481e51c6/A%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',~%60..txt"));
@@ -58,7 +56,8 @@ namespace UnitTests
             request.Path = "http://localhost:8084/!svn/ver/5718/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',~%60..txt";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.True(response.Headers.Contains(
                     new KeyValuePair<string, string>("Location",
@@ -72,7 +71,7 @@ namespace UnitTests
             request.Path = "http://localhost:8084/!svn/ver/5718/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',~%60..txt";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
 
-            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+            Record.Exception(delegate { HandlerHandle(handler); });
 
             Assert.NotNull(RequestCache.Items["RequestBody"]);
         }
@@ -85,7 +84,7 @@ namespace UnitTests
             request.Path = "http://localhost:8084/!svn/ver/5718/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',~%60..txt";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
 
-            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+            Record.Exception(delegate { HandlerHandle(handler); });
 
             Assert.NotNull(RequestCache.Items["RequestBody"]);
             Assert.True(r.WasCalled);
@@ -100,7 +99,8 @@ namespace UnitTests
             request.Path = "http://localhost:8084/!svn/ver/5718";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:checkout xmlns:D=\"DAV:\"><D:activity-set><D:href>/!svn/act/f86c2543-a3d3-d04f-b458-8924481e51c6</D:href></D:activity-set></D:checkout>";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
         }
     }
 }

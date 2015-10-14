@@ -52,9 +52,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:propfind xmlns:D='DAV:'><D:prop><D:md5-checksum/></D:prop></D:propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp2:md5-checksum>" + Helper.GetMd5Checksum(new byte[4] {0, 1, 2, 3}) +
                                 "</lp2:md5-checksum>"));
@@ -73,7 +72,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><resourcetype xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "1";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal(1, results.CallCount);
             Assert.Equal(1234, results.Parameters[0]);
@@ -90,7 +90,7 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
             request.Headers["Depth"] = "2";
 
-			Exception result = Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+			Exception result = Record.Exception(delegate { HandlerHandle(handler); });
 
             Assert.IsType(typeof(InvalidOperationException), result);
         }
@@ -108,9 +108,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><D:propfind xmlns:D='DAV:'><D:prop><D:lockdiscovery/></D:prop></D:propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:lockdiscovery/>"));
         }
 
@@ -130,9 +129,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><resourcetype xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "1";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:href>/!svn/bc/1234/Foo/</D:href>"));
             Assert.True(result.Contains("<D:href>/!svn/bc/1234/Foo/Bar.txt</D:href>"));
         }
@@ -149,8 +147,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
 
             string expected = "<lp2:baseline-relative-path>Folder With Spaces</lp2:baseline-relative-path>";
             Assert.True(result.Contains(expected));
@@ -172,9 +170,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><creationdate xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp1:creationdate>" + Helper.FormatDate(dt.ToUniversalTime()) + "</lp1:creationdate>"));
         }
@@ -194,9 +191,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><creator-displayname xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:creator-displayname>user_foo</lp1:creator-displayname>"));
         }
 
@@ -212,9 +208,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><deadprop-count xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp2:deadprop-count>0</lp2:deadprop-count>"));
         }
 
@@ -236,9 +231,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><getcontentlength xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<g0:getcontentlength/>"));
         }
 
@@ -254,7 +248,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("/Spikes/SvnFacade/trunk/New Folder 7", r1.Parameters[0]);
             Assert.Equal("/Spikes/SvnFacade/trunk/New Folder 7", r2.Parameters[1]);
@@ -273,7 +268,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/><resourcetype xmlns=\"DAV:\"/><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/><repository-uuid xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("/Test Project", r.Parameters[0]);
         }
@@ -294,9 +290,8 @@ namespace UnitTests
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-name xmlns=\"DAV:\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:version-name>1234</lp1:version-name>"));
         }
 
@@ -308,7 +303,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/><resourcetype xmlns=\"DAV:\"/><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/><repository-uuid xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
             request.Headers["Depth"] = "0";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            HandlerHandle(
+                handler);
 
             Assert.Equal("7a6c73b2-7e7c-2141-817d-9bd653873445", r1.Parameters[0]);
             Assert.Equal("trunk/A !@#$%^&()_-+={[}];',.~`.txt", r1.Parameters[1]);
@@ -322,7 +318,7 @@ namespace UnitTests
             request.Path = "http://localhost:8080/Quick%20Starts";
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><version-controlled-configuration xmlns=\"DAV:\"/><resourcetype xmlns=\"DAV:\"/><baseline-relative-path xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/><repository-uuid xmlns=\"http://subversion.tigris.org/xmlns/dav/\"/></prop></propfind>";
 
-            Record.Exception(delegate { handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null); });
+            Record.Exception(delegate { HandlerHandle(handler); });
 
             Assert.NotNull(RequestCache.Items["RequestBody"]);
         }

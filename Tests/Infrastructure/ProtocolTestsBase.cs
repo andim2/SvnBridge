@@ -53,6 +53,13 @@ namespace Tests
             Container.Reset();
         }
 
+        private void DispatcherDispatch(
+            IHttpContext context)
+        {
+            HttpDispatcher.Dispatch(
+                context);
+        }
+
         protected static byte[] GetBytes(string data)
         {
             byte[] result = new byte[data.Length];
@@ -84,7 +91,7 @@ namespace Tests
             HttpStream.Position = 0;
 
             ListenerContext context = new ListenerContext(HttpStream, stubs.CreateObject<DefaultLogger>());
-            HttpDispatcher.Dispatch(context);
+            DispatcherDispatch(context);
             context.Response.Close();
 
             HttpStream.Position = responseStart;

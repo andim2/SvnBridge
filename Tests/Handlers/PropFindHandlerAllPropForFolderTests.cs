@@ -4,7 +4,6 @@ using System.Text;
 using SvnBridge.Interfaces;
 using Xunit;
 using SvnBridge.Infrastructure;
-using SvnBridge.PathParsing;
 using SvnBridge.SourceControl;
 using SvnBridge.Utility;
 using SvnBridge.Handlers;
@@ -41,9 +40,9 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
             Assert.True(result.Contains("<D:href>/!svn/bc/5787/trunk/A%20!@%23$%25%5e&amp;()_-+=%7b%5b%7d%5d%3b',.~%60/</D:href>\n"));
             Assert.True(result.Contains("<lp1:getetag>\"5787//trunk/A !@#$%^&amp;()_-+={[}];',.~`\"</lp1:getetag>"));
             Assert.True(result.Contains("<lp1:checked-in><D:href>/!svn/ver/5787/trunk/A%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60</D:href></lp1:checked-in>"));
@@ -57,9 +56,9 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
             Assert.True(result.Contains("<C:bugtraq:message>Work Item: %BUGID%</C:bugtraq:message>"));
         }
 
@@ -70,9 +69,9 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
             Assert.True(result.Contains("<S:ignore>*.log\n</S:ignore>"));
         }
 
@@ -83,9 +82,9 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp2:baseline-relative-path>Foo</lp2:baseline-relative-path>"));
         }
 
@@ -96,9 +95,9 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
+            string result = HandlerHandle(
+                handler);
 
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
             Assert.True(result.Contains("<lp1:checked-in><D:href>/!svn/ver/1234/Foo</D:href></lp1:checked-in>"));
         }
 
@@ -109,9 +108,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>"));
         }
 
@@ -124,9 +122,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp1:creationdate>" + Helper.FormatDate(dt) + "</lp1:creationdate>"));
         }
@@ -138,9 +135,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:creator-displayname>user_foo</lp1:creator-displayname>"));
         }
 
@@ -151,9 +147,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp2:deadprop-count>2</lp2:deadprop-count>"));
         }
 
@@ -164,9 +159,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:getetag>\"1234//Foo\"</lp1:getetag>"));
         }
 
@@ -179,9 +173,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp1:getlastmodified>" + dt.ToUniversalTime().ToString("R") + "</lp1:getlastmodified>"));
         }
@@ -193,9 +186,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains("<lp2:repository-uuid>81a5aebe-f34e-eb42-b435-ac1ecbb335f7</lp2:repository-uuid>"));
         }
@@ -207,9 +199,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:resourcetype><D:collection/></lp1:resourcetype>"));
         }
 
@@ -220,9 +211,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(
                 result.Contains(
                     "<lp1:version-controlled-configuration><D:href>/!svn/vcc/default</D:href></lp1:version-controlled-configuration>"));
@@ -235,9 +225,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-        	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<lp1:version-name>1234</lp1:version-name>"));
         }
 
@@ -248,9 +237,8 @@ namespace UnitTests
             request.Input = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><allprop/></propfind>";
             request.Headers["Depth"] = "0";
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
-
-            string result = Encoding.Default.GetString(((MemoryStream)response.OutputStream).ToArray());
+            string result = HandlerHandle(
+                handler);
             Assert.True(result.Contains("<D:href>/!svn/bc/5784/Quick%20Starts/</D:href>"));
         }
     }
