@@ -2021,6 +2021,15 @@ namespace SvnBridge.SourceControl
             return isCompatible;
         }
 
+        public static BranchItem ConstructBranchItem(
+            SourceItem fromItem,
+            SourceItem toItem)
+        {
+            BranchItem branchItem = new BranchItem { FromItem = fromItem, ToItem = toItem };
+
+            return branchItem;
+        }
+
         /// <summary>
         /// Tries to determine whether a particular BranchItem
         /// was a rename

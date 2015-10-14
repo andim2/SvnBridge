@@ -536,25 +536,36 @@ namespace SvnBridge.SourceControl
             DebugIntercept(change);
 
             bool changed = false;
-            // ATTENTION ORDER: IsEditOperation() branch internally checks IsRenameOperation(), TOO!
-            // (in general, these comparisons work on a possibly combined multi-bit mask!!)
+            // ATTENTION ORDER:
+            // In general, these comparisons work on a possibly combined multi-bit mask!!
+            // I strongly suspect that all (well, almost all) change ops
+            // need to be executed unconditionally/independently whenever needed
+            // (since individual items may have *combined* change ops
+            // such as edit & rename operations)
+            // since they need to be able
+            // to resolve cleanly / symmetrically / in a fully complementary manner.
+            // But obviously add/rename/edit/delete ops
+            // still need to be processed in a certain order here
+            // (cannot do Edit after Delete, obviously).
+            // E.g. doing a Rename *directly prior* to a destructive Delete (within-same-commit!)
+            // seems very useless,
+            // but from an incrementally-applied-history POV
+            // (or pass-through maximally-detailed context POV)
+            // this is likely to be very valid (read: crucial!).
+
             if (ChangeTypeAnalyzer.IsAddOperation(change, updatingForwardInTime))
             {
                 engine.Add(change, updatingForwardInTime);
                 changed = true;
             }
-            else if (ChangeTypeAnalyzer.IsDeleteOperation(change, updatingForwardInTime))
+            else if (ChangeTypeAnalyzer.IsRenameOperation(change))
             {
-                engine.Delete(change);
+                engine.Rename(change, updatingForwardInTime);
                 changed = true;
             }
-            else if (ChangeTypeAnalyzer.IsEditOperation(change))
+
+            if (ChangeTypeAnalyzer.IsEditOperation(change))
             {
-                // We may have edit & rename operations
-                if (ChangeTypeAnalyzer.IsRenameOperation(change))
-                {
-                    engine.Rename(change, updatingForwardInTime);
-                }
                 if (updatingForwardInTime == false)
                 {
                     // FIXME: rather than dirtily fumbling a member of *foreign* objects,
@@ -569,9 +580,10 @@ namespace SvnBridge.SourceControl
                 engine.Edit(change);
                 changed = true;
             }
-            else if (ChangeTypeAnalyzer.IsRenameOperation(change))
+
+            if (ChangeTypeAnalyzer.IsDeleteOperation(change, updatingForwardInTime))
             {
-                engine.Rename(change, updatingForwardInTime);
+                engine.Delete(change);
                 changed = true;
             }
 

@@ -1479,11 +1479,13 @@ namespace SvnBridge.SourceControl
             foreach (SourceItemHistory history in histories)
             {
                 List<SourceItem> renamedItems = new List<SourceItem>();
+                List<SourceItem> deletedItems = new List<SourceItem>();
                 List<SourceItem> branchedItems = new List<SourceItem>();
 
                 foreach (SourceItemChange change in history.Changes)
                 {
                     bool isRename = ((change.ChangeType & ChangeType.Rename) == ChangeType.Rename);
+                    bool isDelete = ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete);
                     bool isBranch = ((change.ChangeType & ChangeType.Branch) == ChangeType.Branch);
 
                     // WARNING: I wanted to add this check here to skip doing string handling
@@ -1500,11 +1502,16 @@ namespace SvnBridge.SourceControl
                     // they might be done with the full expectation of non-TFS path syntax.
                     SourceItem_TFStoSVNsyntaxHACK(ref change.Item);
 
+                    // Single change may contain *multiple* change types:
                     if (isRename)
                     {
                         renamedItems.Add(change.Item);
                     }
-                    else if (isBranch)
+                    if (isDelete)
+                    {
+                        deletedItems.Add(change.Item);
+                    }
+                    if (isBranch)
                     {
                         branchedItems.Add(change.Item);
                     }
@@ -1540,6 +1547,8 @@ namespace SvnBridge.SourceControl
                     }
 
                     var renamesWithNoPreviousVersion = new List<SourceItemChange>();
+                    var changesNone_Processed = // will contain those ChangeType.None changes which ought to be removed e.g. due to having discovered their corresponding match
+                        new List<SourceItemChange>();
                     foreach (var change in history.Changes.Where(change => (change.ChangeType & ChangeType.Rename) == ChangeType.Rename))
                     {
                         ItemMetaData oldItem;
@@ -1556,6 +1565,37 @@ namespace SvnBridge.SourceControl
                         {
                             RenamedSourceItem itemRenamed = new RenamedSourceItem(change.Item, oldItem.Name, oldItem.Revision);
                             change.Item = itemRenamed;
+                            bool changeIncludesDeletionHint = ((change.ChangeType & ChangeType.Delete) == ChangeType.Delete);
+                            bool needSpecialCheckForDeletedSubItemsMovedByParentRename = (changeIncludesDeletionHint);
+                            if (needSpecialCheckForDeletedSubItemsMovedByParentRename)
+                            {
+                                foreach (var changeNoneCandidate in history.Changes.Where(changeCandidate => (changeCandidate.ChangeType & ChangeType.None) == ChangeType.None))
+                                {
+                                    bool thisChangeMatchesSourceOfRename = (changeNoneCandidate.Item.RemoteName == itemRenamed.OriginalRemoteName);
+                                    if (thisChangeMatchesSourceOfRename)
+                                    {
+                                        var changeNone_previously_deleted_item_placeholder_marker = changeNoneCandidate;
+                                        // I don't know WHY TFS decides to indicate relocation of prior-delete items
+                                        // the way it does it
+                                        // (it may have very good reasons,
+                                        // such as perhaps enabling proper folding during branch merge operations...),
+                                        // but what I do know is:
+                                        // definitely do NOT indicate an *active* Delete change to the SVN side
+                                        // when relocating a previously-deleted (read: no-longer-existing) item!
+                                        // UPDATE: nope, in fact we SHOULD keep the Delete change indicated!
+                                        // Currently known situations where this occurs:
+                                        // - relocation of a parent folder containing a sub item which had been *previously deleted*:
+                                        //   TFS indicates a Rename | Delete change for this sub item
+                                        //   (probably to ensure that after folder relocation the non-existent sub item in fact *also does not exist there*),
+                                        //   together with annotating (hinting?) the previously-deleted sub item at source side as a None change
+                                        // - relocation of a parent folder containing an existing (*non-deleted*) sub item
+                                        //   which then *additionally* gets Delete:d by the user at destination side *within this same commit*!:
+                                        //   TFS indicates a Rename | Delete change for this sub item
+                                        //change.ChangeType &= ~(ChangeType.Delete);
+                                        changesNone_Processed.Add(changeNone_previously_deleted_item_placeholder_marker);
+                                    }
+                                }
+                            }
                             renameWithPreviousVersion = true;
                         }
                         if (!renameWithPreviousVersion)
@@ -1574,13 +1614,11 @@ namespace SvnBridge.SourceControl
 
                     // [this is slowpath (rare event),
                     // thus Remove() is better than Enumerable.Except() use:]
+                    foreach (var victim in changesNone_Processed)
+                        history.Changes.Remove(victim);
                     foreach (var victim in renamesWithNoPreviousVersion)
                         history.Changes.Remove(victim);
 
-                    // Hmm, was .None handling really intended to be specifically done in this rename handling part only??
-                    // OTOH perhaps .None entries *are* meaningful for (some?) changes other than renames
-                    // (perhaps hinting about [non-]deleted identical items in various branches??) - who knows...
-                    history.Changes.RemoveAll(change => change.ChangeType == ChangeType.None);
                     history.Changes.RemoveAll(change => change.ChangeType == ChangeType.Delete &&
                                               oldItems.Any(oldItem => oldItem != null && oldItem.Id == change.Item.ItemId));
                 }
@@ -1631,6 +1669,56 @@ namespace SvnBridge.SourceControl
                             }
                         }
                     }
+                }
+                // ChangeType.None seems to happen e.g. in cases where parent items get renamed/deleted away,
+                // yet where there's a prior-deletion sub item
+                // which then seems to be intended to remain "annotated" (via ChangeType.None).
+                // (this might actually be new behaviour in TFS2013 vs. TFS2008).
+                // Also, perhaps .None entries *are* meaningful for (some?) changes other than renames/deletes
+                // (perhaps hinting about [non-]deleted identical items in various branches,
+                // for correct branching overlay operation handling??) - who knows...
+                // Hmm, there remain the following unsolved issues:
+                // - was .None handling really intended to be done in such a coarse manner??
+                //   (delete *all* .None entries in case any rename happened [and now added for deletes, too])
+                // - quite likely .None entries should only be deleted whenever they are directly affected
+                //   by a rename/delete of a parent item...
+                // - also, I'm not really certain about the order of operations in this handler -
+                //   .None entries probably ought to be removed only *after* Branching handling,
+                //   but in general perhaps important Branching ops ought to be done *prior* to rename/delete handling, too!
+                //   (and perhaps this order ought to be re-executed *per-item* even, not after the whole loop has been analyzed!?)
+                //   Is there any information on how other SCMs process such things?
+                //
+                // OK, one case of None Change being indicated is:
+                // Cleanly simply rename of an entire sub/ directory into its root folder
+                // (i.e., all of its items), where the interesting items then are:
+                // $/TeamProj/sub/foo/file1.txt None
+                // $/TeamProj/foo/file1.txt Rename|Delete
+                // , at least in this case where
+                // $/TeamProj/sub/foo/file1.txt
+                // got Added:ed and then also Delete:d (*prior* to this commit) -
+                // this prior-delete item status likely is the reason
+                // that we're getting indicated a None (as opposed to an active Delete!) Change
+                // for this *source item* during the folder rename!
+                // *and also* the destination item
+                // $/TeamProj/foo/file1.txt
+                // got Add:ed and then also Delete:d (*prior* to this commit).
+                // This would seem to indicate that we would need to match up any None Changes
+                // on the source side with the Change on the destination side,
+                // i.e. we would need to watch all Renames
+                // to see whether they also indicate a Delete
+                // and if so check
+                // whether the reason for the Delete
+                // is a matching None Change on the source side,
+                // and if so remove the Delete indication on that Change
+                // (since the destination side does NOT have that item existing!),
+                // but quite possibly
+                // this removal should be done only at the *very end* of our processing,
+                // since these "annotation helper" Change flags
+                // might be very important e.g. during prior branch-merge-folding processing.
+                bool needProcessRemovalOfChangeTypeNoneItems = ((renamedItems.Count > 0) || (deletedItems.Count > 0));
+                if (needProcessRemovalOfChangeTypeNoneItems)
+                {
+                    history.Changes.RemoveAll(change => change.ChangeType == ChangeType.None);
                 }
             }
         }
@@ -4354,6 +4442,12 @@ namespace SvnBridge.SourceControl
                     // Note that some elements may end up null; known reasons so far:
                     // - renamed item already had "deleted" state
                     //   (one such situation may be one where the item's containing folder gets renamed).
+                    // - item occurring in this changeset is an *interim* location
+                    //   (e.g. whole-hierarchy Rename:d from one location to another,
+                    //   then parts of that hierarchy immediately Delete:d within-same-changeset
+                    //   --> there *is* no existing item at this Changeset
+                    //   [however a Rename | Delete change *does* get listed for this location in this changeset!],
+                    //   which probably is the reason that QueryBranches() yields null)
                     thisRevBranches = sourceControlService.QueryBranches(serverUrl,
                                                                          credentials,
                                                                          itemSpecs,
@@ -4364,9 +4458,74 @@ namespace SvnBridge.SourceControl
                         branchItem.ToItem != null &&
                         branchItem.ToItem.RemoteChangesetId == changeset &&
                         branchItem.ToItem.RemoteName == MakeTfsPath(item.RemoteName))).ToArray();
+
+                // Do some special workarounds for unsuccessful elements -
+                // or perhaps we should often simply skip QueryBranches() completely,
+                // and directly go via history instead...
+                GetRenamedItems_TryFixupUnsuccessfulElements(
+                    ref renamedItems,
+                    itemSpecs,
+                    changeset);
             }
 
             return renamedItems;
+        }
+
+        private void GetRenamedItems_TryFixupUnsuccessfulElements(
+            ref BranchItem[] renamedItems,
+            ItemSpec[] itemSpecs,
+            int changeset)
+        {
+            ChangesetVersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset);
+            int idxItem = 0;
+            foreach (var renamedItem in renamedItems)
+            {
+                bool haveProperRenameHistory = (null != renamedItem);
+                if (!(haveProperRenameHistory))
+                {
+                    ItemSpec itemSpec = itemSpecs[idxItem];
+                    var changesets = QueryChangesets_TFS_sanitize_querylimit_etc(
+                        itemSpec.item,
+                        versionSpecChangeset,
+                        1,
+                        changeset,
+                        RecursionType.None,
+                        int.MaxValue,
+                        false);
+                    var itemRenameDeterminedFromHistory = GetItemRenameDeterminedFromHistory(
+                        changesets);
+                    renamedItems[idxItem] = itemRenameDeterminedFromHistory;
+                }
+                ++idxItem;
+            }
+        }
+
+        private static BranchItem GetItemRenameDeterminedFromHistory(
+            List<Changeset> changesets)
+        {
+            BranchItem itemRenameDeterminedFromHistory = null;
+
+            if (changesets.Count >= 2)
+            {
+                Change changeCurr = changesets[0].Changes[0];
+                if (
+                    ((changeCurr.type & ChangeType.Rename) == ChangeType.Rename)
+                )
+                {
+                    Change changePrev = changesets[1].Changes[0];
+                    var fromItem = ConvertChangeToSourceItem(changePrev);
+                    var toItem = ConvertChangeToSourceItem(changeCurr);
+                    bool isValidRename = true;
+                    if (isValidRename)
+                    {
+                        itemRenameDeterminedFromHistory = TfsLibraryHelpers.ConstructBranchItem(
+                            fromItem,
+                            toItem);
+                    }
+                }
+            }
+
+            return itemRenameDeterminedFromHistory;
         }
 
         /// <summary>

@@ -17,7 +17,36 @@ namespace SvnBridge.SourceControl
     	private FolderMetaData parent;
 
         public string Author;
-        public bool OriginallyDeleted /* = false */;
+        // .NewlyAdded member is for UpdateDiffEngine use only
+        // (this has been semi-dirtily added as a member here
+        // rather than being remembered by a map member at UpdateDiffEngine,
+        // since it's an intrinsic feature of an item
+        // at a certain path location,
+        // thus housekeeping ought to be easier
+        // when keeping it recorded directly within the item).
+        // .NewlyAdded indicates whether an item has been *newly* introduced
+        // *within the particular commit range* that we are processing.
+        // This is intended to enable us
+        // to reliably decide
+        // whether a Delete op of an item
+        // should simply revert an already-inserted previous change,
+        // rather than getting staged as an *active* Delete item change indication.
+        // Put differently: if the item at start revision
+        // was *already* existing
+        // and we get a Delete op
+        // --> *should* be an *active* Delete
+        // as opposed to the case where
+        // the item gets newly introduced
+        // within the diffed commit range
+        // via an Add,
+        // followed by a Delete
+        // --> simply revert (*discard*) the recorded item change.
+        // Please note that the state of this flag
+        // most certainly needs to be maintained
+        // for *all* item conversions that may happen within the diff range, e.g.:
+        // replacement of this item by its DeleteMetaData counterpart,
+        // renames, ..
+        public bool NewlyAdded /* = false */;
         public bool DataLoaded /* = false */;
         public string Base64DiffData /* = null */;
         public string Md5Hash /* = null */; // Important helper to support maintaining a properly end-to-end checksummed data chain
@@ -303,8 +332,8 @@ namespace SvnBridge.SourceControl
             sb.Append(DataLoaded);
             sb.Append(", lastMod ");
             sb.Append(LastModifiedDate);
-            sb.Append(", origDeleted ");
-            sb.Append(OriginallyDeleted);
+            sb.Append(", newlyAdded ");
+            sb.Append(NewlyAdded);
             RenderContentAsString_nextline(sb);
         }
 

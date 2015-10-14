@@ -284,6 +284,8 @@ namespace SvnBridge.SourceControl
                 return;
             }
 
+            bool newlyAddedLastElem = (!edit);
+
             // Special case for changes of source root item (why? performance opt?):
             if (ItemMetaData.IsSamePath(remoteName, _checkoutRootPath))
             {
@@ -303,6 +305,8 @@ namespace SvnBridge.SourceControl
                 int pathElemsCount = pathElems.Length;
                 for (int i = 0; i < pathElemsCount; ++i)
                 {
+                    bool newlyAdded = newlyAddedLastElem;
+
                     bool isLastPathElem = (i == pathElemsCount - 1);
 
                     FilesysHelpers.PathAppendElem(ref itemPath, pathElems[i]);
@@ -328,8 +332,9 @@ namespace SvnBridge.SourceControl
                             // which then deals with IsDeleteMetaDataKind() updating...
                             // Still, that sounds like our logic evaluation here
                             // is a bit too complex, could be simplified.
-                            // Well, the whole special-casing below seems to be
-                            // for properly setting the OriginallyDeleted member...
+                            // Well, the whole special-casing below seemed to be
+                            // for properly setting the now-reworked (replaced)
+                            // OriginallyDeleted member...
                             if (existingItemsVersionIsOutdated && !IsDeleteMetaDataKind(itemPrev))
                                 doReplaceByNewItem = true;
                         }
@@ -388,12 +393,29 @@ namespace SvnBridge.SourceControl
                                 return;
                             }
                             item = new MissingItemMetaData(itemPath, processedVersion, edit);
+                            // From an incremental-handling POV even a "missing item"
+                            // (which may indicate e.g. a previously-deleted item
+                            // within a parent-folder rename)
+                            // *has* been *newly* added
+                            // (*actively* entered SCM history within the processed commit range)
+                            // to occupy its location,
+                            // i.e. its addition *should* be cleanly symmetrically revertable
+                            // by a subsequent Delete-change request,
+                            // thus we should NOT force indicating .NewlyAdded as false.
+                            //newlyAdded = false;
+                            // Well in fact we SHOULD actively (locally) override-assign newlyAdded state to true here:
+                            newlyAdded = true;
                         }
                         if (!isLastPathElem)
                         {
+                            // Currently determined required state of newlyAdded
+                            // belongs to *this* item
+                            // (rather than its stub folder wrapper)!
+                            item.NewlyAdded = newlyAdded;
+                            newlyAdded = false;
                             item = ProvideHelperFolderWhileItsChangeStatusNonFinal((FolderMetaData)item);
                         }
-                        Folder_AddItem(folder, item);
+                        Folder_AddItem(folder, item, newlyAdded);
                         SetAdditionForPropertyChangeOnly(item, propertyChange);
                     }
                     else if ((itemPrev is StubFolderMetaData) && isLastPathElem)
@@ -410,7 +432,6 @@ namespace SvnBridge.SourceControl
                           if (!propertyChange)
                           {
                               item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
-                              item.OriginallyDeleted = true;
                               Folder_ReplaceItem(folder, itemPrev, item);
                           }
                         }
@@ -428,7 +449,7 @@ namespace SvnBridge.SourceControl
                           // SvnBridge does generate both delete and add diffs,
                           // whereas for similar-name renames it previously did not -> buggy!]
                           item = sourceControlProvider.GetItems(change.Item.RemoteChangesetId, itemPath, Recursion.None);
-                          Folder_AddItem(folder, item);
+                          Folder_AddItem(folder, item, newlyAdded);
                         }
 //#endif
                     }
@@ -569,12 +590,14 @@ namespace SvnBridge.SourceControl
                         item = ProvideHelperFolderWhileItsChangeStatusNonFinal((FolderMetaData)item);
                     }
                 }
-                Folder_AddItem(folder, item);
+                Folder_AddItem(folder, item, false);
             }
-            else if (isLastPathElem) // we need to revert the item addition
+            else if (isLastPathElem)
             {
                 var processedVersion = _targetVersion;
-                bool needIndicateRealDelete = (itemPrev.OriginallyDeleted); // convert back into a delete
+                bool isItemNewlyAddedWithinDiffRevisionRange = (itemPrev.NewlyAdded);
+                bool haveExistingRecordedItemChangeAvailToDiscard = (isItemNewlyAddedWithinDiffRevisionRange);
+                bool needIndicateRealDelete = (!haveExistingRecordedItemChangeAvailToDiscard);
                 if (needIndicateRealDelete)
                 {
                     item = ConstructDeletedItem(
@@ -708,11 +731,13 @@ namespace SvnBridge.SourceControl
 
         private static void Folder_ReplaceItem(FolderMetaData folder, ItemMetaData itemVictim, ItemMetaData itemWinner)
         {
+            itemWinner.NewlyAdded = itemVictim.NewlyAdded; // carry over important state
             ItemHelpers.FolderOps_ReplaceItem(folder, itemVictim, itemWinner);
         }
 
-        private static void Folder_AddItem(FolderMetaData folder, ItemMetaData item)
+        private static void Folder_AddItem(FolderMetaData folder, ItemMetaData item, bool newlyAdded)
         {
+            item.NewlyAdded = newlyAdded;
             ItemHelpers.FolderOps_AddItem(folder, item);
         }
 

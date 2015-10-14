@@ -137,20 +137,51 @@ namespace UnitTests
             AssertItem(root.Items[0], "project/file.txt", 1);
         }
 
-        // The reason for remaining disabled for now possibly is
-        // that it crashes during Add processing due to having established
-        // an overly-dummy GetItems() which always returns null...
-        [Fact(Skip="Temporary disable")]
-        public void DeleteFileThenAddFileThenDeleteFile()
+        [Fact]
+        [Trait("TestName", "EFDTATDTATD")]
+        public void ExistingFileDeleteThenAddThenDeleteThenAddThenDelete()
         {
-            stub.Attach(sourceControlProvider.GetItems, Return.Value(null));
+            //System.Diagnostics.Debugger.Launch();
 
-            engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
-            engine.Add(CreateChange(ChangeType.Add, "project/file.txt", ItemType.File));
-            engine.Delete(CreateChange(ChangeType.Delete, "project/file.txt", ItemType.File));
+            string pathFile = "project/file.txt";
+
+            ItemMetaData item = new ItemMetaData(pathFile);
+            root.Items.Add(item);
+
+            stub.Attach(sourceControlProvider.GetItems, Return.Value(root.Items.Count > 0 ? root.Items[0] : null));
+
+            engine.Delete(CreateChange(ChangeType.Delete, pathFile, ItemType.File));
+            engine.Add(CreateChange(ChangeType.Add, pathFile, ItemType.File));
+            engine.Delete(CreateChange(ChangeType.Delete, pathFile, ItemType.File));
+            engine.Add(CreateChange(ChangeType.Add, pathFile, ItemType.File));
+            engine.Delete(CreateChange(ChangeType.Delete, pathFile, ItemType.File));
 
             AssertFolder(root, "project", 0, 1);
-            AssertDeleteItem(root.Items[0], "project/file.txt");
+            var items = root.Items;
+            // End result of a pre-existing file over this change range
+            // *must* be registered as an active Delete
+            // rather than simply a complementary revert of "prior item change".
+            AssertDeleteItem(items[0], pathFile);
+        }
+
+        [Fact]
+        [Trait("TestName", "FATDTATD")]
+        public void FileAddThenDeleteThenAddThenDelete()
+        {
+            //System.Diagnostics.Debugger.Launch();
+
+            string pathFile = "project/file.txt";
+
+            stub.Attach(sourceControlProvider.GetItems, Return.Value(root.Items.Count > 0 ? root.Items[0] : null));
+
+            engine.Add(CreateChange(ChangeType.Add, pathFile, ItemType.File));
+            engine.Delete(CreateChange(ChangeType.Delete, pathFile, ItemType.File));
+            engine.Add(CreateChange(ChangeType.Add, pathFile, ItemType.File));
+            engine.Delete(CreateChange(ChangeType.Delete, pathFile, ItemType.File));
+
+            // End result of a not-existing file over this change range
+            // *must* be "no item change to be done".
+            AssertFolder(root, "project", 0, 0);
         }
 
         [Fact]
