@@ -204,13 +204,10 @@ namespace UnitTests
         [Fact]
         public void Dispatch_ServerIsCodePlexAndUsernameIsMissingDomainAndSuffix_DomainAndSuffixIsAdded()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com");
-            request.Headers = new NameValueCollection();
-            request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("username:password"));
+            context.Request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("username:password"));
 
             DispatcherDispatch(dispatcher, context);
 
@@ -221,14 +218,10 @@ namespace UnitTests
         [Fact]
         public void Dispatch_ProjectNotFound_Return404Response()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             dispatcher.Parser.GetServerUrl_Return = null;
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            StubHttpResponse response = new StubHttpResponse();
-            context.Request = request;
-            context.Response = response;
-            request.Url = new Uri("https://tfs01.codeplex.com");
 
             DispatcherDispatch(dispatcher, context);
 
@@ -238,11 +231,9 @@ namespace UnitTests
         [Fact]
         public void Dispatch_ServerIsCodePlexAndNoAuthorizationHeader_CredentialsAreNull()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com");
 
             DispatcherDispatch(dispatcher, context);
 
@@ -252,12 +243,10 @@ namespace UnitTests
         [Fact(Skip = "Digest likely cannot be supported truly, and we should NOT return possibly session-foreign unchecked/unvalidated DefaultCredentials")]
         public void Dispatch_DigestAuthorizationHeader_ReturnDefaultCredentials()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("http://tfsserver"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Headers["Authorization"] = "Digest ...";
-            request.Url = new Uri("http://tfsserver");
+            context.Request.Headers["Authorization"] = "Digest ...";
             dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
 
             DispatcherDispatch(dispatcher, context);
@@ -267,12 +256,10 @@ namespace UnitTests
 
         public void Dispatch_DigestAuthorizationHeader_ThrowsException()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("http://tfsserver"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Headers["Authorization"] = "Digest ...";
-            request.Url = new Uri("http://tfsserver");
+            context.Request.Headers["Authorization"] = "Digest ...";
             dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
 
             Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
@@ -284,12 +271,10 @@ namespace UnitTests
         [Fact]
         public void Dispatch_UnknownAuthorizationHeader_ThrowsException()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("http://tfsserver"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Headers["Authorization"] = "abcdef ...";
-            request.Url = new Uri("http://tfsserver");
+            context.Request.Headers["Authorization"] = "abcdef ...";
 
             Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
 
@@ -299,11 +284,9 @@ namespace UnitTests
         [Fact]
         public void Dispatch_RequestIsCancelledUnderIIS6_ExceptionIsNotThrown()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com");
             dispatcher.Handler.Handle_Throw = new IOException();
 
             Exception result = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
@@ -314,11 +297,9 @@ namespace UnitTests
         [Fact]
         public void Dispatch_RequestIsCancelledUnderIIS7_ExceptionIsNotThrown()
         {
+            IHttpContext context = ConstructStubHttpContext(
+                new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
-            StubHttpContext context = new StubHttpContext();
-            StubHttpRequest request = new StubHttpRequest();
-            context.Request = request;
-            request.Url = new Uri("https://tfs01.codeplex.com");
 
             dispatcher.Handler.Handle_Throw = new HttpException("An error occurred while communicating with the remote host.");
             Exception result1 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
@@ -328,6 +309,20 @@ namespace UnitTests
 
             Assert.Null(result1);
             Assert.Null(result2);
+        }
+
+        private static IHttpContext ConstructStubHttpContext(
+            Uri uri)
+        {
+            StubHttpContext context = new StubHttpContext();
+            StubHttpRequest request = new StubHttpRequest();
+            StubHttpResponse response = new StubHttpResponse();
+            request.Url =  uri;
+            request.Headers = new NameValueCollection();
+            context.Request = request;
+            context.Response = response;
+
+            return context;
         }
     }
 
