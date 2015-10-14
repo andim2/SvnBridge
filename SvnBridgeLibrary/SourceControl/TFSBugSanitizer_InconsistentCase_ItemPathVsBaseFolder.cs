@@ -39,11 +39,14 @@ namespace SvnBridge.SourceControl
         }
 
         private static string PathJoin(
-            string[] pathElems)
+            string[] pathElems,
+            int count)
         {
             return string.Join(
                 path_separator_s,
-                pathElems);
+                pathElems,
+                0,
+                count);
         }
 
         public virtual string GetItemPathSanitized(
@@ -84,7 +87,8 @@ namespace SvnBridge.SourceControl
             for (var numElemsRemain = pathElemsCount; numElemsRemain > 0; --numElemsRemain)
             {
                 string pathToBeChecked_Curr = PathJoin(
-                    pathElemsToBeChecked);
+                    pathElemsToBeChecked,
+                    numElemsRemain);
                 SourceItem sourceItem = QueryItem(
                     pathToBeChecked_Curr,
                     versionSpec);
@@ -99,18 +103,20 @@ namespace SvnBridge.SourceControl
                         idxPathElemToBeCorrected,
                         pathResult);
                 }
-                // Hmm, I guess decreasing like this
-                // is more convenient
-                // than keeping things in a list
-                // and then having to do .ToArray() each time...
-                Array.Resize<string>(ref pathElemsToBeChecked, pathElemsToBeChecked.Length - 1);
+                // UPDATE: NOPE, we now use a count-based .Join():
+                //// Hmm, I guess decreasing like this
+                //// is more convenient
+                //// than keeping things in a list
+                //// and then having to do .ToArray() each time...
+                //Array.Resize<string>(ref pathElemsToBeChecked, pathElemsToBeChecked.Length - 1);
             }
 
             bool hadSanePath = !(haveEncounteredAnyMismatch);
             if (!(hadSanePath))
             {
                 pathSanitized = PathJoin(
-                    pathElemsSanitized);
+                    pathElemsSanitized,
+                    pathElemsSanitized.Length);
             }
             else
             {
