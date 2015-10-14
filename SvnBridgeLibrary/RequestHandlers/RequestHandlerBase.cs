@@ -1,5 +1,5 @@
 using System;
-using System.IO; // Path.Combine()
+using System.IO;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
@@ -119,24 +119,6 @@ namespace SvnBridge.Handlers
                 "</body></html>\n";
 
             WriteToResponse(response, responseContent);
-        }
-
-        public static string LogBasePath
-        {
-            get
-            {
-                return "F:\\svnbridge\\Logs";
-            }
-        }
-
-        public void WriteLog(string logMessage)
-        {
-            string pathLogFile = Path.Combine(LogBasePath, "requestlog.txt");
-            using (StreamWriter w = File.AppendText(pathLogFile))
-            {
-                w.WriteLine("{0}", logMessage);
-                w.WriteLine("-------------------------------");
-            }
         }
 	}
 }
