@@ -1023,47 +1023,47 @@ namespace SvnBridge.SourceControl
         {
             List<SourceItemChange> sourceItemChanges = new List<SourceItemChange>();
 
-                foreach (Change change in changeset.Changes)
+            foreach (Change change in changeset.Changes)
+            {
+                bool isChangeRelevantForSVNHistory = !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item);
+
+                if (!(isChangeRelevantForSVNHistory))
                 {
-                    bool isChangeRelevantForSVNHistory = !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item);
+                    continue;
+                }
 
-                    if (!(isChangeRelevantForSVNHistory))
+                bool isChangeOfAnSVNProperty = WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item);
+                if (isChangeOfAnSVNProperty)
+                {
+                    string item = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(change.Item.item);
+                    bool itemFileIncludedInChanges = false;
+                    foreach (Change itemChange in changeset.Changes)
                     {
-                        continue;
-                    }
-
-                    bool isChangeOfAnSVNProperty = WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item);
-                    if (isChangeOfAnSVNProperty)
-                    {
-                        string item = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(change.Item.item);
-                        bool itemFileIncludedInChanges = false;
-                        foreach (Change itemChange in changeset.Changes)
+                        if (item.Equals(itemChange.Item.item))
                         {
-                            if (item.Equals(itemChange.Item.item))
-                            {
-                                itemFileIncludedInChanges = true;
-                                break;
-                            }
-                        }
-                        if (!itemFileIncludedInChanges)
-                        {
-                            ItemType itemType = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
-                            SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
-                            ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
-
-                            sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
+                            itemFileIncludedInChanges = true;
+                            break;
                         }
                     }
-                    else // change of a standard source control item
+                    if (!itemFileIncludedInChanges)
                     {
-                        SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
-                        ChangeType changeType = change.type;
-                        if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
-                            (changeType == (ChangeType.Add | ChangeType.Encoding)))
-                            changeType = ChangeType.Add;
-                        sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType));
+                        ItemType itemType = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
+                        SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
+                        ChangeType changeType_PropertiesWereModified = ChangeType.Edit;
+
+                        sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType_PropertiesWereModified));
                     }
                 }
+                else // change of a standard source control item
+                {
+                    SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
+                    ChangeType changeType = change.type;
+                    if ((changeType == (ChangeType.Add | ChangeType.Edit | ChangeType.Encoding)) ||
+                        (changeType == (ChangeType.Add | ChangeType.Encoding)))
+                        changeType = ChangeType.Add;
+                    sourceItemChanges.Add(new SourceItemChange(sourceItem, changeType));
+                }
+            }
 
             return sourceItemChanges;
         }
