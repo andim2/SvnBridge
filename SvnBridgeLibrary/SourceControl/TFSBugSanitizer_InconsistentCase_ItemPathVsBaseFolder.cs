@@ -153,7 +153,7 @@ namespace SvnBridge.SourceControl
             return itemSpecs.ToArray();
         }
 
-        private static bool SanitizePathElemsViaItemSet(ref string[] pathElemsToBeChecked, ItemType itemType, ItemSet[] itemSetsHierarchical)
+        private static void SanitizePathElemsViaItemSet(string[] pathElemsToBeChecked, ItemType itemType, ItemSet[] itemSetsHierarchical)
         {
             bool haveEncounteredAnyMismatch = false;
 
@@ -191,30 +191,30 @@ namespace SvnBridge.SourceControl
                 itemType = ItemType.Folder; // any item other than FQPN *must* be a parent folder
             }
 
-            return haveEncounteredAnyMismatch;
+            bool hadSanePath = !(haveEncounteredAnyMismatch);
+            if (!(hadSanePath))
+            {
+                ReportSanitizedPathFromElems(pathElemsToBeChecked);
+            }
         }
 
         private void DoCheckNeedItemPathSanitize_batched(string[] pathElemsOrig,
                                                                 VersionSpec versionSpec,
                                                                 ItemType itemType)
         {
-            bool haveEncounteredAnyMismatch = false;
-
             string[] pathElemsSanitized = pathElemsOrig;
 
-            ItemSpec[] itemSpecs = PathHierarchyToItemSpecs(pathElemsOrig);
-
-            ItemSet[] itemSets = sourceControlService.QueryItems(serverUrl, credentials,
-                versionSpec,
-                itemSpecs,
-                0);
-
-            haveEncounteredAnyMismatch = SanitizePathElemsViaItemSet(ref pathElemsSanitized, itemType, itemSets);
-            bool hadSanePath = !(haveEncounteredAnyMismatch);
-            if (!(hadSanePath))
+            ItemSet[] itemSets;
             {
-                ReportSanitizedPathFromElems(pathElemsSanitized);
+                ItemSpec[] itemSpecs = PathHierarchyToItemSpecs(pathElemsOrig);
+
+                itemSets = sourceControlService.QueryItems(serverUrl, credentials,
+                    versionSpec,
+                    itemSpecs,
+                    0);
             }
+
+            SanitizePathElemsViaItemSet(pathElemsSanitized, itemType, itemSets);
         }
 
         private void DoCheckNeedItemPathSanitize_slow_single_queries(string[] pathElemsOrig,
