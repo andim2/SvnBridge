@@ -56,6 +56,8 @@ namespace SvnBridge.SourceControl
             string pathSanitized;
             bool haveEncounteredAnyMismatch = false;
 
+            EnsureServerRootSyntax(pathToBeChecked);
+
             // FIXME: should likely have VersionSpec directly at interface layer...
             VersionSpec versionSpec = VersionSpec.FromChangeset(revision);
 
@@ -86,13 +88,11 @@ namespace SvnBridge.SourceControl
             // (that probably would be more imprecise/risky).
             for (var numElemsRemain = pathElemsCount; numElemsRemain > 0; --numElemsRemain)
             {
-                if (1 == numElemsRemain)
+                bool haveHitRoot = (1 == numElemsRemain);
+                if (haveHitRoot)
                 {
-                    bool haveHitRoot = (pathElemsToBeChecked[0] == "$");
-                    if (haveHitRoot)
-                    {
-                        break;
-                    }
+                    // When doing a root-only request, TFS APIs would bail out...
+                    break;
                 }
 
                 string pathToBeChecked_Curr = PathJoin(
@@ -153,6 +153,26 @@ namespace SvnBridge.SourceControl
             }
 
             return sourceItems[0];
+        }
+
+        private static void EnsureServerRootSyntax(string path)
+        {
+            string serverRootPath = SvnBridge.Constants.ServerRootPath;
+            bool isServerRootSyntax = path.StartsWith(serverRootPath);
+            bool haveExpectedFullServerRootSyntax = (isServerRootSyntax);
+            if (!(haveExpectedFullServerRootSyntax))
+            {
+                throw new UnexpectedPathFormatException(path, serverRootPath);
+            }
+        }
+
+        public sealed class UnexpectedPathFormatException : ArgumentException
+        {
+            public UnexpectedPathFormatException(string path, string serverRootPath)
+                : base("Unexpected format of path " + path + ": does not start with server root syntax part " + serverRootPath)
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
         }
 
         public sealed class InvalidPathException : ArgumentException
