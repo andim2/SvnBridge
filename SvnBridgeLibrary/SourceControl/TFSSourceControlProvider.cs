@@ -610,9 +610,12 @@ namespace SvnBridge.SourceControl
         private static RecursionType GetLogRecursionType(Recursion recursion)
         {
             // SVNBRIDGE_WARNING_REF_RECURSION
-            RecursionType recursionType = RecursionType.None;
+            RecursionType recursionType;
             switch (recursion)
             {
+                case Recursion.None:
+                    recursionType = RecursionType.None;
+                    break;
                 case Recursion.OneLevel:
                     // Hmm, why is this translated to .None here?
                     // There was neither a comment here nor was it encapsulated into a self-explanatory
@@ -624,6 +627,8 @@ namespace SvnBridge.SourceControl
                 case Recursion.Full:
                     recursionType = RecursionType.Full;
                     break;
+                default: // unsupported/corrupt case!?
+                    throw new NotSupportedException();
             }
             return recursionType;
         }
