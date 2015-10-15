@@ -1940,10 +1940,23 @@ namespace SvnBridge.SourceControl
             // using Gated Check-In"
             //   http://svnbridge.codeplex.com/discussions/260147
             return new SourceItemHistory(
-                changeset.Changes[0].Item.cs,
+                GetChangesetRevisionValueRelevantForHistory(
+                    changeset),
                 changeset.owner,
                 changeset.date,
                 changeset.Comment);
+        }
+
+        /// <summary>
+        /// Figures out the revision (Changeset ID)
+        /// which is the one relevant for a SVN-protocol commit's content description.
+        /// </summary>
+        /// <param name="changeset"></param>
+        /// <returns>SVN commit revision ID</returns>
+        private static int GetChangesetRevisionValueRelevantForHistory(
+            Changeset changeset)
+        {
+            return changeset.Changes[0].Item.cs;
         }
 
         private IEnumerable<SourceItemChange> ConvertTFSChangesetToSVNSourceItemChanges(
