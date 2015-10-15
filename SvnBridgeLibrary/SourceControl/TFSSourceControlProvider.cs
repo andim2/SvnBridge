@@ -2478,7 +2478,13 @@ namespace SvnBridge.SourceControl
             // done *both* by GetItems() internally (its inner copy of the variable)
             // *and* below, by ItemMetaData implementation.
             SVNPathStripLeadingSlash(ref path);
-            ItemMetaData item = GetItems(version, path, Recursion.None, returnPropertyFiles);
+            bool needAuthorshipLookup = false; // item existence check only!!
+            ItemMetaData item = GetItems(
+                version,
+                path,
+                Recursion.None,
+                returnPropertyFiles,
+                needAuthorshipLookup);
             if (item != null)
             {
                 // Now that these checks are implemented
@@ -3095,7 +3101,12 @@ namespace SvnBridge.SourceControl
             return itemPaths;
         }
 
-        private ItemMetaData GetItems(int version, string path, Recursion recursion, bool returnPropertyFiles)
+        private ItemMetaData GetItems(
+            int version,
+            string path,
+            Recursion recursion,
+            bool returnPropertyFiles,
+            bool needAuthorshipLookup)
         {
             ItemMetaData rootItem = null;
 
@@ -3111,8 +3122,11 @@ namespace SvnBridge.SourceControl
                 // Authorship (== history) fetching is very expensive -
                 // TODO: make intelligently configurable from the outside,
                 // only where needed (perhaps via a parameterization struct
-                // for this method?):
-                bool needAuthorshipLookup = false;
+                // for this method?).
+                // UPDATE: now that internal handling is streamlined,
+                // should be sufficiently fast
+                // (sample execution time: 4m27s vs. 5m36s)
+                // thus enable users to request lookup:
                 ItemMetaData[] items = ConvertSourceItemsWithAuthorship(
                     sourceItems,
                     needAuthorshipLookup);
@@ -3128,6 +3142,24 @@ namespace SvnBridge.SourceControl
             } // sourceItems.Length > 0
 
             return rootItem;
+        }
+
+        /// <summary>
+        /// Legacy-signature helper.
+        /// </summary>
+        private ItemMetaData GetItems(
+            int version,
+            string path,
+            Recursion recursion,
+            bool returnPropertyFiles)
+        {
+            bool needAuthorshipLookup = true; // default to safe full-support
+            return GetItems(
+                version,
+                path,
+                recursion,
+                returnPropertyFiles,
+                needAuthorshipLookup);
         }
 
         /// <summary>
@@ -3785,7 +3817,13 @@ namespace SvnBridge.SourceControl
                                                   localBasePath,
                                                   folderExistingBase_HEAD.Revision));
 
-                ItemMetaData itemExisting_HEAD = GetItems(LATEST_VERSION, path.Substring(1), Recursion.None, true);
+                bool needAuthorshipLookup = false; // correct, right?
+                ItemMetaData itemExisting_HEAD = GetItems(
+                    LATEST_VERSION,
+                    path.Substring(1),
+                    Recursion.None,
+                    true,
+                    needAuthorshipLookup);
                 if (itemExisting_HEAD != null)
                 {
                     updates.Add(LocalUpdate.FromLocal(itemExisting_HEAD.Id, localPath, itemExisting_HEAD.Revision));
