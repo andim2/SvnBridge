@@ -1432,6 +1432,25 @@ namespace SvnBridge.SourceControl
             int maxCount,
             bool sortAscending = false)
         {
+            return GetLogImpl(
+                path,
+                itemVersion,
+                versionFrom,
+                versionTo,
+                recursion,
+                maxCount,
+                sortAscending);
+        }
+
+        private LogItem GetLogImpl(
+            string path,
+            int itemVersion,
+            int versionFrom,
+            int versionTo,
+            Recursion recursion,
+            int maxCount,
+            bool sortAscending)
+        {
             SVNPathStripLeadingSlash(ref path);
 
             string serverPath = MakeTfsPath(path);
@@ -1873,7 +1892,7 @@ namespace SvnBridge.SourceControl
             Changeset changeset)
         {
             // Warning: this handler is doing to-SVN post-processing
-            // not completely unsimilar to what is being done at the end of GetLog(), too.
+            // not completely unsimilar to what is being done at the end of GetLogImpl(), too.
             // Possibly the *end result* of this currently disparate-call-hierarchy handling
             // ought to become the *same* in all cases,
             // since I'd expect SVN-side requirements to always be the same
@@ -3306,6 +3325,7 @@ namespace SvnBridge.SourceControl
             SourceItemHistory logQueryPartial_Newest_history = null;
             int itemVersion = version; // debugging helper
             int versionTo = version;
+            bool sortAscending = false;
             bool wantShortcutForLargeRepository = (version > 20000);
             bool wantQueryPartial = wantShortcutForLargeRepository;
             bool wantQueryFull = false;
@@ -3318,13 +3338,14 @@ namespace SvnBridge.SourceControl
                 //
                 // [no need to manually ensure that versionFrom ends up >= 1 here - input values are much larger anyway]
                 int versionFrom = ((versionTo * 9) / 10);
-                LogItem logQueryPartial_Newest = GetLog(
+                LogItem logQueryPartial_Newest = GetLogImpl(
                     itemName,
                     itemVersion,
                     versionFrom,
                     versionTo,
                     Recursion.Full,
-                    1);
+                    1,
+                    sortAscending);
                 if (0 != logQueryPartial_Newest.History.Length)
                     logQueryPartial_Newest_history = logQueryPartial_Newest.History[0];
             }
@@ -3346,13 +3367,14 @@ namespace SvnBridge.SourceControl
                 // the reason for specifying .Full here probably is to get a full history,
                 // which ensures that the first entry (due to sort order)
                 // does provide the *newest* Change(set) anywhere below that item.
-                LogItem logQueryAll_Newest = GetLog(
+                LogItem logQueryAll_Newest = GetLogImpl(
                     itemName,
                     itemVersion,
                     versionFrom,
                     versionTo,
                     Recursion.Full,
-                    1);
+                    1,
+                    sortAscending);
                 if (0 != logQueryAll_Newest.History.Length)
                     logQueryAll_Newest_history = logQueryAll_Newest.History[0];
             }
@@ -4679,12 +4701,15 @@ namespace SvnBridge.SourceControl
 
         public virtual int GetEarliestVersion(string path)
         {
-            LogItem log = GetLog(
+            bool sortAscending = false;
+            LogItem log = GetLogImpl(
                 path,
+                LATEST_VERSION,
                 1,
                 GetLatestVersion(),
                 Recursion.None,
-                int.MaxValue);
+                int.MaxValue,
+                sortAscending);
             return log.History[log.History.Length - 1].ChangeSetID;
         }
 
