@@ -252,6 +252,21 @@ namespace CodePlex.TfsLibrary.ObjectModel
                 });
         }
 
+        // FIXME!!! the two QueryItems() library API variants below
+        // do some ATROCIOUS LAYER VIOLATION -
+        // they decide to apply a totally bogus and unhelpful Sort() -
+        // such awful mangling of pristine database-side payload data
+        // should only be done manually by certain *user* layers
+        // which for strange reasons have the constraint of requiring the result to be sorted.
+        // To add insult to injury, one QueryItems() skips Add() of null items, too.
+        // Such implementation completely ignores
+        // that the request-side array might have been the result of another query
+        // (e.g. QueryBranches())
+        // where both request and result side arrays thus better ought to fulfill
+        // an array index consistency guarantee!!
+        // (else the user will have to do painfully laborious post-damage processing
+        // by correction-resorting things via their item IDs...).
+
         public virtual SourceItem[] QueryItems(string tfsUrl,
                                        ICredentials credentials,
                                        string serverPath,

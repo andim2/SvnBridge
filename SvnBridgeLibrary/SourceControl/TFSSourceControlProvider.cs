@@ -2309,10 +2309,27 @@ namespace SvnBridge.SourceControl
         /// Helper to figure out the previous version of a list of source items,
         /// properly symmetric within the same implementation layer!
         /// (*from* SourceItem-typed input *to* SourceItem-typed output).
+        /// Returns a *same-size*/*same-index* (potentially using NULL filler entries) array.
+        /// Need to ensure that items returned are same-tree filesystem items
+        /// (i.e., returning item results belonging to a different Team Project
+        /// - e.g. due to them having been merged into the local one at some point - would be illegal).
+        /// Not entirely sure whether this foreign-TP removal filtering ought to be done by this _TFS_SCP class,
+        /// but it definitely needs to be done somewhere prominently.
+        /// WARNING: QueryItems() given an input of an array of IDs returns a result list with *jumbled order*
+        /// (order of IDs may end up wrong).
         /// </summary>
         ///
         /// References:
         /// http://stackoverflow.com/questions/8946508/tfs-2010-api-get-old-name-location-of-renamed-moved-item
+        ///
+        /// And of course this method is required to return an accurately index-matching result list... Argh.
+        /// (need to account for this by doing proper sorting).
+        /// Note that I'm still very unsure of this method's reliability for all of the various use cases.
+        /// I fixed handling to try to account for a rather pathological case:
+        /// changeset 1: create test directory with test sub dir
+        /// changeset 2: branch foreign-TeamProject content into test sub dir
+        /// changeset 3: rename test sub dir
+        /// (it's best to try this in a small test TP)
         /// <param name="items">List of items to be queried</param>
         /// <param name="changeset_Newer">The changeset that is newer than the result that we're supposed to determine</param>
         /// <returns>Container of items at the older changeset revision</returns>
@@ -2334,16 +2351,17 @@ namespace SvnBridge.SourceControl
             var previousRevision = changeset_Newer - 1;
 
             // Rather than the prior hard if/else skipping of branches,
-            // we'll now do handling of TFS08/multi right in the very same code flow,
+            // we'll now do handling of TFS08/multi/batched right in the very same code flow,
             // to gain the capability of dynamically choosing (via configurable high-level bools)
             // which branch to actually add to the execution.
             // The reason for that is that I'm entirely unsure about the reasoning/differences
-            // between the <=TFS08 implementation and OTOH the multi stuff
+            // between the <=TFS08 implementation and OTOH the multi/batched stuff
             // (and currently there's a data mismatch of members in case of a RenamedSourceItem
             // vs. the results queried here!),
             // thus debugging needs to be very easy, to finally gain sufficient insight.
             SourceItem[] resultTFS08Fallback = null;
             SourceItem[] resultMulti = null;
+            SourceItem[] resultBatched = null;
 
             // What *exactly* is the significance of this check? Rename/comment variable as needed...
             bool isAllItemsWithNullContent = (renamedItems.All(item => (null == item) || (null == item.FromItem)));
@@ -2351,12 +2369,24 @@ namespace SvnBridge.SourceControl
             bool wantTfs08FallbackAlgo = needTfs08FallbackAlgo;
 
             bool wantMultiRequestMode = false;
+            bool wantBatchedRequestMode = false;
+            if (true != wantTfs08FallbackAlgo)
+            {
+                // Do old multiple-requests handling for low counts only
+                // (avoid socket exceptions, happening after around the standard range of ~ 4000 ports [XP]).
+                // Now decreased activation condition to relatively few items
+                // (no comparison mismatches turned up,
+                // thus it's wasteful to have hundreds of web service requests).
+                wantMultiRequestMode = (numRenamedItems < 50);
+                wantBatchedRequestMode = true;
+            }
             bool wantDebugResults = false;
             //wantDebugResults = true; // DEBUG_SITE: UNCOMMENT IF DESIRED (or simply ad-hoc toggle var in debugger)
             if (wantDebugResults)
             {
                 wantTfs08FallbackAlgo = true;
                 wantMultiRequestMode = true;
+                wantBatchedRequestMode = true;
             }
 
             if (wantTfs08FallbackAlgo)
@@ -2387,7 +2417,120 @@ namespace SvnBridge.SourceControl
                 }
                 resultMulti = resultMulti_List.ToArray();
             }
-            result = needTfs08FallbackAlgo ? resultTFS08Fallback : resultMulti;
+            if (wantBatchedRequestMode)
+            {
+                resultBatched = QueryPreviousVersionOfSourceItems_batched(items, renamedItems, previousRevision);
+            }
+
+            if (wantMultiRequestMode && wantBatchedRequestMode)
+            {
+                // Implement some nice result comparison:
+                // Throw exception in case old and new results don't match!
+                // For some reason trying to simply use .SequenceEqual() fails,
+                // despite all members seemingly being equal
+                // (possibly because the items *are* different instantiations).
+                // http://stackoverflow.com/questions/4423318/how-to-compare-arrays-in-c
+                // XXX: old multi-request handling and this check
+                // can be removed at some future moment
+                // in case results did not turn out problematic for a while
+                // (for a rather loooong while, that is...).
+                int resultCount = Math.Min(resultBatched.Length, resultMulti.Length);
+                bool isMatch = (resultBatched.Length == resultCount);
+                if (isMatch) // important: definitely don't proceed with comparison then (potential out-of-bounds e.g. on zero resultBatched.Count()!)
+                {
+                    for (int i = 0; i < resultCount; ++i)
+                    {
+                        var batch = resultBatched[i];
+                        var multi = resultMulti[i];
+                        // Definitely avoid null object access!
+                        // And prefer ReferenceEquals(): http://stackoverflow.com/a/10104842
+                        // http://stackoverflow.com/questions/155458/c-sharp-object-is-not-null-but-myobject-null-still-return-false
+                        // http://stackoverflow.com/questions/6417902/checking-if-object-is-null-in-c-sharp
+                        bool isNullBatch = Object.ReferenceEquals(null, batch);
+                        bool isNullMulti = Object.ReferenceEquals(null, multi);
+                        if (isNullBatch || isNullMulti)
+                        {
+                            // Special check via bool-null true/false (avoid check via object comparison operators)
+                            if (isNullBatch != isNullMulti)
+                            {
+                                isMatch = false;
+                            }
+                        }
+                        else
+                        if (batch.ItemId != multi.ItemId)
+                        {
+                            isMatch = false;
+                        }
+                        if (!(isMatch))
+                        {
+                            break;
+                        }
+                    }
+                }
+                if (!(isMatch))
+                {
+                    throw new InvalidOperationException("ERROR: old multi-request and new batched-request lists DO NOT MATCH, please report!!");
+                }
+            }
+            result = needTfs08FallbackAlgo ? resultTFS08Fallback : resultBatched;
+
+            return result;
+        }
+
+        private SourceItem[] QueryPreviousVersionOfSourceItems_batched(SourceItem[] items, BranchItem[] renamedItems, int previousRevision)
+        {
+            SourceItem[] result;
+
+            var numRenamedItems = renamedItems.Length;
+            List<SourceItem> resultBatched_List = new List<SourceItem>();
+            // the number of rename reports which we'll request per web service request
+            // We'll choose a sufficiently but not overly large number (avoid server DoS).
+            // Perhaps we should increase that number (to minimize network requests:
+            // socket exhaustion exception occurring too frequently,
+            // and latency is not nice either).
+            // Hmm, the best idea probably is to simply make use of the same number
+            // as the TFS_QUERY_LIMIT (256) which is imposed by TFS QueryHistory() API,
+            // since processing circumstances here might happen to be in the same ballpark:
+            const int batchSize = 256;
+            for (var iterBatchBase = 0; iterBatchBase < numRenamedItems; iterBatchBase += batchSize)
+            {
+                SourceItem[] resultThisBatch = null;
+                {
+                    int numRemaining = (numRenamedItems - iterBatchBase);
+                    int numThisTime = Math.Min(batchSize, numRemaining);
+                    List<int> previousSourceItemIds = new List<int>();
+
+                    var iterBatchEnd = iterBatchBase + numThisTime;
+                    // Performance WARNING: in execution time terms,
+                    // this iteration can end up astonishingly longer than the actual web request!
+                    // Thus prefer operator[] rather than .ElementAt()
+                    // (please note that this does indeed make a dramatic execution difference).
+                    for (var i = iterBatchBase; i < iterBatchEnd; ++i)
+                    {
+                        var renamedItem = renamedItems[i];
+                        var previousSourceItemId = GetItemIdOfRenamedItem(renamedItem, items[i]);
+                        previousSourceItemIds.Add(previousSourceItemId);
+                    }
+
+                    var arrPreviousSourceItemIds = previousSourceItemIds.ToArray();
+                    resultThisBatch = QueryItems_WithTfsLibraryJumbledOrderSanitized(arrPreviousSourceItemIds, previousRevision);
+
+                    // IMPORTANT NOTE: examples kept there for future debugging/development purposes:
+                    //var previousItemsForQueryBranches = previousSourceItems.Select(item => CreateItemSpec(item.RemoteName, RecursionType.None)).ToArray();
+                    //var previousSourceItemsEx = sourceControlService.QueryItemsExtended(serverUrl, credentials, null, previousItemsForQueryBranches, DeletedState.Any, ItemType.Any);
+                    //BranchRelative[][] previousRevBranchesRel = sourceControlService.QueryBranches(serverUrl, credentials, null, previousItemsForQueryBranches, VersionSpec.FromChangeset(previousRevision));
+                    //var previousRevBranches = sourceControlService.QueryBranches(serverUrl, credentials, previousItemsForQueryBranches, VersionSpec.FromChangeset(previousRevision));
+                    //var parentPreviousRevBranches = sourceControlService.QueryBranches(serverUrl, credentials, previousItemsForQueryBranches, VersionSpec.FromChangeset(previousRevision - 1));
+
+                    bool isMatchingCounts = (resultThisBatch.Length == previousSourceItemIds.Count());
+                    if (!isMatchingCounts)
+                    {
+                        throw new InvalidOperationException("ERROR: counts of input and result renamedItems lists DO NOT MATCH, please report!!");
+                    }
+                }
+                resultBatched_List.AddRange(resultThisBatch.ToList());
+            }
+            result = resultBatched_List.ToArray();
 
             return result;
         }
@@ -2407,6 +2550,9 @@ namespace SvnBridge.SourceControl
                     // FIXME_PERFORMANCE: QueryBranches() is very slow!
                     // (note that behaviour of this web service request delay seems to be linear:
                     // about 1 second per 100 items).
+                    // Note that some elements may end up null; known reasons so far:
+                    // - renamed item already had "deleted" state
+                    //   (one such situation may be one where the item's containing folder gets renamed).
                     thisRevBranches = sourceControlService.QueryBranches(serverUrl,
                                                                          credentials,
                                                                          itemSpecs,
@@ -2420,6 +2566,72 @@ namespace SvnBridge.SourceControl
             }
 
             return renamedItems;
+        }
+
+        /// <summary>
+        /// At least TFS2008 returns items in an order *different* from the order of IDs found in the array
+        /// (UPDATE: in fact root cause seems to be
+        /// a LAYER VIOLATION in CodePlex.TfsLibrary's QueryItems() code parts:
+        /// it decides to apply a totally bogus and unhelpful Sort() -
+        /// such awful mangling of payload data
+        /// should only be done manually by certain user layers
+        /// which for strange reasons have the constraint of requiring the result to be sorted).
+        /// Thus add this helper, to apply a correction to this broken CodePlex library API.
+        ///
+        /// Perhaps it's not a good idea to intermingle the sorting-correction concern
+        /// with the TFS query concern
+        /// (implement this as an array-correction-only helper instead?).
+        /// OTOH this is a quirk specific to ID-based QueryItems(), thus it's probably good to keep it combined.
+        /// </summary>
+        /// <param name="arrSourceItemIds">Array of source item IDs to be queried</param>
+        /// <param name="revision">Revision to query the items at</param>
+        /// <returns>SourceItem array containing the query results</returns>
+        private SourceItem[] QueryItems_WithTfsLibraryJumbledOrderSanitized(int[] arrSourceItemIds, int revision)
+        {
+            var sourceItems_UnknownOrder = metaDataRepository.QueryItems(revision, arrSourceItemIds);
+
+            // First shortcut: (almost) empty result? (--> no sorting necessary)
+            // [this check could be taken over by SequenceEquals() below instead as well,
+            // however that check below will require some pre-processing]
+            if (sourceItems_UnknownOrder.Length <= 1)
+            {
+                // ...but ONLY IF request vs. result same-length!!
+                // (avoid the case of result with empty-sized elements due to e.g. deleted items!
+                // Else we'll have to do usual correction handling further below
+                // to have corresponding null elements properly indicated
+                // which thus manages to fulfill same-index guarantee...)
+                bool bSameSize = (sourceItems_UnknownOrder.Length == arrSourceItemIds.Length);
+                if (bSameSize)
+                {
+                    return sourceItems_UnknownOrder;
+                }
+            }
+
+            // Second shortcut: same order?
+            // (slightly more involved due to requiring some pre-processing,
+            // thus we tried to prevent executing even this check)
+            var sourceItemIds_Result = sourceItems_UnknownOrder.Select(item => item.ItemId);
+            if (sourceItemIds_Result.SequenceEqual(arrSourceItemIds))
+            {
+                return sourceItems_UnknownOrder;
+            }
+
+            var itemsById = new Dictionary<int, SourceItem>();
+            foreach (SourceItem item in sourceItems_UnknownOrder)
+            {
+                if (null != item)
+                {
+                    itemsById[item.ItemId] = item;
+                }
+            }
+            List<SourceItem> sourceItems_CorrectedOrder = new List<SourceItem>();
+            foreach(int id in arrSourceItemIds)
+            {
+                SourceItem item = null;
+                itemsById.TryGetValue(id, out item);
+                sourceItems_CorrectedOrder.Add(item);
+            }
+            return sourceItems_CorrectedOrder.ToArray();
         }
 
         /// <summary>
