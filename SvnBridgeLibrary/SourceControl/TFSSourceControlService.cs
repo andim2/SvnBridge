@@ -170,6 +170,24 @@ namespace SvnBridge.SourceControl
                         logger.Error("Error connecting with read all account \"" + Configuration.ReadAllUserName + "\"", ex);
                     }
 
+                    // This check will throw an "access denied"
+                    // for *both* cases of
+                    // - masked (null entries) access denied error of user account read attempt
+                    // - access denied exception of read-all account read attempt
+                    // One might be tempted to avoid throwing
+                    // in case user result was empty
+                    // yet verification via read-all then threw
+                    // (e.g. due to read all account being *unconfigured*).
+                    // However since read-all failing means that subsequent validation
+                    // of the imprecise user account result
+                    // (empty set due to *either* error *or* an actual empty set)
+                    // was not possible,
+                    // it's best to always throw an exception
+                    // (thereby making the admin sit up and take
+                    // notice of account problems)
+                    // rather than continuing to forward an unverified item
+                    // (potential problem) to client side
+                    // (possibly causing improper tree state changes).
                     if (!invalidPath)
                         throw new NetworkAccessDeniedException();
                 }

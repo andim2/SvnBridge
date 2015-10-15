@@ -9,6 +9,11 @@ namespace SvnBridge.Protocol
 
         [XmlAttribute("rev", DataType = "string", Form = XmlSchemaForm.Unqualified)] public string Rev /* = null */;
 
+        /// <summary>
+        /// start-empty true indicates that the client
+        /// does NOT have a prior revision of this item
+        /// (i.e., needs full processing)
+        /// </summary>
         [XmlAttribute("start-empty", DataType = "boolean", Form = XmlSchemaForm.Unqualified)] public bool StartEmpty /* = false */;
 
         public EntryData()

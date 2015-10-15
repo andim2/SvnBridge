@@ -44,6 +44,10 @@ namespace SvnBridge.Handlers
         private static bool Delete(TFSSourceControlProvider sourceControlProvider,
                                    string requestPath)
         {
+            // May do one of:
+            // - DELETEing a resource (file)
+            // - explicitly DELETEing (finalizing) entire transaction activity (MKACTIVITY)
+            // Transaction deletion judged to probably be more frequent than resource DELETEs.
             if (requestPath.StartsWith("/!svn/act/"))
             {
                 string activityId = requestPath.Substring(10);

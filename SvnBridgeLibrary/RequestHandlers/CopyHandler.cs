@@ -5,6 +5,21 @@ using SvnBridge.SourceControl;
 
 namespace SvnBridge.Handlers
 {
+    /// <summary>
+    /// WebDAV COPY is supposed to add an alternative *reference* to an existing resource, AFAICS,
+    /// without modifying that resource in any way, shape or form (PUT would be used for doing that).
+    ///
+    /// "Copy, Move and Rename files and folders in the repository"
+    ///   https://www.coderesort.com/about/wiki/HowTo/Subversion/CopyMoveRename
+    /// "Re: svn copy and history - quick question"
+    ///    http://mail-archives.apache.org/mod_mbox/subversion-users/201302.mbox/%3C511D4FF2.8000405@collab.net%3E
+    /// "svn copy question (Is it always 'with history'?)"
+    ///   http://svn.haxx.se/users/archive-2005-01/1848.shtml
+    ///
+    /// TODO: should probably implement MOVE here, too,
+    /// by splitting off a base class for shared COPY/MOVE functionality,
+    /// then provide both a COPY and a MOVE class.
+    /// </summary>
     public class CopyHandler : RequestHandlerBase
     {
         protected override void Handle(

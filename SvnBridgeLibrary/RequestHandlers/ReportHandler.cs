@@ -96,10 +96,13 @@ namespace SvnBridge.Handlers
             using (XmlReader reader = XmlReader.Create(request.InputStream, Helper.InitializeNewXmlReaderSettings()))
             {
                 reader.MoveToContent();
-                object data = null;
+                object data = null; // need to have this as a central variable for the error-path logging below
                 try
                 {
                     ConfigureResponse_SendChunked();
+
+                    // At least for now, we'll decide to not implement via switch/case -
+                    // this is less flexible than if/else conditionals.
 
                     if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "get-locks-report")
                     {
@@ -603,6 +606,18 @@ namespace SvnBridge.Handlers
             // while real Subversion (1.6.17) server did honour (non-)existence of this property,
             // SvnBridge didn't (it always added path information). Doh.
             bool discoverChangedPaths = (logreport.DiscoverChangedPaths != null);
+            // TODO: we currently completely ignore strict-node-history request property -
+            // we don't even have a logreport.StrictNodeHistory member yet...
+            // http://docs.sharpsvn.net/current/html/P_SharpSvn_SvnLogArgs_StrictNodeHistory.htm
+            // http://subversion.tigris.org/ds/viewMessage.do?dsForumId=495&dsMessageId=975874
+            // "[PATCH]implement a FIXME for handling moved paths in copyfrom_info_receiver"
+            //   http://comments.gmane.org/gmane.comp.version-control.subversion.devel/88310
+            // "How to read merge-history?"
+            //   http://subversion.1072662.n5.nabble.com/How-to-read-merge-history-td3520.html
+            // "svn commit: r29751 - trunk/subversion/libsvn_repos"
+            //   http://comments.gmane.org/gmane.comp.version-control.subversion.svn/25956
+            // http://tortoisesvn.googlecode.com/svn/trunk/src/LogCache/CacheLogQuery.cpp
+
 
             bool requestInclusionOfPathChanges = (discoverChangedPaths);
 

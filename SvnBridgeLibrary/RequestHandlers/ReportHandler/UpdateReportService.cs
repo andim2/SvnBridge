@@ -319,6 +319,12 @@ namespace SvnBridge.Infrastructure
         /// </summary>
         private bool ItemExistsAtRevision(ItemMetaData item, int clientRevisionForItem)
         {
+            // Side comment: the user account (~ workspace) used here
+            // is preferred to be per-source-control-client unique,
+            // otherwise risk of conflicts in TFS server-side tracking
+            // of client workspace!
+            // For details, see the comment at credentials handling.
+
             // we need to check both name and id to ensure that the item was not renamed
             return sourceControlProvider.ItemExists(item.Id, clientRevisionForItem) &&
                    sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
@@ -331,6 +337,12 @@ namespace SvnBridge.Infrastructure
 			return isExistingItem == false &&
                 HaveItemExistingAtClient(
                     item.Name) &&
+            // NOTE: .ItemExists() call here is very expensive.
+            // Could think of an optimization where one fetches
+            // all items (at their revision(s)) beforehand
+            // to a container which then will be queried here.
+            // OTOH service.QueryItems() is single-revision only,
+            // which might be difficult in case of mixed-revisions data.
 				   sourceControlProvider.ItemExists(item.Name, clientRevisionForItem);
 		}
 
@@ -339,6 +351,8 @@ namespace SvnBridge.Infrastructure
         {
             bool existsAtClient = false;
 
+            // No pre-existing files whatsoever at client working copy (WC) yet,
+            // thus no need to check in the first place?
             bool isCleanSlate = (updateReportRequest.IsCheckOut != false);
             bool needCheckClient = !(isCleanSlate);
             if (needCheckClient)

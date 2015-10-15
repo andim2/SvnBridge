@@ -185,6 +185,40 @@ namespace SvnBridge.SourceControl
         }
     }
 
+    /// <summary>
+    /// This provider class (God Class :-{) is meant to offer an interface for *SVN-side* tasks
+    /// (e.g. it's directly being used by all handlers of SVN/WebDAV HTTP request methods).
+    /// While internally of course this particular implementation happens to consult TFS APIs,
+    /// this is not supposed to be relevant at all
+    /// for the outer interface of this class
+    /// (which is expected to be pretty much SVN-conforming/-generic).
+    /// Thereby one could almost say that either TFSSourceControlProvider name is a misnomer,
+    /// or that it should be (or already have been?) wrapped by a provider class
+    /// that offers SVN/WebDAV conforming APIs,
+    /// and quite possibly should be based on an interface
+    /// which is intended to provide SVN-conforming services.
+    ///
+    /// Side note:
+    /// I guess "provider" (c.f. class naming) is:
+    /// a specific (web) *service* type
+    /// as provided by a specific *location*/*session*
+    /// (represented by the server location / credentials pair).
+    ///
+    /// Side note #2 (testing / reliability):
+    /// Testing of SvnBridge reliability can be done
+    /// by means of e.g. one of
+    /// unit tests, FxCop, git-svn,
+    /// command line svn (e.g. svn --diff --summarize),
+    /// WebDAV (Cadaver, Konqueror webdav://),
+    /// special Windows behaviour (TortoiseSVN)
+    ///
+    /// General FIXME comment:
+    /// when going towards a clean class for SVN-only interface purposes,
+    /// it would be very useful to guard all its interfaces with various checks that ensure
+    /// that we never accidentally leak non-SVN specifics to the outside:
+    /// - don't return any property storage item locations (i.e., internal implementation knowledge)
+    /// - don't return any path strings with TFS Team Project syntax
+    /// </summary>
     [Interceptor(typeof(TracingInterceptor))]
     [Interceptor(typeof(RetryOnExceptionsInterceptor<SocketException>))]
     public class TFSSourceControlProvider : MarshalByRefObject
@@ -335,6 +369,12 @@ namespace SvnBridge.SourceControl
             CopyItem(activityId, LATEST_VERSION, path, targetPath, true);
         }
 
+        /// <summary>
+        /// The main public interface handler for WebDAV DELETE request.
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
+        /// <param name="path">path to file item</param>
+        /// <returns>true when successfully deleted, else false</returns>
         public virtual bool DeleteItem(string activityId, string path)
         {
             if ((GetItems(LATEST_VERSION, path, Recursion.None, true) == null) && (GetPendingItem(activityId, path) == null))
@@ -474,6 +514,14 @@ namespace SvnBridge.SourceControl
             return GetItemsWithoutProperties(LATEST_VERSION, path, Recursion.None);
         }
 
+        /// <summary>
+        /// Probably a legacy name, with implementation identical to GetItemsWithoutProperties()
+        /// (IOW, prefer the explicit naming of that one).
+        /// </summary>
+        /// <param name="version">Version (revision) to fetch the items of</param>
+        /// <param name="path">Location to fetch the items of</param>
+        /// <param name="recursion">Indicates mode of recursing into sub tree</param>
+        /// <returns>Valid ItemMetaData on success, else null</returns>
         public virtual ItemMetaData GetItems(int version, string path, Recursion recursion)
         {
             return GetItems(version, path, recursion, false);
@@ -532,6 +580,7 @@ namespace SvnBridge.SourceControl
 
             string serverPath = MakeTfsPath(path);
 
+            // Prefer to avoid construction via ternary (would require ugly cast).
             VersionSpec itemVersionSpec = VersionSpec.Latest;
             if (itemVersion != LATEST_VERSION)
                 itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
@@ -613,6 +662,8 @@ namespace SvnBridge.SourceControl
                     // but also with _copy_ (branch) or even other changes.
                     ItemMetaData[] oldItems = GetPreviousVersionOfItems(renamedItems.ToArray(), history.ChangeSetID);
                     var oldItemsById = new Dictionary<int, ItemMetaData>();
+                    // [remember that renamedItems and oldItems containers have a same-index compatibility requirement]
+
                     // I pondered changing this loop into the (faster) decrementing type,
                     // but I'm unsure: I wonder whether
                     // having rename actions/items processed in strict incrementing order
@@ -638,6 +689,9 @@ namespace SvnBridge.SourceControl
                     foreach (var rename in renamesWithNoPreviousVersion)
                         history.Changes.Remove(rename);
 
+                    // Hmm, was .None handling really intended to be specifically done in this rename handling part only??
+                    // OTOH perhaps .None entries *are* meaningful for (some?) changes other than renames
+                    // (perhaps hinting about [non-]deleted identical items in various branches??) - who knows...
                     history.Changes.RemoveAll(change => change.ChangeType == ChangeType.None);
                     history.Changes.RemoveAll(change => change.ChangeType == ChangeType.Delete &&
                                               oldItems.Any(oldItem => oldItem != null && oldItem.Id == change.Item.ItemId));
@@ -650,6 +704,14 @@ namespace SvnBridge.SourceControl
                     branchChangeset.cs = history.ChangeSetID;
                     BranchRelative[][] branches = sourceControlService.QueryBranches(serverUrl, credentials, null, itemsBranched, branchChangeset);
 
+                    // NOTE performance/efficiency/scaling issue:
+                    // at least for some handling, three of the loop-processed arrays here
+                    // contain exactly the same amount of items,
+                    // in other words these loops yield roughly cubic (^3) complexity.
+                    // I'm not quite sure whether there should be done anything about it now though,
+                    // since processing penalty most likely is network-bound (e.g. QueryBranches() above).
+                    // However for very large amounts of items (> 1000?),
+                    // processing penalty will likely become CPU-bound.
                     foreach (BranchRelative[] branch in branches)
                     {
                         foreach (SourceItem item in branchedItems)
@@ -671,6 +733,8 @@ namespace SvnBridge.SourceControl
                                             if (bRenamed)
                                             {
                                                 string oldName = branchItem.BranchFromItem.item.Substring(rootPath.Length);
+                                                // FIXME: decrement-by-1 might happen to just work, or actually be too hardcoded after all -
+                                                // so if things fail then we might need to replace it by a call to GetPreviousVersionOfItems().
                                                 int oldRevision = item.RemoteChangesetId - 1;
                                                 change.Item = new RenamedSourceItem(item, oldName, oldRevision);
                                             }
@@ -989,9 +1053,19 @@ namespace SvnBridge.SourceControl
         public virtual bool IsDirectory(int version, string path)
         {
             ItemMetaData item = GetItemsWithoutProperties(version, path, Recursion.None);
+            // Hmm, no null check here!?
+            // But which result to indicate in case of failure? (hint: then it's not really a "file"...).
+            // And IsDirectory() is not really being used (stubbed by tests only) anyway...
             return item.ItemType == ItemType.Folder;
         }
 
+        /// <summary>
+        /// Determines whether an item exists (plus, that it is not deleted).
+        /// Often used to verify that there's sufficient permission to access this item
+        /// (possibly including verifying its property storage areas, though!!).
+        /// </summary>
+        /// <param name="path">Path of the item to be queried</param>
+        /// <returns>true if this non-deleted item exists, else false</returns>
         public virtual bool ItemExists(string path)
         {
             return ItemExists(path, LATEST_VERSION);
@@ -1011,6 +1085,18 @@ namespace SvnBridge.SourceControl
             {
                 itemExists = true;
                 bool needCheckCaseSensitiveItemMatch = (Configuration.SCMWantCaseSensitiveItemMatch);
+                // FIXME: one could say that this case sensitivity check here
+                // shouldn't be at this layer
+                // (most likely it should be handled fully internally
+                // by GetItems(), or somewhere where all the other accesses to .wantCaseSensitiveMatch
+                // are being done).
+                // Problem is that this is somewhat difficult:
+                // while at this place here we're easily able to case-compare
+                // the *single* result against the *single* and *authoritative* original query path,
+                // within GetItems() it's an entirely different matter
+                // since we're dealing with *multiple* and *unknown* results
+                // returned from a query with *multiple* query paths
+                // with potentially *full* recursion parm.
                 if (needCheckCaseSensitiveItemMatch)
                 {
                     // If the result item is a folder,
@@ -1054,6 +1140,13 @@ namespace SvnBridge.SourceControl
             return (items.Length != 0);
         }
 
+        /// <summary>
+        /// Creates a DeltaV activity/transaction (WebDAV MKACTIVITY: RFC3253), emulated via TFS workspace.
+        /// http://www.webdav.org/deltav/protocol/rfc3253-issues-list.htm
+        /// "Use of WebDAV in Subversion"
+        ///    http://svn.apache.org/repos/asf/subversion/trunk/notes/http-and-webdav/webdav-usage.html
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
         public virtual void MakeActivity(string activityId)
         {
             ClearExistingTempWorkspaces(true);
@@ -1064,6 +1157,10 @@ namespace SvnBridge.SourceControl
             ActivityRepository.Create(activityId);
         }
 
+        /// <summary>
+        /// Deletes an activity/transaction (WebDAV DELETE /!svn/act/), emulated via TFS workspace.
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
         public virtual void DeleteActivity(string activityId)
         {
             sourceControlService.DeleteWorkspace(serverUrl, credentials, activityId);
@@ -1142,6 +1239,11 @@ namespace SvnBridge.SourceControl
                     }
                     if (item.Action == ActivityItemAction.Branch)
                     {
+                        // Keep GetLatestVersion() call within the loop for now,
+                        // since it's used by the Branch case only (would penalize all other cases),
+                        // and it has internal caching anyway.
+                        // OTOH it's likely cached already from the get-go,
+                        // so perhaps one initial call above would be better...
                         SourceItem[] items = metaDataRepository.QueryItems(GetLatestVersion(), item.SourcePath, Recursion.Full);
                         foreach (SourceItem sourceItem in items)
                         {
@@ -1283,6 +1385,13 @@ namespace SvnBridge.SourceControl
             fileRepository.ReadFileAsync(item, GetRepositoryUuid());
         }
 
+        /// <summary>
+        /// Returns a UUID/GUID precisely identifying the provider's repository
+        /// (specific to the particular server URL).
+        /// Note that this ID will be used
+        /// both for item queries
+        /// *and* for publishing in certain DAV elements.
+        /// </summary>
         public virtual Guid GetRepositoryUuid()
         {
             string cacheKey = "GetRepositoryUuid_" + serverUrl;
@@ -1354,6 +1463,13 @@ namespace SvnBridge.SourceControl
             });
         }
 
+        /// <summary>
+        /// The main public interface handler for WebDAV PUT request.
+        /// </summary>
+        /// <param name="activityId">ID of the activity (transaction)</param>
+        /// <param name="path">path to file item</param>
+        /// <param name="fileData">data to be written into file</param>
+        /// <returns>true if a new file has been created, else (updated only) false</returns>
         public virtual bool WriteFile(string activityId, string path, byte[] fileData)
         {
             return WriteFile(activityId, path, fileData, false);
@@ -1797,6 +1913,7 @@ namespace SvnBridge.SourceControl
             bool isNewFile = true;
 
             bool replaced = false;
+            // Combo of prior deleteAction plus Write ends up as replace:
             if (IsDeleted(activityId, path))
             {
                 replaced = true;
@@ -1937,6 +2054,13 @@ namespace SvnBridge.SourceControl
             ServiceUpdateLocalVersions(activityId, updates);
         }
 
+        /// <summary>
+        /// TFS API docs sez:
+        /// "Called to update the local version of an item which is stored for a workspace.
+        /// Clients should call this after successfully calling DownloadFile() based on instructions from Get()."
+        /// </summary>
+        /// <param name="activityId">ID of an activity (transaction)</param>
+        /// <param name="updates">The updates to be applied</param>
         private void ServiceUpdateLocalVersions(string activityId, IEnumerable<LocalUpdate> updates)
         {
             sourceControlService.UpdateLocalVersions(serverUrl, credentials, activityId, updates);
@@ -1950,6 +2074,7 @@ namespace SvnBridge.SourceControl
                 string localTargetPath = GetLocalPath(activityId, copyAction.TargetPath);
 
                 bool copyIsRename = false;
+                // Combo of prior deleteAction plus copyAction ends up as rename:
                 if (IsDeleted(activityId, copyAction.Path))
                 {
                     copyIsRename = true;
@@ -2239,6 +2364,14 @@ namespace SvnBridge.SourceControl
             return properties;
         }
 
+        /// <summary>
+        /// Uses QueryItemsExtended() (workspace-enhanced variant of QueryItems())
+        /// to query an item that has been registered as pending
+        /// within the current {activity|workspace|transaction}.
+        /// </summary>
+        /// <param name="activityId">ID of an activity (transaction)</param>
+        /// <param name="path">Path to be queried</param>
+        /// <returns>Meta data of the item, else null</returns>
         private ItemMetaData GetPendingItem(string activityId, string path)
         {
             ItemSpec spec = new ItemSpec();

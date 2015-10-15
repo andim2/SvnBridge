@@ -5,6 +5,9 @@ using SvnBridge.Utility; // Helper.Decode()
 
 namespace SvnBridge.Handlers
 {
+    /// <summary>
+    /// See also http://subversion.apache.org/security/CVE-2013-1849-advisory.txt
+    /// </summary>
     public class MkActivityHandler : RequestHandlerBase
     {
         protected override void Handle(

@@ -84,7 +84,17 @@ namespace SvnBridge.Nodes
 
         private string GetContentLength()
         {
-            return "<lp1:getcontentlength>" + sourceControlProvider.ReadFile(item).Length + "</lp1:getcontentlength>";
+            // Ouch, this is obviously very expensive (a dominating performance hotspot of properties),
+            // but there probably isn't much we can do
+            // (provider APIs don't seem to provide an interface for
+            // querying further details about an item - this also applies to GUIs on Windows).
+            // Nope, that is not really true: there's both SourceItem.RemoteSize and Item.len members.
+            // But these two are a CodePlex.TfsLibrary dependency and We Don't Do That Here (well, "try to") -
+            // so a compromise would be adding a .length member to ItemMetaData,
+            // however an extra member there is quite painful
+            // as long as we are only making use of it at this single place here.
+            int content_length = sourceControlProvider.ReadFile(item).Length;
+            return "<lp1:getcontentlength>" + content_length + "</lp1:getcontentlength>";
         }
 
         private string GetDeadPropCount()

@@ -43,6 +43,17 @@ namespace SvnBridge.Net
     /// </summary>
 	public static class RequestCache
 	{
+        // IMPORTANT NOTE:
+        // I originally thought
+        // that we might have a grave violation/conflict
+        // of per-session-separate instance data
+        // (since this is a static class which is shared
+        // between concurrent multi-user network request activity),
+        // however it seems that the ThreadStatic (TLS) attribute here
+        // is exactly the means to achieve properly fully provided
+        // per-request (which likely is == per-thread)
+        // instance data separation.
+        // https://larryparkerdotnet.wordpress.com/2009/11/29/thread-local-storage-the-easy-way/
 		[ThreadStatic] private static IDictionary currentItems;
 	    private static bool? runningInIIS;
 

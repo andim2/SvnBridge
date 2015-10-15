@@ -107,6 +107,17 @@ namespace SvnBridge.Handlers
 		{
             this.credentials = credentials;
             Initialize(context, pathParser);
+
+            // FIXME bad abstraction:
+            // not every RequestHandler-derived class necessarily
+            // is a full complex SCM-providing handler,
+            // thus not all handlers are expected
+            // to need and thus resolve
+            // a rather specific-layer SCM provider object!
+            // Should possibly introduce a SCM-specific derived class
+            // (or instead forward to a member equivalent of that?)
+            // which implements a clean HTTP-symmetric virtual Handle(context)
+            // which *then* internally resolves the provider.
             sourceControlProvider = Container.Resolve<TFSSourceControlProvider>();
 
             // BIG FAT CENTRAL WARNING:

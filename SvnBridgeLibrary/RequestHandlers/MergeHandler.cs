@@ -67,6 +67,8 @@ namespace SvnBridge.Handlers
                     WriteHumanReadableError(output, 160024, ex.Message);
                 }
 			}
+            // Not storing data in RequestCache's RequestBody key here
+            // (since we're doing *final*, non-rethrowing error/exception handling above).
 		}
 
 		private void WriteMergeResponse(IHttpRequest request, MergeActivityResponse mergeResponse,

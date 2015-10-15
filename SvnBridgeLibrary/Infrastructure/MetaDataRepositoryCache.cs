@@ -156,6 +156,7 @@ namespace SvnBridge.Infrastructure
             // already cached this version, skip inserting
             if (IsInCache(revision, serverPath))
                 return;
+            // Do expensive stuff outside of scoped lock:
             string cacheKey = CreateRevisionAndPathCacheKey(revision, serverPath);
             persistentCache.UnitOfWork(delegate
             {

@@ -211,7 +211,7 @@ namespace SvnBridge.SourceControl
                     item = item ?? new MissingItemMetaData(itemPath, targetVersion, false);
                     folder.Items.Add(item);
                 }
-                if (isLastPathElem == false)
+                if (isLastPathElem == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                 {
                     folder = (FolderMetaData)item;
                 }
@@ -468,6 +468,11 @@ namespace SvnBridge.SourceControl
                 }
                 else
                 {
+                    // See also http://svnbridge.codeplex.com/workitem/13545
+                    // (not trying to improve handling right now
+                    // since I'm rather unsure of the suggested fix there
+                    // and I'd think one can easily get it wrong
+                    // and I don't have a test case...)
                     throw new NotSupportedException("Unsupported change type " + change.ChangeType);
                 }
             }

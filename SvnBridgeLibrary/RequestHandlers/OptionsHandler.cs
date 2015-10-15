@@ -51,6 +51,11 @@ namespace SvnBridge.Handlers
             }
         }
 
+        /// <remarks>
+        /// While the requestPath parameter is *currently* unused,
+        /// I believe that handling of WebDAV OPTIONS is per-resource-specific,
+        /// which means the resource-specific path may in fact easily become relevant.
+        /// </remarks>
         private void Options(OptionsData data, string requestPath, StreamWriter output)
         {
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");

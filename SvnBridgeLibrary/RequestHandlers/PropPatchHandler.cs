@@ -28,6 +28,9 @@ namespace SvnBridge.Handlers
                 string correctXml = BrokenXml.Escape(originalXml);
                 string requestPath = GetPath(request);
 
+                // FIXME: judging from XML namespace strings below,
+                // I'm wondering whether some of the places below are missing
+                // an extendedNamespaces switch.
                 bool extendedNamespaces = false;
                 if (correctXml.Contains("http://subversion.tigris.org/xmlns/custom/"))
                     extendedNamespaces = true;
@@ -61,6 +64,25 @@ namespace SvnBridge.Handlers
 
 			string itemPath = Helper.Decode(activityPath.Substring(activityPath.IndexOf('/')));
 			string activityId = activityPath.Split('/')[0];
+
+            // Internet sez: "Servers MUST process PROPPATCH instructions in document order
+            // (an exception to the normal rule that ordering is irrelevant)".
+            // Also, for set/remove, some internet logs show an order of D:set then D:remove,
+            // thus we likely would want to obey that as well.
+
+            // FIXME: that handling is quite some bullcrap.
+            // PROPPATCH should be able to handle
+            // *both* set/remove (and in that order!!)
+            // **within the same request**.
+            // This means:
+            // - get rid of this artificially split handling
+            // - move handling of svn log property into handling of set property.
+            // This should perhaps best be done via some higher-level isolation:
+            // First do all incoming requests (with those handlers possibly
+            // being branched away generically, judged by different namespaces
+            // which are responsible for different properties etc.)
+            // and store their result,
+            // *then* start generating the XML output given those results.
 			if (request.Set.Prop.Properties.Count > 0)
 			{
 				if (request.Set.Prop.Properties[0].LocalName == "log")

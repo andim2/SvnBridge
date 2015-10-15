@@ -220,6 +220,7 @@ namespace SvnBridge.Utility
             byte[] signature = reader.ReadBytes(3);
             byte version = reader.ReadByte();
 
+            // See Subversion files notes/svndiff and svndiff.c.
             if (signature[0] != 'S' || signature[1] != 'V' || signature[2] != 'N')
             {
                 throw new InvalidOperationException("The signature is invalid.");

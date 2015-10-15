@@ -27,11 +27,29 @@ namespace SvnBridge.Net
         }
 
         /// <remarks>
+        /// For the various WebDAV methods supported here,
+        /// please see WebDAV RFC4918:
+        /// http://tools.ietf.org/html/rfc4918
+        /// (obsoletes the older RFC2518)
+        /// and Subversion's webdav-protocol document:
+        /// http://svn.apache.org/repos/asf/subversion/trunk/notes/http-and-webdav/webdav-protocol
+        ///
+        /// FIXME: while OptionsHandler advertises some methods as supported,
+        /// they are NOT being serviced here!
+        /// (HEAD, MOVE, POST, TRACE, LOCK, UNLOCK).
+        /// One could reduce OptionsHandler code to advertise supported methods only,
+        /// but then we wouldn't get to know any cases where a new method would be requested
+        /// (and should/could thus be implemented given this request),
+        /// thus better choose to keep it that way.
+        ///
         /// Naming: use name GetHttpHandler() since otherwise it would sort of conflict
         /// with the naming of the handler objects it creates.
         /// </remarks>
         public virtual RequestHandlerBase GetHttpHandler(string httpMethod)
         {
+            // Plain old switch/case - C# is said to often be compiling
+            // a switch/case into an efficient Dictionary lookup.
+
             switch (httpMethod.ToLowerInvariant())
             {
                 case "checkout":
@@ -75,9 +93,26 @@ namespace SvnBridge.Net
 
         public void Dispatch(IHttpContext connection)
         {
+            // [
+            // PERFORMANCE NOTE:
+            // all implementation parts near this area
+            // are about strongly latency-influencing
+            // generic per-each-request hotpath handling,
+            // thus one should avoid as much as possible
+            // bloating them with useless / specific (non-generic)
+            // handling in this hotpath.
+            // See also term "fast first byte",
+            // which denotes the fast initial response time
+            // which one ought to keep maintained properly,
+            // as described e.g. at
+            // http://stackoverflow.com/a/2711405
+            // ]
             try
             {
                 IHttpRequest request = connection.Request;
+                // FIXME PERFORMANCE: this special check should be moved towards
+                // getting done within a GET handler only,
+                // since it needlessly bloats the generic hotpath.
                 if ("/!stats/request".Equals(request.LocalPath, StringComparison.InvariantCultureIgnoreCase))
                 {
                     new StatsRenderer(Container.Resolve<ActionTrackingViaPerfCounter>()).Render(connection);
@@ -114,6 +149,7 @@ namespace SvnBridge.Net
             catch (IOException)
             {
                 // Error caused by client cancelling operation under IIS 6
+                // (and BTW also desktop SvnBridge)
                 if (Configuration.LogCancelErrors)
                     throw;
             }
@@ -297,6 +333,26 @@ namespace SvnBridge.Net
 
                     string username = credentialParts[0];
                     string password = credentialParts[1];
+
+                    // WARNING: the TFS account used here
+                    // is preferred to be per-source-control-client unique,
+                    // otherwise you may get into trouble eventually
+                    // (TFS chooses to do server-side workspace state tracking,
+                    // thus you may experience workspace state conflict issues
+                    // e.g. in case a same-user MSVS-side client workspace
+                    // hasn't fetched a sub project yet
+                    // yet the same-user SVN client already has it in its
+                    // working copy (WC) and wants to have a new file added.
+                    // SvnBridge (and TFS) do use/support
+                    // workspace-less operation, so in theory there
+                    // should be no problems, but it seems at least in
+                    // the case of the client-side SvnBridge the
+                    // current local (on the SvnBridge client machine)
+                    // workspace candidate sometimes
+                    // is getting referenced to check for file existence
+                    // (possibly when doing a QueryItems() with
+                    // credentials, which then internally aggregates the "foreign"
+                    // workspace from a local workspace cache?) --> CONFLICT.
 
                     string domain;
                     SplitUserInfoToDomainAndName(

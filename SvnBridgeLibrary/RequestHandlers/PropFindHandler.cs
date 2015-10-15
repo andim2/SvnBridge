@@ -124,6 +124,11 @@ namespace SvnBridge.Handlers
                                              bool loadPropertiesFromFile)
         {
             // Make sure path is decoded
+
+            // FIXME BUG!?: those two calls actually map into the *same* underlying method call!!
+            // Not sure about properties handling here, but if indeed it's expected
+            // to have property storage items returned here, then it's probably wrong
+            // (always returnPropertyFiles == false!). TODO add breakpoint here and investigate!
             if (loadPropertiesFromFile)
                 return sourceControlProvider.GetItems(version, Helper.Decode(path), recursion);
             else
@@ -339,6 +344,9 @@ namespace SvnBridge.Handlers
 
         private void DoHandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
         {
+            // "Use of WebDAV in Subversion"
+            //    http://svn.apache.org/repos/asf/subversion/trunk/notes/http-and-webdav/webdav-usage.html
+            //      "URL Layout"
             bool requestHandled = false;
             if (requestPath.StartsWith("/!svn/"))
             {
@@ -555,6 +563,18 @@ namespace SvnBridge.Handlers
                 output.Write(" xmlns:g0=\"DAV:\"");
             }
             output.Write(">\n");
+            // FIXME: there's a problem with Cadaver 0.22.3 needlessly(?) having %5f encoded an underscore ('_')
+            // in the PROPFIND request line, and then expecting to get back an identically encoded D:href
+            // despite the transcoding not being necessary (or even annoying, since it increases URL length).
+            // This shows up on "cd some_path" within Cadaver.
+            // Usually clients are encouraged to do a decoding normalization
+            // prior to doing any request vs. response string comparisons, however Cadaver does not seem to do so,
+            // which causes all the pain and suffering in this world.
+            // Thus it would be best to return D:href in exactly the same encoding as has been passed in originally.
+            // However, since deep within this handler (which handles the many items that have been discovered)
+            // our result handling is derived from ItemMetaData content, there's no sufficiently simple way
+            // to reliably generate the exact same string of response vs. initial request,
+            // for *all* the items that we indicate.
 			output.Write("<D:href>" + Helper.UrlEncodeIfNecessary(node.Href(this)) + "</D:href>\n");
 
             XmlDocument doc = new XmlDocument();

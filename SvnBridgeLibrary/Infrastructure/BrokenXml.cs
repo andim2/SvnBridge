@@ -17,6 +17,9 @@ namespace SvnBridge.Infrastructure
 
         public static string Escape(string brokenXml)
         {
+            // No use trying to do a Contains(":") skip-regex performance shortcut here
+            // since pretty much all property-related XML content does contain some colons.
+
             string replaced = findDuplicateNamespacesInTagStart.Replace(brokenXml, "<$1:$2__COLON__$3>");
         	replaced = findDuplicateNamespacesInTag.Replace(replaced, "<$1:$2__COLON__$3/>");
             return findDuplicateNamespacesInTagEnd.Replace(replaced, "</$1:$2__COLON__$3>");
