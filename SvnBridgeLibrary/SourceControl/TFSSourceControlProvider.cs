@@ -1432,6 +1432,9 @@ namespace SvnBridge.SourceControl
             int maxCount,
             bool sortAscending = false)
         {
+            bool includeFiles = true;
+            bool generateDownloadUrls = false;
+            bool slotMode = false;
             return GetLogImpl(
                 path,
                 itemVersion,
@@ -1439,6 +1442,9 @@ namespace SvnBridge.SourceControl
                 versionTo,
                 recursion,
                 maxCount,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
                 sortAscending);
         }
 
@@ -1449,6 +1455,9 @@ namespace SvnBridge.SourceControl
             int versionTo,
             Recursion recursion,
             int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
             bool sortAscending)
         {
             SVNPathStripLeadingSlash(ref path);
@@ -1470,6 +1479,9 @@ namespace SvnBridge.SourceControl
                 versionTo,
                 recursionType,
                 maxCount,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
                 sortAscending).ToArray();
 
             LogHistory_TweakIt_ForSVN(ref histories);
@@ -2121,6 +2133,9 @@ namespace SvnBridge.SourceControl
             int versionTo,
             RecursionType recursionType,
             int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
             bool sortAscending)
         {
             List<Changeset> changesetsTotal = new List<Changeset>();
@@ -2138,6 +2153,9 @@ namespace SvnBridge.SourceControl
                     itemSpec, itemVersion,
                     versionSpecFrom, versionSpecTo,
                     maxCount_Allowed,
+                    includeFiles,
+                    generateDownloadUrls,
+                    slotMode,
                     sortAscending);
                 changesetsTotal.AddRange(changesets);
             }
@@ -2155,6 +2173,9 @@ namespace SvnBridge.SourceControl
                         latestVersionToBeQueried,
                         RecursionType.None,
                         2,
+                        includeFiles,
+                        generateDownloadUrls,
+                        slotMode,
                         sortAscending /* is this the value to pass to have this workaround still work properly? */);
                     if (tempChangesets[0].Changes[0].type == ChangeType.Delete && tempChangesets.Count == 2)
                         latestVersionToBeQueried = tempChangesets[1].cset;
@@ -2177,6 +2198,9 @@ namespace SvnBridge.SourceControl
                             latestVersionToBeQueried,
                             RecursionType.Full,
                             int.MaxValue,
+                            includeFiles,
+                            generateDownloadUrls,
+                            slotMode,
                             sortAscending);
                     }
 
@@ -2235,6 +2259,9 @@ namespace SvnBridge.SourceControl
                         itemSpec, itemVersion,
                         versionSpecFrom, versionSpecTo,
                         maxCount_Allowed,
+                        includeFiles,
+                        generateDownloadUrls,
+                        slotMode,
                         sortAscending);
                     changesetsTotal.AddRange(changesets);
                     logItemsCount_ThisRun = changesets.Length;
@@ -2250,6 +2277,9 @@ namespace SvnBridge.SourceControl
             int versionFrom, int versionTo,
             RecursionType recursionType,
             int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
             bool sortAscending)
         {
             List<SourceItemHistory> histories;
@@ -2260,6 +2290,9 @@ namespace SvnBridge.SourceControl
                 versionFrom, versionTo,
                 recursionType,
                 maxCount,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
                 sortAscending).ToArray();
             histories = ConvertChangesetsToSourceItemHistory(changesets).ToList();
 
@@ -2270,6 +2303,9 @@ namespace SvnBridge.SourceControl
             ItemSpec itemSpec, VersionSpec itemVersion,
             VersionSpec versionSpecFrom, VersionSpec versionSpecTo,
             int maxCount,
+            bool includeFiles,
+            bool generateDownloadUrls,
+            bool slotMode,
             bool sortAscending)
         {
             Changeset[] changesets;
@@ -2286,7 +2322,9 @@ namespace SvnBridge.SourceControl
                 null,
                 versionSpecFrom, versionSpecTo,
                 maxCount,
-                true, false, false,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
                 sortAscending);
 
             return changesets;
@@ -2889,6 +2927,9 @@ namespace SvnBridge.SourceControl
         {
             ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full); // SVNBRIDGE_WARNING_REF_RECURSION
             VersionSpec versionSpecAtDate = ConvertToVersionSpec(date);
+            bool includeFiles = true;
+            bool generateDownloadUrls = false;
+            bool slotMode = false;
             // Keep handling in exception scope minimalistic to the operation which we may need to intercept:
             try
             {
@@ -2896,6 +2937,9 @@ namespace SvnBridge.SourceControl
                     itemSpec, VersionSpec.Latest,
                     VersionSpec.First, versionSpecAtDate,
                     1,
+                    includeFiles,
+                    generateDownloadUrls,
+                    slotMode,
                     false);
 
                 // If no results then date is before project existed
@@ -3156,6 +3200,9 @@ namespace SvnBridge.SourceControl
         {
             string author = null;
 
+            bool includeFiles = true;
+            bool generateDownloadUrls = false;
+            bool slotMode = false;
                 // AFAICS this lookup parameter *must* be the item revision rather than GetLatestVersion(), else incorrect-revision's author
                 int latestVersion = sourceItem.RemoteChangesetId;
                 // FIXME: which recursion type to use? Possibly we need to forward
@@ -3167,6 +3214,9 @@ namespace SvnBridge.SourceControl
                     latestVersion,
                     RecursionType.Full,
                     1,
+                    includeFiles,
+                    generateDownloadUrls,
+                    slotMode,
                     false);
                 bool haveHistory = (0 < hist.Count);
                 if (haveHistory)
@@ -3325,6 +3375,9 @@ namespace SvnBridge.SourceControl
             SourceItemHistory logQueryPartial_Newest_history = null;
             int itemVersion = version; // debugging helper
             int versionTo = version;
+            bool includeFiles = true;
+            bool generateDownloadUrls = false;
+            bool slotMode = false;
             bool sortAscending = false;
             bool wantShortcutForLargeRepository = (version > 20000);
             bool wantQueryPartial = wantShortcutForLargeRepository;
@@ -3345,6 +3398,9 @@ namespace SvnBridge.SourceControl
                     versionTo,
                     Recursion.Full,
                     1,
+                    includeFiles,
+                    generateDownloadUrls,
+                    slotMode,
                     sortAscending);
                 if (0 != logQueryPartial_Newest.History.Length)
                     logQueryPartial_Newest_history = logQueryPartial_Newest.History[0];
@@ -3374,6 +3430,9 @@ namespace SvnBridge.SourceControl
                     versionTo,
                     Recursion.Full,
                     1,
+                    includeFiles,
+                    generateDownloadUrls,
+                    slotMode,
                     sortAscending);
                 if (0 != logQueryAll_Newest.History.Length)
                     logQueryAll_Newest_history = logQueryAll_Newest.History[0];
@@ -4539,6 +4598,9 @@ namespace SvnBridge.SourceControl
             int changeset)
         {
             ChangesetVersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset);
+            bool includeFiles = true;
+            bool generateDownloadUrls = false;
+            bool slotMode = false;
             int idxItem = 0;
             foreach (var renamedItem in renamedItems)
             {
@@ -4553,6 +4615,9 @@ namespace SvnBridge.SourceControl
                         changeset,
                         RecursionType.None,
                         int.MaxValue,
+                        includeFiles,
+                        generateDownloadUrls,
+                        slotMode,
                         false);
                     var itemRenameDeterminedFromHistory = GetItemRenameDeterminedFromHistory(
                         changesets);
@@ -4701,6 +4766,9 @@ namespace SvnBridge.SourceControl
 
         public virtual int GetEarliestVersion(string path)
         {
+            bool includeFiles = true;
+            bool generateDownloadUrls = false;
+            bool slotMode = false;
             bool sortAscending = false;
             LogItem log = GetLogImpl(
                 path,
@@ -4709,6 +4777,9 @@ namespace SvnBridge.SourceControl
                 GetLatestVersion(),
                 Recursion.None,
                 int.MaxValue,
+                includeFiles,
+                generateDownloadUrls,
+                slotMode,
                 sortAscending);
             return log.History[log.History.Length - 1].ChangeSetID;
         }
