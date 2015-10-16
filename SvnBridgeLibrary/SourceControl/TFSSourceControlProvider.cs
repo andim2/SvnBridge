@@ -1432,7 +1432,8 @@ namespace SvnBridge.SourceControl
             int maxCount,
             bool sortAscending = false)
         {
-            bool includeFiles = true;
+            bool isInterestedInItemChanges = true; // DEFINITELY yes!
+            bool includeFiles = (isInterestedInItemChanges);
             bool generateDownloadUrls = false;
             bool slotMode = false;
             return GetLogImpl(
@@ -1951,12 +1952,43 @@ namespace SvnBridge.SourceControl
         /// Figures out the revision (Changeset ID)
         /// which is the one relevant for a SVN-protocol commit's content description.
         /// </summary>
+        /// <remarks>
+        /// Since there are cases where the Changeset does not contain any Changes
+        /// (e.g. QueryHistory() param includeFiles == false),
+        /// we assume that we in fact want to return the Changeset-side revision value
+        /// rather than the revision value of the *first* Change in the Changeset.
+        /// </remarks>
         /// <param name="changeset"></param>
         /// <returns>SVN commit revision ID</returns>
         private static int GetChangesetRevisionValueRelevantForHistory(
             Changeset changeset)
         {
-            return changeset.Changes[0].Item.cs;
+            //return changeset.Changes[0].Item.cs;
+            EnsureRevisionValueConsistency(changeset);
+            return changeset.cset;
+        }
+
+        [Conditional("DEBUG")]
+        private static void EnsureRevisionValueConsistency(Changeset changeset)
+        {
+            bool haveChangesElements = (0 < changeset.Changes.Length);
+            if (haveChangesElements)
+            {
+                bool isRevisionMatch = (changeset.cset == changeset.Changes[0].Item.cs);
+                if (!(isRevisionMatch))
+                {
+                    throw new RevisionValueMismatchException(changeset);
+                }
+            }
+        }
+
+        public sealed class RevisionValueMismatchException : NotSupportedException
+        {
+            public RevisionValueMismatchException(Changeset changeset)
+                : base("Changeset " + changeset + "has revision mismatch between main revision and first-item revision")
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
         }
 
         private IEnumerable<SourceItemChange> ConvertTFSChangesetToSVNSourceItemChanges(
@@ -2940,7 +2972,8 @@ namespace SvnBridge.SourceControl
         {
             ItemSpec itemSpec = CreateItemSpec(rootPath, RecursionType.Full); // SVNBRIDGE_WARNING_REF_RECURSION
             VersionSpec versionSpecAtDate = ConvertToVersionSpec(date);
-            bool includeFiles = true;
+            bool isInterestedInItemChanges = false; // DEFINITELY not!
+            bool includeFiles = (isInterestedInItemChanges);
             bool generateDownloadUrls = false;
             bool slotMode = false;
             // Keep handling in exception scope minimalistic to the operation which we may need to intercept:
@@ -3213,7 +3246,8 @@ namespace SvnBridge.SourceControl
         {
             string author = null;
 
-            bool includeFiles = true;
+            bool isInterestedInItemChanges = false; // DEFINITELY not!
+            bool includeFiles = (isInterestedInItemChanges);
             bool generateDownloadUrls = false;
             bool slotMode = false;
                 // AFAICS this lookup parameter *must* be the item revision rather than GetLatestVersion(), else incorrect-revision's author
@@ -3388,7 +3422,8 @@ namespace SvnBridge.SourceControl
             SourceItemHistory logQueryPartial_Newest_history = null;
             int itemVersion = version; // debugging helper
             int versionTo = version;
-            bool includeFiles = true;
+            bool isInterestedInItemChanges = false; // DEFINITELY not!
+            bool includeFiles = (isInterestedInItemChanges);
             bool generateDownloadUrls = false;
             bool slotMode = false;
             bool sortAscending = false;
@@ -4611,7 +4646,8 @@ namespace SvnBridge.SourceControl
             int changeset)
         {
             ChangesetVersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset);
-            bool includeFiles = true;
+            bool isInterestedInItemChanges = true; // DEFINITELY yes!
+            bool includeFiles = (isInterestedInItemChanges);
             bool generateDownloadUrls = false;
             bool slotMode = false;
             int idxItem = 0;
@@ -4779,7 +4815,8 @@ namespace SvnBridge.SourceControl
 
         public virtual int GetEarliestVersion(string path)
         {
-            bool includeFiles = true;
+            bool isInterestedInItemChanges = false; // DEFINITELY not!
+            bool includeFiles = (isInterestedInItemChanges);
             bool generateDownloadUrls = false;
             bool slotMode = false;
             bool sortAscending = false;
