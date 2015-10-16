@@ -1482,8 +1482,9 @@ namespace SvnBridge.SourceControl
         /// Commits the recorded transaction contents on the server.
         /// </summary>
         /// <param name="activityId">ID of the activity (transaction)</param>
-        /// <returns>MergeActivityResponse object</returns>
-        public virtual MergeActivityResponse MergeActivity(string activityId)
+        /// <param name="disableMergeResponse">Indicates whether to laboriously collect a list of individual merge entries</param>
+        /// <returns>MergeActivityResponse object, either with or without merge entries</returns>
+        public virtual MergeActivityResponse MergeActivity(string activityId, bool disableMergeResponse)
         {
             MergeActivityResponse mergeResponse = null;
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -1557,10 +1558,25 @@ namespace SvnBridge.SourceControl
                             false, 0);
                 }
                 AssociateWorkItemsWithChangeSet(activity.Comment, changesetId);
-                mergeResponse = MergeResponse_Generate(activityId, changesetId);
+                mergeResponse = new MergeActivityResponse(changesetId, DateTime.Now, SCMHelpers.UnknownAuthorMarker);
+                bool needGatherEntriesForMergeResponse = !(disableMergeResponse);
+                if (needGatherEntriesForMergeResponse)
+                {
+                    MergeResponse_GatherEntries(activityId, mergeResponse);
+                }
             });
 
             return mergeResponse;
+        }
+
+        /// <summary>
+        /// Probably legacy-only handler (for unit tests etc.)
+        /// </summary>
+        /// <param name="activityId">ID of the current activity (transaction)</param>
+        /// <returns>MergeActivityResponse result</returns>
+        public virtual MergeActivityResponse MergeActivity(string activityId)
+        {
+            return MergeActivity(activityId, false);
         }
 
         public virtual void AssociateWorkItemsWithChangeSet(string comment, int changesetId)
@@ -2225,9 +2241,8 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        private MergeActivityResponse MergeResponse_Generate(string activityId, int changesetId)
+        private void MergeResponse_GatherEntries(string activityId, MergeActivityResponse mergeResponse)
         {
-            MergeActivityResponse mergeResponse = new MergeActivityResponse(changesetId, DateTime.Now, SCMHelpers.UnknownAuthorMarker);
             List<string> baseFolders = new List<string>();
             List<string> sortedMergeResponse = new List<string>();
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -2277,7 +2292,6 @@ namespace SvnBridge.SourceControl
                     }
                 }
             });
-            return mergeResponse;
         }
 
         private void MergeResponse_AddBaseFolderIfRequired(string activityId, ActivityItem item, ICollection<string> baseFolders, MergeActivityResponse mergeResponse)

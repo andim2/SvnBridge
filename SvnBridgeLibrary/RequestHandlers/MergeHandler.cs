@@ -44,19 +44,14 @@ namespace SvnBridge.Handlers
             // TODO: should be implementing a MergeActivityWithoutResponse() method,
             // to really benefit from no-merge-response mode on the source control side!
             bool disableMergeResponse = GetSvnOption_NoMergeResponse();
-            bool wantMergeResponseItems = true;
-            if (disableMergeResponse)
-            {
-                wantMergeResponseItems = false;
-            }
 			try
 			{
-				MergeActivityResponse mergeResponse = sourceControlProvider.MergeActivity(activityId);
+				MergeActivityResponse mergeResponse = sourceControlProvider.MergeActivity(activityId, disableMergeResponse);
 				SetResponseSettings(response, "text/xml", Encoding.UTF8, 200);
 				response.SendChunked = true;
 				using (StreamWriter output = CreateStreamWriter(response.OutputStream))
 				{
-					WriteMergeResponse(request, mergeResponse, wantMergeResponseItems, output);
+					WriteMergeResponse(request, mergeResponse, output);
 				}
 			}
 			catch (ConflictException ex)
@@ -72,7 +67,6 @@ namespace SvnBridge.Handlers
 		}
 
 		private void WriteMergeResponse(IHttpRequest request, MergeActivityResponse mergeResponse,
-                                    bool wantMergeResponseItems,
 										TextWriter output)
 		{
 			output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
@@ -91,10 +85,7 @@ namespace SvnBridge.Handlers
 			output.Write("</D:propstat>\n");
 			output.Write("</D:response>\n");
 
-			if (wantMergeResponseItems)
-			{
-				GenerateMergeResponseItems(request, mergeResponse, output);
-			}
+			GenerateMergeResponseItems(request, mergeResponse, output);
 
 			output.Write("</D:updated-set>\n");
 			output.Write("</D:merge-response>\n");
@@ -103,6 +94,7 @@ namespace SvnBridge.Handlers
 		private void GenerateMergeResponseItems(IHttpRequest request, MergeActivityResponse mergeResponse,
 										TextWriter output)
 		{
+            // This loop will turn no-op in case of "no-merge-response"... (== no merge response items to be listed)
 			foreach (MergeActivityResponseItem item in mergeResponse.Items)
 			{
 				output.Write("<D:response>\n");
