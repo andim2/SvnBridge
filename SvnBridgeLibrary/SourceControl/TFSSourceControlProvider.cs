@@ -434,9 +434,16 @@ namespace SvnBridge.SourceControl
         private static SourceItemHistory ConstructSourceItemHistoryFromChangeset(
             Changeset changeset)
         {
+            // Username used to get set to changeset.cmtr, but at
+            // least for VSS-migrated repositories and for gated
+            // checkins this is wrong, thus try using changeset.owner.
+            // For details and possible variants to get this fixed,
+            // please see "Log Messages Issue - Committer vs. Owner when
+            // using Gated Check-In"
+            //   http://svnbridge.codeplex.com/discussions/260147
             return new SourceItemHistory(
                 changeset.Changes[0].Item.cs,
-                changeset.cmtr,
+                changeset.owner,
                 changeset.date,
                 changeset.Comment);
         }
