@@ -435,8 +435,8 @@ namespace SvnBridge.SourceControl
         public ItemMetaData process(ItemMetaData[] items, bool returnPropertyFiles)
         {
                 FolderMap folderMap = new FolderMap();
-                Dictionary<string, ItemProperties> dictPropertiesOfItems = new Dictionary<string, ItemProperties>();
-                Dictionary<string, int> dictPropertiesRevisionOfItems = new Dictionary<string, int>();
+                Dictionary<string, ItemProperties> dictPropertiesOfItems = new Dictionary<string, ItemProperties>(items.Length);
+                Dictionary<string, int> dictPropertiesRevisionOfItems = new Dictionary<string, int>(items.Length);
                 WebDAVPropertyStorageAdaptor propsSerializer = new WebDAVPropertyStorageAdaptor(sourceControlProvider);
                 foreach (ItemMetaData item in items)
                 {
@@ -1253,7 +1253,7 @@ namespace SvnBridge.SourceControl
         private IEnumerable<SourceItemChange> ConvertTFSChangesetToSVNSourceItemChanges(
             Changeset changeset)
         {
-            List<SourceItemChange> sourceItemChanges = new List<SourceItemChange>();
+            List<SourceItemChange> sourceItemChanges = new List<SourceItemChange>(changeset.Changes.Length);
 
             foreach (Change change in changeset.Changes)
             {
@@ -2063,13 +2063,13 @@ namespace SvnBridge.SourceControl
             string path,
             Recursion recursion)
         {
-            List<string> itemPaths = new List<string>();
-
-            itemPaths.Add(path);
+            List<string> itemPaths;
 
             IEnumerable<string> propItemPaths = WebDAVPropertyStorageAdaptor.CollectPropertyItemLocationsToBeQueried(
                 path,
                 recursion);
+            itemPaths = new List<string>(1 + propItemPaths.Count());
+            itemPaths.Add(path);
 
             foreach(string propItemPath in propItemPaths)
             {
