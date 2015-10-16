@@ -1768,7 +1768,14 @@ namespace SvnBridge.SourceControl
             if (sourceItems.Length > 0)
             {
                 var itemCollector = new ItemQueryCollector(this);
-                ItemMetaData[] items = sourceItems.Select(sourceItem => SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker)).ToArray();
+                // Authorship (== history) fetching is very expensive -
+                // TODO: make intelligently configurable from the outside,
+                // only where needed (perhaps via a parameterization struct
+                // for this method?):
+                bool needAuthorshipLookup = false;
+                ItemMetaData[] items = ConvertSourceItemsWithAuthorship(
+                    sourceItems,
+                    needAuthorshipLookup);
                 rootItem = itemCollector.process(items, returnPropertyFiles);
 
                 if (!returnPropertyFiles)
@@ -1815,6 +1822,88 @@ namespace SvnBridge.SourceControl
             }
 
             return sourceItems;
+        }
+
+        private ItemMetaData[] ConvertSourceItemsWithAuthorship(
+            SourceItem[] sourceItems,
+            bool needAuthorshipLookup)
+        {
+            IEnumerable<ItemMetaData> result;
+            bool skipAuthorshipLookup = !(needAuthorshipLookup);
+            if (skipAuthorshipLookup)
+            {
+                result = sourceItems.Select(sourceItem => SCMHelpers.ConvertSourceItem(sourceItem, rootPath, UnknownAuthorMarker));
+            }
+            else
+            {
+                result = ConvertSourceItemsWithAuthorship_LookupAuthor(
+                    sourceItems);
+            }
+            return result.ToArray();
+        }
+
+        private List<ItemMetaData> ConvertSourceItemsWithAuthorship_LookupAuthor(
+            SourceItem[] sourceItems)
+        {
+            List<ItemMetaData> listItems = new List<ItemMetaData>(sourceItems.Length);
+            // Clever trick: have construction penalty initially only,
+            // then simply keep re-using same object with specific revision each:
+            ChangesetVersionSpec versionSpecSourceItem = VersionSpec.FromChangeset(0);
+            string author = null;
+            foreach (SourceItem sourceItem in sourceItems)
+            {
+                bool needNewLookup = true;
+                if (needNewLookup)
+                {
+                    versionSpecSourceItem.cs = sourceItem.RemoteChangesetId;
+                    author = ConvertSourceItemsWithAuthorship_LookupAuthorQuery(
+                        sourceItem,
+                        versionSpecSourceItem);
+                }
+                bool haveAuthor = (null != author);
+                ItemMetaData item = SCMHelpers.ConvertSourceItem(
+                    sourceItem,
+                    rootPath,
+                    haveAuthor ? author : UnknownAuthorMarker);
+                listItems.Add(item);
+            }
+
+            return listItems;
+        }
+
+        private string ConvertSourceItemsWithAuthorship_LookupAuthorQuery(
+            SourceItem sourceItem,
+            VersionSpec versionSpecSourceItem)
+        {
+            string author = null;
+
+                // AFAICS this lookup parameter *must* be the item revision rather than GetLatestVersion(), else incorrect-revision's author
+                int latestVersion = sourceItem.RemoteChangesetId;
+                // FIXME: which recursion type to use? Possibly we need to forward
+                // a recursion config param from the caller...
+                List<SourceItemHistory> hist = QueryHistory(
+                    sourceItem.RemoteName,
+                    versionSpecSourceItem,
+                    1,
+                    latestVersion,
+                    RecursionType.Full,
+                    1,
+                    false);
+                bool haveHistory = (0 < hist.Count);
+                if (haveHistory)
+                {
+                    author = hist[0].Username;
+                }
+
+            return author;
+        }
+
+        private static string UnknownAuthorMarker
+        {
+            get
+            {
+                return SCMHelpers.UnknownAuthorMarker;
+            }
         }
 
         /// <summary>
