@@ -100,7 +100,8 @@ namespace SvnBridge.Infrastructure
             bool haveInterceptorTypes = (0 != interceptorTypes.Count);
             if (haveInterceptorTypes)
             {
-                interceptors = new List<IInterceptor>();
+                var interceptorsInitialCapacity = interceptorTypes.Count;
+                interceptors = new List<IInterceptor>(interceptorsInitialCapacity);
 
                 foreach (Type interceptorType in interceptorTypes)
                 {
@@ -153,7 +154,8 @@ namespace SvnBridge.Infrastructure
             bool haveParams = (0 < infos.Length);
             if (haveParams)
             {
-                args = new List<object>();
+                var argsInitialCapacity = infos.Length;
+                args = new List<object>(argsInitialCapacity);
 
                 foreach (ParameterInfo info in infos)
                 {
