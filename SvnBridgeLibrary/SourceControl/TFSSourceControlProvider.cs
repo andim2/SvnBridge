@@ -239,7 +239,6 @@ namespace SvnBridge.SourceControl
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
         private const string repoLatestVersion = "Repository.Latest.Version";
-        private const string propFolderPlusSlash = Constants.PropFolder + "/";
         // TODO: LATEST_VERSION is an interface-related magic value,
         // thus it should obviously not be within this specific *implementation* class
         // but rather be provided by a corresponding *interface* or base class.
@@ -810,12 +809,12 @@ namespace SvnBridge.SourceControl
                     changeset);
                 foreach (Change change in changeset.Changes)
                 {
-                    if (IsPropertyFolder(change.Item.item))
+                    if (WebDAVPropertyStorageAdaptor.IsPropertyFolderType(change.Item.item))
                     {
                         continue;
                     }
 
-                    if (!IsPropertyFile(change.Item.item))
+                    if (!WebDAVPropertyStorageAdaptor.IsPropertyFileType(change.Item.item))
                     {
                         SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, change.Item.type, change.Item.item, change.Item.cs, change.Item.len, change.Item.date, null);
                         ChangeType changeType = change.type;
@@ -826,7 +825,7 @@ namespace SvnBridge.SourceControl
                     }
                     else
                     {
-                        string item = GetItemFileNameFromPropertiesFileName(change.Item.item);
+                        string item = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(change.Item.item);
                         bool itemFileIncludedInChanges = false;
                         foreach (Change itemChange in changeset.Changes)
                         {
@@ -838,7 +837,7 @@ namespace SvnBridge.SourceControl
                         }
                         if (!itemFileIncludedInChanges)
                         {
-                            ItemType itemType = change.Item.item.EndsWith(propFolderPlusSlash + Constants.FolderPropFile) ? ItemType.Folder : ItemType.File;
+                            ItemType itemType = WebDAVPropertyStorageAdaptor.IsPropertyFileType_ForFolderProps(change.Item.item) ? ItemType.Folder : ItemType.File;
                             SourceItem sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, itemType, item, change.Item.cs, change.Item.len, change.Item.date, null);
 
                             sourceItemHistory.Changes.Add(new SourceItemChange(sourceItem, ChangeType.Edit));
@@ -1148,7 +1147,7 @@ namespace SvnBridge.SourceControl
                             bool itemMightBePropStorageItem = (returnPropertyFiles);
                             if (itemMightBePropStorageItem)
                             {
-                                string itemPropPath = GetPropertiesFileName(path, item.ItemType);
+                                string itemPropPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, item.ItemType);
                                 bool haveCorrectlyCasedItem_Prop = item.Name.Equals(itemPropPath);
                                 if (haveCorrectlyCasedItem_Prop)
                                     itemExists = true;
@@ -1529,8 +1528,8 @@ namespace SvnBridge.SourceControl
             if ((recursion != Recursion.None) && (recursion != Recursion.OneLevel))
                 return;
 
-            string propertiesForFile = GetPropertiesFileName(path, ItemType.File);
-            string propertiesForFolder = GetPropertiesFileName(path, ItemType.Folder);
+            string propertiesForFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.File);
+            string propertiesForFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, ItemType.Folder);
             string propertiesForFolderItems = path + "/" + Constants.PropFolder;
 
             if (recursion == Recursion.None)
@@ -1603,9 +1602,9 @@ namespace SvnBridge.SourceControl
                     List<string> propertiesForSubFolders = new List<string>();
                     foreach (SourceItem item in sourceItems)
                     {
-                        if (item.ItemType == ItemType.Folder && !IsPropertyFolder(item.RemoteName))
+                        if (item.ItemType == ItemType.Folder && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.RemoteName))
                         {
-                            string propertiesForFolder = GetPropertiesFileName(item.RemoteName, ItemType.Folder);
+                            string propertiesForFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(item.RemoteName, ItemType.Folder);
                             if (propertiesForFolder.Length <= maxLengthFromRootPath)
                                 propertiesForSubFolders.Add(propertiesForFolder);
                         }
@@ -1625,14 +1624,14 @@ namespace SvnBridge.SourceControl
             foreach (SourceItem sourceItem in sourceItems)
             {
                 ItemMetaData item = SCMHelpers.ConvertSourceItem(sourceItem, rootPath, SCMHelpers.UnknownAuthorMarker);
-                bool isPropertyFile = IsPropertyFile(item.Name);
+                bool isPropertyFile = WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Name);
                 if (isPropertyFile && !returnPropertyFiles)
                 {
-                    string itemPath = GetItemFileNameFromPropertiesFileName(item.Name);
+                    string itemPath = WebDAVPropertyStorageAdaptor.GetItemFileNameFromPropertiesFileName(item.Name);
                     itemPropertyRevision[itemPath] = item.Revision;
                     properties[itemPath] = Helper.DeserializeXml<ItemProperties>(ReadFile(item));
                 }
-                else if ((!isPropertyFile && !IsPropertyFolder(item.Name)) || returnPropertyFiles)
+                else if ((!isPropertyFile && !WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Name)) || returnPropertyFiles)
                 {
                     // FIXME: this optimistic handling relies on a folder-type item always being listed
                     // prior to its file-type content, which may sometimes not be the case.
@@ -1909,48 +1908,30 @@ namespace SvnBridge.SourceControl
             }
         }
 
-        /// <summary>
-        /// Hotpath performance tweak helper [user code first calls this fast unspecific check,
-        /// then iff(!) found (rarely) does more specific ones, whether property file/folder...]
-        /// </summary>
-        /// <param name="path">item path</param>
-        /// <returns>true in case path seems to be a path used for storage of SVN properties, else false</returns>
-        private static bool IsSuspectedPropertyStuff(string path)
-        {
-            return (path.Contains(Constants.PropFolder));
-        }
-
+        // These public-interface property file system helpers,
+        // while not necessarily being a precise part of this class,
+        // probably ought to remain here since the provider class
+        // is the main SCM reference for other parts of the library,
+        // and, most importantly, since the specific property storage method used
+        // is an internal implementation detail of the provider interface,
+        // thus it is the one responsible for offering this info.
+        // Also, kept them non-static since otherwise
+        // one would have to invoke them using the specific class *type*
+        // rather than any flexibly-assigned class *object*,
+        // which is an abstraction handling inconvenience that I would not want.
         public bool IsPropertyFile(string path)
         {
-            if (IsSuspectedPropertyStuff(path))
-            { // found!? --> do precise checks.
-                if (path.StartsWith(propFolderPlusSlash) || path.Contains("/" + propFolderPlusSlash))
-                    return true;
-            }
-            return false;
+            return WebDAVPropertyStorageAdaptor.IsPropertyFileType(path);
         }
 
         public bool IsPropertyFolder(string path)
         {
-            if (IsSuspectedPropertyStuff(path))
-            { // found!? --> do precise checks.
-                if (path.Equals(Constants.PropFolder) || path.EndsWith("/" + Constants.PropFolder))
-                    return true;
-            }
-            return false;
+            return WebDAVPropertyStorageAdaptor.IsPropertyFolderType(path);
         }
 
         public bool IsPropertyFolderElement(string path)
         {
-            if (IsSuspectedPropertyStuff(path))
-            {
-                return (
-                    (path.StartsWith(propFolderPlusSlash) ||
-                     path.EndsWith("/" + Constants.PropFolder) ||
-                     path.Contains("/" + propFolderPlusSlash))
-                );
-            }
-            return false;
+            return WebDAVPropertyStorageAdaptor.IsPropertyFolderElement(path);
         }
 
         private static void UpdateItemRevisionsBasedOnPropertyItemRevisions(IDictionary<string, FolderMetaData> folders, IEnumerable<KeyValuePair<string, int>> itemPropertyRevision)
@@ -2028,11 +2009,11 @@ namespace SvnBridge.SourceControl
                 foreach (ActivityItem item in activity.MergeList)
                 {
                     ActivityItem newItem = item;
-                    if (!IsPropertyFolder(item.Path))
+                    if (!WebDAVPropertyStorageAdaptor.IsPropertyFolderType(item.Path))
                     {
-                        if (IsPropertyFile(item.Path))
+                        if (WebDAVPropertyStorageAdaptor.IsPropertyFileType(item.Path))
                         {
-                            string path = item.Path.Replace("/" + propFolderPlusSlash, "/");
+                            string path = item.Path.Replace("/" + WebDAVPropertyStorageAdaptor.propFolderPlusSlash, "/");
                             ItemType newItemType = item.FileType;
                             if (path.EndsWith("/" + Constants.FolderPropFile))
                             {
@@ -2392,56 +2373,6 @@ namespace SvnBridge.SourceControl
             });
         }
 
-        private static string GetPropertiesFolderName(string path, ItemType itemType)
-        {
-            if (itemType == ItemType.Folder)
-            {
-                if (path.Equals("/"))
-                    return "/" + Constants.PropFolder;
-                return path + "/" + Constants.PropFolder;
-            }
-            if (path.LastIndexOf('/') != -1)
-                return path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder;
-            return Constants.PropFolder;
-        }
-
-        private static string GetItemFileNameFromPropertiesFileName(string path)
-        {
-            string itemPath = path;
-            if (itemPath.StartsWith(propFolderPlusSlash))
-            {
-              if (itemPath.Equals(propFolderPlusSlash + Constants.FolderPropFile))
-              {
-                itemPath = "";
-              }
-              else
-                itemPath = path.Substring(propFolderPlusSlash.Length);
-            }
-            else
-            {
-                itemPath = itemPath.Replace("/" + propFolderPlusSlash + Constants.FolderPropFile, "");
-                itemPath = itemPath.Replace("/" + propFolderPlusSlash, "/");
-            }
-            return itemPath;
-        }
-
-        private static string GetPropertiesFileName(string path, ItemType itemType)
-        {
-            if (itemType == ItemType.Folder)
-            {
-                if (path.Equals("/"))
-                    return "/" + propFolderPlusSlash + Constants.FolderPropFile;
-                return path + "/" + propFolderPlusSlash + Constants.FolderPropFile;
-            }
-            if (path.LastIndexOf('/') != -1)
-            {
-                return
-                    path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder +
-                    path.Substring(path.LastIndexOf('/'));
-            }
-            return propFolderPlusSlash + path;
-        }
-
         private void ProcessDeleteItem(string activityId, string path)
         {
             ActivityRepository.Use(activityId, delegate(Activity activity)
@@ -2458,7 +2389,7 @@ namespace SvnBridge.SourceControl
 
                 if (item.ItemType != ItemType.Folder)
                 {
-                    string propertiesFile = GetPropertiesFileName(path, item.ItemType);
+                    string propertiesFile = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, item.ItemType);
                     DeleteItem(activityId, propertiesFile);
                 }
 
@@ -2475,7 +2406,7 @@ namespace SvnBridge.SourceControl
             {
                 ItemMetaData item;
                 {
-                    string propertiesPath = GetPropertiesFileName(path, itemType);
+                    string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
                     string cacheKey = "ReadPropertiesForItem_" + propertiesPath;
                     CachedResult cachedResult = cache.Get(cacheKey);
 
@@ -2521,8 +2452,8 @@ namespace SvnBridge.SourceControl
                     {
                         propertiesToAdd.Remove(removedProperty);
                     }
-                    string propertiesPath = GetPropertiesFileName(path, itemType);
-                    string propertiesFolder = GetPropertiesFolderName(path, itemType);
+                    string propertiesPath = WebDAVPropertyStorageAdaptor.GetPropertiesFileName(path, itemType);
+                    string propertiesFolder = WebDAVPropertyStorageAdaptor.GetPropertiesFolderName(path, itemType);
                     ItemMetaData propertiesFolderItem = GetItems(LATEST_VERSION, propertiesFolder, Recursion.None, true);
                     if ((propertiesFolderItem == null) && !activity.Collections.Contains(propertiesFolder))
                     {
@@ -3088,6 +3019,125 @@ namespace SvnBridge.SourceControl
                 serverUrl, credentials,
                 activityId, serverItems
             );
+        }
+    }
+
+    /// <summary>
+    /// Encapsulates internal knowledge about the locations
+    /// where storage of WebDAV/SVN-specific properties happens.
+    /// Perfect encapsulation would result in simply being able to swap this implementation for another one
+    /// and have a completely differently implemented storage mechanism for WebDAV properties.
+    /// </summary>
+    internal sealed class WebDAVPropertyStorageAdaptor
+    {
+        // FIXME: this member ought to be made private, with suitably slim helpers offered to users,
+        // but for now I will not do that (in order to avoid bugs from excessive changes).
+        // And all TFSSourceControlProvider uses of Constants.PropFolder ought to be moved here, too...
+        public const string propFolderPlusSlash = Constants.PropFolder + "/";
+
+        public static string GetPropertiesFolderName(string path, ItemType itemType)
+        {
+            if (itemType == ItemType.Folder)
+            {
+                if (path.Equals("/"))
+                    return "/" + Constants.PropFolder;
+                return path + "/" + Constants.PropFolder;
+            }
+            if (path.LastIndexOf('/') != -1)
+                return path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder;
+            return Constants.PropFolder;
+        }
+
+        public static string GetPropertiesFileName(string path, ItemType itemType)
+        {
+            if (itemType == ItemType.Folder)
+            {
+                if (path.Equals("/"))
+                    return "/" + propFolderPlusSlash + Constants.FolderPropFile;
+                return path + "/" + propFolderPlusSlash + Constants.FolderPropFile;
+            }
+            if (path.LastIndexOf('/') != -1)
+            {
+                return
+                    path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder +
+                    path.Substring(path.LastIndexOf('/'));
+            }
+            return propFolderPlusSlash + path;
+        }
+
+        public static string GetItemFileNameFromPropertiesFileName(string path)
+        {
+            string itemPath = path;
+            if (itemPath.StartsWith(propFolderPlusSlash))
+            {
+                if (itemPath.Equals(propFolderPlusSlash + Constants.FolderPropFile))
+                {
+                    itemPath = "";
+                }
+                else
+                    itemPath = path.Substring(propFolderPlusSlash.Length);
+            }
+            else
+            {
+                itemPath = itemPath.Replace("/" + propFolderPlusSlash + Constants.FolderPropFile, "");
+                itemPath = itemPath.Replace("/" + propFolderPlusSlash, "/");
+            }
+            return itemPath;
+        }
+
+        /// <summary>
+        /// Hotpath performance tweak helper [user code first calls this fast unspecific check,
+        /// then iff(!) found (rarely) does more specific ones, whether property file/folder...]
+        /// </summary>
+        /// <param name="path">item path</param>
+        /// <returns>true in case path seems to be a path used for storage of SVN properties, else false</returns>
+        private static bool IsSuspectedPropertyStuff(string path)
+        {
+            return (path.Contains(Constants.PropFolder));
+        }
+
+        public static bool IsPropertyFileType(string path)
+        {
+            if (IsSuspectedPropertyStuff(path))
+            { // found!? --> do precise checks.
+                if (path.StartsWith(propFolderPlusSlash) || path.Contains("/" + propFolderPlusSlash))
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool IsPropertyFolderType(string path)
+        {
+            if (IsSuspectedPropertyStuff(path))
+            { // found!? --> do precise checks.
+                if (path.Equals(Constants.PropFolder) || path.EndsWith("/" + Constants.PropFolder))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Indicates whether the location given is the property file
+        /// which stores the properties of a folder.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static bool IsPropertyFileType_ForFolderProps(string path)
+        {
+            return path.EndsWith(WebDAVPropertyStorageAdaptor.propFolderPlusSlash + Constants.FolderPropFile);
+        }
+
+        public static bool IsPropertyFolderElement(string path)
+        {
+            if (IsSuspectedPropertyStuff(path))
+            {
+                return (
+                     (path.StartsWith(propFolderPlusSlash) ||
+                      path.EndsWith("/" + Constants.PropFolder) ||
+                      path.Contains("/" + propFolderPlusSlash))
+                );
+            }
+            return false;
         }
     }
 }
