@@ -564,10 +564,17 @@ namespace SvnBridge.Infrastructure
         {
             bool isSubmitted = false;
 
-            IAsyncResult ar = BeginDownloadItemData(
-                item);
+            // Warning: potential race window!
+            // Since BeginReadFile() might happen to fully process things instantly (who knows...),
+            // this might result in the callback getting called prior to us
+            // even having enqueued the externally generated IAsyncResult,
+            // thus the callback's lookup would come up empty.
+            // Thus we need to extend scope of the lookup table's lock
+            // *prior* to even starting the operation.
             lock (dictAsync)
             {
+                IAsyncResult ar = BeginDownloadItemData(
+                    item);
                 dictAsync.Add(
                     ar,
                     item);
@@ -620,6 +627,10 @@ namespace SvnBridge.Infrastructure
             }
             finally
             {
+                // Definitely ensure releasing the slot,
+                // and precisely in a reliable "finally"
+                // at the very end of the callback
+                // which signalled end of slot processing.
                 monitoredComm.RequestSlotRelease();
 
                 // Ultimately, make damn sure to *always* notify
@@ -652,12 +663,18 @@ namespace SvnBridge.Infrastructure
             // End()
             lock (dictAsync)
             {
-                item = dictAsync[ar];
-                dictAsync.Remove(ar);
+                try
+                {
+                    item = dictAsync[ar];
+                    dictAsync.Remove(
+                        ar);
+                }
+                finally
+                {
+                    data = EndDownloadItemData(
+                        ar);
+                }
             }
-
-            data = EndDownloadItemData(
-                ar);
         }
 
         private IAsyncResult BeginDownloadItemData(
