@@ -76,10 +76,6 @@ namespace SvnBridge.Net
         }
 
         /// <remarks>
-        /// NOTE: this method could (and did!) get called _multiple_ times,
-        /// thus it should better be made
-        /// to not have single-invocation-only constraints.
-        ///
         /// Since non-chunked operation may write a full content body *once* only,
         /// it would likely be a better idea to move writeout from Flush()
         /// (someone might call Flush() multiple times, and the first one would happen with
@@ -87,8 +83,51 @@ namespace SvnBridge.Net
         /// UNFORTUNATELY in some cases (Listener.cs FlushConnection())
         /// Close() will not be called on shutdown (why!?!?),
         /// thus we have to resort to sending the buffer here for now.
+        /// UPDATE: hopefully handling is more suitable now...
         /// </remarks>
         public override void Flush()
+        {
+            bool skipFlush = IsInterimFlushProhibited;
+            if (!(skipFlush))
+            {
+                FlushDo();
+            }
+        }
+
+        /// <summary>
+        /// Comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// Due to complex handling here
+        /// (class handles both header parts *and* content part!),
+        /// in case of non-chunked operation
+        /// we cannot allow interim Flush()
+        /// since that would risk writing headers
+        /// which would indicate Content-Length:
+        /// as length of *currently partially finished* length
+        /// (in case of a very early Flush()
+        /// this would even lead to zero Content-Length:!).
+        /// </remarks>
+        private bool IsInterimFlushProhibited
+        {
+            get
+            {
+                bool isInterimFlushProhibited;
+
+                bool isPlainHugeBlobData = !(response.SendChunked);
+                bool needWholeDataForHeaderInfo = (isPlainHugeBlobData);
+                isInterimFlushProhibited = (needWholeDataForHeaderInfo);
+
+                return isInterimFlushProhibited;
+            }
+        }
+
+        /// <remarks>
+        /// NOTE: this method could (and did!) get called _multiple_ times,
+        /// thus it should better be made
+        /// to not have single-invocation-only constraints.
+        /// </remarks>
+        private void FlushDo()
         {
             if (!flushed)
             {
@@ -112,13 +151,13 @@ namespace SvnBridge.Net
 
         public override void Close()
         {
-            Flush(); // may write header! (written *FIRST*!)
+            FlushDo(); // may write header! (written *FIRST*!)
 
             if (response.SendChunked)
             {
                 flushed = false;
                 stream.Write(chunkFooterFinalZeroChunk, 0, chunkFooterFinalZeroChunk.Length);
-                Flush(); // ...and a second flush!
+                FlushDo(); // ...and a second flush!
             }
             // FIXME: hmm... should we Close() our wrapped Stream member here, too!?
             // Most likely not... (some subsequent output handling might take place).
