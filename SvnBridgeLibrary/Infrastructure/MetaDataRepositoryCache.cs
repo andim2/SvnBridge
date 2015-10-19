@@ -250,7 +250,7 @@ namespace SvnBridge.Infrastructure
         {
             string parentDirectory = GetParentName(serverPath);
 
-            if (parentDirectory == "$")
+            if (IsRootPath(parentDirectory))
                 return;
 
             bool parentDirDoesNotExist =
@@ -291,7 +291,7 @@ namespace SvnBridge.Infrastructure
             if (lastIndexOfSlash == -1)
                 return name;
             string parentPath = name.Substring(0, lastIndexOfSlash);
-            if (parentPath == "$")
+            if (IsRootPath(parentPath))
                 return Constants.ServerRootPath;
             return parentPath ;
         }
@@ -326,6 +326,11 @@ namespace SvnBridge.Infrastructure
         public void ClearCache()
         {
             persistentCache.Clear();
+        }
+
+        private static bool IsRootPath(string path)
+        {
+            return path == "$";
         }
     }
 }
