@@ -429,6 +429,13 @@ namespace SvnBridge.Handlers
     }
 
     /// <summary>
+    /// Base class for property requests ([B]PROPFIND, [B]PROPPATCH)
+    /// </summary>
+    public abstract class PropRequestHandlerBase : RequestHandlerBase
+    {
+    }
+
+    /// <summary>
     /// Contains generic helpers for WebDAV stream generation etc.
     /// </summary>
     public class WebDAVGeneratorHelpers

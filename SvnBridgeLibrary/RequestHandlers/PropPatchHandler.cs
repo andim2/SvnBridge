@@ -9,7 +9,7 @@ using SvnBridge.SourceControl;
 
 namespace SvnBridge.Handlers
 {
-	public class PropPatchHandler : RequestHandlerBase
+	public class PropPatchHandler : PropRequestHandlerBase
 	{
         protected override void Handle(
             IHttpContext context,

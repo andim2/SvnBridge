@@ -12,7 +12,7 @@ using SvnBridge.Utility; // Helper.*
 
 namespace SvnBridge.Handlers
 {
-    public class PropFindHandler : RequestHandlerBase
+    public class PropFindHandler : PropRequestHandlerBase
     {
         private static bool _doLogFile /* = false */ = false /* CS0649 */;
 
