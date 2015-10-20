@@ -3230,6 +3230,10 @@ namespace SvnBridge.SourceControl
         }
 
         /// <remarks>
+        /// I strongly suspect
+        /// that "per-item" authors within the same revision
+        /// *are* same author since it's simply content of the very same commit!!
+        ///
         /// XXX Note that there's a bug remaining:
         /// It seems for folders (as opposed to files!),
         /// ItemSet[] TFSSourceControlService.QueryItems()
@@ -3253,7 +3257,8 @@ namespace SvnBridge.SourceControl
             string author = null;
             foreach (SourceItem sourceItem in sourceItems)
             {
-                bool needNewLookup = true;
+                bool isSameRevision = (versionSpecSourceItem.cs == sourceItem.RemoteChangesetId);
+                bool needNewLookup = (!isSameRevision) || (null == author);
                 if (needNewLookup)
                 {
                     versionSpecSourceItem.cs = sourceItem.RemoteChangesetId;
