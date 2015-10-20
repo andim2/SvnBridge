@@ -181,5 +181,10 @@ namespace SvnBridge.Handlers
 			output.Write("</D:response>\n");
 			output.Write("</D:multistatus>\n");
 		}
+
+        private static bool DetermineSkipOKResults(IHttpRequest request)
+        {
+            return DetermineBriefOutput(request);
+        }
 	}
 }

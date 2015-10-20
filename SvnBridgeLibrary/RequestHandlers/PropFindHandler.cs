@@ -711,5 +711,10 @@ namespace SvnBridge.Handlers
                               || itemPath.Equals("/tags", StringComparison.OrdinalIgnoreCase));
             return isStdlayoutSubPath;
         }
+
+        private static bool DetermineSkipNotFoundResults(IHttpRequest request)
+        {
+            return DetermineBriefOutput(request);
+        }
     }
 }

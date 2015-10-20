@@ -503,6 +503,21 @@ namespace SvnBridge.Handlers
         {
             return prop.LocalName.Equals(name);
         }
+
+        /// <summary>
+        /// Analyzes HTTP Brief header
+        /// to determine whether [B]PROPFIND, [B]PROPPATCH are allowed
+        /// to return certain status results in brief (shortened/skipped) output form.
+        /// </summary>
+        protected static bool DetermineBriefOutput(IHttpRequest request)
+        {
+            bool brief_default = false;
+            bool brief = brief_default;
+            string briefHeader = request.Headers["Brief"];
+            if ((null != briefHeader) && (briefHeader.Equals("t")))
+                brief = true;
+            return brief;
+        }
     }
 
     /// <summary>
