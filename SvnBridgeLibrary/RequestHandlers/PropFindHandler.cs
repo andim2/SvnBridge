@@ -533,8 +533,8 @@ namespace SvnBridge.Handlers
         private static void WriteMultiStatusStart(TextWriter writer, List<XmlElement> properties)
         {
             if (properties.Count > 1 ||
-               (properties.Count == 1 && properties[0].LocalName == "deadprop-count") ||
-               (properties.Count == 1 && properties[0].LocalName == "md5-checksum"))
+               (properties.Count == 1 && IsPropertyName(properties[0], "deadprop-count")) ||
+               (properties.Count == 1 && IsPropertyName(properties[0], "md5-checksum")))
             {
                 writer.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns1=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:ns0=\"DAV:\">\n");
             }
@@ -554,7 +554,7 @@ namespace SvnBridge.Handlers
             bool writeGetContentLengthForFolder = isFolder && PropertiesContains(properties, "getcontentlength");
 
             output.Write("<D:response xmlns:lp1=\"DAV:\"");
-            if (!(properties.Count == 1 && properties[0].LocalName == "resourcetype"))
+            if (!(properties.Count == 1 && IsPropertyName(properties[0], "resourcetype")))
             {
                 output.Write(" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\"");
             }
@@ -583,7 +583,7 @@ namespace SvnBridge.Handlers
             foreach (XmlElement prop in properties)
             {
                 XmlElement property = doc.CreateElement(prop.LocalName, prop.NamespaceURI);
-                if (!(isFolder && prop.LocalName == "getcontentlength"))
+                if (!(isFolder && IsPropertyName(prop, "getcontentlength")))
                 {
                     propertyResults.Add(node.GetProperty(this, property.LocalName));
                 }
@@ -617,7 +617,7 @@ namespace SvnBridge.Handlers
         {
             foreach (XmlElement property in properties)
             {
-                if (property.LocalName == propertyName)
+                if (IsPropertyName(property, propertyName))
                 {
                     return true;
                 }

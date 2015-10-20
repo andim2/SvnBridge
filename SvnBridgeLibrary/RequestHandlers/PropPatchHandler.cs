@@ -85,7 +85,7 @@ namespace SvnBridge.Handlers
             // *then* start generating the XML output given those results.
 			if (request.Set.Prop.Properties.Count > 0)
 			{
-				if (request.Set.Prop.Properties[0].LocalName == "log")
+				if (IsPropertyName(request.Set.Prop.Properties[0], "log"))
 					OutputLogResponse(requestPath, request, sourceControlProvider, extendedNamespaces, activityId, output);
 				else
 					OutputSetPropertiesResponse(requestPath, request, sourceControlProvider, activityId, output, itemPath);

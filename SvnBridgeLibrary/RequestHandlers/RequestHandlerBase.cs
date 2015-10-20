@@ -2,6 +2,7 @@ using System;
 using System.IO; // Path.Combine(), Stream, StreamWriter, TextWriter
 using System.Net; // ICredentials
 using System.Text; // Encoding
+using System.Xml; // XmlElement
 using SvnBridge.Interfaces;
 using SvnBridge.Net; // RequestCache
 using SvnBridge.SourceControl;
@@ -433,6 +434,10 @@ namespace SvnBridge.Handlers
     /// </summary>
     public abstract class PropRequestHandlerBase : RequestHandlerBase
     {
+        protected static bool IsPropertyName(XmlElement prop, string name)
+        {
+            return prop.LocalName == name;
+        }
     }
 
     /// <summary>
