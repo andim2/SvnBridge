@@ -2563,7 +2563,8 @@ namespace SvnBridge.SourceControl
 
                     MergeResponse_OverrideItem(ref newItem);
 
-                    if (!sortedMergeResponse.Contains(newItem.Path))
+                    bool isAlreadyListed = sortedMergeResponse.Contains(newItem.Path);
+                    if (!isAlreadyListed)
                     {
                         sortedMergeResponse.Add(newItem.Path);
 
