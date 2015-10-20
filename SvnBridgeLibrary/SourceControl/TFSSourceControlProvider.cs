@@ -2568,11 +2568,11 @@ namespace SvnBridge.SourceControl
                             if (path.Equals(""))
                                 path = "/";
 
-                            MergeActivityResponseItem responseItem =
-                                new MergeActivityResponseItem(newItem.FileType, path);
                             if (newItem.Action != ActivityItemAction.Deleted && newItem.Action != ActivityItemAction.Branch &&
                                 newItem.Action != ActivityItemAction.RenameDelete)
                             {
+                                MergeActivityResponseItem responseItem =
+                                    new MergeActivityResponseItem(newItem.FileType, path);
                                 mergeResponse.Items.Add(responseItem);
                             }
 
