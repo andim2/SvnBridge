@@ -376,10 +376,15 @@ namespace SvnBridge.Handlers
                             <S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
                             "
                         );
-                        StreamItemDataAsTxDeltaElem(
-                            output,
-                            sourceControlProvider,
-                            item);
+                        // This will happen e.g. in case the item state currently is Deleted.
+                        bool haveItemDataAtThisRevision = (null != item);
+                        if (haveItemDataAtThisRevision)
+                        {
+                            StreamItemDataAsTxDeltaElem(
+                                output,
+                                sourceControlProvider,
+                                item);
+                        }
                         output.Write("</S:file-rev>");
                     }
                 }
