@@ -603,6 +603,8 @@ namespace SvnBridge.SourceControl
         // but rather be provided by a corresponding *interface* or base class.
         public const int LATEST_VERSION = -1;
         private readonly DebugRandomActivator debugRandomActivator;
+        private readonly bool davPropertiesIsAllowedRead = false;
+        private readonly bool davPropertiesIsAllowedWrite = false;
         private WebDAVPropertyStorageAdaptor propsSerializer;
 
         public TFSSourceControlProvider(
@@ -2992,6 +2994,14 @@ namespace SvnBridge.SourceControl
         private ItemProperties ReadPropertiesForItem(string path, ItemType itemType, int version)
         {
             ItemProperties properties = null;
+
+            bool isAllowedAccess = DAVPropertiesIsAllowedRead;
+            // Keep this check located right before access layer implementation:
+            if (!(isAllowedAccess))
+            {
+                return null;
+            }
+
             {
                 ItemMetaData itemForItemProperties = GetItemForItemProperties(path, itemType, version);
 
@@ -3022,6 +3032,13 @@ namespace SvnBridge.SourceControl
 
         private void UpdateDAVPropertiesOfItem(string activityId, Activity activity, string path, DAVPropertiesChanges propsChangesOfPath)
         {
+            bool isAllowedAccess = DAVPropertiesIsAllowedWrite;
+            // Keep this check located right before access layer implementation:
+            if (!(isAllowedAccess))
+            {
+                return;
+            }
+
             ItemMetaData item;
             ItemType itemType;
 
@@ -3038,6 +3055,28 @@ namespace SvnBridge.SourceControl
 
             bool reportUpdatedFile = (null != item);
             WebDAVPropsSerializer.PropertiesWrite(activityId, propertiesPath, newItemProperties, reportUpdatedFile);
+        }
+
+        private bool DAVPropertiesIsAllowedRead
+        {
+            get
+            {
+                return this.davPropertiesIsAllowedRead;
+            }
+        }
+
+        /// <summary>
+        /// Helper to indicate whether writing of DAV property storage data is allowed.
+        /// </summary>
+        /// <remarks>
+        /// See description at config layer.
+        /// </remarks>
+        private bool DAVPropertiesIsAllowedWrite
+        {
+            get
+            {
+                return this.davPropertiesIsAllowedWrite;
+            }
         }
 
         private static ItemProperties CalculateNewSetOfDAVProperties(ItemProperties priorProperties, DAVPropertiesChanges propsChangesOfPath)
