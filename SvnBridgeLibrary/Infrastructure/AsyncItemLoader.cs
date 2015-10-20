@@ -78,6 +78,11 @@ namespace SvnBridge.Infrastructure
                         break;
                 }
 
+                if (!(haveUnusedItemLoadBufferCapacity))
+                {
+                    break;
+                }
+
                 if (cancelOperation)
                     break;
 
