@@ -2554,36 +2554,38 @@ namespace SvnBridge.SourceControl
             {
                 foreach (ActivityItem item in activity.MergeList)
                 {
-                    if (!MergeResponse_ShouldBeIgnored(item.Path))
+                    if (MergeResponse_ShouldBeIgnored(item.Path))
                     {
-                        ActivityItem newItem = item;
+                        continue;
+                    }
 
-                        MergeResponse_OverrideItem(ref newItem);
+                    ActivityItem newItem = item;
 
-                        if (!sortedMergeResponse.Contains(newItem.Path))
+                    MergeResponse_OverrideItem(ref newItem);
+
+                    if (!sortedMergeResponse.Contains(newItem.Path))
+                    {
+                        sortedMergeResponse.Add(newItem.Path);
+
+                        string path = newItem.Path.Substring(rootPath.Length - 1);
+                        if (path.Equals(""))
+                            path = "/";
+
+                        if (newItem.Action != ActivityItemAction.Deleted && newItem.Action != ActivityItemAction.Branch &&
+                            newItem.Action != ActivityItemAction.RenameDelete)
                         {
-                            sortedMergeResponse.Add(newItem.Path);
+                            MergeActivityResponseItem responseItem =
+                                new MergeActivityResponseItem(newItem.FileType, path);
+                            mergeResponse.Items.Add(responseItem);
+                        }
 
-                            string path = newItem.Path.Substring(rootPath.Length - 1);
-                            if (path.Equals(""))
-                                path = "/";
+                        bool mayNeedBaseFolder =
+                            (newItem.Action == ActivityItemAction.New) || (newItem.Action == ActivityItemAction.Deleted) ||
+                            (newItem.Action == ActivityItemAction.RenameDelete);
 
-                            if (newItem.Action != ActivityItemAction.Deleted && newItem.Action != ActivityItemAction.Branch &&
-                                newItem.Action != ActivityItemAction.RenameDelete)
-                            {
-                                MergeActivityResponseItem responseItem =
-                                    new MergeActivityResponseItem(newItem.FileType, path);
-                                mergeResponse.Items.Add(responseItem);
-                            }
-
-                            bool mayNeedBaseFolder =
-                                (newItem.Action == ActivityItemAction.New) || (newItem.Action == ActivityItemAction.Deleted) ||
-                                (newItem.Action == ActivityItemAction.RenameDelete);
-
-                            if (mayNeedBaseFolder)
-                            {
-                                MergeResponse_AddBaseFolderIfRequired(activityId, newItem, baseFolders, mergeResponse);
-                            }
+                        if (mayNeedBaseFolder)
+                        {
+                            MergeResponse_AddBaseFolderIfRequired(activityId, newItem, baseFolders, mergeResponse);
                         }
                     }
                 }
