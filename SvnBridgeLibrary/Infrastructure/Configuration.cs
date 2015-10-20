@@ -13,6 +13,8 @@ namespace SvnBridge.Infrastructure
             CacheEnabled,
             CodePlexWorkItemUrl,
             DomainIncludesProjectName,
+            DAVPropertiesIsAllowedRead,
+            DAVPropertiesIsAllowedWrite,
             LogCancelErrors,
             LogPath,
             NetworkSvnUseInsecureNonLoopbackBind,
@@ -89,6 +91,23 @@ namespace SvnBridge.Infrastructure
         public static string CodePlexWorkItemUrl
         {
             get { return ReadConfig<string>(ConfigSettings.CodePlexWorkItemUrl, null); }
+        }
+
+        public static bool DAVPropertiesIsAllowedRead
+        {
+            get { return ReadConfig<bool>(ConfigSettings.DAVPropertiesIsAllowedRead, false); }
+        }
+
+        /// <remarks>
+        /// DAV property storage handling currently still is problematic / incomplete.
+        /// Since writing properties will be ensued by future read activity
+        /// (which can end up problematic),
+        /// we better don't enable writing by default,
+        /// at least as long as we know that it's still problematic.
+        /// </remarks>
+        public static bool DAVPropertiesIsAllowedWrite
+        {
+            get { return ReadConfig<bool>(ConfigSettings.DAVPropertiesIsAllowedWrite, false); }
         }
 
         public static string LogPath

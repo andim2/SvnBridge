@@ -603,8 +603,8 @@ namespace SvnBridge.SourceControl
         // but rather be provided by a corresponding *interface* or base class.
         public const int LATEST_VERSION = -1;
         private readonly DebugRandomActivator debugRandomActivator;
-        private readonly bool davPropertiesIsAllowedRead = false;
-        private readonly bool davPropertiesIsAllowedWrite = false;
+        private readonly bool davPropertiesIsAllowedRead = Configuration.DAVPropertiesIsAllowedRead;
+        private readonly bool davPropertiesIsAllowedWrite = Configuration.DAVPropertiesIsAllowedWrite;
         private WebDAVPropertyStorageAdaptor propsSerializer;
 
         public TFSSourceControlProvider(
