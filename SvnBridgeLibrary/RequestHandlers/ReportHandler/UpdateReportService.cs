@@ -10,6 +10,37 @@ using SvnBridge.Utility; // Helper.CooperativeSleep(), Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {
+    /// <summary>
+    /// Provides some non-report helpers.
+    /// </summary>
+    /// <remarks>
+    /// Methods should possibly be moved over to more central helpers classes eventually.
+    /// NOTE: should probably keep any specifics about content generation format (XML syntax)
+    /// out of these helpers...
+    /// </remarks>
+    internal class URSHelpers
+    {
+        public static void StreamItemDataAsTxDelta(
+            StreamWriter output,
+            TFSSourceControlProvider sourceControlProvider,
+            ItemMetaData item)
+        {
+            byte[] itemData = sourceControlProvider.ReadFile(item);
+            string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
+            PushTxDeltaData(
+                output,
+                txdelta);
+        }
+
+        public static void PushTxDeltaData(
+            TextWriter output,
+            string result_Base64DiffData)
+        {
+            output.Write(
+                result_Base64DiffData);
+        }
+    }
+
 	internal class UpdateReportService
 	{
 		private readonly RequestHandlerBase handler;
@@ -144,7 +175,9 @@ namespace SvnBridge.Infrastructure
 
 				output.Write("<S:txdelta>");
                 // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
-                output.Write(base64DiffData);
+                URSHelpers.PushTxDeltaData(
+                    output,
+                    base64DiffData);
 				output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                 output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
                 output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");

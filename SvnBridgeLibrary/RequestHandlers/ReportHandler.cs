@@ -329,7 +329,9 @@ namespace SvnBridge.Handlers
 
                     output.Write("<S:apply-textdelta>");
                     // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
-                    output.Write(base64DiffData);
+                    URSHelpers.PushTxDeltaData(
+                        output,
+                        base64DiffData);
                     output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                     output.Write("</S:apply-textdelta>\n");
                     output.Write("<S:close-file checksum=\"{0}\"/>\n", item.Md5Hash);
@@ -388,21 +390,33 @@ namespace SvnBridge.Handlers
                             <S:rev-prop name=""svn:date"">" + Helper.FormatDate(change.Item.RemoteDate) + @"</S:rev-prop>
                             "
                         );
-                        output.Write("<S:txdelta>");
-                        byte[] itemData = sourceControlProvider.ReadFile(item);
-                        string txdelta = SvnDiffParser.GetBase64SvnDiffData(itemData);
-                        // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
-                        output.Write(txdelta);
-                        // NOTE: while other tx-delta generators have a trailing \n here,
-                        // this one doesn't
-                        // (likely doesn't need to, since for unknown reasons
-                        // the *whole* XML content here does not have \n EOL).
-                        output.Write("</S:txdelta>");
+                        StreamItemDataAsTxDeltaElem(
+                            output,
+                            sourceControlProvider,
+                            item);
                         output.Write("</S:file-rev>");
                     }
                 }
                 output.Write("</S:file-revs-report>");
             }
+        }
+
+        private static void StreamItemDataAsTxDeltaElem(
+            StreamWriter output,
+            TFSSourceControlProvider sourceControlProvider,
+            ItemMetaData item)
+        {
+            output.Write("<S:txdelta>");
+            // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):
+            URSHelpers.StreamItemDataAsTxDelta(
+                output,
+                sourceControlProvider,
+                item);
+            // NOTE: while other tx-delta generators have a trailing \n here,
+            // this one doesn't
+            // (likely doesn't need to, since for unknown reasons
+            // the *whole* XML content here does not have \n EOL).
+            output.Write("</S:txdelta>");
         }
 
         private static void SendErrorResponseCannotRunBlameOnFolder(IHttpResponse response, string serverPath)
