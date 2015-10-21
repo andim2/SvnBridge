@@ -328,17 +328,18 @@ namespace SvnBridge.Handlers
                         output.Write("<S:add-file name=\"{0}\"/>\n", Helper.EncodeB(item.Name));
                     }
 
-                    bool gotData = loader.WaitForItemLoaded(
+                    string base64DiffData;
+                    string md5Hash;
+                    bool gotData = loader.TryRobItemData(
                         item,
-                        spanLoadTimeout);
+                        spanLoadTimeout,
+                        out base64DiffData,
+                        out md5Hash);
                     if (!(gotData))
                     {
                         Helper.DebugUsefulBreakpointLocation();
                         throw new TimeoutException("Timeout while waiting for file retrieval");
                     }
-
-                    string md5Hash;
-                    var base64DiffData = item.ContentDataRobAsBase64(out md5Hash);
 
                     output.Write("<S:apply-textdelta>");
                     // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):

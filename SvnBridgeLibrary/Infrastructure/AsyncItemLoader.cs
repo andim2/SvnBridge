@@ -159,11 +159,41 @@ namespace SvnBridge.Infrastructure
 
         /// <summary>
         /// Helper for the *consumer*-side thread context,
-        /// to allow for a reliable wait on an item to have achieved "loaded" state.
+        /// to allow for reliable waiting and fetching of item data
+        /// (after item has achieved "loaded" state).
         /// </summary>
         /// <param name="item">Item whose data we will be waiting for to have finished loading</param>
         /// <param name="spanTimeout">Expiry timeout for waiting for the item's data to become loaded</param>
-        public bool WaitForItemLoaded(
+        /// <param name="base64DiffData">Receives the base64-encoded diff data</param>
+        /// <param name="md5Hash">Receives the MD5 hash which had been calculated the moment the data has been stored (ensure end-to-end validation)</param>
+        public bool TryRobItemData(
+            ItemMetaData item,
+            TimeSpan spanTimeout,
+            out string base64DiffData,
+            out string md5Hash)
+        {
+            bool gotData = false;
+
+            gotData = WaitForItemLoaded(
+                item,
+                spanTimeout);
+
+            if (gotData)
+            {
+                base64DiffData = DoRobItemData(
+                    item,
+                    out md5Hash);
+            }
+            else
+            {
+                base64DiffData = "";
+                md5Hash = "";
+            }
+
+            return gotData;
+        }
+
+        private bool WaitForItemLoaded(
             ItemMetaData item,
             TimeSpan spanTimeout)
         {
@@ -220,6 +250,18 @@ namespace SvnBridge.Infrastructure
             }
 
             return item.DataLoaded;
+        }
+
+        private string DoRobItemData(
+            ItemMetaData item,
+            out string md5Hash)
+        {
+            string base64DiffData;
+
+            base64DiffData = item.ContentDataRobAsBase64(
+                out md5Hash);
+
+            return base64DiffData;
         }
     }
 }

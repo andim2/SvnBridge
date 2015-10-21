@@ -69,15 +69,15 @@ namespace SvnBridge.Infrastructure
             out string item_Md5Hash)
         {
             TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
-            bool gotData = loader.WaitForItemLoaded(
+            bool gotData = loader.TryRobItemData(
                 item,
-                spanLoadTimeout);
+                spanLoadTimeout,
+                out item_Base64DiffData,
+                out item_Md5Hash);
             if (!(gotData))
             {
                 ReportErrorItemDataRetrievalTimeout();
             }
-
-            item_Base64DiffData = item.ContentDataRobAsBase64(out item_Md5Hash);
         }
 
         private static void ReportErrorItemDataRetrievalTimeout()
