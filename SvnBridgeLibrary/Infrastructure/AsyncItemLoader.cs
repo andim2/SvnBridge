@@ -442,6 +442,18 @@ namespace SvnBridge.Infrastructure
         }
     }
 
+    public sealed class AsyncItemLoaderExceptionTimeout : TimeoutException
+    {
+        public AsyncItemLoaderExceptionTimeout(
+            Exception innerException)
+            : base(
+                "Timeout while waiting for retrieval of filesystem item data",
+                innerException)
+        {
+            Helper.DebugUsefulBreakpointLocation();
+        }
+    }
+
     public /* no "sealed" here (class subsequently derived by Tests) */ class AsyncItemLoader
     {
         private readonly FolderMetaData folderInfo;
@@ -1061,45 +1073,16 @@ namespace SvnBridge.Infrastructure
         /// Helper for the *consumer*-side thread context,
         /// to allow for reliable waiting and fetching of item data
         /// (after item has achieved "loaded" state).
-        /// Since we currently want to avoid an interface-breaking change,
-        /// keeps serving an improper bool-result-based interface
-        /// (converted from exceptions)
-        /// rather than properly throwing exceptions to the user.
         /// </summary>
         /// <param name="item">Item whose data we will be waiting for to have finished loading</param>
         /// <param name="spanTimeout">Expiry timeout for waiting for the item's data to become loaded</param>
         /// <param name="base64DiffData">Receives the base64-encoded diff data</param>
         /// <param name="md5Hash">Receives the MD5 hash which had been calculated the moment the data has been stored (ensure end-to-end validation)</param>
-        public bool TryRobItemData(
+        public void RobItemData(
             ItemMetaData item,
             TimeSpan spanTimeout,
             out string base64DiffData,
             out string md5Hash)
-        {
-            bool gotData = false;
-
-            gotData = WaitForItemLoaded(
-                item,
-                spanTimeout);
-
-            if (gotData)
-            {
-                base64DiffData = DoRobItemData(
-                    item,
-                    out md5Hash);
-            }
-            else
-            {
-                base64DiffData = "";
-                md5Hash = "";
-            }
-
-            return gotData;
-        }
-
-        private bool WaitForItemLoaded(
-            ItemMetaData item,
-            TimeSpan spanTimeout)
         {
             try
             {
@@ -1111,13 +1094,15 @@ namespace SvnBridge.Infrastructure
                 monitoredComm_ItemConsumption.Wait(
                     item,
                     spanTimeout);
+                base64DiffData = DoRobItemData(
+                    item,
+                    out md5Hash);
             }
-            catch
+            catch (MonitoredCommBaseExceptionTimeout e)
             {
-                // Simply silence exceptions
+                throw new AsyncItemLoaderExceptionTimeout(
+                    e);
             }
-
-            return item.DataLoaded;
         }
 
         private string DoRobItemData(

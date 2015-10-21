@@ -11,7 +11,7 @@ using SvnBridge.Infrastructure;
 using SvnBridge.Interfaces;
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.EncodeB() etc.
+using SvnBridge.Utility; // Helper.EncodeB() etc.
 
 namespace SvnBridge.Handlers
 {
@@ -332,16 +332,14 @@ namespace SvnBridge.Handlers
 
                     string base64DiffData;
                     string md5Hash;
-                    bool gotData = loader.TryRobItemData(
+                    // This may throw exceptions -
+                    // I believe we can simply leave them rippling through unhandled,
+                    // since this will likely properly terminate output stream generation.
+                    loader.RobItemData(
                         item,
                         spanLoadTimeout,
                         out base64DiffData,
                         out md5Hash);
-                    if (!(gotData))
-                    {
-                        Helper.DebugUsefulBreakpointLocation();
-                        throw new TimeoutException("Timeout while waiting for file retrieval");
-                    }
 
                     output.Write("<S:apply-textdelta>");
                     // KEEP THIS WRITE ACTION SEPARATE! (avoid huge-string alloc):

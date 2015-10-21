@@ -6,7 +6,7 @@ using SvnBridge.Handlers;
 using SvnBridge.Infrastructure; // Configuration
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // DebugRandomActivator, Helper.DebugUsefulBreakpointLocation(), Helper.Encode() etc.
+using SvnBridge.Utility; // DebugRandomActivator, Helper.Encode() etc.
 
 namespace SvnBridge.Infrastructure
 {
@@ -69,21 +69,16 @@ namespace SvnBridge.Infrastructure
             out string item_Md5Hash)
         {
             TimeSpan spanLoadTimeout = TimeSpan.FromHours(2);
-            bool gotData = loader.TryRobItemData(
+            item_Base64DiffData = null;
+            item_Md5Hash = null;
+            // This may throw exceptions -
+            // I believe we can simply leave them rippling through unhandled,
+            // since this will likely properly terminate output stream generation.
+            loader.RobItemData(
                 item,
                 spanLoadTimeout,
                 out item_Base64DiffData,
                 out item_Md5Hash);
-            if (!(gotData))
-            {
-                ReportErrorItemDataRetrievalTimeout();
-            }
-        }
-
-        private static void ReportErrorItemDataRetrievalTimeout()
-        {
-            Helper.DebugUsefulBreakpointLocation();
-            throw new TimeoutException("Timeout while waiting for retrieval of filesystem item data");
         }
     }
 
