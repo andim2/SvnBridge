@@ -847,6 +847,57 @@ namespace SvnBridge.Utility
                 return needAvoidLongLivedMemoryFragmentation;
             }
         }
+
+        /// <remarks>
+        /// Could instead be doing bit-based next-increment alignment via
+        /// new = (required+(align+1) &amp; ~(align-1);
+        /// but this likely is only correct for 2^n-based align values.
+        /// </remarks>
+        public static int ValueAlignNext(
+            int oldLength,
+            int requiredLength,
+            int alignLength)
+        {
+            return ValueAlignNextImplDiv(
+                oldLength,
+                requiredLength,
+                alignLength);
+        }
+
+        /// <remarks>
+        /// ~ O(1) complexity.
+        /// </remarks>
+        private static int ValueAlignNextImplDiv(
+            int oldLength,
+            int requiredLength,
+            int alignLength)
+        {
+            int newLength;
+
+            int numSegs = (requiredLength / alignLength) + 1;
+            newLength = alignLength * numSegs;
+
+            return newLength;
+        }
+
+        /// <remarks>
+        /// Annoying complexity of ~ O(n) due to loop.
+        /// </remarks>
+        private static int ValueAlignNextImplWhile(
+            int oldLength,
+            int requiredLength,
+            int alignLength)
+        {
+            int newLength;
+
+            newLength = 0;
+            while (newLength < requiredLength)
+            {
+                newLength += alignLength;
+            }
+
+            return newLength;
+        }
 	}
 
     /// <summary>

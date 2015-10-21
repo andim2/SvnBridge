@@ -82,8 +82,7 @@ namespace SvnBridge.Utility
 
                 EnsureRequiredLengthOfWorkBuffer(
                     ref buffer,
-                    targetIndex,
-                    (int) instruction.Length);
+                    targetIndex + (int) instruction.Length);
 
                 ApplySvnDiffInstruction(
                     instruction,
@@ -100,18 +99,16 @@ namespace SvnBridge.Utility
 
         private static void EnsureRequiredLengthOfWorkBuffer(
             ref byte[] buffer,
-            int targetIndex,
-            int instructionLength)
+            int requiredLength)
         {
-            if (targetIndex + instructionLength > buffer.Length)
+            if (requiredLength > buffer.Length)
             {
                 // Figure out new _exact_ multiple of request size (avoid LOH fragmentation!!):
                 int oldLength = buffer.Length;
-                int newLength = oldLength + BUFFER_EXPAND_SIZE;
-                while (newLength < (oldLength + instructionLength))
-                {
-                  newLength += BUFFER_EXPAND_SIZE;
-                }
+                int newLength = Helper.ValueAlignNext(
+                    oldLength,
+                    requiredLength,
+                    BUFFER_EXPAND_SIZE);
 
                 Array.Resize(ref buffer, newLength);
             }
