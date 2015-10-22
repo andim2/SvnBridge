@@ -357,7 +357,7 @@ namespace SvnBridge.Net
         /// </summary>
         private static string GetDateHeaderValue()
         {
-            return Helper.FormatDateB(DateTime.Now);
+            return DateTime.UtcNow.ToString("R");
         }
     }
 }
