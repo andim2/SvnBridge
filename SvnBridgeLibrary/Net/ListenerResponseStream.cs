@@ -307,7 +307,6 @@ namespace SvnBridge.Net
 
             output.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
 
-            output.WriteLine("Date: {0}", GetDateHeaderValue());
             output.WriteLine("Server: " + Constants.SVNServerIdentificationString);
 
             List<KeyValuePair<string, string>> headers = response.Headers;
@@ -333,21 +332,27 @@ namespace SvnBridge.Net
                 }
             }
 
-            if (!response.SendChunked)
-            {
-                output.WriteLine("Content-Length: {0}", streamBuffer.Length);
-            }
-            else
-            {
-                output.WriteLine("Transfer-Encoding: chunked");
-            }
-
             if (connection != null)
             {
                 output.WriteLine("Connection: {0}", connection);
             }
 
-            output.WriteLine("Content-Type: {0}", response.ContentType);
+            if (NeedDateHeader)
+            {
+                output.WriteLine("Date: {0}", GetDateHeaderValue());
+            }
+
+            bool haveEntity = true;
+            if (haveEntity)
+            {
+                if (response.SendChunked)
+                {
+                    output.WriteLine("Transfer-Encoding: chunked");
+                }
+
+                WritePerEachEntityHeaders(
+                    output);
+            }
 
             if (!String.IsNullOrEmpty(xPadHeader))
             {
@@ -363,6 +368,31 @@ namespace SvnBridge.Net
         }
 
         /// <summary>
+        /// Comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// rfc2616 "14.18 Date":
+        /// "
+        /// The HTTP-date sent in a Date header SHOULD NOT represent a
+        /// date and time subsequent to the generation of the message. It
+        /// SHOULD represent the best available approximation of the date
+        /// and time of message generation, unless the implementation has
+        /// no means of generating a reasonably accurate date and time. In
+        /// theory, the date ought to represent the moment just before the
+        /// entity is generated. In practice, the date can be generated at
+        /// any time during the message origination without affecting its
+        /// semantic value.
+        /// "
+        /// </remarks>
+        private static bool NeedDateHeader
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Returns Date: header value
         /// as required to be compliant with RFC1123.
         /// "3.3.1 Full Date"
@@ -371,6 +401,38 @@ namespace SvnBridge.Net
         private static string GetDateHeaderValue()
         {
             return DateTime.UtcNow.ToString("R");
+        }
+
+        /// <remarks>
+        /// http://www.w3.org/Protocols/rfc2616/rfc2616-sec7.html
+        /// IMPORTANT NOTE: rfc2518 e.g. "13.4 getcontentlength Property"
+        /// seems to strongly suggest
+        /// that we actually ought to try to achieve
+        /// directly generating various entity-related headers
+        /// by doing blindingly simple queries
+        /// on the PROPFIND-supplied INode-based objects.
+        /// IOW, pseudo code:
+        /// if (null != myINode)
+        /// {
+        ///     WritePerEachEntityHeaders(
+        ///         output,
+        ///         myINode);
+        /// }
+        ///
+        /// Note that I kept order of Content-Length / Content-Type generation
+        /// since many, many unit tests check against that
+        /// (and not sure in general
+        /// whether there is a required or even recommended order).
+        /// </remarks>
+        private void WritePerEachEntityHeaders(
+            TextWriter output)
+        {
+            if (!response.SendChunked)
+            {
+                output.WriteLine("Content-Length: {0}", streamBuffer.Length);
+            }
+
+            output.WriteLine("Content-Type: {0}", response.ContentType);
         }
     }
 }
