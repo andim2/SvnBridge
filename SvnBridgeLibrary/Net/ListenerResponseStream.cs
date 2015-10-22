@@ -253,7 +253,7 @@ namespace SvnBridge.Net
 
             writer.WriteLine("HTTP/1.1 {0} {1}", response.StatusCode, statusCodeDescription);
 
-            writer.WriteLine("Date: {0}", Helper.FormatDateB(DateTime.Now));
+            writer.WriteLine("Date: {0}", GetDateHeaderValue());
             writer.WriteLine("Server: " + Constants.SVNServerIdentificationString);
 
             List<KeyValuePair<string, string>> headers = response.Headers;
@@ -347,6 +347,17 @@ namespace SvnBridge.Net
             byte[] bufferBytes = Encoding.UTF8.GetBytes(headersString);
 
             stream.Write(bufferBytes, 0, bufferBytes.Length);
+        }
+
+        /// <summary>
+        /// Returns Date: header value
+        /// as required to be compliant with RFC1123.
+        /// "3.3.1 Full Date"
+        ///   http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html
+        /// </summary>
+        private static string GetDateHeaderValue()
+        {
+            return Helper.FormatDateB(DateTime.Now);
         }
     }
 }
