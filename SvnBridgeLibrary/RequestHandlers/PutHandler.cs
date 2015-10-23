@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility;
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation()
 
 namespace SvnBridge.Handlers
 {
@@ -85,7 +85,16 @@ namespace SvnBridge.Handlers
 
         private static void ReportErrorChecksumMismatch(string details)
         {
-            throw new Exception("Checksum mismatch " + details);
+            throw new ChecksumMismatchException(details);
+        }
+
+        public sealed class ChecksumMismatchException : Exception
+        {
+            public ChecksumMismatchException(string details)
+                : base("Checksum mismatch " + details)
+            {
+                Helper.DebugUsefulBreakpointLocation();
+            }
         }
     }
 }
