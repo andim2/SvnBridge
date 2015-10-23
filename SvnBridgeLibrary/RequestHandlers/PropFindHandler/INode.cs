@@ -35,7 +35,7 @@ namespace SvnBridge.Nodes
             // But since any unsupported property request
             // may lead to questionable/problematic quality of service anyway,
             // we better fail hard, for developers to notice.
-            throw new Exception("Property not found: " + propertyName);
+            throw new NotSupportedException("Property not found/supported: " + propertyName);
         }
     }
 }

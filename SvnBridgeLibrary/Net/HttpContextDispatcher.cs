@@ -381,7 +381,7 @@ namespace SvnBridge.Net
             return CredentialsHelper.NullCredentials;
         }
 
-        public sealed class UnrecognizedAuthorizationHeaderException : Exception
+        public sealed class UnrecognizedAuthorizationHeaderException : InvalidOperationException
         {
             public UnrecognizedAuthorizationHeaderException(string authorizationHeader)
                 // Message used to show a StartsWith() result only,

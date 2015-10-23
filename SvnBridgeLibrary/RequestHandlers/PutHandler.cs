@@ -88,7 +88,7 @@ namespace SvnBridge.Handlers
             throw new ChecksumMismatchException(details);
         }
 
-        public sealed class ChecksumMismatchException : Exception
+        public sealed class ChecksumMismatchException : InvalidOperationException
         {
             public ChecksumMismatchException(string details)
                 : base("Checksum mismatch " + details)

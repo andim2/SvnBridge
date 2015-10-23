@@ -227,7 +227,7 @@ namespace SvnBridge.Utility
             }
             if (version != 0)
             {
-                throw new Exception("Unsupported SVN diff version");
+                throw new NotSupportedException("Unsupported SVN diff version");
             }
         }
 

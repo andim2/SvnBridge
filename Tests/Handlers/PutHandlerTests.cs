@@ -108,7 +108,7 @@ namespace UnitTests
         private static void AssertChecksumMismatchException(
             Exception result)
         {
-            Assert.IsAssignableFrom(typeof(Exception), result);
+            Assert.IsAssignableFrom(typeof(InvalidOperationException), result);
             Assert.Equal("Checksum mismatch with base file", result.Message);
         }
     }
