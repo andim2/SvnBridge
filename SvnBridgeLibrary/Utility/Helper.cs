@@ -1055,6 +1055,13 @@ namespace SvnBridge.Utility
 			return sb.ToString();
     }
 
+    private static string DecodeURIComponent_NonASCII(string href_utf8)
+    {
+        bool containsPercentSign = (href_utf8.Contains("%"));
+        bool likelyNeedsPercentDecoding = (containsPercentSign); // very important shortcut :)
+        return likelyNeedsPercentDecoding ? DecodeURIComponent_NonASCII_Do(href_utf8) : href_utf8;
+    }
+
     /// <remarks>
     /// Design rationale:
     /// We'll try to keep as much handling as possible
@@ -1064,7 +1071,7 @@ namespace SvnBridge.Utility
     /// and then once this multi byte sequence is complete
     /// we'll append the conversion result to the string.
     /// </remarks>
-    private static string DecodeURIComponent_NonASCII(string href_utf8)
+    private static string DecodeURIComponent_NonASCII_Do(string href_utf8)
     {
         string result; // debug helper var
 
