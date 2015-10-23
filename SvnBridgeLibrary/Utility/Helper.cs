@@ -1053,15 +1053,19 @@ namespace SvnBridge.Utility
 
     private static string DecodeURIComponent_NonASCII(string href_utf8)
     {
-        StringBuilder sb = new StringBuilder(href_utf8.Length);
-        int href_utf8Len = href_utf8.Length;
+        string result; // debug helper var
+
+        var href_utf8Len = href_utf8.Length;
+        var sbInitialCapacity = href_utf8Len;
+        StringBuilder sb = new StringBuilder(sbInitialCapacity);
         for (int index = 0; index < href_utf8Len; /* specially conditionally incremented below */)
         {
             // XXX: this handling is the complementary part to Uri.HexEscape(),
             // which turned out to be restricted to 0..255 char value range.
             // Thus it may very well be
             // that we need to fix this handling here, too.
-            if (Uri.IsHexEncoding(href_utf8, index))
+            bool isPercentEncodedChar = Uri.IsHexEncoding(href_utf8, index);
+            if (isPercentEncodedChar)
             {
                 int index_new = index;
                 char c_candidate = Uri.HexUnescape(href_utf8, ref index_new);
@@ -1084,7 +1088,9 @@ namespace SvnBridge.Utility
                 ++index;
             }
         }
-        return sb.ToString();
+        result = sb.ToString();
+
+        return result;
     }
 
     /// <summary>
