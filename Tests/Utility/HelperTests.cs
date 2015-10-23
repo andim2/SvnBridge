@@ -85,7 +85,6 @@ namespace UnitTests
             Assert.Equal("%20%25%20%25", result);
         }
 
-#if false // Does not work yet. Should be activated once this needs to be supported.
         [Fact]
         [Trait("TestName", "VDWCWNSBCR")]
         public void VerifyDecodeWorksCorrectlyWithNonSingleByteCharRange()
@@ -94,7 +93,6 @@ namespace UnitTests
 
             Assert.Equal("€测试", result);
         }
-#endif
 
         [Fact]
         [Trait("TestName", "VEWCWNSBCR")]

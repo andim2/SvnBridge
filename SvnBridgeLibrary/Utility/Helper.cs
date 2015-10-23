@@ -1051,6 +1051,15 @@ namespace SvnBridge.Utility
 			return sb.ToString();
     }
 
+    /// <remarks>
+    /// Design rationale:
+    /// We'll try to keep as much handling as possible
+    /// in standard "string" (internally UTF16, but that's not relevant) domain.
+    /// Then only for those parts which need "special" handling
+    /// we'll collect UTF8 bytes
+    /// and then once this multi byte sequence is complete
+    /// we'll append the conversion result to the string.
+    /// </remarks>
     private static string DecodeURIComponent_NonASCII(string href_utf8)
     {
         string result; // debug helper var
@@ -1058,6 +1067,7 @@ namespace SvnBridge.Utility
         var href_utf8Len = href_utf8.Length;
         var sbInitialCapacity = href_utf8Len;
         StringBuilder sb = new StringBuilder(sbInitialCapacity);
+        List<byte> utf8Bytes = new List<byte>();
         for (int index = 0; index < href_utf8Len; /* specially conditionally incremented below */)
         {
             // XXX: this handling is the complementary part to Uri.HexEscape(),
@@ -1078,19 +1088,37 @@ namespace SvnBridge.Utility
                 }
                 else
                 {
-                    sb.Append(c_candidate);
+                    utf8Bytes.Add((byte)c_candidate);
                 }
                 index = index_new;
             }
             else
             {
+                AppendUTF8BytesIfAvailable(ref sb, utf8Bytes);
+
                 sb.Append(href_utf8[index]);
                 ++index;
             }
         }
+        AppendUTF8BytesIfAvailable(ref sb, utf8Bytes); // to support case of having PE:d elements *only*
+
         result = sb.ToString();
 
         return result;
+    }
+
+    private static void AppendUTF8BytesIfAvailable(
+        ref StringBuilder sb,
+        List<byte> utf8Bytes)
+    {
+        bool haveData = (0 < utf8Bytes.Count);
+        bool nothingToAdd = !(haveData);
+        if (!(nothingToAdd))
+        {
+            string fromUTF8 = Encoding.UTF8.GetString(utf8Bytes.ToArray());
+            sb.Append(fromUTF8);
+            utf8Bytes.Clear();
+        }
     }
 
     /// <summary>
