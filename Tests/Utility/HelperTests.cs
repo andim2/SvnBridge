@@ -85,22 +85,25 @@ namespace UnitTests
             Assert.Equal("%20%25%20%25", result);
         }
 
+        /// <remarks>
+        /// Candidate contains both multi-byte-sequence chars *and* single-byte ones ("Ä").
+        /// </remarks>
         [Fact]
         [Trait("TestName", "VDWCWNSBCR")]
         public void VerifyDecodeWorksCorrectlyWithNonSingleByteCharRange()
         {
-            string result = Helper.Decode("%e2%82%Ac%e6%B5%8b%e8%Af%95");
+            string result = Helper.Decode("%e2%82%Ac%e6%B5%8b%e8%Af%95" + "%c3%84%c3%b6%c3%bC");
 
-            Assert.Equal("€测试", result);
+            Assert.Equal("€测试" + "Äöü", result);
         }
 
         [Fact]
         [Trait("TestName", "VEWCWNSBCR")]
         public void VerifyEncodeWorksCorrectlyWithNonSingleByteCharRange()
         {
-            string result = Helper.Encode("€测试");
+            string result = Helper.Encode("€测试" + "Äöü");
 
-            Assert.Equal("%e2%82%ac%e6%b5%8b%e8%af%95", result);
+            Assert.Equal("%e2%82%ac%e6%b5%8b%e8%af%95" + "%c3%84%c3%b6%c3%bc", result);
         }
 
         [Fact]

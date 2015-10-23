@@ -1026,8 +1026,12 @@ namespace SvnBridge.Utility
 				else
 				{
 					string escaped;
-					bool isBeyondSingleByteRange = (!CharIsInSingleByteRange(c));
-					bool canUseApi_UriHexEscape = (!isBeyondSingleByteRange);
+					//bool isBeyondSingleByteRange = (!CharIsInSingleByteRange(c));
+					//bool canUseApi_UriHexEscape = (!isBeyondSingleByteRange);
+                    // We need proper UTF-8 multi-byte sequences
+                    // (at least in most[?] areas!),
+                    // *not* simple percent-encoding of up-to-255 values!
+                    bool canUseApi_UriHexEscape = false;
 					if (canUseApi_UriHexEscape)
 					{
 						// Uri.HexEscape() supports single-byte values (0..255) only,
