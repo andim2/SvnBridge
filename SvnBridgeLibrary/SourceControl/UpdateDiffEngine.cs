@@ -720,7 +720,8 @@ namespace SvnBridge.SourceControl
             string[] pathElems;
 
             string pathSub = GetSubPath_PossiblyBelowSpecificRoot(root, path);
-            pathElems = FilesysHelpers.GetPathElems(pathSub);
+            bool isValidSubPath = !(string.IsNullOrEmpty(pathSub));
+            pathElems = isValidSubPath ? FilesysHelpers.GetPathElems(pathSub) : new string[] {};
 
             return pathElems;
         }
@@ -737,7 +738,23 @@ namespace SvnBridge.SourceControl
             //   pathElems = path.Substring(root.Length + 1).Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             bool haveNoRoot = root.Equals("");
             bool isRootSpecified = !(haveNoRoot);
-            subPath = isRootSpecified ? path.Substring(root.Length + 1) : path;
+            bool needDoRootRestrictionCheck = (isRootSpecified);
+            if (needDoRootRestrictionCheck)
+            {
+                bool isBelowRoot = (path.StartsWith(root));
+                if (isBelowRoot)
+                {
+                    subPath = path.Substring(root.Length + 1);
+                }
+                else
+                {
+                    subPath = "";
+                }
+            }
+            else
+            {
+                subPath = path;
+            }
 
             return subPath;
         }
