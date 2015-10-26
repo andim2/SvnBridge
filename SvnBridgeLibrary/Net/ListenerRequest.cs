@@ -115,7 +115,7 @@ namespace SvnBridge.Net
 				ParseHeaderLine(headerLine);
 			}
 
-			ReadMessageBody_linear(stream, buffer);
+			HandleMessageBody(stream, buffer);
 
             // Now that all content has been read (and actively parsed) into buffer,
             // we're finally able to have it trace logged if requested:
@@ -187,6 +187,40 @@ namespace SvnBridge.Net
 			return Encoding.ASCII.GetString(buffer.GetBuffer(), offset, (int)buffer.Position - offset - 2);
 		}
 
+        private static void ReadData(
+            Stream stream,
+            MemoryStream buffer,
+            byte[] dataOut)
+        {
+            ReadData(
+                stream,
+                buffer,
+                new ArraySegment<byte>(dataOut, 0, dataOut.Length));
+        }
+
+        private static void ReadData(
+            Stream stream,
+            MemoryStream buffer,
+            ArraySegment<byte> dataSegOut)
+        {
+            var toBeRead = dataSegOut.Count;
+            var avail = buffer.Length - buffer.Position;
+            var missing = (toBeRead - avail);
+            bool needNewData = (0 < missing);
+            if (needNewData)
+            {
+                bool isReadOK = ReadToBuffer(
+                    stream,
+                    buffer);
+                if (!(isReadOK))
+                {
+                    return;
+                }
+            }
+
+            buffer.Read(dataSegOut.Array, dataSegOut.Offset, toBeRead);
+        }
+
         /// <summary>
         /// Reads network stream data to a buffer.
         /// References:
@@ -252,12 +286,101 @@ namespace SvnBridge.Net
             return isConnectionOK;
         }
 
-        private void ReadMessageBody_linear(
+        private void HandleMessageBody(
             Stream stream,
             MemoryStream buffer)
         {
-			int contentLength = GetContentLength();
+            bool chunked;
+            int contentLength;
+            GetMessageBodyContentSettings(
+                out chunked,
+                out contentLength);
 
+            bool haveMessageBody = HaveMessageBodyRFC2616(
+                chunked,
+                contentLength);
+
+            bool needReadMessageBody = NeedReadMessageBody(
+                haveMessageBody);
+            if (needReadMessageBody)
+            {
+                ReadMessageBody(
+                    stream,
+                    buffer,
+                    chunked,
+                    contentLength);
+            }
+        }
+
+        /// <remarks>
+        /// ATTENTION! at least our unit tests expect
+        /// a valid InputStream object
+        /// to get set up even in zero length body case!
+        /// </remarks>
+        private static bool NeedReadMessageBody(
+            bool haveMessageBody)
+        {
+            bool needReadMessageBody;
+
+            needReadMessageBody = (haveMessageBody);
+            needReadMessageBody = true;
+
+            return needReadMessageBody;
+        }
+
+        /// <remarks>
+        /// RFC2616:
+        /// "
+        /// The presence of a message-body in a request is signaled by the inclusion
+        /// of a Content-Length or Transfer-Encoding header field in the request's message-headers.
+        /// "
+        /// </remarks>
+        private static bool HaveMessageBodyRFC2616(
+            bool chunked,
+            int contentLength)
+        {
+            bool seemToHaveTransferEncodingHeader = (chunked);
+            bool haveTransferEncodingHeader = (seemToHaveTransferEncodingHeader);
+            return ((haveTransferEncodingHeader) || (0 != contentLength));
+        }
+
+        private void GetMessageBodyContentSettings(
+            out bool chunked,
+            out int contentLength)
+        {
+            chunked = IsTransferEncodingChunked(Headers);
+            contentLength = GetContentLength();
+        }
+
+        public static bool IsTransferEncodingChunked(
+            NameValueCollection headers)
+        {
+            string headerTransferEncoding = headers["Transfer-Encoding"];
+            bool chunked = ((null != headerTransferEncoding) && (headerTransferEncoding.Equals("chunked", StringComparison.OrdinalIgnoreCase)));
+            return chunked;
+        }
+
+        private void ReadMessageBody(
+            Stream stream,
+            MemoryStream buffer,
+            bool chunked,
+            int contentLength)
+		{
+            if (chunked)
+            {
+                ReadMessageBody_chunked(stream, buffer);
+            }
+            else
+            {
+                ReadMessageBody_linear(stream, buffer, contentLength);
+            }
+		}
+
+        private void ReadMessageBody_linear(
+            Stream stream,
+            MemoryStream buffer,
+            int contentLength)
+        {
             var posStart = buffer.Position;
 			for (; ; )
 			{
@@ -289,6 +412,71 @@ namespace SvnBridge.Net
         private void AdoptAsReadOnlyInputStream(ArraySegment<byte> arrSeg)
         {
             inputStream = new MemoryStream(arrSeg.Array, arrSeg.Offset, arrSeg.Count, false);
+        }
+
+        /// <summary>
+        /// Implements parsing of chunked HTTP payload.
+        /// Since we likely do (intend to) signal HTTP/1.1 conformance
+        /// (since several locations have hard-coded "HTTP/1.1" strings),
+        /// we do need to support chunked transfers as well
+        /// since that is a *required* feature of 1.1.
+        /// </summary>
+        /// <remarks>
+        /// See also e.g. http://wiki.nginx.org/HttpChunkinModule
+        /// Not really sure whether it's a good idea to go
+        /// from cleanly chunked operation
+        /// (incremental streamy handling via tiny memory chunks)
+        /// to huge-blob-style operation.
+        /// Anyway, at least currently
+        /// I need to remain
+        /// within the current implementation model
+        /// of request body parsing...
+        /// </remarks>
+        private void ReadMessageBody_chunked(
+            Stream stream,
+            MemoryStream buffer)
+        {
+            var bodyPlain = new Utility.MemoryStreamLOHSanitized();
+            byte[] chunk = new byte[Constants.AllocSize_AvoidLOHCatastrophy];
+            byte[] eol = new byte[2];
+            for (;;)
+            {
+                string lineChunkSize = ReadLine(stream, buffer);
+                int chunkSize = ParseChunkSize(lineChunkSize);
+                bool isMarkerChunkingEnded = (0 == chunkSize);
+                bool haveDataChunk = (!(isMarkerChunkingEnded));
+                if (haveDataChunk)
+                {
+                    bool canAccomodateChunk = (chunkSize <= chunk.Length);
+                    if (!(canAccomodateChunk))
+                    {
+                        chunk = new byte[chunkSize];
+                    }
+                    ArraySegment<byte> arrSegChunk = new ArraySegment<byte>(chunk, 0, chunkSize);
+                    ReadData(
+                        stream,
+                        buffer,
+                        arrSegChunk);
+                    Helper.AppendToStream(bodyPlain, arrSegChunk);
+                }
+                ReadData(
+                    stream,
+                    buffer,
+                    eol);
+                if (isMarkerChunkingEnded)
+                {
+                    break;
+                }
+            }
+            ArraySegment<byte> arrSeg = new ArraySegment<byte>(bodyPlain.GetBuffer(), 0, (int)bodyPlain.Length);
+            AdoptAsReadOnlyInputStream(arrSeg);
+        }
+
+        private static int ParseChunkSize(
+            string lineChunkSize)
+        {
+            var chunkSize = int.Parse(lineChunkSize, System.Globalization.NumberStyles.HexNumber);
+            return chunkSize;
         }
 
 		private int GetContentLength()

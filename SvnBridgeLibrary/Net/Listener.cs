@@ -3,6 +3,7 @@ using System.Diagnostics; // Debug.WriteLine()
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text; // Encoding
 using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.Interfaces;

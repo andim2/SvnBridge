@@ -124,8 +124,14 @@ namespace SvnBridge.Net
                     return;
                 }
 
-                SetupAndHandleRequest(
+                bool isRequestOk = CheckRequestConfiguration(
                     connection);
+                bool mayHandleRequest = (isRequestOk);
+                if (mayHandleRequest)
+                {
+                    SetupAndHandleRequest(
+                        connection);
+                }
             }
             // IMPORTANT: I assume that this series of catch()es
             // is generally intended
@@ -180,6 +186,108 @@ namespace SvnBridge.Net
                 if (Configuration.LogCancelErrors)
                     throw;
             }
+        }
+
+        /// <summary>
+        /// Checks and indicates whether the current request
+        /// is deemed to be ok for servicing.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns>true if the request is deemed to be ok for servicing, else false</returns>
+        private static bool CheckRequestConfiguration(
+            IHttpContext connection)
+        {
+            bool isRequestOk = true;
+
+            if (isRequestOk)
+            {
+                bool chunked = ListenerRequest.IsTransferEncodingChunked(
+                    connection.Request.Headers);
+
+                if (chunked)
+                {
+                    isRequestOk = HandleChunkedSetting(
+                        connection);
+                }
+            }
+
+            return isRequestOk;
+        }
+
+        private static bool HandleChunkedSetting(
+            IHttpContext connection)
+        {
+            bool isSettingOk = true;
+
+            bool supportChunked = ShouldSupportHTTP11ChunkedTransfers();
+
+            if (!supportChunked)
+            {
+                SendLengthRequiredResponse(
+                    connection);
+                isSettingOk = false;
+            }
+
+            return isSettingOk;
+        }
+
+        /// <summary>
+        /// Almost(?) comment-only helper.
+        /// </summary>
+        /// <returns>true in case requests with chunked transfers should be processed, false if they should be rejected</returns>
+        private static bool ShouldSupportHTTP11ChunkedTransfers()
+        {
+            /// [[
+            /// While I tried to (successfully, I believe)
+            /// implement parsing of chunked transfers,
+            /// uuuunfortunately it looks like TortoiseSVN 1.8.11
+            /// sends an OPTIONS request with an *incomplete* payload in the request's chunked body
+            /// (first chunk 66 bytes, then final 0-byte end chunk,
+            /// i.e. it finished chunk parsing *successfully*
+            /// yet that results in data which is an *incomplete* XML document!!).
+            /// I'm wondering whether that's an actual bug of TortoiseSVN
+            /// (perhaps usually chunked mode does not get used for one reason or another?)
+            /// or whether perhaps we are somehow
+            /// (via the configuration in general
+            /// which we are imposing on the client)
+            /// prompting it to send incomplete data
+            /// (possibly ToirtoiseSVN encounters an internal exception
+            /// due to missing some things in our data exchange,
+            /// which will nevertheless cause it
+            /// to finish sending out the incompletely generated XML options payload)
+            /// Hmmmmmm... 1.8.11 does not seem to honour 411
+            /// (still insists on doing chunked transfers),
+            /// thus for such requests
+            /// I'm now deciding
+            /// to not reject-discard them
+            /// and instead actually trying to keep going...
+            /// ]]
+            /// UPDATE: and in fact that XML payload content was *not* incomplete
+            /// (rather, stream handling was broken,
+            /// causing \0 at end (within .Length-valid area)
+            /// which XmlSerializer refused to parse),
+            /// thus since it now appears to work
+            /// we obviously now should always support chunked transfers.
+            return true;
+        }
+
+        private static void SendLengthRequiredResponse(
+            IHttpContext connection)
+        {
+            IHttpResponse response = connection.Response;
+            response.StatusCode = (int)HttpStatusCode.LengthRequired;
+            response.ContentType = "text/html; charset=iso-8859-1";
+
+            string content =
+                "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
+                "<html><head>\n" +
+                "<title>411 Length Required</title>\n" +
+                "</head><body>\n" +
+                "</body></html>\n";
+
+            AppendAsUTF8(
+                response,
+                content);
         }
 
         private void SetupAndHandleRequest(

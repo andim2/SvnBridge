@@ -22,7 +22,7 @@ namespace SvnBridge.Handlers
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
-            PropFindData propfind = Helper.DeserializeXml<PropFindData>(request.InputStream);
+            PropFindData propfind = GetPropFindData(request.InputStream);
 
             try
             {
@@ -70,6 +70,43 @@ namespace SvnBridge.Handlers
                 OnErrorRetainRequestInfo_RequestBody(propfind);
                 throw;
             }
+        }
+
+        private static PropFindData GetPropFindData(
+            Stream stream)
+        {
+            PropFindData propFindData;
+
+            var streamLenPreReadBackup = stream.Length;
+            // While having a request with an empty body may be somewhat rare,
+            // it *is* a fully normally specified case
+            // of RFC4918, "9.1 PROPFIND Method":
+            // "A client may choose not to submit a request body.
+            // An empty PROPFIND request body MUST be treated as if
+            // it were an 'allprop' request.",
+            // thus it is *not* exceptional
+            // and should thus be handled regularly
+            // rather than in exceptional irregular error path.
+            //
+            // Note that in my case
+            // I hit the "empty PROPFIND request body" case *erroneously*
+            // due to prior parsing failure of chunked-transfer body, though...
+            bool isEmptyRequest = (0 == streamLenPreReadBackup);
+            bool needHandleRFC4918EmptyPropFindAllPropSpecialCase = (isEmptyRequest);
+            propFindData = needHandleRFC4918EmptyPropFindAllPropSpecialCase ?
+                GetPropFindData_EmptyRequest_AllProp() :
+                Helper.DeserializeXml<PropFindData>(stream);
+
+            return propFindData;
+        }
+
+        private static PropFindData GetPropFindData_EmptyRequest_AllProp()
+        {
+            PropFindData propFindData = new PropFindData();
+
+            propFindData.AllProp = new AllPropData();
+
+            return propFindData;
         }
 
         private void HandleAllPropVccDefault(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream stream)
