@@ -5,6 +5,35 @@ using System.Web;
 namespace SvnBridge.Net
 {
     /// <summary>
+    /// Exceedingly simple (since cleanly symmetrically scoped) helper
+    /// with the sole purpose
+    /// of ensuring proper handling of RequestCache lifetime.
+    /// All uses of this class *must* be done
+    /// via properly scope-restricting "using" scope.
+    /// </summary>
+    /// WARNING: this code might easily be
+    /// an insufficient implementation of the woefully horrible IDisposable -
+    /// for details, see
+    /// "IDisposable: What Your Mother Never Told You About Resource Deallocation"
+    ///   http://www.codeproject.com/KB/dotnet/idisposable.aspx
+    /// http://www.codeproject.com/Messages/1840365/Re-Definitive-IDisposable-reference.aspx
+    public sealed class RequestCache_Scope : IDisposable
+    {
+        public RequestCache_Scope()
+        {
+            RequestCache.Init();
+        }
+
+        public void Dispose()
+        {
+            RequestCache.Dispose();
+
+            // Hmm, do we need to call GC.SuppressFinalize() here?
+            // http://joeduffyblog.com/2005/04/08/dg-update-dispose-finalization-and-resource-management/
+        }
+    }
+
+    /// <summary>
     /// Global, static cache class
     /// the lifetime of which is (and needs to remain!) exactly restricted
     /// to per-HTTP-request scope.

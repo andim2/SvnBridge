@@ -616,8 +616,10 @@ namespace SvnBridge.Net
                 // thus we'll have to init/tear down it
                 // here (and here at this scope only!!)
                 // anew.
-                RequestCache.Init();
-                dispatcher.Dispatch(connection);
+                using (var requestCache_Scope = new RequestCache_Scope())
+                {
+                    dispatcher.Dispatch(connection);
+                }
             }
             catch (Exception exception)
             {
@@ -637,7 +639,6 @@ namespace SvnBridge.Net
             }
             finally
             {
-                RequestCache.Dispose();
                 FlushConnection(connection);
                 TimeSpan duration = DateTime.UtcNow - timeUtcStart;
                 FinishedHandling(this, new FinishedHandlingEventArgs(duration,
