@@ -18,6 +18,7 @@ namespace SvnBridge.Net
 {
     public class HttpContextDispatcher
     {
+        private const string cacheKeyCredentials = "credentials"; // NOTE: cannot change name (resolving of method parameters named "credentials")
         protected readonly IPathParser parser;
         protected readonly ActionTrackingViaPerfCounter actionTracking;
         private ICredentials sessionCredentials; // whole-session credentials as possibly cached over all individual HTTP requests
@@ -285,7 +286,7 @@ namespace SvnBridge.Net
 
             RequestCache.Items["serverUrl"] = tfsUrl;
             RequestCache.Items["projectName"] = projectName;
-            RequestCache.Items["credentials"] = sessionCredentials;
+            RequestCache.Items[cacheKeyCredentials] = sessionCredentials;
 
             // Decided to use more specific naming here
             // ("sessionUserDomain" rather than "domain")
