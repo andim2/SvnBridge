@@ -203,6 +203,8 @@ namespace SvnBridge.Net
                 TweakCredential(ref credential, tfsUrl);
             }
 
+            string projectName = parser.GetProjectName(request);
+
             /// Remembering a username value here in more global scope,
             /// since a specific username identification unfortunately is required
             /// for certain services (e.g. IWorkItemModifier)
@@ -233,8 +235,13 @@ namespace SvnBridge.Net
                 }
             }
 
+            // Now that all attributes as required for per-request handling
+            // have been figured out,
+            // make sure that they are available
+            // where we will need them (in per-request cache):
+
             RequestCache.Items["serverUrl"] = tfsUrl;
-            RequestCache.Items["projectName"] = parser.GetProjectName(request);
+            RequestCache.Items["projectName"] = projectName;
             RequestCache.Items["credentials"] = credential;
 
             // Decided to use more specific naming here
