@@ -13,12 +13,59 @@ namespace SvnBridge.SourceControl
     {
         public static bool IsRenameOperation(SourceItemChange change)
         {
-            return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
+            return IsChangeTypeRename(change.ChangeType);
         }
 
         public static bool IsMergeOperation(SourceItemChange change)
         {
-            return (change.ChangeType & ChangeType.Merge) == ChangeType.Merge;
+            return IsChangeTypeMerge(change.ChangeType);
+        }
+
+        /// <remarks>
+        /// IsDeleteOperation()/IsAddOperation() could be streamlined by
+        /// collapsing everything into simple ternary-only operations
+        /// (after all the updatingForwardInTime bools are hard-coded thus it's obvious
+        /// which path it takes),
+        /// but then it was probably fully intentional to have a fully complementary
+        /// "if not this one, then call the fully complementary method" implementation,
+        /// so maybe we should keep implementation that way.
+        /// </remarks>
+        public static bool IsDeleteOperation(SourceItemChange change, bool updatingForwardInTime)
+        {
+            if (updatingForwardInTime == false)
+            {
+                return IsAddOperation(change, true);
+            }
+            return IsChangeTypeDelete(change.ChangeType);
+        }
+
+        public static bool IsAddOperation(SourceItemChange change, bool updatingForwardInTime)
+        {
+            if (updatingForwardInTime == false)
+            {
+                return IsDeleteOperation(change, true);
+            }
+            return IsChangeTypeAddKind(change.ChangeType);
+        }
+
+        public static bool IsEditOperation(SourceItemChange change)
+        {
+            return IsChangeTypeEdit(change.ChangeType);
+        }
+
+        static bool IsChangeTypeMerge(ChangeType changeType)
+        {
+            return (changeType & ChangeType.Merge) == ChangeType.Merge;
+        }
+
+        static bool IsChangeTypeRename(ChangeType changeType)
+        {
+            return (changeType & ChangeType.Rename) == ChangeType.Rename;
+        }
+
+        static bool IsChangeTypeDelete(ChangeType changeType)
+        {
+            return (changeType & ChangeType.Delete) == ChangeType.Delete;
         }
 
         public static bool IsChangeTypeAddKind(ChangeType changeType)
@@ -36,27 +83,9 @@ namespace SvnBridge.SourceControl
             return isAdd;
         }
 
-        public static bool IsDeleteOperation(SourceItemChange change, bool updatingForwardInTime)
+        static bool IsChangeTypeEdit(ChangeType changeType)
         {
-            if (updatingForwardInTime == false)
-            {
-                return IsAddOperation(change, true);
-            }
-            return (change.ChangeType & ChangeType.Delete) == ChangeType.Delete;
-        }
-
-        public static bool IsAddOperation(SourceItemChange change, bool updatingForwardInTime)
-        {
-            if (updatingForwardInTime == false)
-            {
-                return IsDeleteOperation(change, true);
-            }
-            return IsChangeTypeAddKind(change.ChangeType);
-        }
-
-        public static bool IsEditOperation(SourceItemChange change)
-        {
-            return (change.ChangeType & ChangeType.Edit) == ChangeType.Edit;
+            return (changeType & ChangeType.Edit) == ChangeType.Edit;
         }
 
         /// <summary>
