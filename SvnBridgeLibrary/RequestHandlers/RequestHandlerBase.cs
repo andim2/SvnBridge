@@ -25,6 +25,12 @@ namespace SvnBridge.Handlers
 			response.StatusCode = status;
 		}
 
+        protected static void SetResponseHeader_X_Pad_avoid_browser_bug(
+            IHttpResponse response)
+        {
+            response.AppendHeader("X-Pad", "avoid browser bug");
+        }
+
 		protected static void WriteToResponse(IHttpResponse response, string content)
 		{
 			using (StreamWriter writer = new StreamWriter(response.OutputStream))

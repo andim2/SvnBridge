@@ -20,7 +20,8 @@ namespace SvnBridge.Handlers
             SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
             response.AppendHeader("Cache-Control", "no-cache");
             response.AppendHeader("Location", "http://" + request.Headers["Host"] + path);
-            response.AppendHeader("X-Pad", "avoid browser bug");
+            SetResponseHeader_X_Pad_avoid_browser_bug(
+                response);
 
             string responseContent = "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n" +
                                      "<html><head>\n" +
