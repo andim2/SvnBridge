@@ -57,36 +57,35 @@ namespace SvnBridge.Infrastructure
         {
             SourceItem[] sourceItems = null;
 
-            List<SourceItem> list = null;
-            persistentCache.UnitOfWork(delegate
+            string serverPath = GetServerPath(path);
+
+            bool doSpecialCasingOfRootItem = (serverPath == Constants.ServerRootPath && recursion == Recursion.None);
+            if (doSpecialCasingOfRootItem)
             {
-                string serverPath = GetServerPath(path);
-
-                if (serverPath == Constants.ServerRootPath && recursion == Recursion.None)
+                sourceItems = Service_QueryItems(
+                    serverPath,
+                    RecursionType.None,
+                    VersionSpec.FromChangeset(revision),
+                    DeletedState.NonDeleted,
+                    ItemType.Any);
+            }
+            else
+            {
+                List<SourceItem> list = null;
+                persistentCache.UnitOfWork(delegate
                 {
-                    SourceItem[] items =
-                        Service_QueryItems(
-                            serverPath,
-                            RecursionType.None,
-                            VersionSpec.FromChangeset(revision),
-                            DeletedState.NonDeleted,
-                            ItemType.Any);
+                    EnsureRevisionIsCached(revision, path);
 
-                    list = new List<SourceItem>(items);
-                    return;
-                }
+                    string itemCacheKey = GetItemsListCacheKey(recursion, revision, serverPath);
 
-                EnsureRevisionIsCached(revision, path);
-
-                string itemCacheKey = GetItemsListCacheKey(recursion, revision, serverPath);
-
-                list = persistentCache.GetList<SourceItem>(itemCacheKey);
-                list.Sort(delegate(SourceItem x, SourceItem y)
-                {
-                    return x.RemoteName.CompareTo(y.RemoteName);
+                    list = persistentCache.GetList<SourceItem>(itemCacheKey);
+                    list.Sort(delegate(SourceItem x, SourceItem y)
+                    {
+                        return x.RemoteName.CompareTo(y.RemoteName);
+                    });
                 });
-            });
-            sourceItems = list.ToArray();
+                sourceItems = list.ToArray();
+            }
 
             return sourceItems;
         }
