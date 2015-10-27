@@ -148,24 +148,9 @@ namespace SvnBridge.Net
                 {
                 	try
                 	{
-                		connection.Response.StatusCode = 500;
-                		using (StreamWriter output = new StreamWriter(connection.Response.OutputStream))
-                		{
-                			Guid guid = Guid.NewGuid();
-
-                			string message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                			                 "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
-                			                 "<C:error/>\n" +
-                			                 "<m:human-readable errcode=\"160024\">\n" +
-                                    
-                			                 ("Failed to process a request. Failure id: " + guid + "\n" + exception) +
-
-                			                 "</m:human-readable>\n" +
-                			                 "</D:error>\n";
-                			output.Write(message);
-
-                			LogError(guid, exception);
-                		}
+                      SendHandlerErrorResponse(
+                          exception,
+                          connection.Response);
                 	}
                 	catch 
                 	{
@@ -215,6 +200,30 @@ namespace SvnBridge.Net
         private void LogError(Guid guid, Exception e)
         {
             logger.Error("Error on handling request. Error id: " + guid + Environment.NewLine + e.ToString(), e);
+        }
+
+        private void SendHandlerErrorResponse(
+            Exception exception,
+            IHttpResponse response)
+        {
+            response.StatusCode = 500;
+            using (StreamWriter output = new StreamWriter(response.OutputStream))
+            {
+                Guid guid = Guid.NewGuid();
+
+                string message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                                 "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
+                                 "<C:error/>\n" +
+                                 "<m:human-readable errcode=\"160024\">\n" +
+
+                                 ("Failed to process a request. Failure id: " + guid + "\n" + exception) +
+
+                                 "</m:human-readable>\n" +
+                                 "</D:error>\n";
+                output.Write(message);
+
+                LogError(guid, exception);
+            }
         }
 
         private void OnListenException(Exception ex)
