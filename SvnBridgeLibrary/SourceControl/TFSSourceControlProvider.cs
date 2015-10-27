@@ -6,6 +6,7 @@ namespace SvnBridge.SourceControl
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics; // Debug.WriteLine()
     using System.IO; // FileNotFoundException only
     using System.Net; // ICredentials
     using System.Text.RegularExpressions; // Regex
@@ -17,7 +18,7 @@ namespace SvnBridge.SourceControl
     using Interfaces; // IMetaDataRepository
     using Protocol; // UpdateReportData only (layer violation?)
     using Proxies; // TracingInterceptor, RetryOnExceptionsInterceptor
-    using Utility;
+    using Utility; // DebugRandomActivator
     using SvnBridge.Cache;
     using System.Web.Services.Protocols; // SoapException
     using System.Linq; // System.Array extensions
@@ -243,6 +244,7 @@ namespace SvnBridge.SourceControl
         // thus it should obviously not be within this specific *implementation* class
         // but rather be provided by a corresponding *interface* or base class.
         public const int LATEST_VERSION = -1;
+        private readonly DebugRandomActivator debugRandomActivator;
 
         public TFSSourceControlProvider(
             TFSSourceControlService sourceControlService,
@@ -296,6 +298,7 @@ namespace SvnBridge.SourceControl
             }
 
             this.fileRepository = fileRepository;
+            this.debugRandomActivator = new DebugRandomActivator();
         }
 
         /// <summary>
@@ -1675,6 +1678,8 @@ namespace SvnBridge.SourceControl
 
         /// <summary>
         /// Helper to determine the most recent change somewhere within the directory tree of this (possibly folder) item.
+        /// Desperately tries to do some shortcuts of this otherwise very expensive network request operation,
+        /// since use of this function is an absolute hotpath, i.e. time spent here is rather dominant.
         /// Implemented in minimal-interface manner (the only thing that is of interest is whether it was successful,
         /// and then changeset ID and commit time - SourceItemHistory is NOT used anywhere near the caller
         /// thus shouldn't be leaked outside).
@@ -1694,10 +1699,55 @@ namespace SvnBridge.SourceControl
             out int changeChangeSetID,
             out DateTime changeCommitDateTime)
         {
+            // Warning: use of very limited maxCount for TFS QueryHistory() (as done in this method: maxCount 1)
+            // is problematic - since we're interested in the most recent change only,
+            // this should be ok, but watch out...
+            // Plus, QueryHistory() results (at least on TFS08) seem to be very unreliable:
+            // a) querying a folder location which got renamed-away, with a proper *prior* ("still-existing") revision
+            //    will fail to list the result (one needs to resort to querying parent folders
+            //    to successfully get a large history which also includes that folder's activity - ARGH)
+            // b) [AFAIR] querying a folder location which got renamed-away, with a proper *modern* revision
+            //    will bogusly contain a changeset where that moved-away folder originally got *created*. WTF??
+            // To verify this, simply modify data of the current query in a debugger,
+            // then check expected results, then correct/comment here.
+
             SourceItemHistory logQueryAll_Newest_history = null;
+            SourceItemHistory logQueryPartial_Newest_history = null;
             int itemVersion = version; // debugging helper
             int versionTo = version;
-            bool wantQueryFull = true;
+            bool wantShortcutForLargeRepository = (version > 20000);
+            bool wantQueryPartial = wantShortcutForLargeRepository;
+            bool wantQueryFull = false;
+            if (wantQueryPartial)
+            {
+                // Have the perhaps optimistic hope that there was a commit done
+                // in the last 10% of most recent versions.
+                // If such a shortcut for a *very* large range fails, then it's no problem
+                // since we had only that percentage additionally, for our request wait time.
+                //
+                // [no need to manually ensure that versionFrom ends up >= 1 here - input values are much larger anyway]
+                int versionFrom = ((versionTo * 9) / 10);
+                LogItem logQueryPartial_Newest = GetLog(
+                    itemName,
+                    itemVersion,
+                    versionFrom,
+                    versionTo,
+                    Recursion.Full,
+                    1);
+                if (0 != logQueryPartial_Newest.History.Length)
+                    logQueryPartial_Newest_history = logQueryPartial_Newest.History[0];
+            }
+            // Determine wantQueryFull desires:
+            bool isFailedQueryPartial = (null == logQueryPartial_Newest_history);
+            wantQueryFull = isFailedQueryPartial;
+            // Have breakpointable syntax:
+            if (!wantQueryFull)
+            {
+                int doVerificationPercentage = 2; // now reduced (prolonged testing was ok)
+                wantQueryFull = GotRandom_percentage(doVerificationPercentage);
+            }
+            //wantQueryFull = true; // DEBUG_SITE
+
             if (wantQueryFull)
             {
                 int versionFrom = 1;
@@ -1715,8 +1765,29 @@ namespace SvnBridge.SourceControl
                 if (0 != logQueryAll_Newest.History.Length)
                     logQueryAll_Newest_history = logQueryAll_Newest.History[0];
             }
+            // Verification step:
+            bool canCompareResults = false;
+            //if (wantQueryPartial && wantQueryFull) // not needed
+            if (true)
+            {
+                canCompareResults = ((null != logQueryPartial_Newest_history) && (null != logQueryAll_Newest_history));
+            }
+            if (canCompareResults)
+            {
+                // [performance: comparison of less complex objects first!]
+                bool isMatch = (
+                    (logQueryPartial_Newest_history.ChangeSetID == logQueryAll_Newest_history.ChangeSetID) &&
+                    (logQueryPartial_Newest_history.CommitDateTime == logQueryAll_Newest_history.CommitDateTime)
+                );
+                if (!(isMatch))
+                {
+                    ReportErrorMostRecentChangesetQueryMismatch(
+                        logQueryPartial_Newest_history,
+                        logQueryAll_Newest_history);
+                }
+            }
 
-            SourceItemHistory logQueryResult_Newest_history = logQueryAll_Newest_history;
+            SourceItemHistory logQueryResult_Newest_history = (null != logQueryPartial_Newest_history) ? logQueryPartial_Newest_history : logQueryAll_Newest_history;
             if (null != logQueryResult_Newest_history)
             {
                 changeChangeSetID = logQueryResult_Newest_history.ChangeSetID;
@@ -1729,6 +1800,32 @@ namespace SvnBridge.SourceControl
                 changeCommitDateTime = DateTime.MinValue;
                 return false;
             }
+        }
+
+        private static void ReportErrorMostRecentChangesetQueryMismatch(
+            SourceItemHistory logQueryPartial,
+            SourceItemHistory logQueryAll)
+        {
+            string logMessage = string.Format(
+                "Mismatch: partial query data (rev {0}, date {1}) vs. full query data (rev {2}, date {3}), please report!",
+                logQueryPartial.ChangeSetID, logQueryPartial.CommitDateTime,
+                logQueryAll.ChangeSetID, logQueryAll.CommitDateTime);
+            bool doThrowException = true;
+            //doThrowException = false; // UNCOMMENT TO CONTINUE COLLECTING MISMATCHES
+            if (doThrowException)
+            {
+                throw new InvalidOperationException(logMessage);
+            }
+            else
+            {
+                // It is said that to have output appear in VS Output window, we need to use Debug.WriteLine rather than Console.WriteLine.
+                Debug.WriteLine(logMessage + "\n");
+            }
+        }
+
+        private bool GotRandom_percentage(int percentage)
+        {
+            return debugRandomActivator.YieldTrueOnPercentageOfCalls(percentage);
         }
 
         private void UpdateFolderRevisions(ItemMetaData item, int version, Recursion recursion)
