@@ -149,6 +149,7 @@ namespace SvnBridge.SourceControl
                 return;
             }
 
+            // Special case for changes of source root item (why? performance opt?):
             if (string.Equals(remoteName, _checkoutRootPath, StringComparison.InvariantCultureIgnoreCase))
             {
                 ItemMetaData item = sourceControlProvider.GetItems(_targetVersion, remoteName, Recursion.None);
@@ -157,7 +158,7 @@ namespace SvnBridge.SourceControl
                     _root.Properties = item.Properties;
                 }
             }
-            else
+            else // standard case (other items)
             {
                 FolderMetaData folder = _root;
                 string itemName = _checkoutRootPath;
@@ -178,6 +179,9 @@ namespace SvnBridge.SourceControl
                     else
                         itemName += nameParts[i];
 
+                    // Detect our possibly pre-existing record of this item within the changeset version range
+                    // that we're in the process of analyzing/collecting...
+                    // This existing item may possibly be a placeholder (stub folder).
                     ItemMetaData item = folder.FindItem(itemName);
                     if (item == null ||
                          (
@@ -188,10 +192,13 @@ namespace SvnBridge.SourceControl
                          )
                         )
                     {
+                        // ...then remove this prior item...
                         if (item != null)
                         {
                             folder.Items.Remove(item);
                         }
+                        // ...and fetch the updated one
+                        // for the currently processed version:
                         item = sourceControlProvider.GetItems(_targetVersion, itemName, Recursion.None);
                         if (item == null)
                         {
@@ -238,7 +245,7 @@ namespace SvnBridge.SourceControl
                             folder.Items.Add(item);
                         }
                     }
-                    if (lastNamePart == false)
+                    if (lastNamePart == false) // this conditional merely required to prevent cast of non-FolderMetaData-type objects below :(
                     {
                         folder = (FolderMetaData)item;
                     }
@@ -310,6 +317,7 @@ namespace SvnBridge.SourceControl
         private bool HandleDeleteItem(string remoteName, SourceItemChange change, string folderName, ref FolderMetaData folder, bool isLastNamePart)
         {
             ItemMetaData item = folder.FindItem(folderName);
+            // Shortcut: valid item in our cache, and it's a delete already? We're done :)
             if (item is DeleteFolderMetaData || item is DeleteMetaData)
                 return true;
 

@@ -81,8 +81,17 @@ namespace SvnBridge.Net
 			}
 		}
 
+        /// <remarks>
+        /// See also
+        /// http://stackoverflow.com/questions/18564044/parsing-data-from-a-network-stream
+        /// </remarks>
         private void ParseRequest(Stream stream, DefaultLogger logger)
 		{
+      // Improve fragmentation / efficiency issues
+      // via one single globally shared stream
+      // (during multiple parse activities)
+      // for all subsequent I/O-decoupled parsing
+      // of data from network stream here.
 			MemoryStream buffer = new MemoryStream();
 
 			ReadToBuffer(stream, buffer);
@@ -98,6 +107,9 @@ namespace SvnBridge.Net
 			}
 
 			ReadMessageBody(stream, buffer);
+
+            // Now that all content has been read (and actively parsed) into buffer,
+            // we're finally able to have it trace logged if requested:
 			if(Logging.TraceEnabled)
 			{
                 string message = SnitchStringFromStream(buffer);

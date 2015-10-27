@@ -9,6 +9,7 @@ namespace SvnBridge.Cache
 {
     public class WebCache
     {
+        // http://stackoverflow.com/questions/8092448/should-i-use-httpruntime-cache
         private readonly System.Web.Caching.Cache cache = HttpRuntime.Cache;
 
         public virtual CachedResult Get(string key)

@@ -314,6 +314,8 @@ namespace SvnBridge.Handlers
         private static void CopyMemoryStreamDo(MemoryStream inputStream, Stream outputStream)
         {
             inputStream.Seek(0, SeekOrigin.Begin);
+            // Potentially relevant:
+            // http://stackoverflow.com/questions/230128/how-do-i-copy-the-contents-of-one-stream-to-another
             inputStream.WriteTo(outputStream);
         }
 

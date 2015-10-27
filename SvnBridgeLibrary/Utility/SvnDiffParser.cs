@@ -22,6 +22,11 @@ namespace SvnBridge.Utility
         {
             SvnDiff[] diffs = SvnDiffEngine.ParseSvnDiff(inputStream);
             byte[] fileData = new byte[0];
+            // FIXME BUG!?: failing this check (i.e. if there were no diffs to be processed) will cause *empty* file data to be returned
+            // (unless this is exactly the behaviour that is expected by the protocol when not encountering any svndiffs -
+            // but then IMHO the "no diffs --> empty file" check should still be done *outside* of this diff-specific handler!).
+            // However, Subversion says "After the header come one or more windows" (note "one"!).
+            // Still, sounds like we ought to instantiate/return a fileData in case of diffs.Lengths, else return sourceData.
             if (diffs.Length > 0)
             {
                 int sourceDataStartIndex = 0;

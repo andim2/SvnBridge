@@ -25,6 +25,10 @@ namespace SvnBridge.Handlers
 			response.StatusCode = status;
 		}
 
+        /// <remarks>
+        /// Related info:
+        /// http://stackoverflow.com/questions/8711584/x-pad-avoid-browser-bug-header-added-by-apache
+        /// </remarks>
         protected static void SetResponseHeader_X_Pad_avoid_browser_bug(
             IHttpResponse response)
         {

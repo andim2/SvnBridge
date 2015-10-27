@@ -6,6 +6,10 @@ namespace SvnBridge.Interfaces
 {
 	public interface IPathParser
 	{
+		/// <remarks>
+		/// For GetServerUrl() implementation requirements,
+		/// see its unit tests.
+		/// </remarks>
         string GetServerUrl(IHttpRequest request, ICredentials credentials);
 		string GetLocalPath(IHttpRequest request);
 		string GetLocalPath(IHttpRequest request, string url);

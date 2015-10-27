@@ -321,8 +321,17 @@ namespace SvnBridge.SourceControl
                 }
                 if (renamedItems.Count > 0)
                 {
+                    // I had pondered "improving" naming of variables old* to preRename*,
+                    // however that might be imprecise
+                    // since it's possibly not only in a _rename_ change
+                    // that there are "old items",
+                    // but also with _copy_ (branch) or even other changes.
                     ItemMetaData[] oldItems = GetPreviousVersionOfItems(renamedItems.ToArray(), history.ChangeSetID);
                     var oldItemsById = new Dictionary<int, ItemMetaData>();
+                    // I pondered changing this loop into the (faster) decrementing type,
+                    // but I'm unsure: I wonder whether
+                    // having rename actions/items processed in strict incrementing order
+                    // is actually *required* (since they might be inter-dependent).
                     for (var i = 0; i < renamedItems.Count; i++)
                     {
                         if (oldItems[i] != null)
@@ -339,6 +348,8 @@ namespace SvnBridge.SourceControl
                             renamesWithNoPreviousVersion.Add(change);
                     }
 
+                    // [this is slowpath (rare event),
+                    // thus Remove() is better than Enumerable.Except() use:]
                     foreach (var rename in renamesWithNoPreviousVersion)
                         history.Changes.Remove(rename);
 
@@ -593,6 +604,9 @@ namespace SvnBridge.SourceControl
         {
             if (ItemExists(path))
             {
+                // [Folder pre-existing in repository??
+                // Possibly your repo working copy was not up-to-date
+                // - try updating and *then* retry commit...]
                 throw new FolderAlreadyExistsException();
             }
 

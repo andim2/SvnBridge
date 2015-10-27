@@ -58,6 +58,7 @@ namespace SvnBridge.PathParsing
                     {
                         string remoteProjectName = items[0].RemoteName.Substring(Constants.ServerRootPath.Length);
                         projectLocations[projectName] = new ProjectLocationInformation(remoteProjectName, server);
+                        // Hmm... to break; or not to break;?
                     }
                 }
                 if (!projectLocations.ContainsKey(projectName))

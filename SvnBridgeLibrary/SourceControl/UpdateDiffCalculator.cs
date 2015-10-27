@@ -319,9 +319,12 @@ namespace SvnBridge.SourceControl
             return clientExistingFiles;
         }
 
-        /// This method ensures that we are not sending useless deletes to the client
+        /// <summary>
+        /// This method ensures that we are not sending useless deletes to the client -
         /// if a folder is to be deleted, all its children are as well, which we remove
         /// at this phase.
+        /// </summary>
+        /// <param name="parentFolder">Folder where any deleted items ought to be recursively removed from</param>
         private static void FlattenDeletedFolders(FolderMetaData parentFolder)
         {
             foreach (ItemMetaData item in parentFolder.Items)

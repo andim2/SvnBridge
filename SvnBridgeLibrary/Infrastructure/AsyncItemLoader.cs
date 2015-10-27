@@ -33,6 +33,11 @@ namespace SvnBridge.Infrastructure
         {
             foreach (ItemMetaData item in folder.Items)
             {
+                // Before reading further data, verify total pending size:
+
+                // Wanted to move size check/data reading into a helper,
+                // but then the cancel handling below
+                // would have to be implemented in an awkward more indirect way...
                 while (CalculateLoadedItemsSize(folderInfo) > CacheTotalSizeLimit)
                 {
                     if (cancelOperation)
@@ -55,6 +60,12 @@ namespace SvnBridge.Infrastructure
             }
         }
 
+        /// <summary>
+        /// Queries total data size of all items within the entire directory hierarchy
+        /// (i.e. file content data that we gathered and that awaits retrieval by client side).
+        /// </summary>
+        /// <param name="folder">Base folder to calculate the hierarchical data items size of</param>
+        /// <returns>Byte count currently occupied by data items below the base folder</returns>
         private long CalculateLoadedItemsSize(FolderMetaData folder)
         {
             long itemsSize = 0;

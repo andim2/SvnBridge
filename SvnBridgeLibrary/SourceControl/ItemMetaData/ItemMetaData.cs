@@ -12,7 +12,7 @@ namespace SvnBridge.SourceControl
         public bool OriginallyDeleted = false;
         public bool DataLoaded = false;
         public string Base64DiffData = null;
-        public string Md5Hash = null;
+        public string Md5Hash = null; // Important helper to support maintaining a properly end-to-end checksummed data chain
         public Exception DataLoadedError;
         public string DownloadUrl = null;
         public int Id;

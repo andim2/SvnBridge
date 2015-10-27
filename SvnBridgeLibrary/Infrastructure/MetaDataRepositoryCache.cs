@@ -163,7 +163,9 @@ namespace SvnBridge.Infrastructure
             string cacheKey = CreateRevisionAndPathCacheKey(revision, serverPath);
             persistentCache.UnitOfWork(delegate
             {
-                // we have to make a second test here, to ensure that another thread
+                // Once we are safely within the protected lock area here,
+                // we have to make a second test,
+                // to ensure that another thread
                 // did not already read this version
                 if (IsInCache(revision, serverPath))
                     return;
