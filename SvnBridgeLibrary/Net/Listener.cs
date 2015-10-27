@@ -327,11 +327,11 @@ namespace SvnBridge.Net
             Exception exception,
             IHttpResponse response)
         {
+            Guid guid = Guid.NewGuid();
+
             response.StatusCode = 500;
             using (StreamWriter output = new StreamWriter(response.OutputStream))
             {
-                Guid guid = Guid.NewGuid();
-
                 string message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                                  "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
                                  "<C:error/>\n" +
@@ -342,9 +342,9 @@ namespace SvnBridge.Net
                                  "</m:human-readable>\n" +
                                  "</D:error>\n";
                 output.Write(message);
-
-                LogError(guid, exception);
             }
+
+            LogError(guid, exception);
         }
 
         private void OnListenException(Exception ex)
