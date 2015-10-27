@@ -11,7 +11,9 @@ namespace SvnBridge.Handlers
 {
     public class CheckOutHandler : RequestHandlerBase
     {
-        protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
+        protected override void Handle(
+            IHttpContext context,
+            TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;

@@ -20,7 +20,9 @@ namespace SvnBridge.Handlers
     {
         protected AsyncItemLoader loader;
 
-        protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
+        protected override void Handle(
+            IHttpContext context,
+            TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;

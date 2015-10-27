@@ -37,13 +37,18 @@ namespace SvnBridge.Handlers
 	        get { return credentials; }
 	    }
 
-	    public virtual void Handle(IHttpContext context, IPathParser pathParser, NetworkCredential credentials)
+        public virtual void Handle(
+            IHttpContext context,
+            IPathParser pathParser,
+            NetworkCredential credentials)
 		{
             this.credentials = credentials;
             Initialize(context, pathParser);
             sourceControlProvider = Container.Resolve<TFSSourceControlProvider>();
 
-            Handle(context, sourceControlProvider);
+            Handle(
+                context,
+                sourceControlProvider);
 		}
 
 		public void Initialize(IHttpContext context, IPathParser parser)
@@ -56,7 +61,9 @@ namespace SvnBridge.Handlers
 		{
 		}
 
-        protected abstract void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider);
+        protected abstract void Handle(
+            IHttpContext context,
+            TFSSourceControlProvider sourceControlProvider);
 
 		protected static void SetResponseSettings(IHttpResponse response, string contentType, Encoding contentEncoding, int status)
 		{

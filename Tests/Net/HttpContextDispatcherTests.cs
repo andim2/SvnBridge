@@ -388,14 +388,19 @@ namespace UnitTests
         public NetworkCredential Handle_credentials;
         public Exception Handle_Throw = null;
 
-        public override void Handle(IHttpContext context, IPathParser pathParser, NetworkCredential credentials)
+        public override void Handle(
+            IHttpContext context,
+            IPathParser pathParser,
+            NetworkCredential credentials)
         {
             Handle_credentials = credentials;
             if (Handle_Throw != null)
                 throw Handle_Throw;
         }
 
-        protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
+        protected override void Handle(
+            IHttpContext context,
+            TFSSourceControlProvider sourceControlProvider)
         {
         }
     }

@@ -10,7 +10,9 @@ namespace SvnBridge.Handlers
 {
     public class MkColHandler : RequestHandlerBase
     {
-        protected override void Handle(IHttpContext context, TFSSourceControlProvider sourceControlProvider)
+        protected override void Handle(
+            IHttpContext context,
+            TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;

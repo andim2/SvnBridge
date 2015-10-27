@@ -109,7 +109,10 @@ namespace SvnBridge.Net
                 try
                 {
                     actionTracking.Request(handler);
-                    handler.Handle(connection, parser, credential);
+                    handler.Handle(
+                        connection,
+                        parser,
+                        credential);
                 }
                 catch (TargetInvocationException e)
                 {

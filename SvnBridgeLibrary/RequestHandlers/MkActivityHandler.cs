@@ -7,8 +7,9 @@ namespace SvnBridge.Handlers
 {
     public class MkActivityHandler : RequestHandlerBase
     {
-        protected override void Handle(IHttpContext context,
-                                       TFSSourceControlProvider sourceControlProvider)
+        protected override void Handle(
+            IHttpContext context,
+            TFSSourceControlProvider sourceControlProvider)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
