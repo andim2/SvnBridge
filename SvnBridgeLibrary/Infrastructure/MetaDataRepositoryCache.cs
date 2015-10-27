@@ -161,25 +161,25 @@ namespace SvnBridge.Infrastructure
             int revision,
             string serverPath)
         {
-                // Once we are safely within the protected lock area here,
-                // we have to make a second test,
-                // to ensure that another thread
-                // did not already read this version
-                if (IsInCache(revision, serverPath))
-                    return;
+            // Once we are safely within the protected lock area here,
+            // we have to make a second test,
+            // to ensure that another thread
+            // did not already read this version
+            if (IsInCache(revision, serverPath))
+                return;
 
-                SourceItem[] items = QueryItemsInternal(revision, ref serverPath);
+            SourceItem[] items = QueryItemsInternal(revision, ref serverPath);
 
-                if (items.Length != 0)
-                {
-                    AddSubItemsToCache(revision, serverPath, items);
-                }
-                else
-                {
-                    AddMissingItemToCache(revision, serverPath);
-                }
+            if (items.Length != 0)
+            {
+                AddSubItemsToCache(revision, serverPath, items);
+            }
+            else
+            {
+                AddMissingItemToCache(revision, serverPath);
+            }
 
-                persistentCache.Set(cacheKey, true);
+            persistentCache.Set(cacheKey, true);
         }
 
         private SourceItem[] QueryItemsInternal(int revision, ref string serverPath)
