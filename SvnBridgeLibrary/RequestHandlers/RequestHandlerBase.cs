@@ -68,7 +68,7 @@ namespace SvnBridge.Handlers
         protected static void OnErrorRetainRequestInfo_RequestBody<T>(T data)
         {
             Helper.DebugUsefulBreakpointLocation();
-            RequestCache.Items["RequestBody"] = data;
+            RequestCache.Items[RequestCache_Keys.RequestBody] = data;
         }
     }
 

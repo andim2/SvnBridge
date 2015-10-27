@@ -93,4 +93,20 @@ namespace SvnBridge.Net
 				throw new InvalidOperationException("Cannot use RequestCache if it wasn't initialized");
 		}
 	}
+
+    /// <summary>
+    /// Provides specific well-known key strings to be used by RequestCache users.
+    /// Since a Hashtable is generic (type-agnostic), we cannot create local helper methods
+    /// to query/set specific RequestCache content (their signature would not be type-agnostic).
+    /// Thus at least have some well-known string constants
+    /// in order to minimize danger of typos in error-prone open-coded string literals.
+    /// It could be considered somewhat of a layer violation
+    /// to be offering *specific* (interface-user-related) key values
+    /// at the same location
+    /// that the *basic/generic* class gets offered - XXX?
+    /// </summary>
+    public static class RequestCache_Keys
+    {
+        public const string RequestBody = "RequestBody";
+    }
 }

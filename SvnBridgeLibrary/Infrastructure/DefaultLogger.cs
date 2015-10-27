@@ -92,7 +92,7 @@ namespace SvnBridge.Infrastructure
                 output.AppendFormat("User     : {0}\r\n", credential.UserName);
             }
             output.AppendFormat("Request  : {0} {1} HTTP/1.1\r\n", context.Request.HttpMethod, context.Request.Url.AbsolutePath);
-            var requestBody = RequestCache.Items["RequestBody"];
+            var requestBody = RequestCache.Items[RequestCache_Keys.RequestBody];
             if (null != requestBody)
             {
                 output.AppendFormat("{0}\r\n", Helper.SerializeXmlString(requestBody));
