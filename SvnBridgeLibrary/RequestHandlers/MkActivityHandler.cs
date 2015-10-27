@@ -1,6 +1,7 @@
 using System.Text;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
+using SvnBridge.Utility; // Helper.Decode()
 
 namespace SvnBridge.Handlers
 {
@@ -14,6 +15,7 @@ namespace SvnBridge.Handlers
             IHttpResponse response = context.Response;
 
             string requestPath = GetPath(request);
+            string activityPath = Helper.Decode(requestPath);
             string activityId = requestPath.Substring(10);
             sourceControlProvider.MakeActivity(activityId);
 
@@ -28,7 +30,7 @@ namespace SvnBridge.Handlers
                                      "<title>201 Created</title>\n" +
                                      "</head><body>\n" +
                                      "<h1>Created</h1>\n" +
-                                     "<p>Activity " + requestPath + " has been created.</p>\n" +
+                                     "<p>Activity " + Helper.Encode(activityPath) + " has been created.</p>\n" +
                                      "<hr />\n" +
                                      "<address>Apache/2.0.59 (Win32) SVN/1.4.2 DAV/2 Server at " + request.Url.Host +
                                      " Port " + request.Url.Port + "</address>\n" +
