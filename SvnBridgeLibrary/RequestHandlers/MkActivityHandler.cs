@@ -21,7 +21,7 @@ namespace SvnBridge.Handlers
 
             SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
             response.AppendHeader("Cache-Control", "no-cache");
-            response.AppendHeader("Location", "http://" + request.Headers["Host"] + requestPath);
+            response.AppendHeader("Location", "http://" + request.Headers["Host"] + activityPath);
             SetResponseHeader_X_Pad_avoid_browser_bug(
                 response);
 
