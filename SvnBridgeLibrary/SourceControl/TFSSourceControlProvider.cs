@@ -325,9 +325,16 @@ namespace SvnBridge.SourceControl
             if (itemVersion != -1)
                 itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
 
-            LogItem logItem = GetLogItem(serverPath, itemVersionSpec, versionFrom, versionTo, recursionType, maxCount, sortAscending);
+            SourceItemHistory[] histories = QueryHistory(
+                serverPath,
+                itemVersionSpec,
+                versionFrom,
+                versionTo,
+                recursionType,
+                maxCount,
+                sortAscending).ToArray();
 
-            foreach (SourceItemHistory history in logItem.History)
+            foreach (SourceItemHistory history in histories)
             {
                 List<SourceItem> renamedItems = new List<SourceItem>();
                 List<SourceItem> branchedItems = new List<SourceItem>();
@@ -418,6 +425,8 @@ namespace SvnBridge.SourceControl
                 }
             }
 
+            LogItem logItem = new LogItem(null, serverPath, histories);
+
             return logItem;
         }
 
@@ -489,7 +498,14 @@ namespace SvnBridge.SourceControl
                 changeset.Comment);
         }
 
-        private LogItem GetLogItem(string serverPath, VersionSpec itemVersion, int versionFrom, int versionTo, RecursionType recursionType, int maxCount, bool sortAscending)
+        private List<SourceItemHistory> QueryHistory(
+            string serverPath,
+            VersionSpec itemVersion,
+            int versionFrom,
+            int versionTo,
+            RecursionType recursionType,
+            int maxCount,
+            bool sortAscending)
         {
             ItemSpec itemSpec = CreateItemSpec(serverPath, recursionType);
             Changeset[] changesets;
@@ -508,22 +524,35 @@ namespace SvnBridge.SourceControl
                 {
                     // Workaround for bug in TFS2008sp1
                     int latestVersion = GetLatestVersion();
-                    LogItem log = GetLogItem(serverPath, itemVersion, 1, latestVersion, RecursionType.None, 2, sortAscending /* is this the value to pass to have this workaround still work properly? */);
-                    if (log.History[0].Changes[0].ChangeType == ChangeType.Delete && log.History.Length == 2)
-                        latestVersion = log.History[1].ChangeSetID;
+                    List<SourceItemHistory> tempHistories = QueryHistory(
+                        serverPath,
+                        itemVersion,
+                        1,
+                        latestVersion,
+                        RecursionType.None,
+                        2,
+                        sortAscending /* is this the value to pass to have this workaround still work properly? */);
+                    if (tempHistories[0].Changes[0].ChangeType == ChangeType.Delete && tempHistories.Count == 2)
+                        latestVersion = tempHistories[1].ChangeSetID;
 
                     if (versionTo == latestVersion)
                     {
                         // in this case, there are only 2 revisions in TFS
                         // the first being the initial checkin, and the second
                         // being the deletion, there is no need to query further
-                        histories = new List<SourceItemHistory>(log.History);
+                        histories = tempHistories;
                     }
                     else
                     {
-                        string itemFirstPath = log.History[0].Changes[0].Item.RemoteName; // debug helper
-                        LogItem result = GetLogItem(itemFirstPath, VersionSpec.FromChangeset(latestVersion), 1, latestVersion, RecursionType.Full, int.MaxValue, sortAscending);
-                        histories = new List<SourceItemHistory>(result.History);
+                        string itemFirstPath = tempHistories[0].Changes[0].Item.RemoteName; // debug helper
+                        histories = QueryHistory(
+                            itemFirstPath,
+                            VersionSpec.FromChangeset(latestVersion),
+                            1,
+                            latestVersion,
+                            RecursionType.Full,
+                            int.MaxValue,
+                            sortAscending);
                     }
 
                     // I don't know whether we actually want/need to do ugly manual version limiting here -
@@ -533,8 +562,10 @@ namespace SvnBridge.SourceControl
                     Histories_RestrictToRangeWindow(
                         ref histories,
                         versionTo,
-                        maxCount);
-                    return new LogItem(null, serverPath, histories.ToArray());
+                        maxCount,
+                        true);
+
+                    return histories;
                 }
                 else
                     throw;
@@ -572,7 +603,7 @@ namespace SvnBridge.SourceControl
 
             histories = ConvertChangesetsToSourceItemHistory(changesetsTotal.ToArray());
 
-            return new LogItem(null, serverPath, histories.ToArray());
+            return histories;
         }
 
         private Changeset[] Service_QueryHistory(
@@ -603,18 +634,29 @@ namespace SvnBridge.SourceControl
         /// <param name="histories">List of changesets to be modified</param>
         /// <param name="versionTo">maximum version to keep listing</param>
         /// <param name="maxCount">maximum number of entries allowed</param>
+        /// <param name="whenOverflowDiscardNewest">when true: remove newest version entries, otherwise remove oldest.
+        /// Hmm... not sure whether offering a whenOverflowDiscardNewest choice is even helpful -
+        /// perhaps the user should always expect discarding at a certain end and thus _always_
+        /// have loop handling for missing parts...
+        /// </param>
         private static void Histories_RestrictToRangeWindow(
             ref List<SourceItemHistory> histories,
             int versionTo,
-            int maxCount)
+            int maxCount,
+            bool whenOverflowDiscardNewest)
         {
             while ((histories.Count > 0) && (histories[0].ChangeSetID > versionTo))
             {
                 histories.RemoveAt(0);
             }
-            while (histories.Count > maxCount)
+            if (histories.Count > maxCount)
             {
-                histories.RemoveAt(histories.Count - 1);
+                // Order of the results that TFS returns is from _newest_ (index 0) to oldest (last index),
+                // thus when whenOverflowDiscardNewest == true we need to remove the starting range,
+                // else end range.
+                int numElemsRemove = histories.Count - maxCount;
+                int startIndex = whenOverflowDiscardNewest ? 0 : maxCount;
+                histories.RemoveRange(startIndex, numElemsRemove);
             }
         }
 
@@ -929,6 +971,44 @@ namespace SvnBridge.SourceControl
             return WriteFile(activityId, path, fileData, false);
         }
 
+        /// <remarks>
+        /// Hmm... this helper is a bit dirty... but it helps.
+        /// Should be reworked into a class which assembles an itemPaths member
+        /// via various helper methods that return property file names.
+        /// </remarks>
+        private void CollectItemPaths(
+            string path,
+            ref List<string> itemPaths,
+            Recursion recursion)
+        {
+            itemPaths.Add(path);
+
+            // shortcut
+            if ((recursion != Recursion.None) && (recursion != Recursion.OneLevel))
+                return;
+
+            string propertiesForFile = GetPropertiesFileName(path, ItemType.File);
+            string propertiesForFolder = GetPropertiesFileName(path, ItemType.Folder);
+            string propertiesForFolderItems = path + "/" + Constants.PropFolder;
+
+            if (recursion == Recursion.None)
+            {
+                if (propertiesForFile.Length <= maxLengthFromRootPath)
+                    itemPaths.Add(propertiesForFile);
+
+                if (propertiesForFolder.Length <= maxLengthFromRootPath)
+                    itemPaths.Add(propertiesForFolder);
+            }
+            else if (recursion == Recursion.OneLevel)
+            {
+                if (propertiesForFile.Length <= maxLengthFromRootPath)
+                    itemPaths.Add(propertiesForFile);
+
+                if (propertiesForFolderItems.Length <= maxLengthFromRootPath)
+                    itemPaths.Add(propertiesForFolderItems);
+            }
+        }
+
         private ItemMetaData GetItems(int version, string path, Recursion recursion, bool returnPropertyFiles)
         {
             // WARNING: this interface will
@@ -951,36 +1031,15 @@ namespace SvnBridge.SourceControl
                 version = GetLatestVersion();
             }
 
-            string propertiesForFile = GetPropertiesFileName(path, ItemType.File);
-            string propertiesForFolder = GetPropertiesFileName(path, ItemType.Folder);
-            string propertiesForFolderItems = path + "/" + Constants.PropFolder;
             List<string> itemPaths = new List<string>();
-            itemPaths.Add(path);
+            CollectItemPaths(
+                path,
+                ref itemPaths,
+                recursion);
 
-            SourceItem[] items = null;
-            if (returnPropertyFiles || recursion == Recursion.Full)
+            SourceItem[] items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
+            if (recursion == Recursion.OneLevel)
             {
-                items = metaDataRepository.QueryItems(version, path, recursion);
-            }
-            else if (recursion == Recursion.None)
-            {
-                if (propertiesForFile.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFile);
-
-                if (propertiesForFolder.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFolder);
-
-                items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
-            }
-            else if (recursion == Recursion.OneLevel)
-            {
-                if (propertiesForFile.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFile);
-
-                if (propertiesForFolderItems.Length <= maxLengthFromRootPath)
-                    itemPaths.Add(propertiesForFolderItems);
-
-                items = metaDataRepository.QueryItems(version, itemPaths.ToArray(), recursion);
                 if (items.Length > 0 && items[0].ItemType == ItemType.Folder)
                 {
                     List<string> propertiesForSubFolders = new List<string>();
@@ -988,7 +1047,7 @@ namespace SvnBridge.SourceControl
                     {
                         if (item.ItemType == ItemType.Folder && !IsPropertyFolder(item.RemoteName))
                         {
-                            propertiesForFolder = GetPropertiesFileName(item.RemoteName, ItemType.Folder);
+                            string propertiesForFolder = GetPropertiesFileName(item.RemoteName, ItemType.Folder);
                             if (propertiesForFolder.Length <= maxLengthFromRootPath)
                                 propertiesForSubFolders.Add(propertiesForFolder);
                         }

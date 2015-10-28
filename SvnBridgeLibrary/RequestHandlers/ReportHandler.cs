@@ -335,7 +335,7 @@ namespace SvnBridge.Handlers
                     output.Write("<S:close-file checksum=\"{0}\"/>\n", item.Md5Hash);
                 }
             }
-            output.Write("<S:close-directory />\n");
+            output.Write("<S:close-directory/>\n");
         }
 
         private void SendBlameResponse(IHttpRequest request, IHttpResponse response, TFSSourceControlProvider sourceControlProvider, string serverPath, FileRevsReportData data)

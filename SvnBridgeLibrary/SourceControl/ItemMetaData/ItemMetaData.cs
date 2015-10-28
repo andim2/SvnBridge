@@ -72,6 +72,9 @@ namespace SvnBridge.SourceControl
             return IsSamePath(Name, path);
         }
 
+        /// <remarks>
+        /// See also FolderMetaData.MightContain()
+        /// </remarks>
         public static bool IsSamePath(string itemPath, string pathCompare)
         {
             string itemPathCooked = itemPath;

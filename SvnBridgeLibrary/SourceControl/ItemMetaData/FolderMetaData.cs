@@ -34,6 +34,52 @@ namespace SvnBridge.SourceControl
 
         public ItemMetaData FindItem(string name)
         {
+            // Shortcut (many incoming folder requests have completely foreign path names,
+            // in which case traversing a whole completely foreign large directory
+            // hierarchy would become super expensive):
+            if (MightContain(name))
+            {
+                return FindItem_Internal(name);
+            }
+            return null;
+        }
+
+        /// <remarks>
+        /// See also IsSamePath()
+        /// </remarks>
+        private bool MightContain(string pathCompare)
+        {
+            string itemPathCooked = Name;
+
+            if (pathCompare.StartsWith("/"))
+            {
+                if (itemPathCooked.StartsWith("/") == false)
+                    itemPathCooked = "/" + itemPathCooked;
+            }
+
+            return (pathCompare.StartsWith(itemPathCooked,
+                WantCaseSensitiveMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase)
+            );
+
+        }
+
+        private ItemMetaData FindItem_Internal(string name)
+        {
+            return FindItem_Internal_Do(name);
+        }
+
+        /// <remarks>
+        /// Implementation of this method seems a bit weird
+        /// (e.g. duplicate IsSamePath() checks of same object when recursing,
+        /// due to checking both the item-type and folder-type cases).
+        /// This could be implemented more easily via virtuals
+        /// (also to move the IsSamePath() checks to a handler of the base class),
+        /// however since this sub item "find" method is quite obviously FolderMetaData-specific,
+        /// it probably was decided to keep everything implemented
+        /// at this derived class level.
+        /// </remarks>
+        private ItemMetaData FindItem_Internal_Do(string name)
+        {
             if (IsSamePath(name))
                 return this;
             foreach (ItemMetaData item in Items)
@@ -45,7 +91,7 @@ namespace SvnBridge.SourceControl
                 FolderMetaData subFolder = item as FolderMetaData;
                 if (subFolder != null)
                 {
-                    ItemMetaData result = subFolder.FindItem(name);
+                    ItemMetaData result = subFolder.FindItem_Internal(name);
                     if (result != null)
                         return result;
                 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic; // Dictionary , List
 using CodePlex.TfsLibrary.ObjectModel; // SourceItemChange
 using CodePlex.TfsLibrary.RepositoryWebSvc; // ChangeType , ItemType
+using SvnBridge.Infrastructure; // Configuration
 
 namespace SvnBridge.SourceControl
 {
@@ -71,17 +72,32 @@ namespace SvnBridge.SourceControl
 
             string itemOldName = oldItem.Name;
             string itemNewName = change.Item.RemoteName;
+
+            // origin item not within (somewhere below) our checkout root? --> skip indication of Add or Delete!
+            bool attentionOriginItemOfForeignScope = IsOriginItemOfForeignScope(
+                change,
+                itemOldName);
+
             string itemOldNameIndicated;
             string itemNewNameIndicated;
+            bool processDelete = true, processAdd = true;
             if (updatingForwardInTime)
             {
                 itemOldNameIndicated = itemOldName;
                 itemNewNameIndicated = itemNewName;
+                if (attentionOriginItemOfForeignScope)
+                {
+                    processDelete = false;
+                }
             }
             else
             {
                 itemOldNameIndicated = itemNewName;
                 itemNewNameIndicated = itemOldName;
+                if (attentionOriginItemOfForeignScope)
+                {
+                    processAdd = false;
+                }
             }
 
             // svn diff output of a real Subversion server
@@ -97,13 +113,58 @@ namespace SvnBridge.SourceControl
             // and not during ItemMetaData queueing here yet,
             // in case subsequent ItemMetaData handling
             // happened to expect a different order.
-            ProcessDeletedItem(itemOldNameIndicated, change);
-            ProcessAddedOrUpdatedItem(itemNewNameIndicated, change, false, false, updatingForwardInTime);
+            if (processDelete)
+            {
+                ProcessDeletedItem(itemOldNameIndicated, change);
+            }
+            if (processAdd)
+            {
+                ProcessAddedOrUpdatedItem(itemNewNameIndicated, change, false, false, updatingForwardInTime);
+            }
 
             if (change.Item.ItemType == ItemType.Folder)
             {
                 renamedItemsToBeCheckedForDeletedChildren.Add(itemNewNameIndicated);
             }
+        }
+
+        /// <remarks>
+        /// SPECIAL CASE for *foreign-location* "renames"
+        /// (e.g. foreign Team Project, or probably simply not within (somewhere below) our checkout root):
+        /// Some Change may indicate Edit | Rename | Merge,
+        /// with oldItem.Name being REPO1/somefolder/file.h and
+        /// change.Item.RemoteName being REPO2/somefolder/file.h
+        /// IOW we actually have a *merge* rather than a *rename*.
+        /// Since the foreign-repo (REPO1) part will *not* be modified (deleted),
+        /// and our handling would modify this into a Delete of REPO2/somefolder/file.h,
+        /// which is a *non-existing, newly added* file,
+        /// this means that the Delete part of the Delete/Add combo should not be indicated
+        /// to the SVN side (would croak on the non-existing file).
+        /// Now the question remains whether this special-casing here is still fine as well
+        /// in case the user's checkout root ends up somewhere *below* the actual repository root,
+        /// IOW both old and new name are within the *same* repo and thus Delete
+        /// of the pre-existing item is valid/required (TODO?).
+        /// </remarks>
+        private bool IsOriginItemOfForeignScope(
+            SourceItemChange change,
+            string itemOriginName)
+        {
+            bool isOriginItemOfForeignScope = false;
+
+            bool needCheckForSkippingForeignScopeItems = (ChangeTypeAnalyzer.IsMergeOperation(change));
+            if (needCheckForSkippingForeignScopeItems)
+            {
+                StringComparison stringCompareMode =
+                    Configuration.SCMWantCaseSensitiveItemMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
+
+                bool isItemResidingWithinCheckoutRoot = itemOriginName.StartsWith(_checkoutRootPath, stringCompareMode);
+                if (!(isItemResidingWithinCheckoutRoot))
+                {
+                    isOriginItemOfForeignScope = true;
+                }
+            }
+
+            return isOriginItemOfForeignScope;
         }
 
         private void PerformAddOrUpdate(SourceItemChange change, bool edit, bool updatingForwardInTime)

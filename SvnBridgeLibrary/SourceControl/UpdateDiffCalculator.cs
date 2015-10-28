@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO; // Path.GetFileName()
 using CodePlex.TfsLibrary.ObjectModel;
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure; // Configuration
@@ -14,6 +13,11 @@ namespace SvnBridge.SourceControl
         public static bool IsRenameOperation(SourceItemChange change)
         {
             return (change.ChangeType & ChangeType.Rename) == ChangeType.Rename;
+        }
+
+        public static bool IsMergeOperation(SourceItemChange change)
+        {
+            return (change.ChangeType & ChangeType.Merge) == ChangeType.Merge;
         }
 
         public static bool IsDeleteOperation(SourceItemChange change, bool updatingForwardInTime)
@@ -176,6 +180,8 @@ namespace SvnBridge.SourceControl
         {
             bool updatingForwardInTime = sourceVersion <= targetVersion;
             int lastVersion = sourceVersion;
+            // Need loop iteration (the history fetching below
+            // might be configured to return partial history parts):
             while (lastVersion != targetVersion)
             {
                 int previousLoopLastVersion = lastVersion;
@@ -205,10 +211,20 @@ namespace SvnBridge.SourceControl
                 changeVersion,
                 versionFrom, versionTo,
                 Recursion.Full,
-                // FIXME: why only 256 *here*?? This would match <see cref="TFSSourceControlProvider"/> TFS_QUERY_LIMIT
+                // Hmm, why only 256 *here*?? This would match <see cref="TFSSourceControlProvider"/> TFS_QUERY_LIMIT
                 // (which is being worked around over there),
                 // thus I don't think we want to artificially specify it here as a constraint...
-                256);
+                // Well, now I think it is useful, to have a nicely observable limited amount to go through per each loop,
+                // also to avoid excessive resource use on server/client sides.
+                // UPDATE: we definitely need to do an *unrestricted* (int.MaxValue) query here instead,
+                // since TFS QueryHistory() for an *older->newer* query unhelpfully prefers to discard *older* version entries
+                // in case of insufficient request size.
+                // The most cleanly doable way to deal with this might be
+                // to reverse our UpdateDiffEngine loop to start with newest entries first,
+                // but I don't think that we're prepared for this
+                // and from my limited understanding I'm not even sure at all
+                // whether it's fully possible to sanely construct a diff tree going from new->old.
+                int.MaxValue);
 
             var numHistories = logItem.History.Length;
             bool needProcessHistories = (numHistories > 0); // shortcut
@@ -231,6 +247,27 @@ namespace SvnBridge.SourceControl
                     lastVersion -= 1;
                 }
 
+                // TODO UpdateDiffEngine should probably be changed to be instantiated *once* per the entire loop
+                // (and also have it take the updatingForwardInTime bool as a member),
+                // and then implement an Apply(change) method there which does all modifications
+                // of an individual Change within the loop. After all the root (FolderMetaData)
+                // will remain the same content instance for all engines (dito for all other members of Engine class!),
+                // thus it does not make much sense to continually reinstantiate it
+                // (but lastVersion value [_targetVersion member] would have to be supplied more dynamically per-method then, too).
+                // [hmm, however it's possibly conceivable
+                // that certain branching ops might require us
+                // to apply the reverse direction for certain changes??]
+                // Also, this would enable us to somehow centralize
+                // the currently duplicated-use (UpdateDiffEngine _and_ UpdateDiffCalculator)
+                // IsAddOperation() etc. helpers within UpdateDiffEngine
+                // (then it's that class only which will be concerned with ChangeType evaluation).
+
+                // Fixed MEGA BUG: the UpdateDiffEngine's "target" version
+                // should be the one of the current Changeset i.e. lastVersion!!
+                // (since this specific loop iteration is supposed to apply changes relevant to this Changeset only,
+                // and *not* the targetVersion of the global loop processing).
+                UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, lastVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
+
                 // we need to go over the changeset in reverse order so we will process
                 // all the files first, and build the folder hierarchy that way
                 for (int i = history.Changes.Count - 1; i >= 0; i--)
@@ -239,12 +276,6 @@ namespace SvnBridge.SourceControl
 
                     if (ShouldBeIgnored(change.Item.RemoteName))
                         continue;
-
-                    // Fixed MEGA BUG: the UpdateDiffEngine's "target" version
-                    // should be the one of the current Changeset i.e. lastVersion!!
-                    // (since this specific loop iteration is supposed to apply changes relevant to this Changeset only,
-                    // and *not* the targetVersion of the global loop processing).
-                    UpdateDiffEngine engine = new UpdateDiffEngine(root, checkoutRootPath, lastVersion, sourceControlProvider, clientExistingFiles, clientMissingFiles, additionForPropertyChangeOnly, renamedItemsToBeCheckedForDeletedChildren);
 
                     ApplyChangeOps(engine, change, updatingForwardInTime);
                 }
@@ -354,15 +385,17 @@ namespace SvnBridge.SourceControl
 
             foreach (ItemMetaData data in new List<ItemMetaData>(root.Items))
             {
-                string nameMatchingSourceItemConvention = data.Name;
-                FilesysHelpers.StripRootSlash(ref nameMatchingSourceItemConvention);
-
-                // a child of the currently renamed item
-                if (data is MissingItemMetaData &&
-                    nameMatchingSourceItemConvention.StartsWith(itemName, stringCompareMode))
+                // a child of the currently renamed item?
+                if (data is MissingItemMetaData)
                 {
-                    root.Items.Remove(data);
-                    continue;
+                    string nameMatchingSourceItemConvention = data.Name;
+                    FilesysHelpers.StripRootSlash(ref nameMatchingSourceItemConvention);
+
+                    if (nameMatchingSourceItemConvention.StartsWith(itemName, stringCompareMode))
+                    {
+                        root.Items.Remove(data);
+                        continue;
+                    }
                 }
                 if (data is FolderMetaData)
                 {
@@ -410,7 +443,8 @@ namespace SvnBridge.SourceControl
 
         private bool ShouldBeIgnored(string file)
         {
-            return Path.GetFileName(file) == Constants.PropFolder;
+            //return Path.GetFileName(file) == Constants.PropFolder;
+            return sourceControlProvider.IsPropertyFolder(file);
         }
     }
 }
