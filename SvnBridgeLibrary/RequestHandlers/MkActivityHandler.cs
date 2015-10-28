@@ -1,3 +1,4 @@
+using System.IO; // StreamWriter
 using System.Text;
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
@@ -12,7 +13,8 @@ namespace SvnBridge.Handlers
     {
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -33,7 +35,7 @@ namespace SvnBridge.Handlers
                 activityPath,
                 request);
 
-            WriteToResponse(response, responseContent);
+            output.Write(responseContent);
         }
     }
 }

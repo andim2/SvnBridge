@@ -1,3 +1,4 @@
+using System.IO; // StreamWriter
 using System.Text;
 using System.Text.RegularExpressions;
 using SvnBridge.Exceptions;
@@ -11,7 +12,8 @@ namespace SvnBridge.Handlers
     {
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -23,11 +25,11 @@ namespace SvnBridge.Handlers
             {
                 MakeCollection(requestPath, sourceControlProvider);
 
-                SendCreatedResponse(request, response, itemPath, request.Url.Host, request.Url.Port.ToString());
+                SendCreatedResponse(request, response, itemPath, request.Url.Host, request.Url.Port.ToString(), output);
             }
             catch (FolderAlreadyExistsException)
             {
-                SendFailureResponse(response, itemPath, request.Url.Host, request.Url.Port.ToString());
+                SendFailureResponse(response, itemPath, request.Url.Host, request.Url.Port.ToString(), output);
             }
         }
 
@@ -45,7 +47,7 @@ namespace SvnBridge.Handlers
             sourceControlProvider.MakeCollection(activityId, folderPathElement);
         }
 
-        private static void SendCreatedResponse(IHttpRequest request, IHttpResponse response, string itemPath, string server, string port)
+        private static void SendCreatedResponse(IHttpRequest request, IHttpResponse response, string itemPath, string server, string port, StreamWriter output)
         {
             SetResponseSettings(response, "text/html", Encoding.UTF8, 201);
 
@@ -57,10 +59,10 @@ namespace SvnBridge.Handlers
                 server,
                 port);
 
-            WriteToResponse(response, responseContent);
+            output.Write(responseContent);
         }
 
-        private static void SendFailureResponse(IHttpResponse response, string itemPath, string server, string port)
+        private static void SendFailureResponse(IHttpResponse response, string itemPath, string server, string port, StreamWriter output)
         {
             SetResponseSettings(response, "text/html; charset=iso-8859-1", Encoding.UTF8, 405);
 
@@ -77,7 +79,7 @@ namespace SvnBridge.Handlers
                 "<address>" + GetServerIdentificationString_HostPort(server, port) + "</address>\n" +
                 "</body></html>\n";
 
-            WriteToResponse(response, responseContent);
+            output.Write(responseContent);
         }
     }
 }

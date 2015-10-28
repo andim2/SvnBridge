@@ -13,7 +13,8 @@ namespace SvnBridge.Handlers
 	{
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
 		{
 			IHttpRequest request = context.Request;
 			IHttpResponse response = context.Response;
@@ -40,10 +41,7 @@ namespace SvnBridge.Handlers
                 // RFC4918 "9.2 PROPPATCH Method" "Responses to this method MUST NOT be cached."
                 SetResponseHeader_CacheControl_Uncached(response);
 
-                using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-                {
                     PropPatch(sourceControlProvider, data, extendedNamespaces, requestPath, output);
-                }
             }
             catch
             {

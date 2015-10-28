@@ -1,3 +1,4 @@
+using System.IO; // StreamWriter
 using System.Text;
 using SvnBridge.Interfaces;
 using SvnBridge.Utility;
@@ -9,7 +10,8 @@ namespace SvnBridge.Handlers
     {
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -39,7 +41,7 @@ namespace SvnBridge.Handlers
                     "<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
                     "</body></html>\n";
 
-                WriteToResponse(response, responseContent);
+                output.Write(responseContent);
             }
         }
 

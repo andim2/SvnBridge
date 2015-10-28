@@ -33,7 +33,8 @@ namespace SvnBridge.Handlers
 
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
 		{
 			IHttpRequest request = context.Request;
 			IHttpResponse response = context.Response;
@@ -50,11 +51,8 @@ namespace SvnBridge.Handlers
                 // that IIS seems to be rewriting the 404 message, so using 400 still allows
                 // the conversion process to continue.
                 SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 400);
-                using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-                {
-                    string error_string = "Path does not exist in repository."; // _with_ trailing dot, right?
-                    WriteHumanReadableError(output, 160013, error_string);
-                }
+                string error_string = "Path does not exist in repository."; // _with_ trailing dot, right?
+                WriteHumanReadableError(output, 160013, error_string);
                 return;
             }
             else if (requestPath.StartsWith("/!svn/"))
@@ -96,7 +94,7 @@ namespace SvnBridge.Handlers
 			ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(itemVersion, itemPath, Recursion.OneLevel);
             if (item == null)
             {
-                WriteFileNotFoundResponse(request, response);
+                WriteFileNotFoundResponse(request, response, output);
             }
             else if (item.ItemType == ItemType.Folder)
             {
@@ -104,8 +102,6 @@ namespace SvnBridge.Handlers
                 {
                     SetResponseSettings(response, "text/html; charset=iso-8859-1", Encoding.UTF8, 301);
                     response.AppendHeader("Location", request.Url + "/");
-                    using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-                    {
                         output.Write("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
                         output.Write("<html><head>\n");
                         output.Write("<title>301 Moved Permanently</title>\n");
@@ -115,18 +111,17 @@ namespace SvnBridge.Handlers
                         output.Write("<hr>\n");
                         output.Write("<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n");
                         output.Write("</body></html>\n");
-                    }
                 }
                 else
-                    RenderFolder(context, sourceControlProvider, (FolderMetaData)item);
+                    RenderFolder(context, sourceControlProvider, (FolderMetaData)item, output);
             }
             else
             {
-                RenderFile(context, sourceControlProvider, item);
+                RenderFile(context, sourceControlProvider, item, output);
             }
 		}
 
-        private void RenderFile(IHttpContext context, TFSSourceControlProvider sourceControlProvider, ItemMetaData item)
+        private void RenderFile(IHttpContext context, TFSSourceControlProvider sourceControlProvider, ItemMetaData item, StreamWriter output)
         {
             IHttpResponse response = context.Response;
             SetResponseSettings(response, "text/plain", Encoding.Default, 200);
@@ -139,12 +134,12 @@ namespace SvnBridge.Handlers
                 byte[] itemData = sourceControlProvider.ReadFile(item);
                 if (itemData.Length > 0) // Write throws exception if zero bytes
                 {
-                    response.OutputStream.Write(itemData, 0, itemData.Length);
+                    output.BaseStream.Write(itemData, 0, itemData.Length);
                 }
             }
         }
 
-        private static void RenderFolder(IHttpContext context, TFSSourceControlProvider sourceControlProvider, FolderMetaData folder)
+        private static void RenderFolder(IHttpContext context, TFSSourceControlProvider sourceControlProvider, FolderMetaData folder, StreamWriter output)
         {
             int latestVersion = sourceControlProvider.GetLatestVersion();
             IHttpResponse response = context.Response;
@@ -153,8 +148,6 @@ namespace SvnBridge.Handlers
             response.AppendHeader("ETag", "W/\"" + folder.ItemRevision + "//" + Helper.EncodeB(folder.Name) + "\"");
             response.AppendHeader("Accept-Ranges", "bytes");
 
-            using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-            {
                 output.Write("<html><head><title>");
                 output.Write("Revision " + latestVersion + ": /" + folder.Name);
                 output.Write("</title></head>\n");
@@ -186,7 +179,6 @@ namespace SvnBridge.Handlers
                 output.Write(" <hr noshade><em><a href=\"http://www.codeplex.com/\">CodePlex</a> powered by <a href=\"http://svnbridge.codeplex.com\">SvnBridge</a></em>\n");
                 output.Write("</body></html>");
                 output.Flush();
-            }
          }
 	}
 }

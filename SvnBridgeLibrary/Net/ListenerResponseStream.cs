@@ -116,6 +116,21 @@ namespace SvnBridge.Net
             }
             // FIXME: hmm... should we Close() our wrapped Stream member here, too!?
             // Most likely not... (some subsequent output handling might take place).
+            // UPDATE: I'm dead certain that we ought to Close() it,
+            // since we are within our Stream.Close()
+            // where all (the entire chain of) stream dependees
+            // is also supposed to be Close()d!!
+            // http://stackoverflow.com/questions/13043706/will-streamwriter-flush-also-call-filestream-flush/13043763#13043763
+            // NOPE, since this class is directly serving a NetworkStream (response.OutputStream),
+            // it seemingly (and, at least in that aspect, correctly)
+            // was explicitly designed to *NOT* Close() NetworkStream,
+            // in order to have a workaround against
+            // very problematic lifetime handling behaviour
+            // of pre-4.5 StreamWriter
+            // (now there's finally a bool leaveOpen).
+            // http://stackoverflow.com/questions/2666888/is-there-any-way-to-close-a-streamwriter-without-closing-its-basestream
+            //stream.Close(); <--- DO NOT RE-ACTIVATE THIS!!!!
+
             base.Close();
         }
 

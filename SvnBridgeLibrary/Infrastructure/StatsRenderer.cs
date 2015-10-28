@@ -13,10 +13,8 @@ namespace SvnBridge.Handlers.Renderers
             this.actionTracking = actionTracking;
         }
 
-        public void Render(IHttpContext context)
+        public void Render(IHttpContext context, StreamWriter output)
         {
-            using (var output = new StreamWriter(context.Response.OutputStream))
-            {
                 output.Write("<html><head><title>SvnBridge Stats</title></head>");
                 output.Write("<h1>Statistics</h1>");
                 output.Write("<table>");
@@ -30,7 +28,6 @@ namespace SvnBridge.Handlers.Renderers
                 }
                 output.Write("</table>");
                 output.Write("</html>");
-            }
         }
     }
 }

@@ -12,7 +12,8 @@ namespace SvnBridge.Handlers
     {
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -37,10 +38,7 @@ namespace SvnBridge.Handlers
                     if (data != null)
                     {
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-                        {
-                            Options(data, requestPath, output);
-                        }
+                        Options(data, requestPath, output);
                     }
                 }
             }

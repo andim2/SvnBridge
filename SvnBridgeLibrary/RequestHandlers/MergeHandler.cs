@@ -13,7 +13,8 @@ namespace SvnBridge.Handlers
 	{
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
 		{
 			IHttpRequest request = context.Request;
 			IHttpResponse response = context.Response;
@@ -49,18 +50,12 @@ namespace SvnBridge.Handlers
 				MergeActivityResponse mergeResponse = sourceControlProvider.MergeActivity(activityId, disableMergeResponse);
 				SetResponseSettings(response, "text/xml", Encoding.UTF8, 200);
 				response.SendChunked = true;
-				using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-				{
 					WriteMergeResponse(request, mergeResponse, output);
-				}
 			}
 			catch (ConflictException ex)
 			{
 				SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 409);
-                using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-                {
                     WriteHumanReadableError(output, 160024, ex.Message);
-                }
 			}
             // Not storing data in RequestCache's RequestBody key here
             // (since we're doing *final*, non-rethrowing error/exception handling above).

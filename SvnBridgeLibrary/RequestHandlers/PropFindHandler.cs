@@ -18,7 +18,8 @@ namespace SvnBridge.Handlers
 
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -47,13 +48,13 @@ namespace SvnBridge.Handlers
                 if (propfind.AllProp != null)
                 {
                     if(requestPath.EndsWith(Constants.SvnVccPath))
-                        HandleAllPropVccDefault(sourceControlProvider, requestPath, response.OutputStream);
+                        HandleAllPropVccDefault(sourceControlProvider, requestPath, output);
                     else
-                        HandleAllProp(sourceControlProvider, requestPath, response.OutputStream);
+                        HandleAllProp(sourceControlProvider, requestPath, output);
                 }
                 else if (propfind.Prop != null)
                 {
-                    HandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, propfind.Prop, response.OutputStream);
+                    HandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, propfind.Prop, output);
                 }
                 else
                 {
@@ -63,7 +64,7 @@ namespace SvnBridge.Handlers
             catch (FileNotFoundException)
             {
                 Helper.DebugUsefulBreakpointLocation();
-                WriteFileNotFoundResponse(request, response);
+                WriteFileNotFoundResponse(request, response, output);
             }
             catch
             {
@@ -109,11 +110,9 @@ namespace SvnBridge.Handlers
             return propFindData;
         }
 
-        private void HandleAllPropVccDefault(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream stream)
+        private void HandleAllPropVccDefault(TFSSourceControlProvider sourceControlProvider, string requestPath, StreamWriter output)
         {
             int latestVersion = sourceControlProvider.GetLatestVersion();
-            using (StreamWriter output = CreateStreamWriter(stream))
-            {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
                 output.Write("<D:response xmlns:lp1=\"DAV:\" xmlns:lp2=\"http://subversion.tigris.org/xmlns/dav/\">\n");
@@ -134,7 +133,6 @@ namespace SvnBridge.Handlers
                 output.Write("</D:propstat>\n");
                 output.Write("</D:response>\n");
                 output.Write("</D:multistatus>\n");
-            }
         }
 
         private static bool GetFolderInfo(TFSSourceControlProvider sourceControlProvider,
@@ -187,7 +185,7 @@ namespace SvnBridge.Handlers
                 return sourceControlProvider.GetItemsWithoutProperties(version, itemPath, recursion);
         }
 
-        private void HandleAllProp(TFSSourceControlProvider sourceControlProvider, string requestPath, Stream outputStream)
+        private void HandleAllProp(TFSSourceControlProvider sourceControlProvider, string requestPath, StreamWriter output)
         {
             int revision;
             string itemPath;
@@ -254,8 +252,6 @@ namespace SvnBridge.Handlers
                     throw new FileNotFoundException("There is no item " + requestPath + " in revision " + revision);
             }
 
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
                 if (item.ItemType == ItemType.Folder)
                 {
                     WriteAllPropForFolder(output, requestPath, item, bcPath, sourceControlProvider);
@@ -264,7 +260,6 @@ namespace SvnBridge.Handlers
                 {
                     WriteAllPropForItem(output, requestPath, item, sourceControlProvider.ReadFile(item), sourceControlProvider);
                 }
-            }
         }
 
         private string GetSvnVerLocalPath(ItemMetaData item)
@@ -362,16 +357,17 @@ namespace SvnBridge.Handlers
             output.Write("</D:multistatus>\n");
         }
 
-        private void HandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
+        private void HandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, StreamWriter output)
         {
             if (_doLogFile)
             {
                 using (MemoryStream ms = new MemoryStream())
+                using (var memoryWriter = new StreamWriter(ms))
                 {
-                    DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, ms);
+                    DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, memoryWriter);
 
                     // Initiate write to network *prior* to hitting file (perf opt!!)
-                    CopyMemoryStream(ms, outputStream);
+                    CopyMemoryStream(ms, output.BaseStream);
 
                     string pathLogFile = Path.Combine(LogBasePath, DateTime.Now.ToString("HH_mm_ss_ffff") + ".txt");
                     using (FileStream file = new FileStream(pathLogFile, FileMode.Create, System.IO.FileAccess.Write))
@@ -382,7 +378,7 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, outputStream);
+                DoHandleProp(sourceControlProvider, requestPath, depthHeader, labelHeader, data, output);
             }
         }
 
@@ -407,7 +403,7 @@ namespace SvnBridge.Handlers
             inputStream.WriteTo(outputStream);
         }
 
-        private void DoHandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, Stream outputStream)
+        private void DoHandleProp(TFSSourceControlProvider sourceControlProvider, string requestPath, string depthHeader, string labelHeader, PropData data, StreamWriter output)
         {
             // "Use of WebDAV in Subversion"
             //    http://svn.apache.org/repos/asf/subversion/trunk/notes/http-and-webdav/webdav-usage.html
@@ -417,22 +413,22 @@ namespace SvnBridge.Handlers
             {
                 if (requestPath.Equals(Constants.SvnVccPath))
                 {
-                    WriteVccResponse(sourceControlProvider, requestPath, labelHeader, data, outputStream);
+                    WriteVccResponse(sourceControlProvider, requestPath, labelHeader, data, output);
                     requestHandled = true;
                 }
                 else if (requestPath.StartsWith("/!svn/bln/"))
                 {
-                    WriteBlnResponse(requestPath, data, outputStream);
+                    WriteBlnResponse(requestPath, data, output);
                     requestHandled = true;
                 }
                 else if (requestPath.StartsWith("/!svn/bc/"))
                 {
-                    WriteBcResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
+                    WriteBcResponse(sourceControlProvider, requestPath, depthHeader, data, output);
                     requestHandled = true;
                 }
                 else if (requestPath.StartsWith("/!svn/wrk/"))
                 {
-                    WriteWrkResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
+                    WriteWrkResponse(sourceControlProvider, requestPath, depthHeader, data, output);
                     requestHandled = true;
                 }
                 else
@@ -442,7 +438,7 @@ namespace SvnBridge.Handlers
             }
             if (!requestHandled)
             {
-                WritePathResponse(sourceControlProvider, requestPath, depthHeader, data, outputStream);
+                WritePathResponse(sourceControlProvider, requestPath, depthHeader, data, output);
             }
         }
 
@@ -453,22 +449,19 @@ namespace SvnBridge.Handlers
         /// <param name="requestPath">Full SVN request path</param>
         /// <param name="label">Some label</param>
         /// <param name="data">Property data to be dumped</param>
-        /// <param name="outputStream">Dump sink</param>
+        /// <param name="output">Dump sink</param>
         private void WriteVccResponse(TFSSourceControlProvider sourceControlProvider,
                                       string requestPath,
                                       string label,
                                       PropData data,
-                                      Stream outputStream)
+                                      StreamWriter output)
         {
             INode node = new SvnVccDefaultNode(sourceControlProvider, requestPath, label);
 
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
                 WriteProperties(node, data.Properties, output);
                 output.Write("</D:multistatus>\n");
-            }
         }
 
         /// <summary>
@@ -476,21 +469,18 @@ namespace SvnBridge.Handlers
         /// </summary>
         /// <param name="requestPath">Full SVN request path</param>
         /// <param name="data">Property data to be dumped</param>
-        /// <param name="outputStream">Dump sink</param>
+        /// <param name="output">Dump sink</param>
         private void WriteBlnResponse(string requestPath,
                                       PropData data,
-                                      Stream outputStream)
+                                      StreamWriter output)
         {
             int version = int.Parse(requestPath.Substring(10));
             INode node = new SvnBlnNode(requestPath, version);
 
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 output.Write("<D:multistatus xmlns:D=\"DAV:\" xmlns:ns0=\"DAV:\">\n");
                 WriteProperties(node, data.Properties, output);
                 output.Write("</D:multistatus>\n");
-            }
         }
 
         /// <summary>
@@ -500,12 +490,12 @@ namespace SvnBridge.Handlers
         /// <param name="requestPath">Full SVN request path</param>
         /// <param name="depthHeader">WebDAV PROPFIND hierarchy depth specification</param>
         /// <param name="data">Property data to be dumped</param>
-        /// <param name="outputStream">Dump sink</param>
+        /// <param name="output">Dump sink</param>
         private void WriteBcResponse(TFSSourceControlProvider sourceControlProvider,
                                      string requestPath,
                                      string depthHeader,
                                      PropData data,
-                                     Stream outputStream)
+                                     StreamWriter output)
         {
             int version = int.Parse(requestPath.Split('/')[3]);
             string itemPathUndecoded = requestPath.Substring(9 + version.ToString().Length);
@@ -525,8 +515,6 @@ namespace SvnBridge.Handlers
             if (setTrunkAsName)
                 folderInfo.Name = "trunk";
 
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
                 WriteMultiStatusStart(output, data.Properties);
@@ -542,7 +530,6 @@ namespace SvnBridge.Handlers
                 }
 
                 output.Write("</D:multistatus>\n");
-            }
 
             if (_doLogFile)
             {
@@ -566,7 +553,7 @@ namespace SvnBridge.Handlers
                                        string requestPath,
                                        string depthHeader,
                                        PropData data,
-                                       Stream outputStream)
+                                       StreamWriter output)
         {
             string itemPathUndecoded = requestPath;
             string itemPath = Helper.Decode(itemPathUndecoded);
@@ -579,8 +566,6 @@ namespace SvnBridge.Handlers
             FolderMetaData folderInfo;
             GetFolderInfo(sourceControlProvider, depthHeader, itemPath, null, true, out folderInfo);
 
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 
                 WriteMultiStatusStart(output, data.Properties);
@@ -593,7 +578,6 @@ namespace SvnBridge.Handlers
                 }
 
                 output.Write("</D:multistatus>\n");
-            }
         }
 
         /// <summary>
@@ -603,12 +587,12 @@ namespace SvnBridge.Handlers
         /// <param name="requestPath">Full SVN request path</param>
         /// <param name="depthHeader">WebDAV PROPFIND hierarchy depth specification</param>
         /// <param name="data">Property data to be dumped</param>
-        /// <param name="outputStream">Dump sink</param>
+        /// <param name="output">Dump sink</param>
         private void WriteWrkResponse(TFSSourceControlProvider sourceControlProvider,
                                        string requestPath,
                                        string depthHeader,
                                        PropData data,
-                                       Stream outputStream)
+                                       StreamWriter output)
         {
             string activityId = requestPath.Split('/')[3];
             if (!(depthHeader.Equals("0")))
@@ -624,14 +608,11 @@ namespace SvnBridge.Handlers
                 throw new FileNotFoundException("Unable to find file '" + itemPathUndecoded + "' in the specified activity", itemPathUndecoded);
             }
 
-            using (StreamWriter output = CreateStreamWriter(outputStream))
-            {
                 output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
                 WriteMultiStatusStart(output, data.Properties);
                 INode node = new FileNode(item, sourceControlProvider);
                 WriteProperties(node, data.Properties, output, item.ItemType == ItemType.Folder);
                 output.Write("</D:multistatus>\n");
-            }
         }
 
         private static void WriteMultiStatusStart(TextWriter output, List<XmlElement> properties)

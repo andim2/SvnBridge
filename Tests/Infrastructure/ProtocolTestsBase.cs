@@ -56,8 +56,20 @@ namespace Tests
         private void DispatcherDispatch(
             IHttpContext context)
         {
-            HttpDispatcher.Dispatch(
-                context);
+            using (var output = CreateStreamWriter(
+                context.Response.OutputStream))
+            {
+                HttpDispatcher.Dispatch(
+                    context,
+                    output);
+            }
+        }
+
+        private static StreamWriter CreateStreamWriter(
+            Stream outputStream)
+        {
+            Encoding utf8WithoutBOM = new UTF8Encoding(false); // TODO: make this a class member?
+            return new StreamWriter(outputStream, utf8WithoutBOM);
         }
 
         protected static byte[] GetBytes(string data)

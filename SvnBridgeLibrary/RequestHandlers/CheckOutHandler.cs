@@ -1,3 +1,4 @@
+using System.IO; // StreamWriter
 using System.Text;
 using SvnBridge.Exceptions;
 using SvnBridge.Interfaces;
@@ -11,7 +12,8 @@ namespace SvnBridge.Handlers
     {
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -30,7 +32,7 @@ namespace SvnBridge.Handlers
                     location,
                     request);
 
-                WriteToResponse(response, responseContent);
+                output.Write(responseContent);
             }
             catch (ConflictException ex)
             {
@@ -47,7 +49,7 @@ namespace SvnBridge.Handlers
                     "</m:human-readable>\n" +
                     "</D:error>\n";
 
-                WriteToResponse(response, responseContent);
+                output.Write(responseContent);
             }
             catch
             {

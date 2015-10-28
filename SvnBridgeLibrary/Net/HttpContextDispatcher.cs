@@ -96,7 +96,9 @@ namespace SvnBridge.Net
             }
         }
 
-        public void Dispatch(IHttpContext connection)
+        public void Dispatch(
+            IHttpContext connection,
+            StreamWriter output)
         {
             // [
             // PERFORMANCE NOTE:
@@ -120,17 +122,21 @@ namespace SvnBridge.Net
                 // since it needlessly bloats the generic hotpath.
                 if ("/!stats/request".Equals(request.LocalPath, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    new StatsRenderer(Container.Resolve<ActionTrackingViaPerfCounter>()).Render(connection);
+                    new StatsRenderer(Container.Resolve<ActionTrackingViaPerfCounter>()).Render(
+                        connection,
+                        output);
                     return;
                 }
 
                 bool isRequestOk = CheckRequestConfiguration(
-                    connection);
+                    connection,
+                    output);
                 bool mayHandleRequest = (isRequestOk);
                 if (mayHandleRequest)
                 {
                     SetupAndHandleRequest(
-                        connection);
+                        connection,
+                        output);
                 }
             }
             // IMPORTANT: I assume that this series of catch()es
@@ -149,7 +155,9 @@ namespace SvnBridge.Net
                 {
                     if (response.StatusCode == HttpStatusCode.Unauthorized)
                     {
-                        SendUnauthorizedResponse(connection);
+                        SendUnauthorizedResponse(
+                            connection,
+                            output);
                         bHandled = true;
                     }
                 }
@@ -160,7 +168,9 @@ namespace SvnBridge.Net
             }
             catch (NetworkAccessDeniedException)
             {
-                SendUnauthorizedResponse(connection);
+                SendUnauthorizedResponse(
+                    connection,
+                    output);
             }
             catch (IOException)
             {
@@ -195,7 +205,8 @@ namespace SvnBridge.Net
         /// <param name="connection"></param>
         /// <returns>true if the request is deemed to be ok for servicing, else false</returns>
         private static bool CheckRequestConfiguration(
-            IHttpContext connection)
+            IHttpContext connection,
+            StreamWriter output)
         {
             bool isRequestOk = true;
 
@@ -207,7 +218,8 @@ namespace SvnBridge.Net
                 if (chunked)
                 {
                     isRequestOk = HandleChunkedSetting(
-                        connection);
+                        connection,
+                        output);
                 }
             }
 
@@ -215,7 +227,8 @@ namespace SvnBridge.Net
         }
 
         private static bool HandleChunkedSetting(
-            IHttpContext connection)
+            IHttpContext connection,
+            StreamWriter output)
         {
             bool isSettingOk = true;
 
@@ -224,7 +237,8 @@ namespace SvnBridge.Net
             if (!supportChunked)
             {
                 SendLengthRequiredResponse(
-                    connection);
+                    connection,
+                    output);
                 isSettingOk = false;
             }
 
@@ -272,7 +286,8 @@ namespace SvnBridge.Net
         }
 
         private static void SendLengthRequiredResponse(
-            IHttpContext connection)
+            IHttpContext connection,
+            StreamWriter output)
         {
             IHttpResponse response = connection.Response;
             response.StatusCode = (int)HttpStatusCode.LengthRequired;
@@ -286,12 +301,13 @@ namespace SvnBridge.Net
                 "</body></html>\n";
 
             AppendAsUTF8(
-                response,
+                output,
                 content);
         }
 
         private void SetupAndHandleRequest(
-            IHttpContext connection)
+            IHttpContext connection,
+            StreamWriter output)
         {
             NetworkCredential credential = null;
             try
@@ -300,13 +316,16 @@ namespace SvnBridge.Net
             }
             catch (InvalidServerUrlException)
             {
-                SendFileNotFoundResponse(connection);
+                SendFileNotFoundResponse(
+                    connection,
+                    output);
                 return;
             }
 
             HandleRequest(
                 connection,
-                credential);
+                credential,
+                output);
         }
 
         /// <summary>
@@ -655,13 +674,16 @@ namespace SvnBridge.Net
 
         private void HandleRequest(
             IHttpContext connection,
-            NetworkCredential credential)
+            NetworkCredential credential,
+            StreamWriter output)
         {
             RequestHandlerBase handler = GetHttpHandler(connection.Request.HttpMethod);
             if (handler == null)
             {
                 actionTracking.Error();
-                SendUnsupportedMethodResponse(connection);
+                SendUnsupportedMethodResponse(
+                    connection,
+                    output);
                 return;
             }
 
@@ -671,7 +693,8 @@ namespace SvnBridge.Net
                 handler.Handle(
                     connection,
                     parser,
-                    credential);
+                    credential,
+                    output);
             }
             catch (TargetInvocationException e)
             {
@@ -721,7 +744,9 @@ namespace SvnBridge.Net
             }
         }
 
-        private static void SendUnauthorizedResponse(IHttpContext connection)
+        private static void SendUnauthorizedResponse(
+            IHttpContext connection,
+            StreamWriter output)
         {
             IHttpRequest request = connection.Request;
             IHttpResponse response = connection.Response;
@@ -749,11 +774,13 @@ namespace SvnBridge.Net
                              "</body></html>\n";
 
             AppendAsUTF8(
-                response,
+                output,
                 content);
         }
 
-        private static void SendUnsupportedMethodResponse(IHttpContext connection)
+        private static void SendUnsupportedMethodResponse(
+            IHttpContext connection,
+            StreamWriter output)
         {
             IHttpResponse response = connection.Response;
             response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
@@ -772,11 +799,13 @@ namespace SvnBridge.Net
                 </html>";
 
             AppendAsUTF8(
-                response,
+                output,
                 content);
         }
 
-        protected static void SendFileNotFoundResponse(IHttpContext connection)
+        protected static void SendFileNotFoundResponse(
+            IHttpContext connection,
+            StreamWriter output)
         {
             IHttpResponse response = connection.Response;
             response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -792,16 +821,16 @@ namespace SvnBridge.Net
                 "</body></html>\n";
 
             AppendAsUTF8(
-                response,
+                output,
                 content);
         }
 
         private static void AppendAsUTF8(
-            IHttpResponse response,
+            StreamWriter output,
             string content)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(content);
-            response.OutputStream.Write(buffer, 0, buffer.Length);
+            output.BaseStream.Write(buffer, 0, buffer.Length);
         }
     }
 }

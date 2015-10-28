@@ -47,19 +47,6 @@ namespace SvnBridge.Handlers
             response.AppendHeader("X-Pad", "avoid browser bug");
         }
 
-        protected static StreamWriter CreateStreamWriter(Stream outputStream)
-        {
-            return Helper.ConstructStreamWriterUTF8(outputStream);
-        }
-
-		protected static void WriteToResponse(IHttpResponse response, string content)
-		{
-			using (StreamWriter output = CreateStreamWriter(response.OutputStream))
-			{
-				output.Write(content);
-			}
-		}
-
         /// <summary>
         /// Comment-only helper:
         /// PERFORMANCE tweak: do explicit Flush() of the data
@@ -134,7 +121,8 @@ namespace SvnBridge.Handlers
         public virtual void Handle(
             IHttpContext context,
             IPathParser pathParser,
-            NetworkCredential credentials)
+            NetworkCredential credentials,
+            StreamWriter output)
 		{
             this.credentials = credentials;
             Initialize(context, pathParser);
@@ -162,7 +150,8 @@ namespace SvnBridge.Handlers
             // (== potentially not allocatable due to linear-alloc requirement).
             Handle(
                 context,
-                sourceControlProvider);
+                sourceControlProvider,
+                output);
 		}
 
 		public void Initialize(IHttpContext context, IPathParser parser)
@@ -173,7 +162,8 @@ namespace SvnBridge.Handlers
 
         protected abstract void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider);
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output);
 
         protected string[] GetSvnOptions()
         {
@@ -455,7 +445,7 @@ namespace SvnBridge.Handlers
         /// should be considered rather "normal" (benign) -
         /// SVN protocol handling does seem to expect this, right?
         /// </remarks>
-        protected void WriteFileNotFoundResponse(IHttpRequest request, IHttpResponse response)
+        protected void WriteFileNotFoundResponse(IHttpRequest request, IHttpResponse response, StreamWriter output)
         {
             string requestPath = GetPath(request);
             response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -472,7 +462,7 @@ namespace SvnBridge.Handlers
                 "<address>" + GetServerIdentificationString_HostPort(request.Url.Host, request.Url.Port.ToString()) + "</address>\n" +
                 "</body></html>\n";
 
-            WriteToResponse(response, responseContent);
+            output.Write(responseContent);
         }
 
         public static string LogBasePath

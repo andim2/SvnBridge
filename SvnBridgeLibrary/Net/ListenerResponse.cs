@@ -10,6 +10,8 @@ namespace SvnBridge.Net
         private readonly List<KeyValuePair<string, string>> headers;
         // XXX: FxCop complains that this class ought to implement IDisposable mechanisms
         // since member outputStream is IDisposable-based!
+
+        // See VERY IMPORTANT comment at .OutputStream of interface!
         private readonly ListenerResponseStream outputStream;
         private Encoding contentEncoding;
         private string contentType;

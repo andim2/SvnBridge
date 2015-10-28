@@ -10,7 +10,7 @@ using SvnBridge.Infrastructure.Statistics;
 using SvnBridge.SourceControl;
 using SvnBridge.PathParsing;
 using SvnBridge.Infrastructure;
-using System.IO;
+using System.IO; // StreamWriter
 using System.Web;
 using SvnBridge.Net;
 using SvnBridge;
@@ -32,10 +32,26 @@ namespace UnitTests
 
         private static void DispatcherDispatch(
             HttpContextDispatcher dispatcher,
-            IHttpContext context)
+            IHttpContext context,
+            StreamWriter output)
         {
             dispatcher.Dispatch(
-                context);
+                context,
+                output);
+        }
+
+        private static StreamWriter GetOutputWriter(
+            IHttpContext context)
+        {
+            return CreateStreamWriter(
+                context.Response.OutputStream);
+        }
+
+        private static StreamWriter CreateStreamWriter(
+            Stream outputStream)
+        {
+            Encoding utf8WithoutBOM = new UTF8Encoding(false); // TODO: make this a class member?
+            return new StreamWriter(outputStream, utf8WithoutBOM);
         }
 
         //[Fact]
@@ -209,7 +225,10 @@ namespace UnitTests
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             context.Request.Headers["Authorization"] = "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("username:password"));
 
-            DispatcherDispatch(dispatcher, context);
+            using (var output = GetOutputWriter(context))
+            {
+                DispatcherDispatch(dispatcher, context, output);
+            }
 
             Assert.Equal(@"username_cp", dispatcher.Handler.Handle_credentials.UserName);
             Assert.Equal(@"snd", dispatcher.Handler.Handle_credentials.Domain);
@@ -223,7 +242,10 @@ namespace UnitTests
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             dispatcher.Parser.GetServerUrl_Return = null;
 
-            DispatcherDispatch(dispatcher, context);
+            using (var output = GetOutputWriter(context))
+            {
+                DispatcherDispatch(dispatcher, context, output);
+            }
 
             Assert.Equal(404, context.Response.StatusCode);
         }
@@ -235,7 +257,10 @@ namespace UnitTests
                 new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
 
-            DispatcherDispatch(dispatcher, context);
+            using (var output = GetOutputWriter(context))
+            {
+                DispatcherDispatch(dispatcher, context, output);
+            }
 
             Assert.Null(dispatcher.Handler.Handle_credentials);
         }
@@ -249,7 +274,10 @@ namespace UnitTests
             context.Request.Headers["Authorization"] = "Digest ...";
             dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
 
-            DispatcherDispatch(dispatcher, context);
+            using (var output = GetOutputWriter(context))
+            {
+                DispatcherDispatch(dispatcher, context, output);
+            }
 
             Assert.Same(CredentialCache.DefaultCredentials, dispatcher.Handler.Handle_credentials);
         }
@@ -262,10 +290,13 @@ namespace UnitTests
             context.Request.Headers["Authorization"] = "Digest ...";
             dispatcher.Parser.GetServerUrl_Return = "http://tfsserver";
 
-            Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
+            using (var output = GetOutputWriter(context))
+            {
+                Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context, output); });
 
-            Assert.NotNull(exception);
-            Assert.IsType(typeof(NetworkAccessDeniedException), exception);
+                Assert.NotNull(exception);
+                Assert.IsType(typeof(NetworkAccessDeniedException), exception);
+            }
         }
 
         [Fact]
@@ -276,9 +307,12 @@ namespace UnitTests
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             context.Request.Headers["Authorization"] = "abcdef ...";
 
-            Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
+            using (var output = GetOutputWriter(context))
+            {
+                Exception exception = Record.Exception(delegate { DispatcherDispatch(dispatcher, context, output); });
 
-            Assert.NotNull(exception);
+                Assert.NotNull(exception);
+            }
         }
 
         [Fact]
@@ -289,9 +323,12 @@ namespace UnitTests
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
             dispatcher.Handler.Handle_Throw = new IOException();
 
-            Exception result = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
+            using (var output = GetOutputWriter(context))
+            {
+                Exception result = Record.Exception(delegate { DispatcherDispatch(dispatcher, context, output); });
 
-            Assert.Null(result);
+                Assert.Null(result);
+            }
         }
 
         [Fact]
@@ -301,14 +338,17 @@ namespace UnitTests
                 new Uri("https://tfs01.codeplex.com"));
             TestableHttpContextDispatcher dispatcher = new TestableHttpContextDispatcher();
 
-            dispatcher.Handler.Handle_Throw = new HttpException("An error occurred while communicating with the remote host.");
-            Exception result1 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
+            using (var output = GetOutputWriter(context))
+            {
+                dispatcher.Handler.Handle_Throw = new HttpException("An error occurred while communicating with the remote host.");
+                Exception result1 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context, output); });
 
-            dispatcher.Handler.Handle_Throw = new HttpException("The remote host closed the connection.");
-            Exception result2 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context); });
+                dispatcher.Handler.Handle_Throw = new HttpException("The remote host closed the connection.");
+                Exception result2 = Record.Exception(delegate { DispatcherDispatch(dispatcher, context, output); });
 
-            Assert.Null(result1);
-            Assert.Null(result2);
+                Assert.Null(result1);
+                Assert.Null(result2);
+            }
         }
 
         private static IHttpContext ConstructStubHttpContext(
@@ -411,7 +451,8 @@ namespace UnitTests
         public override void Handle(
             IHttpContext context,
             IPathParser pathParser,
-            NetworkCredential credentials)
+            NetworkCredential credentials,
+            StreamWriter output)
         {
             Handle_credentials = credentials;
             if (Handle_Throw != null)
@@ -420,7 +461,8 @@ namespace UnitTests
 
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
         }
     }

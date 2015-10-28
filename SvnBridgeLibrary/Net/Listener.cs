@@ -388,6 +388,15 @@ namespace SvnBridge.Net
             if (!(canHandlePerHttpMethodRequestContext))
                 return false;
 
+            // While one would usually like to do "using" of new objects
+            // right after their lifetime started
+            // i.e. in their *outermost* scope,
+            // *cannot* (and should not!) do this
+            // for the ListenerResponse.OutputStream member *here*
+            // since actual .OutputStream object
+            // may (IOW, will!) continue to be changed
+            // until way later (.Filter chain!!).
+
             HandlePerHttpMethodRequestContext(
                 context,
                 networkStream,
@@ -395,6 +404,36 @@ namespace SvnBridge.Net
                 ref serveFurtherRequests);
 
             return true;
+        }
+
+        /// <summary>
+        /// Almost comment-only helper.
+        /// </summary>
+        /// <remarks>
+        /// Definitely use a StreamWriter on .OutputStream,
+        /// once final .OutputStream configuration is ready
+        /// (detailed reasons/docs see OutputStream member definition).
+        /// That StreamWriter can then be aggregated
+        /// in a properly *centrally* using-scoped lifetime manner.
+        ///
+        /// Related important note:
+        /// When not using "using" or Close() on a stream,
+        /// its chained streams will NOT have their .Flush() chain-invoked!
+        /// (via chained Close() / Flush()):
+        /// http://stackoverflow.com/questions/13043706/will-streamwriter-flush-also-call-filestream-flush
+        /// Since the code (sometimes?) failed to do this
+        /// (and thus FAILED to flush when adding chained streams!),
+        /// it's good to know that:
+        /// - Close()ing cannot be forgotten
+        /// - Close()ing cannot happen too early
+        /// since we're now centrally/globally
+        /// doing it properly (when doing "using").
+        /// </remarks>
+        private static StreamWriter ConstructOutputStreamWriter(
+            Stream outputStream)
+        {
+            return Helper.ConstructStreamWriterUTF8(
+                outputStream);
         }
 
         private void HandlePerHttpMethodRequestContext(
@@ -474,10 +513,19 @@ namespace SvnBridge.Net
                     response);
             }
 
-            // Now do actual handling
-            // of the currently requested HTTP method:
-            HandleOneHttpRequest(
-                context);
+            using (var output = ConstructOutputStreamWriter(
+                context.Response.OutputStream))
+            {
+                // Now do actual handling
+                // of the currently requested HTTP method:
+                HandleOneHttpRequest(
+                    context,
+                    output);
+            }
+
+            // "He's Dead, Jim!" - due to .OutputStream Close()
+            // any and all underlying streams i.e. NetworkStream
+            // are definitely *gone* now.
         }
 
         /// <summary>
@@ -627,7 +675,8 @@ namespace SvnBridge.Net
         /// which actually may or may not be how it is supposed to be done).
         /// </remarks>
         private void HandleOneHttpRequest(
-            IHttpContext connection)
+            IHttpContext connection,
+            StreamWriter output)
         {
             DateTime timeUtcStart = DateTime.UtcNow;
             try
@@ -643,7 +692,9 @@ namespace SvnBridge.Net
                 // anew.
                 using (var requestCache_Scope = new RequestCache_Scope())
                 {
-                    dispatcher.Dispatch(connection);
+                    dispatcher.Dispatch(
+                        connection,
+                        output);
                 }
             }
             catch (Exception exception)
@@ -652,7 +703,8 @@ namespace SvnBridge.Net
                 {
                     SendHandlerErrorResponse(
                         exception,
-                        connection.Response);
+                        connection.Response,
+                        output);
                 }
                 catch
                 {
@@ -669,7 +721,8 @@ namespace SvnBridge.Net
                 // *then* immediately ensure a flush of the connection data to consumer,
                 // *then* do remaining unimportant evaluation handling.
                 DateTime timeUtcEnd = DateTime.UtcNow; // debug helper
-                FlushConnection(connection);
+                // Now disabled (see comment at method):
+                //FlushConnection(connection);
                 TimeSpan duration = timeUtcEnd - timeUtcStart;
                 FinishedHandling(this, new FinishedHandlingEventArgs(duration,
                     connection.Request.Url.AbsoluteUri,
@@ -685,11 +738,22 @@ namespace SvnBridge.Net
         /// which needs to be ignored at this very scope -
         /// otherwise scope of catching (various unknown-reason) IOException:s
         /// would be way too imprecise...
+        /// Method now unused
+        /// since [I]HttpResponse.OutputStream
+        /// near-always gets used via "using" StreamWriter,
+        /// which does (in fact *already* did prior to this change!!)
+        /// Close() (and thus also Flush())
+        /// at scope end,
+        /// IOW the Flush() here may easily fail with
+        /// ObjectDisposedException "Cannot access a closed Stream.":
         /// </summary>
         private static void FlushConnection(IHttpContext connection)
         {
             try
             {
+                // IMPORTANT NOTE: this stream's Flush()
+                // will NOT implicitly cause Flush() of any chained streams
+                // (that is carried out only when Close()ing).
                 connection.Response.OutputStream.Flush();
             }
             catch (IOException)
@@ -718,13 +782,12 @@ namespace SvnBridge.Net
 
         private void SendHandlerErrorResponse(
             Exception exception,
-            IHttpResponse response)
+            IHttpResponse response,
+            StreamWriter output)
         {
             Guid guid = Guid.NewGuid();
 
             response.StatusCode = 500;
-            using (StreamWriter output = new StreamWriter(response.OutputStream))
-            {
                 string message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                                  "<D:error xmlns:D=\"DAV:\" xmlns:m=\"http://apache.org/dav/xmlns\" xmlns:C=\"svn:\">\n" +
                                  "<C:error/>\n" +
@@ -735,7 +798,6 @@ namespace SvnBridge.Net
                                  "</m:human-readable>\n" +
                                  "</D:error>\n";
                 output.Write(message);
-            }
 
             LogError(guid, exception);
         }

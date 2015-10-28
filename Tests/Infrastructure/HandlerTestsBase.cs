@@ -49,7 +49,10 @@ namespace UnitTests
         {
             string result;
 
-            handler.Handle(context, new PathParserSingleServerWithProjectInPath(serverUrl), null);
+            using (var output = new StreamWriter(response.OutputStream))
+            {
+                handler.Handle(context, new PathParserSingleServerWithProjectInPath(serverUrl), null, output);
+            }
 
             result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
 

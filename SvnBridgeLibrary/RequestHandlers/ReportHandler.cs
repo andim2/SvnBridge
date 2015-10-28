@@ -87,7 +87,8 @@ namespace SvnBridge.Handlers
 
         protected override void Handle(
             IHttpContext context,
-            TFSSourceControlProvider sourceControlProvider)
+            TFSSourceControlProvider sourceControlProvider,
+            StreamWriter output)
         {
             IHttpRequest request = context.Request;
             IHttpResponse response = context.Response;
@@ -107,10 +108,7 @@ namespace SvnBridge.Handlers
                     if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "get-locks-report")
                     {
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        using (var output = CreateStreamWriter(response.OutputStream))
-                        {
                             GetLocksReport(output);
-                        }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "update-report")
                     {
@@ -121,21 +119,18 @@ namespace SvnBridge.Handlers
                         if (null != update)
                         {
                             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                            using (var output = CreateStreamWriter(response.OutputStream))
-                            {
                                 UpdateReport(sourceControlProvider, data_UpdateReport, output, update, targetRevision);
-                            }
                         }
                         else
                         {
-                            SendTargetDoesNotExistResponse(response);
+                            SendTargetDoesNotExistResponse(response, output);
                         }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "replay-report")
                     {
                         ReplayReportData data_ReplayReport = Helper.DeserializeXml<ReplayReportData>(reader);
                         data = data_ReplayReport;
-                        ReplayReport(request, response, sourceControlProvider, data_ReplayReport);
+                        ReplayReport(request, response, sourceControlProvider, data_ReplayReport, output);
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "log-report")
                     {
@@ -143,42 +138,33 @@ namespace SvnBridge.Handlers
                         data = data_LogReport;
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
                         response.BufferOutput = false;
-                        using (var output = CreateStreamWriter(response.OutputStream))
-                        {
                             LogReport(sourceControlProvider, data_LogReport, requestPath, output);
-                        }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "get-locations")
                     {
                         GetLocationsReportData data_GetLocationsReport = Helper.DeserializeXml<GetLocationsReportData>(reader);
                         data = data_GetLocationsReport;
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        using (var output = CreateStreamWriter(response.OutputStream))
-                        {
                             GetLocationsReport(sourceControlProvider, data_GetLocationsReport, requestPath, output);
-                        }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "dated-rev-report")
                     {
                         DatedRevReportData data_DatedRevReport = Helper.DeserializeXml<DatedRevReportData>(reader);
                         data = data_DatedRevReport;
                         SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
-                        using (var output = CreateStreamWriter(response.OutputStream))
-                        {
                             GetDatedRevReport(sourceControlProvider, data_DatedRevReport, output);
-                        }
                     }
                     else if (reader.NamespaceURI == WebDav.Namespaces.SVN && reader.LocalName == "file-revs-report")
                     {
                         FileRevsReportData data_FileRevsReport = Helper.DeserializeXml<FileRevsReportData>(reader);
                         data = data_FileRevsReport;
                         string serverPath = GetServerSidePath(requestPath);
-                        SendBlameResponse(request, response, sourceControlProvider, serverPath, data_FileRevsReport);
+                        SendBlameResponse(request, response, sourceControlProvider, serverPath, data_FileRevsReport, output);
                         return;
                     }
                     else
                     {
-                        SendUnknownReportResponse(response);
+                        SendUnknownReportResponse(response, output);
                     }
                     //if (data != null)
                     //{
@@ -195,44 +181,35 @@ namespace SvnBridge.Handlers
             }
         }
 
-        private static void SendUnknownReportResponse(IHttpResponse response)
+        private static void SendUnknownReportResponse(IHttpResponse response, StreamWriter output)
         {
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.NotImplemented);
             response.AppendHeader("Connection", "close");
 
-            using (var output = CreateStreamWriter(response.OutputStream))
-            {
-                WriteHumanReadableError(output, 200007, "The requested report is unknown."); // yup, _with_ trailing dot.
-                return;
-            }
+            WriteHumanReadableError(output, 200007, "The requested report is unknown."); // yup, _with_ trailing dot.
+            return;
         }
 
-        private static void SendTargetDoesNotExistResponse(IHttpResponse response)
+        private static void SendTargetDoesNotExistResponse(IHttpResponse response, StreamWriter output)
         {
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, (int)HttpStatusCode.InternalServerError);
             response.AppendHeader("Connection", "close");
 
-            using (var output = CreateStreamWriter(response.OutputStream))
-            {
-                WriteHumanReadableError(output, 160005, "Target path does not exist"); // yup, _without_ trailing dot.
-                return;
-            }
+            WriteHumanReadableError(output, 160005, "Target path does not exist"); // yup, _without_ trailing dot.
+            return;
         }
 
-        private void ReplayReport(IHttpRequest request, IHttpResponse response, TFSSourceControlProvider sourceControlProvider, ReplayReportData replayReport)
+        private void ReplayReport(IHttpRequest request, IHttpResponse response, TFSSourceControlProvider sourceControlProvider, ReplayReportData replayReport, StreamWriter output)
         {
             if (replayReport.Revision == 0)
             {
                 response.StatusCode = (int) HttpStatusCode.OK;
-                using (var output = CreateStreamWriter(response.OutputStream))
-                {
-                    output.Write(
+                output.Write(
                         @"<?xml version=""1.0"" encoding=""utf-8""?>
 <S:editor-report xmlns:S=""svn:"">
 <S:target-revision rev=""0""/>
 </S:editor-report>");
-                    return;
-                }
+                return;
             }
 
             var data = new UpdateReportData();
@@ -248,7 +225,7 @@ namespace SvnBridge.Handlers
                 1);
             if (log.History.Length == 0)
             {
-                WriteFileNotFoundResponse(request, response);
+                WriteFileNotFoundResponse(request, response, output);
             }
 
             item.Rev = (replayReport.Revision - 1).ToString();
@@ -256,8 +233,6 @@ namespace SvnBridge.Handlers
             data.Entries.Add(item);
             SetResponseSettings(response, "text/xml; charset=\"utf-8\"", Encoding.UTF8, 200);
             response.SendChunked = true;
-            using (var output = CreateStreamWriter(response.OutputStream))
-            {
                 try
                 {
                     output.Write(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -276,9 +251,8 @@ namespace SvnBridge.Handlers
                 }
                 catch (FileNotFoundException)
                 {
-                    WriteFileNotFoundResponse(request, response);
+                    WriteFileNotFoundResponse(request, response, output);
                 }
-            }
         }
 
         private void OutputEditorReport(TFSSourceControlProvider sourceControlProvider, FolderMetaData folder, int revision, bool isRoot, TextWriter output)
@@ -354,7 +328,7 @@ namespace SvnBridge.Handlers
             output.Write("<S:close-directory/>\n");
         }
 
-        private void SendBlameResponse(IHttpRequest request, IHttpResponse response, TFSSourceControlProvider sourceControlProvider, string serverPath, FileRevsReportData data)
+        private void SendBlameResponse(IHttpRequest request, IHttpResponse response, TFSSourceControlProvider sourceControlProvider, string serverPath, FileRevsReportData data, StreamWriter output)
         {
             LogItem log = sourceControlProvider.GetLog(
                 serverPath,
@@ -369,7 +343,7 @@ namespace SvnBridge.Handlers
 
             if (log.History.Length == 0)
             {
-                WriteFileNotFoundResponse(request, response);
+                WriteFileNotFoundResponse(request, response, output);
             }
 
             foreach (SourceItemHistory history in log.History)
@@ -378,13 +352,11 @@ namespace SvnBridge.Handlers
                 {
                     if (change.Item.ItemType == ItemType.Folder)
                     {
-                        SendErrorResponseCannotRunBlameOnFolder(response, serverPath);
+                        SendErrorResponseCannotRunBlameOnFolder(response, serverPath, output);
                         return;
                     }
                 }
             }
-            using (var output = CreateStreamWriter(response.OutputStream))
-            {
                 response.StatusCode = (int) HttpStatusCode.OK;
                 output.Write(
                     @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -412,7 +384,6 @@ namespace SvnBridge.Handlers
                     }
                 }
                 output.Write("</S:file-revs-report>");
-            }
         }
 
         private static void StreamItemDataAsTxDeltaElem(
@@ -433,16 +404,13 @@ namespace SvnBridge.Handlers
             output.Write("</S:txdelta>");
         }
 
-        private static void SendErrorResponseCannotRunBlameOnFolder(IHttpResponse response, string serverPath)
+        private static void SendErrorResponseCannotRunBlameOnFolder(IHttpResponse response, string serverPath, StreamWriter output)
         {
             response.StatusCode = (int) HttpStatusCode.InternalServerError;
             response.ContentType = "text/xml; charset=\"utf-8\"";
-            using (var output = CreateStreamWriter(response.OutputStream))
-            {
-                string error_string = "'" + serverPath + "' is not a file"; // yup, _without_ trailing dot.
-                WriteHumanReadableError(output, 160017, error_string);
-                return;
-            }
+            string error_string = "'" + serverPath + "' is not a file"; // yup, _without_ trailing dot.
+            WriteHumanReadableError(output, 160017, error_string);
+            return;
         }
 
         private static void GetDatedRevReport(TFSSourceControlProvider sourceControlProvider, DatedRevReportData data, TextWriter output)

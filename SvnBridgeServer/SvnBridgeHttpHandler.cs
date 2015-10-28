@@ -1,4 +1,5 @@
 using System;
+using System.IO; // StreamWriter
 using System.Web;
 using System.Web.Services.Protocols;
 using SvnBridge.Net;
@@ -52,11 +53,11 @@ namespace SvnBridgeServer
 
 		public void ProcessRequest(HttpContext context)
 		{
-			try
+			using (var output = new StreamWriter(context.Response.OutputStream))
 			{
                 try
                 {
-                    dispatcher.Dispatch(new HttpContextWrapper(context));
+                    dispatcher.Dispatch(new HttpContextWrapper(context), output);
                 }
                 catch (Exception ex)
                 {
@@ -66,10 +67,6 @@ namespace SvnBridgeServer
                         logger.ErrorFullDetails(ex, new HttpContextWrapper(context)); 
                     }
                 }
-			}
-			finally
-			{
-				context.Response.OutputStream.Dispose();
 			}
 		}
 
