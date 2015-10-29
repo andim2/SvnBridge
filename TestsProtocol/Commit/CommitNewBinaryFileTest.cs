@@ -453,6 +453,7 @@ namespace ProtocolTests
         [Fact]
         public void Test11()
         {
+            stubs.Attach(provider.GetItemInActivity, (ItemMetaData)null); // NO pre-existing resource! (--> write required).
             stubs.Attach(provider.GetItems, Return.Value(null));
             stubs.Attach(provider.WriteFile, true);
 

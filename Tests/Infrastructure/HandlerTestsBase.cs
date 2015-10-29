@@ -41,5 +41,23 @@ namespace UnitTests
             Clock.FrozenCurrentTime = null;
             Container.Reset();
         }
+
+        /// <summary>
+        /// Q&amp;D helper (probably shouldn't be in here ultimately).
+        /// Creates a string containing an svn diff which exists to apply a single-char change to a file,
+        /// for the purpose of guaranteeing a write to an SCM item.
+        /// </summary>
+        /// <returns>string which contains the svn diff</returns>
+        protected static string GetSvnDiffStringForSingleCharFileWrite()
+        {
+            char[] svnHeader = new char[] { 'S', 'V', 'N', '\0' };
+            char[] svnDiffWindow = new char[] { '\0', '\0', '\u0001', '\u0001', '\u0001', '\u0081', 'X' };
+            char[] svnDiff = new char[svnHeader.Length + svnDiffWindow.Length];
+            svnHeader.CopyTo(svnDiff, 0);
+            svnDiffWindow.CopyTo(svnDiff, svnHeader.Length);
+            //string svnDiffString = Encoding.Unicode.GetString(svnDiff);
+            string svnDiffString = new string(svnDiff);
+            return svnDiffString;
+        }
     }
 }

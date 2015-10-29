@@ -269,9 +269,11 @@ namespace ProtocolTests
         [Fact]
         public void Test15()
         {
+            stubs.Attach(provider.GetItemInActivity, new ItemMetaData());
             stubs.Attach(provider.ItemExists, false);
             ItemMetaData item = new ItemMetaData();
             stubs.Attach(provider.GetItems, item);
+            stubs.AttachReadFile(provider.ReadFile, new byte[0]);
             stubs.Attach(provider.WriteFile, false);
 
             string request =

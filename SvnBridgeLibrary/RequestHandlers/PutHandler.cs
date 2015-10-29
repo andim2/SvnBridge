@@ -61,48 +61,64 @@ namespace SvnBridge.Handlers
                 requestPath = "/" + requestPath;
             }
 
+            // FIXME: I'm not sure whether SVN-specific PUT really always is done
+            // within a corresponding activity (MKACTIVITY) or collection (MKCOL),
+            // however if not (standard PUT does NOT seem to have that),
+            // then we should be able to flexibly handle NOT having an activity here...
+            //
             // FIXME: should be using BasePathParser (GetActivityId() or some such)
             // rather than doing this dirt-ugly open-coded something:
             const int startIndex = 11;
             string activityId = requestPath.Substring(startIndex, requestPath.IndexOf('/', startIndex) - startIndex);
             string serverPath = Helper.Decode(requestPath.Substring(startIndex + activityId.Length));
             // Adopt proper SVN speak: "base" == original file, "result" == updated file.
+            // In SVN source code, *both* base and result hash are handled as *optional*
+            // (and git-svn does not pass the relevant checksum in the result hash case at least).
+            ItemMetaData itemBase = sourceControlProvider.GetItemInActivity(activityId, serverPath);
+            bool baseExists = (null != itemBase);
             byte[] baseData = new byte[0];
+            if (baseExists)
+                baseData = sourceControlProvider.ReadFile(itemBase);
+            string baseHashCalc = Helper.GetMd5Checksum(baseData);
             if (null != baseHashSvnProvided)
             {
-                ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, serverPath);
-                baseData = sourceControlProvider.ReadFile(item);
-                bool isMatchingBase = !(ChecksumMismatch(baseHashSvnProvided, baseData));
+                bool isMatchingBase = (baseHashSvnProvided == baseHashCalc);
                 if (!(isMatchingBase))
                 {
                     ReportErrorChecksumMismatch("with base file");
                 }
             }
+            // We read/apply diff stream *after* the base checksum validate above,
+            // since existing unit tests implementation expects this order.
             byte[] resultData = SvnDiffParser.ApplySvnDiffsFromStream(inputStream, baseData);
-            if (resultData.Length > 0)
+
+            string resultHashCalc = Helper.GetMd5Checksum(resultData);
+            if ((null != resultHashSvnProvided)
+            && (resultData.Length > 0))
             {
-                bool isMatchingResult = !(ChecksumMismatch(resultHashSvnProvided, resultData));
+                bool isMatchingResult = (resultHashSvnProvided == resultHashCalc);
                 if (!(isMatchingResult))
                 {
                     ReportErrorChecksumMismatch("with updated result file");
                 }
             }
 
-            bool isUpdateNeeded = true;
+            // Subversion likes to do COPY of a resource,
+            // directly followed by a PUT with actually *unchanged* data
+            // [[[and subsequently sending a DELETE in case a rename needs to be achieved]]],
+            // possibly with the intention to get a blue skies "acknowledge" via a "204 No Content".
+            // Thus make sure to invoke WriteFile() (== record pending changes)
+            // only in case there actually *is* something to be changed,
+            // otherwise results of our transaction collapsing of complementary activities
+            // will get terribly imprecise,
+            // causing TFS TF14050 "incompatible pending changes" exceptions...
+            // Need update only in case of changes - unless the base file does not even exist yet:
+            bool isUpdateNeeded = ((baseHashCalc != resultHashCalc) || (!baseExists));
             if (isUpdateNeeded)
             {
                 isWebdavResourceNewlyCreated = sourceControlProvider.WriteFile(activityId, serverPath, resultData);
             }
             return isWebdavResourceNewlyCreated;
-        }
-
-        private static bool ChecksumMismatch(string hash, byte[] data)
-        {
-            // git will not pass the relevant checksum, so we need to ignore
-            // this
-            if(hash==null)
-                return false;
-            return Helper.GetMd5Checksum(data) != hash;
         }
 
         private static void ReportErrorChecksumMismatch(string details)

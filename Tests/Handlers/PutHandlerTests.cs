@@ -19,6 +19,7 @@ namespace UnitTests
         [Fact]
         public void TestCorrectOutput()
         {
+            stubs.Attach(provider.GetItemInActivity, (ItemMetaData)null); // NO pre-existing resource! (--> write required).
             Results r = stubs.Attach(provider.WriteFile, true);
             request.Path =
                 "http://localhost:8082//!svn/wrk/be3dd5c3-e77f-f246-a1e8-640012b047a2/Spikes/SvnFacade/trunk/New%20Folder%207/Empty%20File%202.txt";
@@ -49,10 +50,12 @@ namespace UnitTests
         [Fact]
         public void TestPathIsDecodedWhenInvokingSourceControlProviderForFolderPath()
         {
+            stubs.Attach(provider.GetItemInActivity, new ItemMetaData());
+            stubs.AttachReadFile(provider.ReadFile, new byte[] { });
             Results r = stubs.Attach(provider.WriteFile, false);
             request.Path =
                 "http://localhost:8082//!svn/wrk/be3dd5c3-e77f-f246-a1e8-640012b047a2/Spikes/SvnFacade/trunk/New%20Folder%207/Empty%20File%202.txt";
-            request.Input = "SVN\0";
+            request.Input = GetSvnDiffStringForSingleCharFileWrite();
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
 
@@ -62,10 +65,12 @@ namespace UnitTests
         [Fact]
         public void TestResourceIsProperlyEncoded()
         {
+            stubs.Attach(provider.GetItemInActivity, new ItemMetaData());
+            stubs.AttachReadFile(provider.ReadFile, new byte[] { });
             Results r = stubs.Attach(provider.WriteFile, true);
             request.Path =
                 "http://localhost:8082//!svn/wrk/b50ca3a0-05d8-5b4d-8b51-11fce9cbc603/A%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60/B%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60/C%20!@%23$%25%5E&()_-+=%7B%5B%7D%5D%3B',.~%60..txt";
-            request.Input = "SVN\0";
+            request.Input = GetSvnDiffStringForSingleCharFileWrite();
 
         	handler.Handle(context, new PathParserSingleServerWithProjectInPath(tfsUrl), null);
             string result = Encoding.Default.GetString(((MemoryStream) response.OutputStream).ToArray());
