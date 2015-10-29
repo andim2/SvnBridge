@@ -69,7 +69,8 @@ namespace SvnBridge.Handlers
             {
                 ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, serverPath);
                 baseData = sourceControlProvider.ReadFile(item);
-                if (ChecksumMismatch(baseHashSvnProvided, baseData))
+                bool isMatchingBase = !(ChecksumMismatch(baseHashSvnProvided, baseData));
+                if (!(isMatchingBase))
                 {
                     ReportErrorChecksumMismatch("with base file");
                 }
@@ -77,7 +78,8 @@ namespace SvnBridge.Handlers
             byte[] resultData = SvnDiffParser.ApplySvnDiffsFromStream(inputStream, baseData);
             if (resultData.Length > 0)
             {
-                if (ChecksumMismatch(resultHashSvnProvided, resultData))
+                bool isMatchingResult = !(ChecksumMismatch(resultHashSvnProvided, resultData));
+                if (!(isMatchingResult))
                 {
                     ReportErrorChecksumMismatch("with updated result file");
                 }
