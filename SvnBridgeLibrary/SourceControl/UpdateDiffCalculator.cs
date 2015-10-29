@@ -92,15 +92,16 @@ namespace SvnBridge.SourceControl
 
             if (updateReportData.Entries != null)
             {
+                // pre-calculate rootPath prior to subsequent loop:
+                string rootPath = checkoutRootPath;
+                if (updateReportData.UpdateTarget != null)
+                    rootPath += "/" + updateReportData.UpdateTarget;
+
                 foreach (EntryData data in updateReportData.Entries)
                 {
                     int itemVersionFrom = int.Parse(data.Rev);
                     if (itemVersionFrom < versionFrom)
                     {
-                        string rootPath = checkoutRootPath;
-                        if (updateReportData.UpdateTarget != null)
-                            rootPath += "/" + updateReportData.UpdateTarget;
-
                         string targetPath = rootPath + "/" + data.path;
 
                         FilesysHelpers.StripRootSlash(ref targetPath);
