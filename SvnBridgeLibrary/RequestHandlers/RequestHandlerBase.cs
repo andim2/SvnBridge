@@ -349,7 +349,7 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
+                ReportUnsupportedDepthHeaderValue(depth);
             }
 
             return recursion;
@@ -367,6 +367,21 @@ namespace SvnBridge.Handlers
             )
         {
             httpContext.Response.SendChunked = true;
+        }
+
+        /// <summary>
+        /// Encountered a yet-unsupported Depth HTTP header value,
+        /// thus throw an exception to announce missing handling.
+        /// Since in some cases subsequent processing directly passes things into the TFS side (provider),
+        /// keeping svn-specific protocol parts would be a *problem*,
+        /// thus bailing out by throwing an exception is especially important.
+        /// </summary>
+        /// Decided to add method to more general (non-PROPFIND) areas
+        /// since Depth: header seems like a more general concept
+        /// (indeed, it's also used for at least DELETE / COPY / MOVE).
+        protected static void ReportUnsupportedDepthHeaderValue(string depthHeaderValue)
+        {
+            throw new InvalidOperationException(String.Format("Depth not supported: {0}", depthHeaderValue));
         }
 
         protected static void WriteHumanReadableError(TextWriter output, int svn_error_code, string error_string)

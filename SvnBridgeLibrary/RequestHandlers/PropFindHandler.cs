@@ -510,7 +510,7 @@ namespace SvnBridge.Handlers
             string activityId = requestPath.Split('/')[3];
             if (!(depth.Equals("0")))
             {
-                throw new InvalidOperationException(String.Format("Depth not supported: {0}", depth));
+                ReportUnsupportedDepthHeaderValue(depth);
             }
             string path = requestPath.Substring(11 + activityId.Length);
             ItemMetaData item = sourceControlProvider.GetItemInActivity(activityId, Helper.Decode(path));
