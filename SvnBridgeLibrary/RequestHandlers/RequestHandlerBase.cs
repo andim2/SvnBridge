@@ -433,35 +433,67 @@ namespace SvnBridge.Handlers
     /// </summary>
     public class WebDAVGeneratorHelpers
     {
-        /// <summary>
-        /// This should be returning an entity tag ("entity-tag") of a resource
-        /// (a _quoted_ string: "...content..." - or W/"...content..." to indicate a weak tag).
-        /// Probably a hash (simple hashing, or MD5, SHA1, possibly using System.Security.Cryptography ComputeHash())
-        /// of the resource's specific unique data such as inode / mtime / ...
-        /// See "thoughts on ETags and mod_dav" http://marc.info/?l=apache-httpd-dev&m=119213950421845&w=3
-        /// and "Weak Etags in Apache are useless and violate RFC 2616, 13.3.3" https://issues.apache.org/bugzilla/show_bug.cgi?id=42987
-        ///
-        /// SEMI-STUB!
-        /// OK, for now return item.Md5Hash, since that should be more or less what's expected here.
-        /// And we better should mark it weak ("W/")?
-        /// Hmm, Md5Hash may (sometimes?) be null. Are we supposed to invoke ReadFileAsync() or some such
-        /// on the item in such a case, to get Md5Hash member populated?
-        /// </summary>
         public static string GetETag_revision_item(
             string xml_namespace,
             int itemRevision,
             string itemLocation)
         {
-            //if (item.Md5Hash == null)
-            //{
-            //    return "<D:getetag/>";
-            //}
-            //else
-            //{
-            //    return "<D:getetag>W/\"" + item.Md5Hash + "\"</D:getetag>";
-            //}
-            // NOPE, we'll do the same thing that PropFindHandler.cs does (FIXME duplicated code!):
-            return "<lp1:getetag>W/\"" + itemRevision + "//" + Helper.EncodeB(itemLocation) + "\"</lp1:getetag>";
+            // Do not have a weak ETag indicated since we deem a revision plus item location combo
+            // to be a completely precise unique ID for a reliably stored item,
+            // at least on TFS2008 (right? Famous last words...).
+            bool isUniqueIdNonweak = true;
+            string revision_location_separator = "//";
+            string etag_value_without_quotes = itemRevision + revision_location_separator + Helper.EncodeB(itemLocation);
+            return GetETag(xml_namespace, isUniqueIdNonweak, etag_value_without_quotes);
+        }
+
+        /// <summary>
+        /// This returns an entity tag ("entity-tag") of a resource
+        /// (a _quoted_ string: "...content..." - or W/"...content..." to indicate a weak tag).
+        /// Probably a hash (simple hashing, or MD5, SHA1, possibly using System.Security.Cryptography ComputeHash())
+        /// of the resource's specific unique data such as inode / mtime / ...
+        /// See "thoughts on ETags and mod_dav" http://marc.info/?l=apache-httpd-dev&m=119213950421845&w=3
+        /// and "Weak Etags in Apache are useless and violate RFC 2616, 13.3.3" https://issues.apache.org/bugzilla/show_bug.cgi?id=42987
+        /// </summary>
+        /// <param name="xml_namespace">The XML namespace ID to be used for the etag</param>
+        /// <param name="isUniqueIdNonweak">Indicates that the etag is not weak (i.e., a guaranteed-strong indicator for the current revision of the item, i.e. any subsequent change ends up indicated differently)</param>
+        /// <param name="etag_value_without_quotes">raw etag value, without the internally applied standards-mandated quotes.
+        /// Should be a sufficiently strong indicator for the current state of an item (e.g. a hash value, or a revision plus item location identifier)</param>
+        /// <returns>The complete getetag element in XML syntax, but without EOL parts.</returns>
+        public static string GetETag(
+            string xml_namespace,
+            bool isUniqueIdNonweak,
+            string etag_value_without_quotes)
+        {
+            string weak_marker = isUniqueIdNonweak ? "" : "W/";
+            string element_name = xml_namespace + ":getetag";
+            string etag_quote = "\"";
+
+            StringBuilder sb = new StringBuilder();
+
+            bool haveEtagContainingValue = (etag_value_without_quotes.Length > 0);
+            bool needGenerateEmptyElement = !(haveEtagContainingValue);
+            if (needGenerateEmptyElement)
+            {
+                sb.Append("<");
+                sb.Append(element_name);
+                sb.Append("/>");
+            }
+            else
+            {
+                sb.Append("<");
+                sb.Append(element_name);
+                sb.Append(">");
+                sb.Append(weak_marker);
+                sb.Append(etag_quote);
+                sb.Append(etag_value_without_quotes);
+                sb.Append(etag_quote);
+                sb.Append("</");
+                sb.Append(element_name);
+                sb.Append(">");
+            }
+            string etag = sb.ToString();
+            return etag;
         }
 	}
 

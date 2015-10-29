@@ -534,7 +534,7 @@ namespace ProtocolTests
                 "<D:prop>\n" +
                 "<C:bugtraq:message>Work Item: %BUGID%</C:bugtraq:message>\n" +
                 "<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>\n" +
-                "<lp1:getetag>W/\"5784//Quick Starts\"</lp1:getetag>\n" +
+                "<lp1:getetag>\"5784//Quick Starts\"</lp1:getetag>\n" +
                 "<lp1:creationdate>2008-12-14T11:23:39.774875Z</lp1:creationdate>\n" +
                 "<lp1:getlastmodified>Sun, 14 Dec 2008 11:23:39 GMT</lp1:getlastmodified>\n" +
                 "<lp1:checked-in><D:href>/!svn/ver/5784/Quick%20Starts</D:href></lp1:checked-in>\n" +

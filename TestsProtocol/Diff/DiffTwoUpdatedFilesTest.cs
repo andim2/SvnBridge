@@ -1079,7 +1079,7 @@ namespace ProtocolTests
                 "<D:prop>\n" +
                 "<C:bugtraq:message>Work Item: %BUGID%</C:bugtraq:message>\n" +
                 "<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>\n" +
-                "<lp1:getetag>W/\"5787//\"</lp1:getetag>\n" +
+                "<lp1:getetag>\"5787//\"</lp1:getetag>\n" +
                 "<lp1:creationdate>2008-12-16T01:03:54.820035Z</lp1:creationdate>\n" +
                 "<lp1:getlastmodified>Tue, 16 Dec 2008 01:03:54 GMT</lp1:getlastmodified>\n" +
                 "<lp1:checked-in><D:href>/!svn/ver/5787/</D:href></lp1:checked-in>\n" +
@@ -1301,7 +1301,7 @@ namespace ProtocolTests
                 "<D:propstat>\n" +
                 "<D:prop>\n" +
                 "<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>\n" +
-                "<lp1:getetag>W/\"5787//trunk\"</lp1:getetag>\n" +
+                "<lp1:getetag>\"5787//trunk\"</lp1:getetag>\n" +
                 "<lp1:creationdate>2008-12-16T01:03:54.820035Z</lp1:creationdate>\n" +
                 "<lp1:getlastmodified>Tue, 16 Dec 2008 01:03:54 GMT</lp1:getlastmodified>\n" +
                 "<lp1:checked-in><D:href>/!svn/ver/5787/trunk</D:href></lp1:checked-in>\n" +
@@ -1523,7 +1523,7 @@ namespace ProtocolTests
                 "<D:propstat>\n" +
                 "<D:prop>\n" +
                 "<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>\n" +
-                "<lp1:getetag>W/\"5787//trunk/A !@#$%^&amp;()_-+={[}];',.~`\"</lp1:getetag>\n" +
+                "<lp1:getetag>\"5787//trunk/A !@#$%^&amp;()_-+={[}];',.~`\"</lp1:getetag>\n" +
                 "<lp1:creationdate>2008-12-16T01:03:54.820035Z</lp1:creationdate>\n" +
                 "<lp1:getlastmodified>Tue, 16 Dec 2008 01:03:54 GMT</lp1:getlastmodified>\n" +
                 "<lp1:checked-in><D:href>/!svn/ver/5787/trunk/A%20!@%23$%25%5E&amp;()_-+=%7B%5B%7D%5D%3B',.~%60</D:href></lp1:checked-in>\n" +

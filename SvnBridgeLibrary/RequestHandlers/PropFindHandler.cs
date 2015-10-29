@@ -233,7 +233,7 @@ namespace SvnBridge.Handlers
             string svnVerLocalPath = GetSvnVerLocalPath(item);
 
             writer.Write("<lp1:getcontenttype>text/html; charset=UTF-8</lp1:getcontenttype>\n");
-            writer.Write("<lp1:getetag>W/\"" + item.Revision + "//" + Helper.EncodeB(item.Name) + "\"</lp1:getetag>\n");
+            writer.Write(WebDAVGeneratorHelpers.GetETag_revision_item("lp1", item.Revision, item.Name) + "\n");
             writer.Write("<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate) + "</lp1:creationdate>\n");
             writer.Write("<lp1:getlastmodified>" + Helper.FormatDateB(item.LastModifiedDate) + "</lp1:getlastmodified>\n");
             writer.Write("<lp1:checked-in><D:href>" + svnVerLocalPath + "</D:href></lp1:checked-in>\n");
@@ -271,7 +271,7 @@ namespace SvnBridge.Handlers
             writer.Write("<D:prop>\n");
             writer.Write("<lp1:getcontentlength>" + itemData.Length + "</lp1:getcontentlength>\n");
             writer.Write("<lp1:getcontenttype>text/plain</lp1:getcontenttype>\n");
-            writer.Write("<lp1:getetag>\"" + item.Revision + "//" + Helper.EncodeB(item.Name) + "\"</lp1:getetag>\n");
+            writer.Write(WebDAVGeneratorHelpers.GetETag_revision_item("lp1", item.Revision, item.Name) + "\n");
             writer.Write("<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate) + "</lp1:creationdate>\n");
             writer.Write("<lp1:getlastmodified>" + Helper.FormatDateB(item.LastModifiedDate) + "</lp1:getlastmodified>\n");
             writer.Write("<lp1:checked-in><D:href>" + svnVerLocalPath + "</D:href></lp1:checked-in>\n");
