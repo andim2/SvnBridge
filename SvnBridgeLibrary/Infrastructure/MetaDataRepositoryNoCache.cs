@@ -12,19 +12,22 @@ namespace SvnBridge.Infrastructure
     [Interceptor(typeof(TracingInterceptor))]
     public class MetaDataRepositoryNoCache : MetaDataRepositoryBase
     {
-        private string serverDownloadUrl;
+        private readonly IRegistrationService registration;
+        private string downloadUrlPrefix;
 
         public MetaDataRepositoryNoCache(
             TFSSourceControlService sourceControlService,
             string serverUrl,
             ICredentials credentials,
-            string rootPath)
+            string rootPath,
+            IRegistrationService registration)
             : base(
                 sourceControlService,
                 serverUrl,
                 credentials,
                 rootPath)
         {
+            this.registration = registration;
         }
 
         public override SourceItem[] QueryItems(int revision, string path, Recursion recursion)
@@ -43,7 +46,7 @@ namespace SvnBridge.Infrastructure
                 0);
 
             SortedList<string, SourceItem> resultUniqueSorted = new SortedList<string, SourceItem>(); // double loop and complex insertion condition --> no initial capacity guesstimate possible
-            string serverDownloadUrlForParms = GetServerDownloadUrl() + "?";
+            string downloadUrlPrefixForParms = GetWebServiceDownloadUrlPrefix() + "?";
             foreach (ItemSet itemSet in itemSets)
             {
                 foreach (Item item in itemSet.Items)
@@ -69,7 +72,7 @@ namespace SvnBridge.Infrastructure
                     // than not doing it.
                     SourceItem sourceItem = SourceItem.FromRemoteItem(item);
                     // Folders obviously may have URL set to null - if so, skip concat.
-                    sourceItem.DownloadUrl = String.IsNullOrEmpty(item.durl) ? null : serverDownloadUrlForParms + item.durl;
+                    sourceItem.DownloadUrl = String.IsNullOrEmpty(item.durl) ? null : downloadUrlPrefixForParms + item.durl;
 
                     resultUniqueSorted.Add(sourceItem.RemoteName, sourceItem);
                 }
@@ -88,18 +91,35 @@ namespace SvnBridge.Infrastructure
             return result2;
         }
 
-        private string GetServerDownloadUrl()
+        private string GetWebServiceDownloadUrlPrefix()
         {
-            if (null == serverDownloadUrl)
+            if (null == downloadUrlPrefix)
             {
-                // I don't know what exactly it is that is being discerned here (should add clarifications).
-                // Improved check according to codeplex.com discussion #403231 "404 Errors In Log Files".
-                // This is the URL as configured by Web.config's TfsUrl key.
-                bool urlContainsTfsPart = (serverUrl.Contains("/tfs/") || serverUrl.EndsWith("/tfs"));
-                var downloadUrlExtension = urlContainsTfsPart ? "ashx" : "asmx";
-                serverDownloadUrl = serverUrl + "/VersionControl/v1.0/item." + downloadUrlExtension;
+                // Finally managed to get rid
+                // of *HORRIBLE* open-coding at this location
+                // (of very version-specific TFS web service protocol URLs)
+                // rather than having properly consulted the official IRegistrationService.
+                // And while we are at it, use the same variable naming
+                // that TfsLibrary is using for that purpose.
+                // Hrmm, support for downloadUrl querying ought to have been provided
+                // by SourceControlService directly,
+                // however IRegistrationService is a *private* member
+                // of the TfsLibrary base class,
+                // thus we don't have access to this functionality
+                // in areas where we would make good use of it
+                // (which would provide service-specific and full
+                // per-item download URLs
+                // for item locations
+                // as passed into SourceControlService).
+                string serviceType = "VersionControl";
+                string interfaceName = "Download";
+                downloadUrlPrefix = registration.GetServiceInterfaceUrl(
+                    serverUrl,
+                    credentials,
+                    serviceType,
+                    interfaceName);
             }
-            return serverDownloadUrl;
+            return downloadUrlPrefix;
         }
     }
 }

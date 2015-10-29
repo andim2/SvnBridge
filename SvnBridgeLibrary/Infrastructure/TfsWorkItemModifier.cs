@@ -6,6 +6,8 @@ using SvnBridge.SourceControl;
 
 namespace SvnBridge.Infrastructure
 {
+    using CodePlex.TfsLibrary.ObjectModel; // IRegistrationService
+
     /// <summary>
     /// This implementation is probably not the best, but we had two problems with it.
     /// First, we can't take dependencies on the TFS API, we would need to redistribute it with us, and 
@@ -99,12 +101,13 @@ namespace SvnBridge.Infrastructure
                 using (StreamWriter sw = new StreamWriter(stream))
                 {
                     int workItemRevisionId = GetWorkItemInformation(workItemId).Revision;
+                    string webServiceUrl = request.RequestUri.ToString();
                     string text =
                         GetAssociateWorkItemWithChangeSetMessage()
                             .Replace("{ChangeSetId}", changeSetId.ToString())
                         ;
                     text = FillTemplateVars_WorkItemId_Guid(text, workItemId);
-                    text = FillTemplateVars_RevisionId_ServerUrl_UserName(text, workItemRevisionId, serverUrl, username);
+                    text = FillTemplateVars_RevisionId_WebServiceUrl_UserName(text, workItemRevisionId, webServiceUrl, username);
 
                     sw.Write(text);
                 }
@@ -140,11 +143,12 @@ namespace SvnBridge.Infrastructure
                     if(information.State.Equals("Fixed"))
                         return; // already fixed
                     int workItemRevisionId = information.Revision;
+                    string webServiceUrl = request.RequestUri.ToString();
                     string text =
                         GetSetWorkItemStatusToFixedMessage()
                         ;
                     text = FillTemplateVars_WorkItemId_Guid(text, workItemId);
-                    text = FillTemplateVars_RevisionId_ServerUrl_UserName(text, workItemRevisionId, serverUrl, username);
+                    text = FillTemplateVars_RevisionId_WebServiceUrl_UserName(text, workItemRevisionId, webServiceUrl, username);
 
                     sw.Write(text);
                 }
@@ -250,11 +254,16 @@ namespace SvnBridge.Infrastructure
             return production;
         }
 
-        private static string FillTemplateVars_RevisionId_ServerUrl_UserName(string templated, int workItemRevisionId, string serverUrl, string username)
+        private static string FillTemplateVars_RevisionId_WebServiceUrl_UserName(string templated, int workItemRevisionId, string webServiceUrl, string username)
         {
+            if (templated.Contains("{ServerUrl}"))
+            {
+                throw new InvalidOperationException(
+                    "DEPLOYMENT MISMATCH ISSUE: Detected unsupported outdated version (has old {ServerUrl} rather than {WebServiceUrl} template variable content) of a .xml file needed by TfsWorkItemModifier");
+            }
             string production = templated
                 .Replace("{RevisionId}", workItemRevisionId.ToString())
-                .Replace("{ServerUrl}", serverUrl)
+                .Replace("{WebServiceUrl}", webServiceUrl)
                 .Replace("{UserName}", username)
             ;
             return production;
@@ -270,9 +279,38 @@ namespace SvnBridge.Infrastructure
         {
             string urlTfsService;
 
-            urlTfsService = GetWebServiceUrl_hardcoded();
+            // I believe that we do want to use
+            // properly generic full IRegistrationService handling here, too,
+            // rather than doing dirt-ugly open-coding
+            // of version-specific URLs.
+            bool useRegistrationService = true;
+            if (useRegistrationService)
+            {
+                urlTfsService = GetWebServiceUrl_IRegistrationService();
+            }
+            else
+            {
+                urlTfsService = GetWebServiceUrl_hardcoded();
+            }
 
             return urlTfsService;
+        }
+
+        private string GetWebServiceUrl_IRegistrationService()
+        {
+            string serviceType = "WorkItemTracking";
+            // [ Minor side note:
+            // In this case the interfaceName to be specified
+            // actually deviates from the name of the page
+            // in the URL that will be returned
+            // (i.e., TFS devels seem to have done some post-impl name shuffling). ]
+            string interfaceName = "WorkitemService";
+            IRegistrationService registration = Container.Resolve<IRegistrationService>();
+            return registration.GetServiceInterfaceUrl(
+                serverUrl,
+                credentials,
+                serviceType,
+                interfaceName);
         }
 
         private string GetWebServiceUrl_hardcoded()

@@ -1040,7 +1040,8 @@ namespace SvnBridge.SourceControl
                     this.sourceControlService,
                     this.serverUrl,
                     this.credentials,
-                    this.rootPath);
+                    this.rootPath,
+                    Container.Resolve<IRegistrationService>());
             }
 
             this.fileRepository = fileRepository;

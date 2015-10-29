@@ -75,6 +75,10 @@ namespace SvnBridge.Infrastructure
         private static string GetDownloadUrl(string downloadUrl, Guid repositoryUuid)
         {
             string newDownloadUrl = downloadUrl;
+            // FIXME: perhaps this (non-)proxy URL switch evaluation
+            // could (and then ought to) be relegated
+            // to properly generic implementation
+            // (use of IRegistrationService - its internal handling) as well?
             if (!string.IsNullOrEmpty(Configuration.TfsProxyUrl))
             {
                 newDownloadUrl = Configuration.TfsProxyUrl + "/VersionControlProxy/" + downloadUrl.Substring(downloadUrl.IndexOf("/VersionControl/") + 16);

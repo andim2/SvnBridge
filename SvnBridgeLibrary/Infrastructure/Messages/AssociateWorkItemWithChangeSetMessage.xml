@@ -8,7 +8,7 @@
 	<soap:Body>
 		<Update xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03">
 			<package>
-				<Package Product="{ServerUrl}/WorkItemTracking/v1.0/ClientService.asmx" xmlns="">
+				<Package Product="{WebServiceUrl}" xmlns="">
 					<UpdateWorkItem WorkItemID="{WorkItemId}" Revision="{RevisionId}" ObjectType="WorkItem">
 						<ComputedColumns>
 							<ComputedColumn Column="System.RevisedDate" />

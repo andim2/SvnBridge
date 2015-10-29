@@ -14,6 +14,8 @@ using SvnBridge.Net;
 
 namespace SvnBridge.Utility
 {
+    using SvnBridge.Infrastructure; // Container
+
 	public static class Helper
 	{
 		private static readonly byte[] _emptyBuffer = new byte[0];
@@ -269,14 +271,63 @@ namespace SvnBridge.Utility
 		{
 			try
 			{
+				// I believe that we do want to use
+				// properly generic full IRegistrationService handling here, too,
+				// rather than doing dirt-ugly open-coding
+				// of version-specific URLs.
+				// That way (by doing this everywhere in our implementation)
+				// we'll have a fighting chance of surviving
+				// some future product version (to be specific: web service protocol) upgrades
+				// (as long as the specific interfaces that we make use of
+				// did remain unchanged/compatible indeed).
+				// And while having to go through a full IRegistrationService processing
+				// ought to be more overhead (less performance)
+				// than a direct open-coded query,
+				// improved compatibility is way more important.
 				string urlTfsService;
 				// For the simple purpose of checking whether a web service exists,
 				// using an unsafe credential ought to be ok
 				// (actual use should then be properly using a client-provided credential).
 				ICredentials credentials = GetUnsafeNetworkCredential();
 				string output_expected;
-				urlTfsService = url + "/Services/v1.0/Registration.asmx";
-				output_expected = "Team Foundation Registration web service";
+				bool useRegistrationService = true;
+				if (useRegistrationService)
+				{
+					// Hmm, NOPE - IRegistrationService seems to be the service
+					// which is *sitting* at (being provided by) that location,
+					// i.e. it understandably then does not allow to *query* that location itself
+					// (its service list does not contain that location).
+					// Thus, it seems
+					// for a valid TFS existence check
+					// we ought to resort
+					// to an actual TFS service to be queried,
+					// and then probably best choose the one
+					// which is *most* common/basic.
+					//string serviceType = "Services";
+					//string interfaceName = "Registration";
+					// output_expected = "Team Foundation Registration web service";
+					string serviceType = "VersionControl";
+					string interfaceName = "ISCCProvider";
+					// Reasons for choosing this validation string
+					// within the resulting web page content:
+					// - don't check against "comment" / "user guidance" parts (they may be very volatile)
+					// - don't check against result URL based on serviceType / interfaceName
+					//   (since this is the very thing that we would want to abstract away)
+					// - so, check for a sufficiently specific interface API name
+					//   which we know to be actually using
+					output_expected = "QueryItemsExtended";
+					IRegistrationService registration = Container.Resolve<IRegistrationService>();
+					urlTfsService = registration.GetServiceInterfaceUrl(
+						url,
+						credentials,
+						serviceType,
+						interfaceName);
+				}
+				else
+				{
+					urlTfsService = url + "/Services/v1.0/Registration.asmx";
+					output_expected = "Team Foundation Registration web service";
+				}
 				WebRequest request = WebRequest.Create(urlTfsService);
 				request.Credentials = credentials;
 				request.Proxy = CreateProxy(proxyInformation);

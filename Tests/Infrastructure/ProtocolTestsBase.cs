@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using CodePlex.TfsLibrary.ObjectModel;
+using CodePlex.TfsLibrary.RegistrationWebSvc; // RegistrationWebSvcFactory
 using CodePlex.TfsLibrary.RepositoryWebSvc;
 using SvnBridge.Infrastructure;
 using SvnBridge.Infrastructure.Statistics;
@@ -26,11 +27,25 @@ namespace Tests
 
         protected ProtocolTestsBase()
         {
+            BootstrapEnvironment();
             provider = stubs.CreateTFSSourceControlProviderStub();
             Container.Register(typeof(TFSSourceControlProvider), provider);
             PathParserSingleServerWithProjectInPath pathParser = new PathParserSingleServerWithProjectInPath("http://foo");
             HttpDispatcher = new HttpContextDispatcher(pathParser, stubs.CreateObject<ActionTrackingViaPerfCounter>());
             RequestCache.Init();
+        }
+
+        private void BootstrapEnvironment()
+        {
+            // Not sure whether we would want to invoke a full BootStrapper.Start()
+            // for simple(?) ProtocolTests things.
+            // Thus manually providing the parts required here.
+
+            // I guess in this case we do want
+            // actual "live" parts (URI resolving etc.)
+            // rather than mock objects?
+            Container.Register(typeof(IRegistrationService), typeof(RegistrationService));
+            Container.Register(typeof(IRegistrationWebSvcFactory), typeof(RegistrationWebSvcFactory));
         }
 
         public void Dispose()

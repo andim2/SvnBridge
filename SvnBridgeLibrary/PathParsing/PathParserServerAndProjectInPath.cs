@@ -22,8 +22,8 @@ namespace SvnBridge.PathParsing
 
     /// <summary>
     /// Figures out the base URL where a TFS service can be reached
-    /// (i.e. below which a particular sub page
-    /// [e.g. Services/v1.0/Registration.asmx]
+    /// (i.e. below which the sub page specific to TFS registration service
+    /// [e.g. Services/v1.0/Registration.asmx - as requested by IRegistrationService]
     /// is provided).
     /// Will iterate through several https/http URLs
     /// with certain corresponding port numbers.
