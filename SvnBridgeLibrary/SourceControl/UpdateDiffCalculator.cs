@@ -126,7 +126,7 @@ namespace SvnBridge.SourceControl
                     result.Items.Add(checkoutRoot);
                 }
 
-                CalculateChangeBetweenVersions(projectRootPath, -1, projectRoot, versionFrom, versionTo);
+                CalculateChangeBetweenVersions(projectRootPath, TFSSourceControlProvider.LATEST_VERSION, projectRoot, versionFrom, versionTo);
             }
 
             foreach (string missingItem in clientMissingFiles.Values)

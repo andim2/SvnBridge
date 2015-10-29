@@ -109,7 +109,7 @@ namespace SvnBridge.Handlers
                                                     bool loadPropertiesFromFile)
         {
             Recursion recursion = ConvertDepthHeaderToRecursion(depth);
-            var versionToFetch = version.HasValue ? version.Value : -1;
+            var versionToFetch = version.HasValue ? version.Value : TFSSourceControlProvider.LATEST_VERSION;
             if (recursion == Recursion.OneLevel)
                 return (FolderMetaData)GetItems(sourceControlProvider, versionToFetch, path, recursion, loadPropertiesFromFile);
 
@@ -149,7 +149,7 @@ namespace SvnBridge.Handlers
             }
             else
             {
-                revision = sourceControlProvider.GetItems(-1, requestPath, Recursion.None).Revision;
+                revision = sourceControlProvider.GetItems(TFSSourceControlProvider.LATEST_VERSION, requestPath, Recursion.None).Revision;
                 path = requestPath;
             }
 
@@ -449,7 +449,7 @@ namespace SvnBridge.Handlers
                                        PropData data,
                                        Stream outputStream)
         {
-            if (!sourceControlProvider.ItemExists(GetLocalPathTrailingSlashStripped(Helper.Decode(requestPath)), -1))
+            if (!sourceControlProvider.ItemExists(GetLocalPathTrailingSlashStripped(Helper.Decode(requestPath)), TFSSourceControlProvider.LATEST_VERSION))
             {
                 throw new FileNotFoundException("Unable to find file '" + requestPath + "' in the source control repository",
                                                 requestPath);

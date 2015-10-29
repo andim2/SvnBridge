@@ -525,6 +525,11 @@ namespace SvnBridge.Handlers
             }
             else
             {
+                // While you'd think one could simply assign the LATEST_VERSION magic here
+                // (would then cause the provider to query the actual version value internally),
+                // that would be terribly wrong
+                // since targetRevision here is an *out* param for further use by the caller,
+                // thus we are the ones to actively figure out the correct value for the caller.
                 targetRevision = sourceControlProvider.GetLatestVersion();
             }
             if (updatereport.IsCheckOut)

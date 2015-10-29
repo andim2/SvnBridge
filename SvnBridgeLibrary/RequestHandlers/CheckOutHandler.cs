@@ -97,7 +97,7 @@ namespace SvnBridge.Handlers
             itemPath = itemPath.Replace("//", "/");
             string location = GetLocalPath("//!svn/wrk/" + activityId + itemPath);
 
-            ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(-1, Helper.Decode(itemPath), Recursion.None);
+            ItemMetaData item = sourceControlProvider.GetItemsWithoutProperties(TFSSourceControlProvider.LATEST_VERSION, Helper.Decode(itemPath), Recursion.None);
             if (item.ItemRevision > version || item.PropertyRevision > version)
             {
                 throw new ConflictException();

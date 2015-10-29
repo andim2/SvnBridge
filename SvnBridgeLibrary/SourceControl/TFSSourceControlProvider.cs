@@ -125,6 +125,10 @@ namespace SvnBridge.SourceControl
         private readonly FileRepository fileRepository;
         private const string repoLatestVersion = "Repository.Latest.Version";
         private const string propFolderPlusSlash = Constants.PropFolder + "/";
+        // TODO: LATEST_VERSION is an interface-related magic value,
+        // thus it should obviously not be within this specific *implementation* class
+        // but rather be provided by a corresponding *interface* or base class.
+        public const int LATEST_VERSION = -1;
 
         public TFSSourceControlProvider(
             string serverUrl,
@@ -195,7 +199,7 @@ namespace SvnBridge.SourceControl
 
         public virtual bool DeleteItem(string activityId, string path)
         {
-            if ((GetItems(-1, path, Recursion.None, true) == null) && (GetPendingItem(activityId, path) == null))
+            if ((GetItems(LATEST_VERSION, path, Recursion.None, true) == null) && (GetPendingItem(activityId, path) == null))
             {
                 return false;
             }
@@ -329,7 +333,7 @@ namespace SvnBridge.SourceControl
                     }
                 }
             });
-            return GetItemsWithoutProperties(-1, path, Recursion.None);
+            return GetItemsWithoutProperties(LATEST_VERSION, path, Recursion.None);
         }
 
         public virtual ItemMetaData GetItems(int version, string path, Recursion recursion)
@@ -369,7 +373,7 @@ namespace SvnBridge.SourceControl
         {
             return GetLog(
                 path,
-                -1,
+                LATEST_VERSION,
                 versionFrom,
                 versionTo,
                 recursion,
@@ -407,7 +411,7 @@ namespace SvnBridge.SourceControl
             }
 
             VersionSpec itemVersionSpec = VersionSpec.Latest;
-            if (itemVersion != -1)
+            if (itemVersion != LATEST_VERSION)
                 itemVersionSpec = VersionSpec.FromChangeset(itemVersion);
 
             // WARNING: TFS08 QueryHistory() is very problematic! (see comments in next inner layer)
@@ -803,7 +807,7 @@ namespace SvnBridge.SourceControl
 
         public virtual bool ItemExists(string path)
         {
-            return ItemExists(path, -1);
+            return ItemExists(path, LATEST_VERSION);
         }
 
         public virtual bool ItemExists(string path, int version)
@@ -911,7 +915,7 @@ namespace SvnBridge.SourceControl
                     existingPath = "";
                 }
 
-                item = GetItemsWithoutProperties(-1, existingPath, Recursion.None);
+                item = GetItemsWithoutProperties(LATEST_VERSION, existingPath, Recursion.None);
             } while (item == null);
             string localPath = GetLocalPath(activityId, path);
             UpdateLocalVersion(activityId, item, localPath.Substring(0, localPath.LastIndexOf('\\')));
@@ -1207,7 +1211,7 @@ namespace SvnBridge.SourceControl
                 version = GetEarliestVersion(path);
             }
 
-            if (version == -1)
+            if (version == LATEST_VERSION)
             {
                 version = GetLatestVersion();
             }
@@ -1593,7 +1597,7 @@ namespace SvnBridge.SourceControl
                     else
                         existingPath = "";
 
-                    item = GetItems(-1, existingPath, Recursion.None, true);
+                    item = GetItems(LATEST_VERSION, existingPath, Recursion.None, true);
                 } while (item == null);
 
                 string localPath = GetLocalPath(activityId, path);
@@ -1602,7 +1606,7 @@ namespace SvnBridge.SourceControl
                                                   localPath.Substring(0, localPath.LastIndexOf('\\')),
                                                   item.Revision));
 
-                item = GetItems(-1, path.Substring(1), Recursion.None, true);
+                item = GetItems(LATEST_VERSION, path.Substring(1), Recursion.None, true);
                 if (item != null)
                 {
                     updates.Add(LocalUpdate.FromLocal(item.Id, localPath, item.Revision));
@@ -1731,7 +1735,10 @@ namespace SvnBridge.SourceControl
                     copyIsRename = true;
                     RevertDelete(activityId, copyAction.Path);
                 }
-                ItemMetaData item = GetItemsWithoutProperties(-1, copyAction.Path, Recursion.None);
+                ItemMetaData item = GetItemsWithoutProperties(LATEST_VERSION, copyAction.Path, Recursion.None);
+                // NOTE: this method assumes that the source item to be copied from does exist at HEAD.
+                // If that is not the case, then another outer method (write file, ...)
+                // should have been chosen.
                 UpdateLocalVersion(activityId, item, localPath);
 
                 if (copyIsRename)
@@ -1896,7 +1903,7 @@ namespace SvnBridge.SourceControl
             {
                 string localPath = GetLocalPath(activityId, path);
 
-                ItemMetaData item = GetItems(-1, path, Recursion.None, true);
+                ItemMetaData item = GetItems(LATEST_VERSION, path, Recursion.None, true);
                 if (item == null)
                 {
                     item = GetPendingItem(activityId, path);
@@ -1927,7 +1934,7 @@ namespace SvnBridge.SourceControl
 
             if (cachedResult == null)
             {
-                item = GetItems(-1, propertiesPath, Recursion.None, true);
+                item = GetItems(LATEST_VERSION, propertiesPath, Recursion.None, true);
                 cache.Set(cacheKey, item);
             }
             else
@@ -1967,7 +1974,7 @@ namespace SvnBridge.SourceControl
                     }
                     string propertiesPath = GetPropertiesFileName(path, itemType);
                     string propertiesFolder = GetPropertiesFolderName(path, itemType);
-                    ItemMetaData propertiesFolderItem = GetItems(-1, propertiesFolder, Recursion.None, true);
+                    ItemMetaData propertiesFolderItem = GetItems(LATEST_VERSION, propertiesFolder, Recursion.None, true);
                     if ((propertiesFolderItem == null) && !activity.Collections.Contains(propertiesFolder))
                     {
                         MakeCollection(activityId, propertiesFolder);
@@ -1990,7 +1997,7 @@ namespace SvnBridge.SourceControl
         private ItemProperties GetItemProperties(Activity activity, string path, out ItemMetaData item, out ItemType itemType)
         {
             itemType = ItemType.File;
-            item = GetItems(-1, path, Recursion.None);
+            item = GetItems(LATEST_VERSION, path, Recursion.None);
             if (item != null)
             {
                 itemType = item.ItemType;
