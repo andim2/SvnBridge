@@ -376,9 +376,17 @@ namespace SvnBridge.Infrastructure
             return int.Parse(bestMatch.Rev);
         }
 
+        /// <summary>
+        /// Checks whether name is a (sub-)element of any entries in Missing.
+        /// </summary>
         private static bool IsMissing(UpdateReportData data, string localPath, string name)
         {
-            if (data.Missing == null || data.Missing.Count == 0)
+            return IsWithin(data.Missing, localPath, name);
+        }
+
+        private static bool IsWithin(List<string> entries, string localPath, string name)
+        {
+            if (entries == null || entries.Count == 0)
                 return false;
 
             string path = localPath.Substring(1);
@@ -387,11 +395,11 @@ namespace SvnBridge.Infrastructure
             if (name.StartsWith(path))
                 name = name.Substring(path.Length);
 
-            if (data.Missing.Contains(name))
+            if (entries.Contains(name))
                 return true;
-            foreach (string missing in data.Missing)
+            foreach (string pathEntry in entries)
             {
-                if (name.StartsWith(missing))// the missing is the parent of this item
+                if (name.StartsWith(pathEntry))// the current entry is the parent of this item
                     return true;
             }
             return false;
