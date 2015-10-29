@@ -1,4 +1,4 @@
-using System; // InvalidOperationException, StringComparison
+using System; // InvalidOperationException
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CodePlex.TfsLibrary;
@@ -47,20 +47,9 @@ namespace SvnBridge.SourceControl
         /// <remarks>
         /// See also IsSamePath()
         /// </remarks>
-        private bool MightContain(string pathCompare)
+        public bool MightContain(string pathCompare)
         {
-            string itemPathCooked = Name;
-
-            if (pathCompare.StartsWith("/"))
-            {
-                if (itemPathCooked.StartsWith("/") == false)
-                    itemPathCooked = "/" + itemPathCooked;
-            }
-
-            return (pathCompare.StartsWith(itemPathCooked,
-                WantCaseSensitiveMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase)
-            );
-
+            return IsSubElement(Name, pathCompare);
         }
 
         private ItemMetaData FindItem_Internal(string name)

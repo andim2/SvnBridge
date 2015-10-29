@@ -155,7 +155,7 @@ namespace ProtocolTests
         {
             FolderMetaData metadata = new FolderMetaData();
             DeleteMetaData deletedFile = new DeleteMetaData();
-            deletedFile.Name = "zxvc.txt";
+            deletedFile.Name = "newFolder/zxvc.txt";
             metadata.Items.Add(deletedFile);
             stubs.Attach(provider.GetChangedItems, metadata);
 

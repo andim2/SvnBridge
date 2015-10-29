@@ -67,6 +67,30 @@ namespace SvnBridge.SourceControl
     		parent = parentFolder;
     	}
 
+        public bool IsBelowEqual(string pathCompare)
+        {
+            return IsSubElement(pathCompare, Name);
+        }
+
+        protected static bool IsSubElement(string basePath, string candidate)
+        {
+            FilesysHelpers.StripRootSlash(ref basePath);
+            FilesysHelpers.StripRootSlash(ref candidate);
+
+            return (candidate.StartsWith(basePath,
+                WantCaseSensitiveMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase)
+            );
+        }
+
+        public static bool IsSamePathCaseSensitive(string itemPath, string pathCompare)
+        {
+            return IsSamePath_Internal(itemPath, pathCompare, true);
+        }
+        public static bool IsSamePathCaseInsensitive(string itemPath, string pathCompare)
+        {
+            return IsSamePath_Internal(itemPath, pathCompare, false);
+        }
+
         public bool IsSamePath(string path)
         {
             return IsSamePath(Name, path);
@@ -77,17 +101,17 @@ namespace SvnBridge.SourceControl
         /// </remarks>
         public static bool IsSamePath(string itemPath, string pathCompare)
         {
-            string itemPathCooked = itemPath;
+            return IsSamePath_Internal(itemPath, pathCompare, WantCaseSensitiveMatch);
+        }
 
-            if (pathCompare.StartsWith("/"))
-            {
-                if (itemPathCooked.StartsWith("/") == false)
-                    itemPathCooked = "/" + itemPathCooked;
-            }
+        private static bool IsSamePath_Internal(string itemPath, string pathCompare, bool wantCaseSensitiveMatchHere)
+        {
+            FilesysHelpers.StripRootSlash(ref itemPath);
+            FilesysHelpers.StripRootSlash(ref pathCompare);
 
             return (string.Equals(
-                itemPathCooked, pathCompare,
-                WantCaseSensitiveMatch ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase)
+                itemPath, pathCompare,
+                wantCaseSensitiveMatchHere ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase)
             );
         }
 

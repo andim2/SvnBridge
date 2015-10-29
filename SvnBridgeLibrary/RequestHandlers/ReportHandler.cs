@@ -487,6 +487,34 @@ namespace SvnBridge.Handlers
 			return srcPath;
 		}
 
+        /// <summary>
+        /// For non-null UpdateTarget cases,
+        /// returns the subset of the entire directory tree that we're interested in.
+        /// FIXME: move this to a common infrastructure file,
+        /// to also be used by UpdateTarget handling done in <see cref="TFSSourceControlProvider"/>.
+        /// </summary>
+        /// <param name="rootFolder">Root folder of the hierarchy to be actively filtered (item removal)</param>
+        /// <param name="targetPath">Sub path to be preserved</param>
+        private static void FilterUpdateTargetSpecificTree(ref FolderMetaData rootFolder, string targetPath)
+        {
+            // [cannot easily use List.RemoveAll() here]
+            foreach (ItemMetaData item in new List<ItemMetaData>(rootFolder.Items))
+            {
+                if (item.IsBelowEqual(targetPath))
+                {
+                    if (item.ItemType == ItemType.Folder)
+                    {
+                        FolderMetaData folder = (FolderMetaData)item;
+                        int idxExisting = rootFolder.Items.IndexOf(item);
+                        FilterUpdateTargetSpecificTree(ref folder, targetPath);
+                        rootFolder.Items[idxExisting] = folder;
+                    }
+                }
+                else
+                    rootFolder.Items.Remove(item);
+            }
+        }
+
         private FolderMetaData GetMetadataForUpdate(IHttpRequest request, UpdateReportData updatereport, TFSSourceControlProvider sourceControlProvider, out int targetRevision)
         {
             string basePath = PathParser.GetLocalPath(request, updatereport.SrcPath);
@@ -514,6 +542,21 @@ namespace SvnBridge.Handlers
             }
             if (metadata != null)
             {
+                // Handle the case where UpdateTarget != null
+                // (occurs e.g. when doing "svn up some_sub_dir").
+                // In this case we need to return a *subset* of the tree,
+                // to contain only all those tree items which are specific to the UpdateTarget sub item expression requested.
+                // We'll certainly choose to do this filtering up-front
+                // rather than adding expensive checks evaluated within each recursion step of subsequent processing.
+                //
+                // FIXME: GetChangedItems() above already has its own UpdateTarget-specific tree handling, too.
+                // Should think of how to cleanly merge this mechanism.
+                if (updatereport.UpdateTarget != null)
+                {
+                    string targetPath = DetermineSrcPath(this, updatereport);
+                    FilterUpdateTargetSpecificTree(ref metadata, targetPath);
+                }
+
                 // Start async crawler thread which will populate our
                 // existing metadata items with actual-data base64 content:
                 loader = new AsyncItemLoader(metadata, sourceControlProvider, Helper.GetCacheBufferTotalSizeRecommendedLimit());

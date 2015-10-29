@@ -88,9 +88,17 @@ namespace SvnBridge.SourceControl
             // unfortunately need to manually *iterate* over all hash entries:
             foreach (var pair in dict)
             {
+                //if (pair.Key.ToLowerInvariant().Contains("somefile.h"))
+                //{
+                //    Helper.DebugUsefulBreakpointLocation();
+                //}
+
                 // Make sure to also use the method that's commonly used
-                // for such path comparison purposes:
-                if (ItemMetaData.IsSamePath(folderName, pair.Key))
+                // for such path comparison purposes.
+                // And do explicitly call the *insensitive* method (i.e. not IsSamePath()),
+                // independent of whether .wantCaseSensitiveMatch is set
+                // (this is a desperate last-ditch attempt, thus we explicitly do want insensitive).
+                if (ItemMetaData.IsSamePathCaseInsensitive(folderName, pair.Key))
                     return pair.Value;
             }
             return null;
@@ -234,6 +242,22 @@ namespace SvnBridge.SourceControl
             return true;
         }
 
+        /// <remarks>
+        /// Would be nice to be able to get rid of the very SVN-specific
+        /// UpdateReportData method param dependency
+        /// (this is the sole reason for the Protocol assembly dependency here),
+        /// but since UpdateDiffCalculator below depends on it as well
+        /// it's not possible even mid-term.
+        /// OTOH, one could (rather strongly) argue
+        /// that this entire bloated-interface method
+        /// is somewhat misplaced within the provider class
+        /// and should thus be external to it.
+        /// OTOH this probably is done here to do a favour
+        /// to the many tests that depend on it
+        /// (and make use of the provider as their central object under test).
+        /// So, perhaps do keep a "changed items" method after all
+        /// and eventually decide to convert it to using a non-SVN update info class.
+        /// </remarks>
         public virtual FolderMetaData GetChangedItems(
             string path,
             int versionFrom,
@@ -270,6 +294,17 @@ namespace SvnBridge.SourceControl
             udc.CalculateDiff(path, versionTo, versionFrom, root, reportData);
             if (reportData.UpdateTarget != null)
             {
+                // FIXME: this one quite likely is WRONG (does not handle subpath expressions
+                // of UpdateTarget - checks one hierarchy level only!).
+                // Should be using a common UpdateTarget infrastructure helper like other
+                // places which need that.
+                // Hmm, and <see cref="UpdateReportService"/> implements a GetSrcPath()
+                // (combines .SrcPath with .UpdateTarget), whereas we don't use that here -
+                // but maybe possibly we should?
+                // Well, ok, our *caller* (GetMetadataForUpdate(), i.e. *one* caller at least)
+                // did determine path via .SrcPath after all,
+                // but that kind of handling is terribly asymmetric :(
+                // (evaluating reportData stuff outside *and* then here again)
                 string targetPath = "/" + Helper.CombinePath(path, reportData.UpdateTarget);
                 // [cannot easily use List.RemoveAll() here]
                 foreach (ItemMetaData item in new List<ItemMetaData>(root.Items))
@@ -1132,7 +1167,7 @@ namespace SvnBridge.SourceControl
 
         private ItemMetaData GetItems(int version, string path, Recursion recursion, bool returnPropertyFiles)
         {
-            // WARNING: this interface will
+            // WARNING: this interface will (update: "might" - things are now improved...)
             // return filename items with a case-insensitive match,
             // due to querying into TFS-side APIs!
             // All users which rely on precise case-sensitive matching
