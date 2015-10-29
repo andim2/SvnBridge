@@ -16,6 +16,30 @@ namespace SvnBridge.Infrastructure
             this.webTransferService = webTransferService;
         }
 
+        public virtual IAsyncResult BeginReadFile(
+            string fileUrl,
+            Guid repositoryUuid,
+            AsyncCallback callback)
+        {
+            return webTransferService.BeginDownloadBytes(
+                GetDownloadUrl(
+                    fileUrl,
+                    repositoryUuid),
+                credentials,
+                callback);
+        }
+
+        public virtual byte[] EndReadFile(
+            IAsyncResult ar)
+        {
+            return webTransferService.EndDownloadBytes(
+                ar);
+        }
+
+        /// <summary>
+        /// OUTDATED (non-asynchronous i.e. blocking,
+        /// and strange foreign-type param dependency) API variant, DO NOT USE.
+        /// </summary>
         public virtual byte[] GetFile(ItemMetaData item, Guid repositoryUuid)
         {
             // FIXME: I'm not completely happy with the layering here -
@@ -38,6 +62,10 @@ namespace SvnBridge.Infrastructure
             return webTransferService.DownloadBytes(GetDownloadUrl(item.DownloadUrl, repositoryUuid), credentials);
         }
 
+        /// <summary>
+        /// OUTDATED (non-asynchronous i.e. blocking,
+        /// and strange foreign-type param dependency) API variant, DO NOT USE.
+        /// </summary>
         public virtual void ReadFileAsync(ItemMetaData item, Guid repositoryUuid)
         {
             byte[] data = GetFile(item, repositoryUuid);

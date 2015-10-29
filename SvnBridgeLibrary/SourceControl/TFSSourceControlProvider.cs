@@ -2554,6 +2554,26 @@ namespace SvnBridge.SourceControl
             return TfsUtil.GetUsername(credentials, serverUrl);
         }
 
+        public virtual IAsyncResult BeginReadFile(
+            ItemMetaData item,
+            AsyncCallback callback)
+        {
+            return fileRepository.BeginReadFile(
+                item.DownloadUrl,
+                GetRepositoryUuid(),
+                callback);
+        }
+
+        public virtual byte[] EndReadFile(
+            IAsyncResult ar)
+        {
+            return fileRepository.EndReadFile(
+                ar);
+        }
+
+        /// <summary>
+        /// OUTDATED (non-asynchronous i.e. blocking) API variant, DO NOT USE.
+        /// </summary>
         public virtual byte[] ReadFile(ItemMetaData item)
         {
             return fileRepository.GetFile(item, GetRepositoryUuid());

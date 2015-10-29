@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading;
 using Attach;
 using CodePlex.TfsLibrary.ObjectModel;
+using CodePlex.TfsLibrary.Utility; // FileSystem
 using SvnBridge.Cache;
 using SvnBridge.Protocol;
 using SvnBridge.SourceControl;
@@ -41,15 +42,24 @@ namespace Tests
     {
         public TFSSourceControlProvider CreateTFSSourceControlProviderStub()
         {
+            string serverUrl = "http://www.codeplex.com";
+            string credentials = null;
+            IFileSystem system = new FileSystem();
+            WebTransferService webTransferService = new WebTransferService(
+                system);
+            var fileRepository = CreateObject<FileRepository>(
+                serverUrl,
+                credentials,
+                webTransferService);
             TFSSourceControlProvider stub = CreateObject<TFSSourceControlProvider>(
                 null,
-                "http://www.codeplex.com",
+                serverUrl,
+                credentials,
                 null,
                 null,
                 null,
                 null,
-                null,
-                null);
+                fileRepository);
             this.Attach((GetRepositoryUuid)stub.GetRepositoryUuid, Return.Value(new Guid("81a5aebe-f34e-eb42-b435-ac1ecbb335f7")));
             this.Attach(stub.GetItemsWithoutProperties, Return.DelegateResult(
                 delegate(object[] parameters) { return stub.GetItems((int)parameters[0], (string)parameters[1], (Recursion)parameters[2]); }
