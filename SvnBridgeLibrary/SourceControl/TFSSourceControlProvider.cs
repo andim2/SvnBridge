@@ -116,6 +116,7 @@ namespace SvnBridge.SourceControl
         private readonly IMetaDataRepository metaDataRepository;
         private readonly FileRepository fileRepository;
         private const string repoLatestVersion = "Repository.Latest.Version";
+        private const string propFolderPlusSlash = Constants.PropFolder + "/";
 
         public TFSSourceControlProvider(
             string serverUrl,
@@ -516,7 +517,7 @@ namespace SvnBridge.SourceControl
                             }
                             if (!itemFileIncludedInChanges)
                             {
-                                if (change.Item.item.EndsWith(Constants.PropFolder + "/" + Constants.FolderPropFile))
+                                if (change.Item.item.EndsWith(propFolderPlusSlash + Constants.FolderPropFile))
                                     sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, ItemType.Folder, item, change.Item.cs, change.Item.len, change.Item.date, null);
                                 else
                                     sourceItem = SourceItem.FromRemoteItem(change.Item.itemid, ItemType.File, item, change.Item.cs, change.Item.len, change.Item.date, null);
@@ -1331,7 +1332,6 @@ namespace SvnBridge.SourceControl
         {
             if (IsSuspectedPropertyStuff(name))
             { // found!? --> do precise checks.
-                const string propFolderPlusSlash = Constants.PropFolder + "/";
                 if (name.StartsWith(propFolderPlusSlash) || name.Contains("/" + propFolderPlusSlash))
                     return true;
             }
@@ -1353,9 +1353,9 @@ namespace SvnBridge.SourceControl
             if (IsSuspectedPropertyStuff(name))
             {
                 return (
-                    (name.StartsWith(Constants.PropFolder + "/") ||
+                    (name.StartsWith(propFolderPlusSlash) ||
                      name.EndsWith("/" + Constants.PropFolder) ||
-                     name.Contains("/" + Constants.PropFolder + "/"))
+                     name.Contains("/" + propFolderPlusSlash))
                 );
             }
             return false;
@@ -1440,7 +1440,7 @@ namespace SvnBridge.SourceControl
                     {
                         if (IsPropertyFile(item.Path))
                         {
-                            string path = item.Path.Replace("/" + Constants.PropFolder + "/", "/");
+                            string path = item.Path.Replace("/" + propFolderPlusSlash, "/");
                             ItemType newItemType = item.FileType;
                             if (path.EndsWith("/" + Constants.FolderPropFile))
                             {
@@ -1792,7 +1792,6 @@ namespace SvnBridge.SourceControl
         private static string GetItemFileNameFromPropertiesFileName(string path)
         {
             string itemPath = path;
-            string propFolderPlusSlash = Constants.PropFolder + "/";
             if (itemPath.StartsWith(propFolderPlusSlash))
             {
               if (itemPath == propFolderPlusSlash + Constants.FolderPropFile)
@@ -1815,8 +1814,8 @@ namespace SvnBridge.SourceControl
             if (itemType == ItemType.Folder)
             {
                 if (path == "/")
-                    return "/" + Constants.PropFolder + "/" + Constants.FolderPropFile;
-                return path + "/" + Constants.PropFolder + "/" + Constants.FolderPropFile;
+                    return "/" + propFolderPlusSlash + Constants.FolderPropFile;
+                return path + "/" + propFolderPlusSlash + Constants.FolderPropFile;
             }
             if (path.LastIndexOf('/') != -1)
             {
@@ -1824,7 +1823,7 @@ namespace SvnBridge.SourceControl
                     path.Substring(0, path.LastIndexOf('/')) + "/" + Constants.PropFolder +
                     path.Substring(path.LastIndexOf('/'));
             }
-            return Constants.PropFolder + "/" + path;
+            return propFolderPlusSlash + path;
         }
 
         private void ProcessDeleteItem(string activityId, string path)
