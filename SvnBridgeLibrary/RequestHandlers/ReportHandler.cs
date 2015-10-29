@@ -466,8 +466,10 @@ namespace SvnBridge.Handlers
 
         private void UpdateReport(TFSSourceControlProvider sourceControlProvider, UpdateReportData updatereport, StreamWriter output, FolderMetaData metadata, int targetRevision)
         {
+            // See also UpdateReportService impl!!
+            string sendAllSetting = (updatereport.SendAll == true) ? "true" : "false";
             output.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-            output.Write("<S:update-report xmlns:S=\"svn:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:D=\"DAV:\" send-all=\"true\">\n");
+            output.Write("<S:update-report xmlns:S=\"svn:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:D=\"DAV:\" send-all=\"" + sendAllSetting + "\">\n");
             output.Write("<S:target-revision rev=\"" + targetRevision + "\"/>\n");
 
             UpdateReportService updateReportService = new UpdateReportService(this, sourceControlProvider);

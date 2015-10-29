@@ -3348,7 +3348,7 @@ namespace ProtocolTests
                 "\r\n" +
                 "3de\r\n" +
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<S:update-report xmlns:S=\"svn:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:D=\"DAV:\" >\n" +
+                "<S:update-report xmlns:S=\"svn:\" xmlns:V=\"http://subversion.tigris.org/xmlns/dav/\" xmlns:D=\"DAV:\" send-all=\"false\">\n" +
                 "<S:target-revision rev=\"5775\"/>\n" +
                 "<S:open-directory rev=\"5775\">\n" +
                 "<D:checked-in><D:href>/!svn/ver/5775/branch/test</D:href></D:checked-in>\n" +

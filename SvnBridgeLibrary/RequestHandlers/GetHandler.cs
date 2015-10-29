@@ -57,14 +57,33 @@ namespace SvnBridge.Handlers
                 }
                 return;
             }
-            else if (requestPath.StartsWith("/!svn/bc/"))
-			{
-				string[] parts = requestPath.Split('/');
-				if (parts.Length >= 3)
-					int.TryParse(parts[3], out itemVersion);
+            else if (requestPath.StartsWith("/!svn/"))
+            {
+                // TODO: handle these two very similar types via a common helper or so.
+                // Also, this section is semi-duplicated (and thus fragile)
+                // in <see cref="GetHandler"/> and <see cref="PropFindHandler"/>
+                // (should likely be provided by a method in request base class).
+                if (requestPath.StartsWith("/!svn/bc/"))
+			    {
+				    string[] parts = requestPath.Split('/');
+				    if (parts.Length >= 3)
+					    int.TryParse(parts[3], out itemVersion);
 
-				itemPath = Helper.Decode(requestPath.Substring(9 + itemVersion.ToString().Length));
-			}
+				    itemPath = Helper.Decode(requestPath.Substring(9 + itemVersion.ToString().Length));
+			    }
+                else if (requestPath.StartsWith("/!svn/ver/"))
+                {
+                    string[] parts = requestPath.Split('/');
+                    if (parts.Length >= 3)
+                        int.TryParse(parts[3], out itemVersion);
+
+                    itemPath = Helper.Decode(requestPath.Substring(10 + itemVersion.ToString().Length));
+                }
+                else
+                {
+                    ReportUnsupportedSVNRequestPath(requestPath);
+                }
+            }
 
 			if (itemVersion == 0)
 				itemVersion = sourceControlProvider.GetLatestVersion();

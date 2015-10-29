@@ -4,7 +4,7 @@ using System.Net; // ICredentials
 using System.Text; // Encoding
 using SvnBridge.Interfaces;
 using SvnBridge.SourceControl;
-using SvnBridge.Utility; // Helper.Encode*()
+using SvnBridge.Utility; // Helper.DebugUsefulBreakpointLocation(), Helper.Encode*()
 using SvnBridge.Infrastructure;
 
 namespace SvnBridge.Handlers
@@ -162,6 +162,19 @@ namespace SvnBridge.Handlers
                 localPath = localPath.Substring(0, localPath.Length - 1);
             }
             return localPath;
+        }
+
+        /// <summary>
+        /// Encountered a yet-unsupported svn URL,
+        /// thus throw an exception to announce missing handling.
+        /// Since in some cases subsequent processing directly passes things into the TFS side (provider),
+        /// keeping svn-specific protocol parts would be a *problem*,
+        /// thus bailing out by throwing an exception is especially important.
+        /// </summary>
+        protected static void ReportUnsupportedSVNRequestPath(string path)
+        {
+            Helper.DebugUsefulBreakpointLocation();
+            throw new InvalidOperationException("Invalid/unsupported SVN request path type " + path);
         }
 
         protected static Recursion ConvertDepthHeaderToRecursion(string depth)

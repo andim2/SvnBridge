@@ -191,6 +191,34 @@ namespace SvnBridge.Infrastructure
 				output.Write("\n"); // \n EOL belonging to entire line (XML elem start plus payload)
                 output.Write("</S:txdelta>"); // XXX hmm, no \n EOL after this elem spec:ed / needed?
                 }
+                else
+                {
+                    bool isNewlyAdded = !(isExistingFile);
+                    if (!(isNewlyAdded)) // not newly added (implicitly fetched)? Produce explicit fetch request for client to fetch whole file.
+                    {
+                        // TODO: missing sha1 checksumming attrs.
+                        // "base-checksum" seems to constitute the "base checksum"
+                        // as calculated of the "base file" (*.svn-base),
+                        // i.e. the previous client revision of the file.
+                        // FIXME: instead of having such a rough fetch of the item
+                        // (whereas we're already doing ItemExists() queries at other places!),
+                        // we should probably always keep a reference member to the previous-version item
+                        // for quick access (but we'll still have to subsequently read the file data).
+                        ItemMetaData itemBase = sourceControlProvider.GetItemsWithoutProperties(clientRevisionForItem, item.Name, Recursion.None);
+                        string base_Md5Hash = null;
+                        if (itemBase != null)
+                        {
+                            var base_Data = sourceControlProvider.ReadFile(itemBase);
+                            base_Md5Hash = Helper.GetMd5Checksum(base_Data);
+                        }
+                        output.Write("<S:fetch-file");
+                        if (base_Md5Hash != null)
+                        {
+                            output.Write(" base-checksum=\"" + base_Md5Hash + "\"");
+                        }
+                        output.Write("/>\n");
+                    }
+                }
                 output.Write("<S:prop><V:md5-checksum>" + item.Md5Hash + "</V:md5-checksum></S:prop>\n");
 
                 if (isExistingFile)
@@ -271,6 +299,19 @@ namespace SvnBridge.Infrastructure
         /// <remarks>
         /// http://grokbase.com/p/subversion/dev/122axpnndm/error-while-checking-out-git-repository
         ///   "The txdelta element should only be delivered to the client when send-all=true."
+        ///
+        /// Well, proper txdelta handling actually is a lot more involved (previous implementation brains
+        /// failed when doing a simple diff [it requested send-all=false]).
+        /// SEE ALSO RELATED send-all ELEMENT ANNOUNCEMENT at parent handler impl!!
+        /// "mod_dav_svn doing wasteful text-delta calculation and transmission for 'svn st -u'"
+        ///   http://subversion.tigris.org/issues/show_bug.cgi?id=2259
+        /// "Re: svn commit: rev 7712 - branches/issue-1429-dev/subversion/mod_dav_svn"
+        ///   http://svn.haxx.se/dev/archive-2003-11/0712.shtml
+        /// http://svn.apache.org/repos/asf/subversion/trunk/notes/http-and-webdav/webdav-protocol
+        /// "Re: Error While Checking out Git Repository"
+        ///  http://mail-archives.apache.org/mod_mbox/subversion-dev/201202.mbox/%3C20120210025308.GA16328@daniel3.local%3E
+        /// In short: seems txdelta element has to _always_ (possibly empty!) get sent, regardless of SendAll active?
+        /// Client analysis does not suggest this to be the case though...
         /// </remarks>
         private static bool HaveRequestTxDelta(UpdateReportData updateReportRequest)
         {

@@ -137,6 +137,10 @@ namespace SvnBridge.Handlers
             int revision;
             string path;
             bool bcPath = false;
+            // TODO: handle these two very similar types via a common helper or so.
+            // Also, this section is semi-duplicated (and thus fragile)
+            // in <see cref="GetHandler"/> and <see cref="PropFindHandler"/>
+            // (should likely be provided by a method in request base class).
             if (requestPath.StartsWith("/!svn/bc"))
             {
                 bcPath = true;
