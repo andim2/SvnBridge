@@ -217,5 +217,42 @@ namespace SvnBridge.Handlers
                 w.WriteLine("-------------------------------");
             }
         }
+    }
+
+    /// <summary>
+    /// Contains generic helpers for WebDAV stream generation etc.
+    /// </summary>
+    public class WebDAVGeneratorHelpers
+    {
+        /// <summary>
+        /// This should be returning an entity tag ("entity-tag") of a resource
+        /// (a _quoted_ string: "...content..." - or W/"...content..." to indicate a weak tag).
+        /// Probably a hash (simple hashing, or MD5, SHA1, possibly using System.Security.Cryptography ComputeHash())
+        /// of the resource's specific unique data such as inode / mtime / ...
+        /// See "thoughts on ETags and mod_dav" http://marc.info/?l=apache-httpd-dev&m=119213950421845&w=3
+        /// and "Weak Etags in Apache are useless and violate RFC 2616, 13.3.3" https://issues.apache.org/bugzilla/show_bug.cgi?id=42987
+        ///
+        /// SEMI-STUB!
+        /// OK, for now return item.Md5Hash, since that should be more or less what's expected here.
+        /// And we better should mark it weak ("W/")?
+        /// Hmm, Md5Hash may (sometimes?) be null. Are we supposed to invoke ReadFileAsync() or some such
+        /// on the item in such a case, to get Md5Hash member populated?
+        /// </summary>
+        public static string GetETag_revision_item(
+            string xml_namespace,
+            int itemRevision,
+            string itemLocation)
+        {
+            //if (item.Md5Hash == null)
+            //{
+            //    return "<D:getetag/>";
+            //}
+            //else
+            //{
+            //    return "<D:getetag>W/\"" + item.Md5Hash + "\"</D:getetag>";
+            //}
+            // NOPE, we'll do the same thing that PropFindHandler.cs does (FIXME duplicated code!):
+            return "<lp1:getetag>W/\"" + itemRevision + "//" + Helper.EncodeB(itemLocation) + "\"</lp1:getetag>";
+        }
 	}
 }

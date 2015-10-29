@@ -49,12 +49,22 @@ namespace SvnBridge.Nodes
                     return GetRepositoryUUID();
                 case "checked-in":
                     return GetCheckedIn(handler);
+                case "checked-out":
+                    return GetCheckedOut(handler);
                 case "deadprop-count":
                     return GetDeadPropCount();
                 case "creator-displayname":
                     return GetCreatorDisplayName();
+                case "displayname": // e.g. Konqueror webdav://
+                    return GetDisplayName();
                 case "creationdate":
                     return GetCreationDate();
+                case "getetag": // Queried by e.g. davfs2.
+                    return GetETag();
+                case "getlastmodified": // queried by WebDAV clients at least (Cadaver)
+                    return GetLastModified();
+                case "executable": // queried by WebDAV clients at least (Cadaver)
+                    return GetExecutable();
                 case "version-name":
                     return GetVersionName();
                 case "getcontentlength":
@@ -63,6 +73,8 @@ namespace SvnBridge.Nodes
                     return GetLockDiscovery();
                 case "md5-checksum":
                     return GetMd5Checksum();
+                case "quota-available-bytes": // Queried by e.g. davfs2.
+                    return GetQuotaAvailableBytes();
                 default:
                     return null;
             }
@@ -135,16 +147,64 @@ namespace SvnBridge.Nodes
                 "</D:href></lp1:checked-in>";
         }
 
+        private static string GetCheckedOut(RequestHandlerBase handler)
+        {
+            // STUB!! (for WebDAV - Cadaver)
+            return "<D:checked-out/>";
+        }
+
         private string GetCreatorDisplayName()
         {
             return "<lp1:creator-displayname>" + item.Author + "</lp1:creator-displayname>";
         }
 
+        private static string GetDisplayName()
+        {
+            // See "DAV:displayname handling" https://issues.apache.org/bugzilla/show_bug.cgi?id=24735
+            // (rationale: don't return property - like Apache mod_dav - since we cannot indicate
+            // specifics anyway)
+            return "<D:displayname/>"; // hmm - is this "empty" or "no" property?
+        }
+
+        private string GetETag()
+        {
+            return WebDAVGeneratorHelpers.GetETag_revision_item("lp1", item.Revision, item.Name);
+        }
+
         private string GetCreationDate()
         {
+            // Ouch, it's a problem that we only have a LastModifiedDate member whereas
+            // we're supposed to return initial creation date - right?
+            // Well, it depends on what exactly creationdate would be about -
+            // and no matter what it is
+            // we should be able to determine the *original*
+            // creation date via an SCM helper method
+            // which traces things back to the proper item
+            // at the revision which would be the initial revision
+            // that is relevant for this element.
+            // Indeed something like this, see:
+            // "Re: svn commit: rev 2637 - trunk/subversion/mod_dav_svn"
+            //   http://svn.haxx.se/dev/archive-2002-07/1363.shtml
             return
                 "<lp1:creationdate>" + Helper.FormatDate(item.LastModifiedDate.ToUniversalTime()) +
                 "</lp1:creationdate>";
+        }
+
+        private string GetLastModified()
+        {
+            return
+                "<lp1:getlastmodified>" + Helper.FormatDate(item.LastModifiedDate.ToUniversalTime()) +
+                "</lp1:getlastmodified>";
+        }
+
+        private string GetExecutable()
+        {
+            // STUB!!
+            // See "mod_dav's custom properties" http://www.webdav.org/mod_dav/
+            // Returns T or F (case is significant) to indicate true/false bool of executable status of a resource (file).
+            return
+                "<lp2:executable>" + "F" +
+                "</lp2:executable>";
         }
 
         private string GetVersionName()
@@ -162,6 +222,12 @@ namespace SvnBridge.Nodes
             return
                 "<lp2:md5-checksum>" + Helper.GetMd5Checksum(sourceControlProvider.ReadFile(item)) +
                 "</lp2:md5-checksum>";
+        }
+
+        private static string GetQuotaAvailableBytes()
+        {
+            // STUB (I don't think we should/can indicate any quota support in this server).
+            return "<D:quota-available-bytes/>";
         }
     }
 }
