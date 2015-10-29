@@ -22,10 +22,10 @@ namespace UnitTests
             stubs = new MyMocks();
             associateWorkItemWithChangeSet = stubs.CreateObject<TfsWorkItemModifier>("http://www.codeplex.com", null);
             provider = new TFSSourceControlProvider(
+                new StubTFSSourceControlService(),
                 "http://www.blah.com",
                 null,
 				null,
-                new StubTFSSourceControlService(),
                 associateWorkItemWithChangeSet,
                 stubs.CreateObject<DefaultLogger>(),
                 stubs.CreateObject<WebCache>(),

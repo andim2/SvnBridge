@@ -113,11 +113,11 @@ namespace SvnBridge.SourceControl
             RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Multiline);
         private const char c_workItemChar = '#';
 
-        private readonly string rootPath;
-        private readonly string serverUrl;
-        private readonly int maxLengthFromRootPath;
-        private readonly ICredentials credentials;
         private readonly TFSSourceControlService sourceControlService;
+        private readonly string serverUrl;
+        private readonly ICredentials credentials;
+        private readonly string rootPath;
+        private readonly int maxLengthFromRootPath;
         private readonly IWorkItemModifier workItemModifier;
         private readonly DefaultLogger logger;
         private readonly WebCache cache;
@@ -131,22 +131,18 @@ namespace SvnBridge.SourceControl
         public const int LATEST_VERSION = -1;
 
         public TFSSourceControlProvider(
-            string serverUrl,
-            string projectName,
-            ICredentials credentials,
             TFSSourceControlService sourceControlService,
+            string serverUrl,
+            ICredentials credentials,
+            string projectName,
             IWorkItemModifier workItemModifier,
             DefaultLogger logger,
             WebCache cache,
             FileRepository fileRepository)
         {
+            this.sourceControlService = sourceControlService;
             this.serverUrl = serverUrl;
             this.credentials = CredentialsHelper.GetCredentialsForServer(this.serverUrl, credentials);
-            this.sourceControlService = sourceControlService;
-            this.workItemModifier = workItemModifier;
-            this.logger = logger;
-            this.cache = cache;
-            this.fileRepository = fileRepository;
 
             // NOTE: currently all uses of this class are short-lived and frequent,
             // thus ctor should remain sufficiently *fast*.
@@ -162,6 +158,11 @@ namespace SvnBridge.SourceControl
             // If the MAX_PATH limitation turns out to be too painful, then perhaps the UNC path convention
             // ("\\?\" prefix, 32k chars limit) might actually be usable here.
             this.maxLengthFromRootPath = 259 - rootPath.Length;
+
+            this.workItemModifier = workItemModifier;
+            this.logger = logger;
+            this.cache = cache;
+
             if (Configuration.CacheEnabled)
             {
                 this.metaDataRepository = new MetaDataRepositoryCache(
@@ -179,6 +180,8 @@ namespace SvnBridge.SourceControl
                     this.credentials,
                     this.rootPath);
             }
+
+            this.fileRepository = fileRepository;
         }
 
         public virtual void CopyItem(string activityId, string path, string targetPath)

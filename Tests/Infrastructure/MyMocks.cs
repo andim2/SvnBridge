@@ -42,8 +42,8 @@ namespace Tests
         public TFSSourceControlProvider CreateTFSSourceControlProviderStub()
         {
             TFSSourceControlProvider stub = CreateObject<TFSSourceControlProvider>(
-                "http://www.codeplex.com",
                 null,
+                "http://www.codeplex.com",
                 null,
                 null,
                 null,

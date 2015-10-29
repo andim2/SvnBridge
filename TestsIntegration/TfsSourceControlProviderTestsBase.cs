@@ -92,10 +92,10 @@ namespace IntegrationTests
             ICredentials credentials = GetCredentials();
             FileRepository fileRepository = new FileRepository(ServerUrl, credentials, webTransferService);
             return new TFSSourceControlProvider(
-                ServerUrl,
-                projectName,
-                null,
                 tfsSourceControlService,
+                ServerUrl,
+                null,
+                projectName,
 				associateWorkItemWithChangeSet,
                 stubs.CreateObject<DefaultLogger>(),
                 stubs.CreateObject<WebCache>(),
