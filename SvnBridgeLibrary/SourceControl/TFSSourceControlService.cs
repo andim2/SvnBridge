@@ -131,7 +131,7 @@ namespace SvnBridge.SourceControl
     /// which keeps separate concerns fully separate,
     /// especially for dangerously similar but unrelated filter cases.
     /// </remarks>
-    public class ITFSSourceControlService_wrapper : ITFSSourceControlService
+    public class ITFSSourceControlService_wrapper : TFSSourceControlServiceHelpers, ITFSSourceControlService
     {
         private readonly ITFSSourceControlService scsWrapped = null;
 
@@ -514,6 +514,30 @@ namespace SvnBridge.SourceControl
         #endregion
     }
 
+    public class TFSSourceControlServiceHelpers
+    {
+        /// <summary>
+        /// Small central comment-enabling helper
+        /// for maintaining position indices:
+        /// For several interface methods which iterate over TFS data sets,
+        /// it's sufficiently relevant during debugging
+        /// to know the index of the specific element
+        /// that's currently being processed
+        /// within a large foreach loop.
+        /// </summary>
+        /// <remarks>
+        /// This central helper could also be used for further useful tasks,
+        /// such as e.g. generating debug output
+        /// for every modulo result
+        /// which indicated that we crossed another 1024 items threshold.
+        /// </remarks>
+        [Conditional("DEBUG")]
+        protected static void DebugMaintainLoopPositionHint(ref int idx)
+        {
+            ++idx;
+        }
+    }
+
     /// <summary>
     /// Wrapper class which is intended to be
     /// the generic-name outer-layer "typedef"
@@ -770,7 +794,7 @@ namespace SvnBridge.SourceControl
     /// but given that the class is very lightweight
     /// that would be overkill.
     /// </remarks>
-    internal class TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_SourceControlService
+    internal class TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder_SourceControlService : TFSSourceControlServiceHelpers
     {
         private readonly TFSBugSanitizer_InconsistentCase_ItemPathVsBaseFolder bugSanitizer;
 
@@ -805,12 +829,12 @@ namespace SvnBridge.SourceControl
         public void QueryHistory_sanitize(
             ref Changeset[] changesets)
         {
-            int cs = 0; // Debug helper (it's sufficiently relevant to know the current element)
+            int dbgCs = 0;
             foreach (var changeset in changesets)
             {
                 VersionSpec versionSpecChangeset = VersionSpec.FromChangeset(changeset.cset);
 
-                int cg = 0; // Debug helper (it's sufficiently relevant to know the current element)
+                int dbgCg = 0;
                 foreach (var change in changeset.Changes)
                 {
                     bool needCheckPath = (change.Item.item.Contains("/display/"));
@@ -838,9 +862,9 @@ namespace SvnBridge.SourceControl
                             change.Item.item = e.PathSanitized;
                         }
                     }
-                    ++cg;
+                    DebugMaintainLoopPositionHint(ref dbgCg);
                 }
-                ++cs;
+                DebugMaintainLoopPositionHint(ref dbgCs);
             }
         }
     }
