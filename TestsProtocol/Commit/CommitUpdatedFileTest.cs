@@ -8,7 +8,7 @@ using Tests;
 
 namespace ProtocolTests
 {
-    public class Tests : ProtocolTestsBase
+    public class CommitUpdatedFileTest : ProtocolTestsBase
     {
         [Fact]
         public void Test1()
